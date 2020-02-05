@@ -566,4 +566,8 @@
     <string name="seven_sided_cookie_shape_title">7-sided cookie</string>
     <!-- label for arch shape option in customization picker -->
     <string name="arch_shape_title">Arch</string>
+    
+    <!-- DT2S -->
+     <string name="pref_sleep_gesture_title">Double tap to sleep</string>
+     <string name="pref_sleep_gesture_summary">Double tap on empty space for screen off</string>
 </resources>
