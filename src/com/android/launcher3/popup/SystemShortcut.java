@@ -15,6 +15,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.pm.ShortcutInfo;
 import android.graphics.Rect;
+import android.net.Uri;
 import android.os.Process;
 import android.os.RemoteException;
 import android.os.UserHandle;
@@ -52,6 +53,7 @@ import com.android.launcher3.views.Snackbar;
 import com.android.launcher3.widget.WidgetsBottomSheet;
 import com.android.launcher3.widget.picker.model.data.WidgetPickerData;
 
+import java.net.URISyntaxException;
 import java.util.Arrays;
 
 /**
@@ -437,6 +439,33 @@ public abstract class SystemShortcut<T extends ActivityContext> extends ItemInfo
                     appKilled.show();
                     AbstractFloatingView.closeAllOpenViews(mTarget);
                 } catch (RemoteException e) { }
+            }
+        }
+    }
+
+    public static final Factory<ActivityContext> UNINSTALL = (activity, itemInfo, originalView) ->
+            itemInfo.getTargetComponent() == null ||
+                    PackageManagerHelper.isSystemApp((Context) activity,
+                    itemInfo.getTargetComponent().getPackageName())
+                    ? null : new UnInstall(activity, itemInfo, originalView);
+
+    public static class UnInstall<T extends ActivityContext> extends SystemShortcut<T> {
+
+        public UnInstall(T target, ItemInfo itemInfo, View originalView) {
+            super(R.drawable.ic_uninstall_no_shadow, R.string.uninstall_drop_target_label,
+                    target, itemInfo, originalView);
+        }
+
+        @Override
+        public void onClick(View view) {
+            try {
+                Intent intent = Intent.parseUri(view.getContext().getString(R.string.delete_package_intent), 0)
+                    .setData(Uri.fromParts("package", mItemInfo.getTargetComponent().getPackageName(),
+                    mItemInfo.getTargetComponent().getClassName())).putExtra(Intent.EXTRA_USER, mItemInfo.user);
+                mTarget.startActivitySafely(view, intent, mItemInfo);
+                AbstractFloatingView.closeAllOpenViews(mTarget);
+            } catch (URISyntaxException e) {
+                // Do nothing.
             }
         }
     }
