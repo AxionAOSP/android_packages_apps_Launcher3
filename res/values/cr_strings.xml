@@ -77,7 +77,7 @@
     <string name="trust_apps_help">Help</string>
     <string name="trust_apps_info_hidden">Hidden apps and their widgets are hidden from the drawer</string>
     <string name="trust_apps_info_protected">Protected apps require authentication to be opened from the launcher</string>
-    
+
     <!-- Suggestions -->
     <string name="suggestion_pref_screen_title">Suggestions</string>
     <string name="suggestion_pref_screen_desc">For All Apps &amp; Home screen suggestions</string>
@@ -120,7 +120,7 @@
 
     <!-- App label -->
     <string name="icon_two_lines_title">Use two lines for app label</string>
-   
+
     <!-- Kill App recents action shortcut -->
     <string name="recent_task_option_kill_app">Kill</string>
     <string name="recents_app_killed">App killed</string>
@@ -172,7 +172,7 @@
     <string name="meminfo_text">%1$s available | %2$s</string>
     <string name="recents_meminfo_title">Memory info</string>
     <string name="recents_meminfo_zram_title">ZRAM info</string>
-    
+
     <!-- Background blur -->
     <string name="background_blur_title">Background blur depth</string>
     <string name="background_blur_summary">Set blur depth level for recents and app drawer</string>
@@ -426,4 +426,9 @@
     <string name="force_monochrome_icons_summary">Generate monochromatic icons, if not supported by the app (requires re-toggling of themed icons)</string>
     
     <string name="app_info_title">Application Info</string>
+
+    <!-- Themed icons toggle -->
+    <string name="themed_icons_title">Themed icons</string>
+    <string name="themed_icons_summary_on">Themed icons enabled</string>
+    <string name="themed_icons_summary_off">Themed icons disabled</string>
 </resources>

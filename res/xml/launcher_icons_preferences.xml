@@ -19,10 +19,18 @@
     xmlns:launcher="http://schemas.android.com/apk/res-auto"
     xmlns:settings="http://schemas.android.com/apk/res/com.android.launcher3">
 
+    <SwitchPreferenceCompat
+        android:key="themed_icons"
+        android:title="@string/themed_icons_title"
+        android:summaryOn="@string/themed_icons_summary_on"
+        android:summaryOff="@string/themed_icons_summary_off"
+        launcher:iconSpaceReserved="false"
+        android:layout="@layout/settings_layout_top" />
+
     <Preference
         android:key="pref_icon_pack"
         android:title="@string/icon_pack_title"
-        android:layout="@layout/settings_layout_top" />
+        android:layout="@layout/settings_layout_middle" />
 
     <com.android.launcher3.settings.NotificationDotsPreference
         android:key="pref_icon_badging"
