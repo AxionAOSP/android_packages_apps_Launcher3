@@ -26,7 +26,7 @@ import android.os.Build;
 
 import androidx.annotation.NonNull;
 
-import com.android.internal.util.crdroid.Utils;
+import com.android.internal.util.android.Utils;
 import com.android.launcher3.lineage.trust.db.TrustComponent;
 
 import java.util.ArrayList;

@@ -28,7 +28,7 @@ import android.os.Handler;
 import android.text.TextUtils;
 import android.util.Log;
 
-import com.android.internal.util.crdroid.OmniJawsClient;
+import com.android.internal.util.android.OmniJawsClient;
 
 import com.android.launcher3.R;
 import com.android.launcher3.Utilities;
