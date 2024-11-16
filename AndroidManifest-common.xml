@@ -228,6 +228,14 @@
             android:exported="true"
             android:autoRemoveFromRecents="true" />
 
+        <!-- About -->
+        <activity
+            android:name="com.android.launcher3.settings.SettingsAbout"
+            android:label="@string/about_category_title"
+            android:theme="@style/HomeSettings.Theme"
+            android:exported="true"
+            android:autoRemoveFromRecents="true" />
+
         <!-- Icon Pack -->
         <activity
             android:name="com.android.launcher3.icons.pack.IconPackSettingsActivity"

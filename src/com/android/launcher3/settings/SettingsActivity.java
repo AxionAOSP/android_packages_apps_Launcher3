@@ -239,6 +239,16 @@ public class SettingsActivity extends CollapsingToolbarBaseActivity
                         .setClassName("com.android.launcher3", "com.android.launcher3.settings.SettingsUISwitcher"));
                 preferenceScreen.addPreference(uiSwitcherPreference);
 
+                // About Preference
+                Preference aboutPreference = new Preference(getContext());
+                aboutPreference.setKey("about");
+                aboutPreference.setTitle(R.string.about_category_title);
+                aboutPreference.setSummary(R.string.about_category_summary);
+                aboutPreference.setIcon(R.drawable.ic_settings_about);
+                aboutPreference.setIntent(new Intent("android.settings.APPLICATION_DETAILS_SETTINGS")
+                        .setClassName("com.android.launcher3", "com.android.launcher3.settings.SettingsAbout"));
+                preferenceScreen.addPreference(aboutPreference);
+
                 setPreferenceScreen(preferenceScreen);
             }
 

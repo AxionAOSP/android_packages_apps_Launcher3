@@ -36,6 +36,8 @@
     <string name="recents_category_summary">Revamp the overview screen</string>
     <string name="misc_category_title">Misc</string>
     <string name="misc_category_summary">Other options</string>
+    <string name="about_category_title">About</string>
+    <string name="about_category_summary">About ortus launcher</string>
     <string name="general_category_title">General</string>
     <string name="interface_category_title">Interface</string>
     <string name="quickspace_category_title">Quickspace</string>
@@ -463,4 +465,10 @@
         <item>preference_card_left</item>
         <item>preference_card_rising</item>
     </string-array>
+
+    <!-- About -->
+    <string name="about_launcher_version">3.0.0</string>
+    <string name="about_credits_title">Built upon contributions from</string>
+    <string name="about_version_title">Outus version</string>
+    <string name="about_version_developer">risingOS Team</string>
 </resources>

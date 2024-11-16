@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.preference.PreferenceScreen
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:launcher="http://schemas.android.com/apk/res-auto"
+    xmlns:settings="http://schemas.android.com/apk/res/com.android.launcher3">
+
+    <!-- Credits -->
+    <PreferenceCategory
+        android:title="@string/about_credits_title">
+
+        <Preference
+            android:key="launchercontributor"
+            android:title="Lawnchair team"
+            android:persistent="false"
+            android:selectable="true"
+            android:layout="@layout/settings_layout_top">
+            <intent
+               android:action="android.intent.action.VIEW"
+               android:data="https://github.com/LawnchairLauncher" />
+        </Preference>
+
+        <Preference
+            android:key="launchercontributor"
+            android:title="LineageOS"
+            android:persistent="false"
+            android:selectable="true"
+            android:layout="@layout/settings_layout_middle">
+            <intent
+               android:action="android.intent.action.VIEW"
+               android:data="https://github.com/LineageOS" />
+        </Preference>
+
+        <Preference
+            android:key="launchercontributor"
+            android:title="Amir Zaidi (Shade Launcher)"
+            android:persistent="false"
+            android:selectable="true"
+            android:layout="@layout/settings_layout_middle">
+            <intent
+               android:action="android.intent.action.VIEW"
+               android:data="https://github.com/amirzaidi" />
+        </Preference>
+
+        <Preference
+            android:key="launchercontributor"
+            android:title="Bootleggers ROM"
+            android:persistent="false"
+            android:selectable="true"
+            android:layout="@layout/settings_layout_middle">
+            <intent
+               android:action="android.intent.action.VIEW"
+               android:data="https://github.com/Bootleggers-BrokenLab" />
+        </Preference>
+
+        <Preference
+            android:key="launchercontributor"
+            android:title="crDroid team"
+            android:persistent="false"
+            android:selectable="true"
+            android:layout="@layout/settings_layout_middle">
+            <intent
+               android:action="android.intent.action.VIEW"
+               android:data="https://github.com/crdroidandroid" />
+        </Preference>
+
+        <Preference
+            android:key="launchercontributor"
+            android:title="Derpfest team"
+            android:persistent="false"
+            android:selectable="true"
+            android:layout="@layout/settings_layout_middle">
+            <intent
+               android:action="android.intent.action.VIEW"
+               android:data="https://github.com/DerpFest-AOSP" />
+        </Preference>
+
+        <Preference
+            android:key="launchercontributor"
+            android:title="Project Kaleidoscope team"
+            android:persistent="false"
+            android:selectable="true"
+            android:layout="@layout/settings_layout_bottom">
+            <intent
+               android:action="android.intent.action.VIEW"
+               android:data="https://github.com/Project-Kaleidoscope" />
+        </Preference>
+    </PreferenceCategory>
+
+</androidx.preference.PreferenceScreen>
