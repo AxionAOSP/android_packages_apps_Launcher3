@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.preference.PreferenceScreen
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:launcher="http://schemas.android.com/apk/res-auto">
+
+    <!-- UI Layout Preferences -->
+    <Preference
+        android:key="launcher_preferences"
+        android:title="@string/ui_layout_option_default"
+        android:layout="@layout/settings_layout_top" />
+
+    <Preference
+        android:key="preference_card"
+        android:title="@string/ui_layout_option_right_icon"
+        android:layout="@layout/settings_layout_middle" />
+
+    <Preference
+        android:key="preference_card_wallpaperview"
+        android:title="@string/ui_layout_option_wallpaper_preview"
+        android:layout="@layout/settings_layout_middle" />
+
+    <Preference
+        android:key="preference_card_smallicon"
+        android:title="@string/ui_layout_option_small_icon"
+        android:layout="@layout/settings_layout_middle" />
+
+    <Preference
+        android:key="preference_card_left"
+        android:title="@string/ui_layout_option_left_icon"
+        android:layout="@layout/settings_layout_middle" />
+
+    <Preference
+        android:key="preference_card_rising"
+        android:title="@string/ui_layout_option_rising"
+        android:layout="@layout/settings_layout_middle" />
+
+    <!-- Grid Layout Switcher -->
+    <SwitchPreferenceCompat
+        android:key="layout_switcher"
+        android:title="@string/layout_switcher_title"
+        android:summary="@string/layout_switcher_summary"
+        android:defaultValue="true"
+        android:layout="@layout/settings_layout_middle"
+        launcher:iconSpaceReserved="false" />
+
+    <!-- Restart Preference -->
+    <com.android.launcher3.settings.preference.RestartPreference
+        android:key="pref_restart"
+        android:title="@string/pref_restart_title"
+        android:summary="@string/pref_restart_summary"
+        android:layout="@layout/settings_layout_bottom"
+        android:persistent="false" />
+
+</androidx.preference.PreferenceScreen>

@@ -71,11 +71,35 @@
         android:title="@string/misc_category_title"
         android:summary="@string/misc_category_summary"
         android:icon="@drawable/ic_settings_misc"
-        android:layout="@layout/settings_layout_bottom">
+        android:layout="@layout/settings_layout_middle">
     <intent
             android:action="android.settings.APPLICATION_DETAILS_SETTINGS"
             android:targetPackage="com.android.launcher3"
             android:targetClass="com.android.launcher3.settings.SettingsMisc" />
+    </Preference>
+
+    <Preference
+        android:key="ui_switcher"
+        android:title="@string/ui_switcher_category_title"
+        android:summary="@string/ui_switcher_category_summary"
+        android:icon="@drawable/ic_settings_ui_switcher"
+        android:layout="@layout/settings_layout_middle">
+        <intent
+            android:action="android.settings.APPLICATION_DETAILS_SETTINGS"
+            android:targetPackage="com.android.launcher3"
+            android:targetClass="com.android.launcher3.settings.SettingsUISwitcher" />
+    </Preference>
+
+    <Preference
+        android:key="about"
+        android:title="@string/about_category_title"
+        android:summary="@string/about_category_summary"
+        android:icon="@drawable/ic_settings_about"
+        android:layout="@layout/settings_layout_bottom">
+        <intent
+            android:action="android.settings.APPLICATION_DETAILS_SETTINGS"
+            android:targetPackage="com.android.launcher3"
+            android:targetClass="com.android.launcher3.settings.SettingsAbout" />
     </Preference>
 
 </androidx.preference.PreferenceScreen>

@@ -20,6 +20,7 @@ import static androidx.preference.PreferenceFragmentCompat.ARG_PREFERENCE_ROOT;
 
 import android.app.Activity;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.Settings;
@@ -40,12 +41,17 @@ import androidx.preference.PreferenceFragmentCompat.OnPreferenceStartScreenCallb
 import androidx.preference.PreferenceGroup;
 import androidx.preference.PreferenceGroup.PreferencePositionCallback;
 import androidx.preference.PreferenceScreen;
+import androidx.recyclerview.widget.GridLayoutManager;
+import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+import androidx.recyclerview.widget.StaggeredGridLayoutManager;
 
 import com.android.launcher3.BuildConfig;
 import com.android.launcher3.Flags;
 import com.android.launcher3.LauncherFiles;
+import com.android.launcher3.LauncherPrefs;
 import com.android.launcher3.R;
+import com.android.launcher3.settings.PreferenceCardAdapter;
 import com.android.launcher3.util.SettingsCache;
 
 import com.android.settingslib.collapsingtoolbar.CollapsingToolbarBaseActivity;
@@ -166,7 +172,75 @@ public class SettingsActivity extends CollapsingToolbarBaseActivity
             }
 
             getPreferenceManager().setSharedPreferencesName(LauncherFiles.SHARED_PREFERENCES_KEY);
-            setPreferencesFromResource(R.xml.launcher_preferences, rootKey);
+            SharedPreferences prefs = getPreferenceManager().getSharedPreferences();
+            String layoutKey = prefs.getString("selected_ui_layout", "launcher_preferences");
+            if ("launcher_preferences".equals(layoutKey)) {
+                setPreferencesFromResource(R.xml.launcher_preferences, rootKey);
+            } else {
+                PreferenceScreen preferenceScreen = getPreferenceManager().createPreferenceScreen(getContext());
+
+                // Icons Preference
+                Preference iconsPreference = new Preference(getContext());
+                iconsPreference.setKey("icons");
+                iconsPreference.setTitle(R.string.icons_category_title);
+                iconsPreference.setSummary(R.string.icons_category_summary);
+                iconsPreference.setIcon(R.drawable.ic_settings_icons);
+                iconsPreference.setIntent(new Intent("android.settings.APPLICATION_DETAILS_SETTINGS")
+                        .setClassName("com.android.launcher3", "com.android.launcher3.settings.SettingsIcons"));
+                preferenceScreen.addPreference(iconsPreference);
+
+                // Home Screen Preference
+                Preference homeScreenPreference = new Preference(getContext());
+                homeScreenPreference.setKey("home_screen");
+                homeScreenPreference.setTitle(R.string.home_category_title);
+                homeScreenPreference.setSummary(R.string.home_category_summary);
+                homeScreenPreference.setIcon(R.drawable.ic_settings_homescreen);
+                homeScreenPreference.setIntent(new Intent("android.settings.APPLICATION_DETAILS_SETTINGS")
+                        .setClassName("com.android.launcher3", "com.android.launcher3.settings.SettingsHomescreen"));
+                preferenceScreen.addPreference(homeScreenPreference);
+
+                // App Drawer Preference
+                Preference appDrawerPreference = new Preference(getContext());
+                appDrawerPreference.setKey("app_drawer");
+                appDrawerPreference.setTitle(R.string.app_drawer_category_title);
+                appDrawerPreference.setSummary(R.string.app_drawer_category_summary);
+                appDrawerPreference.setIcon(R.drawable.ic_settings_appdrawer);
+                appDrawerPreference.setIntent(new Intent("android.settings.APPLICATION_DETAILS_SETTINGS")
+                        .setClassName("com.android.launcher3", "com.android.launcher3.settings.SettingsAppDrawer"));
+                preferenceScreen.addPreference(appDrawerPreference);
+
+                // Recents Preference
+                Preference recentsPreference = new Preference(getContext());
+                recentsPreference.setKey("recents");
+                recentsPreference.setTitle(R.string.recents_category_title);
+                recentsPreference.setSummary(R.string.recents_category_summary);
+                recentsPreference.setIcon(R.drawable.ic_settings_recents);
+                recentsPreference.setIntent(new Intent("android.settings.APPLICATION_DETAILS_SETTINGS")
+                        .setClassName("com.android.launcher3", "com.android.launcher3.settings.SettingsRecents"));
+                preferenceScreen.addPreference(recentsPreference);
+
+                // Miscellaneous Preference
+                Preference miscPreference = new Preference(getContext());
+                miscPreference.setKey("miscellaneous");
+                miscPreference.setTitle(R.string.misc_category_title);
+                miscPreference.setSummary(R.string.misc_category_summary);
+                miscPreference.setIcon(R.drawable.ic_settings_misc);
+                miscPreference.setIntent(new Intent("android.settings.APPLICATION_DETAILS_SETTINGS")
+                        .setClassName("com.android.launcher3", "com.android.launcher3.settings.SettingsMisc"));
+                preferenceScreen.addPreference(miscPreference);
+
+                // UI Switcher Preference
+                Preference uiSwitcherPreference = new Preference(getContext());
+                uiSwitcherPreference.setKey("ui_switcher");
+                uiSwitcherPreference.setTitle(R.string.ui_switcher_category_title);
+                uiSwitcherPreference.setSummary(R.string.ui_switcher_category_summary);
+                uiSwitcherPreference.setIcon(R.drawable.ic_settings_ui_switcher);
+                uiSwitcherPreference.setIntent(new Intent("android.settings.APPLICATION_DETAILS_SETTINGS")
+                        .setClassName("com.android.launcher3", "com.android.launcher3.settings.SettingsUISwitcher"));
+                preferenceScreen.addPreference(uiSwitcherPreference);
+
+                setPreferenceScreen(preferenceScreen);
+            }
 
             PreferenceScreen screen = getPreferenceScreen();
 
@@ -229,9 +303,26 @@ public class SettingsActivity extends CollapsingToolbarBaseActivity
         @Override
         public void onViewCreated(View view, Bundle savedInstanceState) {
             super.onViewCreated(view, savedInstanceState);
-            View listView = getListView();
-            final int bottomPadding = listView.getPaddingBottom();
-            listView.setOnApplyWindowInsetsListener((v, insets) -> {
+            RecyclerView recyclerView = getListView();
+            SharedPreferences prefs = getPreferenceManager().getSharedPreferences();
+            String layoutKey = prefs.getString("selected_ui_layout", "launcher_preferences");
+            if ("launcher_preferences".equals(layoutKey)) {
+                setPreferencesFromResource(R.xml.launcher_preferences, null);
+            } else {
+                if ("preference_card_rising".equals(layoutKey)) {
+                    recyclerView.setLayoutManager(new StaggeredGridLayoutManager(2, StaggeredGridLayoutManager.VERTICAL));
+                } else {
+                    boolean isGridLayout = prefs.getBoolean("is_grid_layout", true);
+                    if (isGridLayout) {
+                        recyclerView.setLayoutManager(new GridLayoutManager(getContext(), 2));
+                    } else {
+                        recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
+                    }
+                }
+                recyclerView.setAdapter(new PreferenceCardAdapter(getPreferenceScreen(), getContext()));
+            }
+            final int bottomPadding = recyclerView.getPaddingBottom();
+            recyclerView.setOnApplyWindowInsetsListener((v, insets) -> {
                 v.setPadding(
                         v.getPaddingLeft(),
                         v.getPaddingTop(),

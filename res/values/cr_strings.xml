@@ -23,7 +23,7 @@
     <string name="google_folder_title" translatable="false">Google</string>
 
     <!-- General -->
-    <string name="settings_title">Home settings</string>
+    <string name="settings_title">Ortus settings</string>
 
     <!-- Categories -->
     <string name="home_category_title">Home screen</string>
@@ -34,7 +34,7 @@
     <string name="app_drawer_category_summary">Customize your app drawer</string>
     <string name="recents_category_title">Recents</string>
     <string name="recents_category_summary">Revamp the overview screen</string>
-    <string name="misc_category_title">Miscellaneous</string>
+    <string name="misc_category_title">Misc</string>
     <string name="misc_category_summary">Other options</string>
     <string name="general_category_title">General</string>
     <string name="interface_category_title">Interface</string>
@@ -433,4 +433,34 @@
     <string name="themed_icons_title">Themed icons</string>
     <string name="themed_icons_summary_on">Themed icons enabled</string>
     <string name="themed_icons_summary_off">Themed icons disabled</string>
+
+    <!-- UI switcher -->
+    <string name="ui_switcher_category_title">UI Switcher</string>
+    <string name="ui_switcher_category_summary">Switch between UI layouts</string>
+    <string name="current_selection">Currently selected</string>
+    <string name="layout_switcher_title">Column layout</string>
+    <string name="layout_switcher_summary">Switch between 1 and 2 column layout</string>
+    <string name="ui_layout_option_default">Default</string>
+    <string name="ui_layout_option_right_icon">Right Icon</string>
+    <string name="ui_layout_option_wallpaper_preview">Wallpaper Preview</string>
+    <string name="ui_layout_option_small_icon">Small Icon</string>
+    <string name="ui_layout_option_left_icon">Left Icon</string>
+    <string name="ui_layout_option_rising">Rising</string>
+    <string-array name="ui_layout_options">
+        <item>@string/ui_layout_option_default</item>
+        <item>@string/ui_layout_option_right_icon</item>
+        <item>@string/ui_layout_option_wallpaper_preview</item>
+        <item>@string/ui_layout_option_small_icon</item>
+        <item>@string/ui_layout_option_left_icon</item>
+        <item>@string/ui_layout_option_rising</item>
+    </string-array>
+
+    <string-array name="ui_layout_keys">
+        <item>launcher_preferences</item>
+        <item>preference_card</item>
+        <item>preference_card_wallpaperview</item>
+        <item>preference_card_smallicon</item>
+        <item>preference_card_left</item>
+        <item>preference_card_rising</item>
+    </string-array>
 </resources>

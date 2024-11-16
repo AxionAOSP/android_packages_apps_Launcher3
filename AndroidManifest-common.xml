@@ -62,6 +62,9 @@
     <uses-permission android:name="android.permission.INJECT_EVENTS" />
     <uses-permission android:name="android.permission.REGISTER_STATS_PULL_ATOM"/>
 
+    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES"/>
+    <uses-permission android:name="android.permission.MANAGE_EXTERNAL_STORAGE" />
+
     <!-- AppLock -->
     <uses-permission android:name="android.permission.MANAGE_APP_LOCK" />
 
@@ -213,6 +216,14 @@
         <activity
             android:name="com.android.launcher3.settings.SettingsRecents"
             android:label="@string/recents_category_title"
+            android:theme="@style/HomeSettings.Theme"
+            android:exported="true"
+            android:autoRemoveFromRecents="true" />
+
+        <!-- UI Switcher -->
+        <activity
+            android:name="com.android.launcher3.settings.SettingsUISwitcher"
+            android:label="@string/ui_switcher_category_title"
             android:theme="@style/HomeSettings.Theme"
             android:exported="true"
             android:autoRemoveFromRecents="true" />

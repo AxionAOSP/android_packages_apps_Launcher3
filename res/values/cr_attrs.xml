@@ -25,4 +25,9 @@
         <attr name="continuousUpdates" format="boolean" />
         <attr name="customlayout" format="reference" />
     </declare-styleable>
+
+    <!-- Wallpaper preview -->
+    <declare-styleable name="WallpaperView">
+        <attr name="blurred" format="boolean" />
+    </declare-styleable>
 </resources>

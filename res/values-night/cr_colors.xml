@@ -20,5 +20,8 @@
     <color name="appseat_color">@*android:color/system_neutral2_900</color>
 
     <color name="gicon_mask">#1AFFFFFF</color>
+
+    <!-- Rising -->
     <color name="op_control_text_color_secondary">#89ffffff</color>
+    <color name="rising_color">#E4E4E4</color>
 </resources>

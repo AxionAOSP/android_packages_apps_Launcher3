@@ -35,6 +35,9 @@
     <!-- String representing the fragment class for recents view settings activity.-->
     <string name="recents_settings_fragment_name" translatable="false">com.android.launcher3.settings.SettingsRecents$RecentsSettingsFragment</string>
 
+    <!-- String representing the fragment class for ui switcher settings activity.-->
+    <string name="ui_switcher_settings_fragment_name" translatable="false">com.android.launcher3.settings.SettingsUISwitcher$UISwitcherSettingsFragment</string>
+
     <!-- Themed icons -->
     <string name="drawable_factory_class" translatable="false">com.android.launcher3.icons.ThirdPartyDrawableFactory</string>
 
