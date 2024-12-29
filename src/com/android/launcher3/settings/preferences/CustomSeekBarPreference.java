@@ -65,7 +65,9 @@ public class CustomSeekBarPreference extends Preference implements SeekBar.OnSee
         super(context, attrs, defStyleAttr, defStyleRes);
 
         TypedArray a = context.obtainStyledAttributes(attrs, R.styleable.CustomSeekBarPreference);
+        int layoutResId;
         try {
+            layoutResId = a.getResourceId(R.styleable.CustomSeekBarPreference_customlayout, R.layout.preference_custom_seekbar_middle);
             mShowSign = a.getBoolean(R.styleable.CustomSeekBarPreference_showSign, mShowSign);
             String units = a.getString(R.styleable.CustomSeekBarPreference_units);
             if (units != null)
@@ -101,7 +103,7 @@ public class CustomSeekBarPreference extends Preference implements SeekBar.OnSee
         }
 
         mSeekBar = new SeekBar(context, attrs);
-        setLayoutResource(R.layout.preference_custom_seekbar);
+        setLayoutResource(layoutResId);
     }
 
     public CustomSeekBarPreference(Context context, AttributeSet attrs, int defStyleAttr) {

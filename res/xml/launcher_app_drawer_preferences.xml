@@ -39,7 +39,8 @@
         android:title="@string/drawer_search_title"
         android:summary="@string/drawer_search_summary"
         android:defaultValue="true"
-        launcher:iconSpaceReserved="false" />
+        launcher:iconSpaceReserved="false"
+        android:layout="@layout/settings_layout_top" />
 
     <SwitchPreferenceCompat
         android:key="pref_auto_keyboard"
@@ -48,21 +49,24 @@
         android:defaultValue="false"
         android:persistent="true"
         android:dependency="pref_drawer_search"
-        launcher:iconSpaceReserved="false" />
+        launcher:iconSpaceReserved="false"
+        android:layout="@layout/settings_layout_middle" />
 
     <SwitchPreferenceCompat
         android:key="pref_drawer_scrollbar"
         android:title="@string/drawer_scrollbar_title"
         android:summary="@string/drawer_scrollbar_summary"
         android:defaultValue="true"
-        launcher:iconSpaceReserved="false" />
+        launcher:iconSpaceReserved="false"
+        android:layout="@layout/settings_layout_middle" />
 
     <SwitchPreferenceCompat
         android:key="pref_drawer_show_labels"
         android:title="@string/drawer_show_labels"
         android:defaultValue="true"
         android:persistent="true"
-        launcher:iconSpaceReserved="false" />
+        launcher:iconSpaceReserved="false"
+        android:layout="@layout/settings_layout_middle_no_summary" />
 
     <!--<com.android.launcher3.settings.preferences.CustomSeekBarPreference
         android:key="pref_app_drawer_opacity"
@@ -80,6 +84,7 @@
         android:max="150"
         android:min="75"
         settings:units="%"
-        android:defaultValue="100" />
+        android:defaultValue="100"
+        settings:customlayout="@layout/preference_custom_seekbar_bottom" />
 
 </androidx.preference.PreferenceScreen>

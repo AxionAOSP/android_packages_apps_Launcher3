@@ -31,4 +31,6 @@
 
     <!-- Overview scrolling scale animation -->
     <dimen name="overview_scroll_scale">0.9</dimen>
+    
+    <dimen name="homepage_preference_text_padding_start">16dp</dimen>
 </resources>

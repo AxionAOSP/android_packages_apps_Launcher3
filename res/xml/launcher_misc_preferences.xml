@@ -23,7 +23,8 @@
         android:key="pref_allow_phone_taskbar"
         android:title="@string/pref_allow_phone_taskbar_title"
         android:summary="@string/pref_allow_phone_taskbar_summary"
-        launcher:iconSpaceReserved="false" />
+        launcher:iconSpaceReserved="false"
+        android:layout="@layout/settings_layout_top" />
 
     <SwitchPreferenceCompat
         android:key="pref_allowRotation"
@@ -33,11 +34,13 @@
         android:persistent="true"
         launcher:logIdOn="615"
         launcher:logIdOff="616"
-        launcher:iconSpaceReserved="false" />
+        launcher:iconSpaceReserved="false"
+        android:layout="@layout/settings_layout_middle" />
 
     <Preference
         android:key="pref_trust_apps"
-        android:title="@string/trust_apps_manager_name" />
+        android:title="@string/trust_apps_manager_name"
+        android:layout="@layout/settings_layout_middle_no_summary" />
 
      <com.android.launcher3.settings.preferences.CustomSeekBarPreference
         android:key="pref_blur_depth"
@@ -51,6 +54,7 @@
 
     <androidx.preference.PreferenceScreen
         android:persistent="false"
+        android:layout="@layout/settings_layout_middle"
         android:title="@string/suggestion_pref_screen_title"
         android:key="pref_suggestions"
         android:summary="@string/suggestion_pref_screen_desc">
@@ -60,6 +64,7 @@
     <com.android.launcher3.settings.preference.RestartPreference
         android:key="pref_restart"
         android:title="@string/pref_restart_title"
-        android:summary="@string/pref_restart_summary" />
+        android:summary="@string/pref_restart_summary"
+        android:layout="@layout/settings_layout_bottom" />
 
 </androidx.preference.PreferenceScreen>
