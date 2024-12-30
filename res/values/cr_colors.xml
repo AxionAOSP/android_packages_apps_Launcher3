@@ -18,4 +18,5 @@
 
     <!-- Appseat -->
     <color name="appseat_color">@*android:color/system_neutral2_50</color>
+    <color name="op_control_text_color_secondary">#66000000</color>
 </resources>

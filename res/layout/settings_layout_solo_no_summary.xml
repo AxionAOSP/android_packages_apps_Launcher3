@@ -26,74 +26,8 @@
     android:gravity="center_vertical"
     android:background="@drawable/settingslib_round_background"
     android:clipToPadding="false"
-    android:baselineAligned="false">
-
-    <LinearLayout
-        android:id="@+id/icon_frame"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:minWidth="40dp"
-        android:minHeight="40dp"
-        android:gravity="center"
-        android:orientation="horizontal"
-        android:paddingStart="16dp"
-        android:layout_marginEnd="-8dp">
-
-        <androidx.preference.internal.PreferenceImageView
-            android:id="@android:id/icon"
-            android:layout_width="40dp"
-            android:layout_height="40dp"
-            android:scaleType="centerInside"/>
-
-    </LinearLayout>
-
-    <RelativeLayout
-        android:id="@+id/text_frame"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_weight="1"
-        android:paddingTop="16dp"
-        android:paddingBottom="16dp"
-        android:paddingStart="@dimen/homepage_preference_text_padding_start"
-        android:paddingEnd="16dp">
-
-        <TextView
-            android:id="@android:id/title"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_toStartOf="@android:id/widget_frame"
-            android:layout_marginEnd="16dp"
-            android:textAlignment="viewStart"
-            android:singleLine="true"
-            android:textAppearance="?android:attr/textAppearanceListItem"
-            android:layout_centerVertical="true"
-            android:hyphenationFrequency="normalFast"
-            android:lineBreakWordStyle="phrase"
-            android:ellipsize="marquee" />
-
-        <TextView
-            android:id="@android:id/summary"
-            android:layout_width="0dp"
-            android:layout_height="0dp"
-            android:layout_below="@android:id/title"
-            android:layout_marginEnd="16dp"
-            android:layout_alignStart="@android:id/title"
-            android:layout_toStartOf="@android:id/widget_frame"
-            android:textAlignment="viewStart"
-            android:textAppearance="?android:attr/textAppearanceSmall"
-            android:textColor="?androidprv:attr/materialColorOnSurfaceVariant"
-            android:maxLines="4"
-            android:hyphenationFrequency="normalFast"
-            android:lineBreakWordStyle="phrase"
-            style="@style/PreferenceSummaryTextStyle" />
-
-        <LinearLayout
-            android:id="@android:id/widget_frame"
-            android:layout_width="wrap_content"
-            android:layout_height="match_parent"
-            android:layout_alignParentEnd="true"
-            android:layout_centerVertical="true"
-            android:gravity="center_vertical"
-            android:orientation="vertical" />
-    </RelativeLayout>
+    android:baselineAligned="false"
+    android:layout_marginBottom="20dp">
+    <include 
+        layout="@layout/settings_layout_base_no_summary" />
 </LinearLayout>

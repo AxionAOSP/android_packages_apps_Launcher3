@@ -20,6 +20,6 @@
         android:viewportWidth="48.0"
         android:viewportHeight="48.0" >
     <path
-        android:fillColor="?android:attr/colorControlNormal"
+        android:fillColor="@color/widget_accent_color"
         android:pathData="M24 4C12.972 4 4 12.972 4 24s8.972 20 20 20s20 -8.972 20 -20S35.028 4 24 4zM32.5 25.5h-7v7c0 0.829 -0.672 1.5 -1.5 1.5s-1.5 -0.671 -1.5 -1.5v-7h-7c-0.828 0 -1.5 -0.671 -1.5 -1.5s0.672 -1.5 1.5 -1.5h7v-7c0 -0.829 0.672 -1.5 1.5 -1.5s1.5 0.671 1.5 1.5v7h7c0.828 0 1.5 0.671 1.5 1.5S33.328 25.5 32.5 25.5z" />
 </vector>
