@@ -24,7 +24,8 @@
         android:title="@string/pref_themed_icons_title"
         android:summary="@string/pref_themed_icons_summary"
         android:persistent="true"
-        launcher:iconSpaceReserved="false" />
+        launcher:iconSpaceReserved="false"
+        android:layout="@layout/settings_layout_top" />
 
     <SwitchPreferenceCompat
         android:key="pref_force_monochrome_icon"
@@ -32,7 +33,8 @@
         android:summary="@string/force_monochrome_icons_summary"
         android:defaultValue="false"
         android:persistent="true"
-        launcher:iconSpaceReserved="false" />
+        launcher:iconSpaceReserved="false"
+        android:layout="@layout/settings_layout_middle" />
 
     <SwitchPreferenceCompat
         android:key="pref_drawer_search"
@@ -40,7 +42,7 @@
         android:summary="@string/drawer_search_summary"
         android:defaultValue="true"
         launcher:iconSpaceReserved="false"
-        android:layout="@layout/settings_layout_top" />
+        android:layout="@layout/settings_layout_middle" />
 
     <SwitchPreferenceCompat
         android:key="pref_auto_keyboard"
