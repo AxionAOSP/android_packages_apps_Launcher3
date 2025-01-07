@@ -1225,8 +1225,7 @@ public final class Utilities {
         Context appContext = context.getApplicationContext();
         ContextualSearchManager contextualSearchManager = 
             (ContextualSearchManager) appContext.getSystemService(Context.CONTEXTUAL_SEARCH_SERVICE);
-        if (!com.android.internal.util.android.Utils.isPackageInstalled(
-                    appContext, GSA_PACKAGE)
+        if (!isVelvetInstalled(appContext)
                 || contextualSearchManager == null) {
             return false;
         }
@@ -1235,6 +1234,11 @@ public final class Utilities {
             return true;
         } catch (Exception e) {}
         return false;
+    }
+    
+    public static boolean isVelvetInstalled(Context context) {
+        return com.android.internal.util.android.Utils.isPackageInstalled(
+                    context.getApplicationContext(), GSA_PACKAGE);
     }
     
     public static boolean isLongPressSearchEnabled(Context context) {

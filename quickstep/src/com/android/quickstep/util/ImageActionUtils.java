@@ -188,6 +188,44 @@ public class ImageActionUtils {
         });
     }
 
+    @WorkerThread
+    public static boolean startLensSearchActivity(Context context, Bitmap bitmap, Rect crop, String tag) {
+        final boolean[] result = {false};
+        CountDownLatch latch = new CountDownLatch(1);
+        UI_HELPER_EXECUTOR.execute(() -> {
+            if (bitmap == null) {
+                Log.e(tag, "No snapshot available, not starting lens.");
+                latch.countDown();
+                return;
+            }
+            Intent intent = new Intent();
+            Uri uri = getImageUri(bitmap, crop, context, tag);
+            ClipData clipData = new ClipData(new ClipDescription("content", new String[]{"image/png"}), new ClipData.Item(uri));
+            intent.setAction(Intent.ACTION_SEND)
+                    .setComponent(new ComponentName("com.google.android.googlequicksearchbox", 
+                                                    "com.google.android.apps.search.lens.LensShareEntryPointActivity"))
+                    .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_EXCLUDE_FROM_RECENTS | Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                    .setType("image/png")
+                    .putExtra(Intent.EXTRA_STREAM, uri)
+                    .setClipData(clipData);
+            try {
+                context.startActivity(intent);
+                result[0] = true;
+            } catch (Exception e) {
+                Log.e(tag, "Error starting lens activity", e);
+                result[0] = false;
+            } finally {
+                latch.countDown();
+            }
+        });
+        try {
+            latch.await();
+        } catch (InterruptedException e) {
+            Log.e(tag, "Latch interrupted", e);
+        }
+        return result[0];
+    }
+
     /**
      * Starts activity based on given intent created from image uri.
      */

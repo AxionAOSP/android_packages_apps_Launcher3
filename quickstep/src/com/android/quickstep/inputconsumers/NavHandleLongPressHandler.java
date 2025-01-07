@@ -17,6 +17,9 @@
 package com.android.quickstep.inputconsumers;
 
 import android.content.Context;
+import android.os.Handler;
+import android.os.Looper;
+import android.view.ViewConfiguration;
 
 import androidx.annotation.Nullable;
 
@@ -25,6 +28,10 @@ import com.android.launcher3.Utilities;
 import com.android.launcher3.util.ResourceBasedOverride;
 import com.android.launcher3.util.VibratorWrapper;
 import com.android.quickstep.NavHandle;
+import com.android.quickstep.util.ImageActionUtils;
+import com.android.quickstep.TopTaskTracker;
+import com.android.systemui.shared.recents.model.ThumbnailData;
+import com.android.systemui.shared.system.ActivityManagerWrapper;
 
 import java.util.List;
 
@@ -37,11 +44,16 @@ public class NavHandleLongPressHandler implements ResourceBasedOverride {
     private boolean DEBUG = false;
 
     private Context mContext;
+    private ThumbnailData mThumbnailData;
+    private TopTaskTracker mTopTaskTracker;
     private VibratorWrapper mVibratorWrapper;
 
+    private static final Handler mHandler = new Handler(Looper.getMainLooper());
+
     /** Creates NavHandleLongPressHandler as specified by overrides */
-    public NavHandleLongPressHandler(Context context) {
+    public NavHandleLongPressHandler(Context context, TopTaskTracker topTaskTracker) {
         mContext = context.getApplicationContext();
+        mTopTaskTracker = topTaskTracker;
         mVibratorWrapper = VibratorWrapper.INSTANCE.get(mContext);
     }
 
@@ -57,13 +69,35 @@ public class NavHandleLongPressHandler implements ResourceBasedOverride {
      * @param navHandle to handle this long press
      */
     public @Nullable Runnable getLongPressRunnable(NavHandle navHandle) {
-        if (Utilities.isLongPressSearchEnabled(mContext) && 
-            Utilities.startContextualSearch(mContext, 
+        final boolean isCTSEnabled = Utilities.isLongPressSearchEnabled(mContext);
+        return () -> {
+            mHandler.postDelayed(() -> {
+                if (isCTSEnabled) {
+                    handleContextualSearch();
+                } else {
+                    handleLensSearch();
+                }
+            }, isCTSEnabled ? ViewConfiguration.getLongPressTimeout() : 0);
+        };
+    }
+
+    private void handleContextualSearch() {
+        if (Utilities.startContextualSearch(mContext, 
                 android.app.contextualsearch.ContextualSearchManager.ENTRYPOINT_LONG_PRESS_NAV_HANDLE)) {
             mVibratorWrapper.cancelVibrate();
             mVibratorWrapper.vibrateForSearchHint();
         }
-        return null;
+    }
+
+    private void handleLensSearch() {
+        if (!Utilities.isVelvetInstalled(mContext)) return;
+        updateThumbnail();
+        if (mThumbnailData != null && mThumbnailData.getThumbnail() != null) {
+            if (ImageActionUtils.startLensSearchActivity(mContext, mThumbnailData.getThumbnail(), null, TAG)) {
+                mVibratorWrapper.cancelVibrate();
+                mVibratorWrapper.vibrateForSearchHint();
+            }
+        }
     }
 
     /**
@@ -71,7 +105,18 @@ public class NavHandleLongPressHandler implements ResourceBasedOverride {
      *
      * @param navHandle to handle the animation for this touch
      */
-    public void onTouchStarted(NavHandle navHandle) {}
+    public void onTouchStarted(NavHandle navHandle) {
+        updateThumbnail();
+    }
+
+    private void updateThumbnail() {
+        if (Utilities.isLongPressSearchEnabled(mContext)) return;
+        String runningPackage = mTopTaskTracker.getCachedTopTask(
+                /* filterOnlyVisibleRecents */ true).getPackageName();
+        int taskId = mTopTaskTracker.getCachedTopTask(
+                /* filterOnlyVisibleRecents */ true).getTaskId();
+        mThumbnailData = ActivityManagerWrapper.getInstance().takeTaskThumbnail(taskId);
+    }
 
     /**
      * Called when nav handle gesture is finished by the user lifting their finger or the system
@@ -80,5 +125,7 @@ public class NavHandleLongPressHandler implements ResourceBasedOverride {
      * @param navHandle to handle the animation for this touch
      * @param reason why the touch ended
      */
-    public void onTouchFinished(NavHandle navHandle, String reason) {}
+    public void onTouchFinished(NavHandle navHandle, String reason) {
+        mThumbnailData = null;
+    }
 }
