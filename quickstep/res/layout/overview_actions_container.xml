@@ -24,78 +24,103 @@
         android:layout_width="wrap_content"
         android:layout_height="@dimen/overview_actions_height"
         android:layout_gravity="bottom|center_horizontal"
-        android:orientation="horizontal">
+        android:orientation="vertical">
 
-        <Space
-            android:id="@+id/action_screenshot_space"
-            android:layout_width="24dp"
-            android:layout_height="1dp"
-            android:visibility="gone" />
+        <LinearLayout
+            android:id="@+id/clear_all_container"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:layout_gravity="bottom|center_horizontal"
+            android:layout_marginBottom="16dp"
+            android:orientation="horizontal">
 
-        <ImageButton
-            android:id="@+id/action_screenshot"
-            style="@style/OverviewActionButton"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:src="@drawable/ic_screenshot"
-            android:tint="?android:attr/colorAccent"
-            android:background="@drawable/bg_overview_clear_all_button"
-            android:theme="@style/ThemeControlHighlightWorkspaceColor"
-            android:visibility="gone" />
+            <Space
+                android:layout_width="0dp"
+                android:layout_height="1dp"
+                android:layout_weight="1" />
 
-        <Space
-            android:id="@+id/action_split_space"
-            android:layout_width="24dp"
-            android:layout_height="1dp"
-            android:visibility="gone" />
+            <Button
+                android:id="@+id/action_clear_all"
+                style="@style/OverviewActionButton"
+                android:layout_width="150dp"
+                android:layout_height="48dp"
+                android:text="@string/recents_clear_all_title"
+                android:src="@drawable/ic_clear_all"
+                android:tint="?android:attr/colorAccent"
+                android:background="@drawable/bg_overview_clear_all_button"
+                android:theme="@style/ThemeControlHighlightWorkspaceColor"
+                android:visibility="gone" />
 
-        <ImageButton
-            android:id="@+id/action_split"
-            style="@style/OverviewActionButton"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:theme="@style/ThemeControlHighlightWorkspaceColor"
-            android:visibility="gone" />
+            <Space
+                android:layout_width="0dp"
+                android:layout_height="1dp"
+                android:layout_weight="1" />
 
-        <Space
-            android:id="@+id/action_clear_all_space"
-            android:layout_width="24dp"
-            android:layout_height="1dp"
-            android:visibility="gone" />
+        </LinearLayout>
 
-        <ImageButton
-            android:id="@+id/action_clear_all"
-            style="@style/OverviewActionButton"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:src="@drawable/ic_clear_all"
-            android:tint="?android:attr/colorAccent"
-            android:background="@drawable/bg_overview_clear_all_button"
-            android:theme="@style/ThemeControlHighlightWorkspaceColor"
-            android:visibility="gone" />
+        <LinearLayout
+        	android:id="@+id/second_overview_actions_container"
+            android:layout_width="match_parent"
+            android:layout_height="60dp"
+            android:layout_gravity="bottom|center_horizontal"
+            android:layout_marginBottom="16dp"
+            android:orientation="horizontal">
 
-        <Space
-            android:id="@+id/action_lens_space"
-            android:layout_width="24dp"
-            android:layout_height="1dp"
-            android:visibility="gone" />
+            <Space
+                android:id="@+id/action_screenshot_space"
+                android:layout_width="24dp"
+                android:layout_height="1dp"
+                android:visibility="gone" />
 
-        <ImageButton
-            android:id="@+id/action_lens"
-            style="@style/OverviewActionButton"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:src="@drawable/ic_share"
-            android:tint="?android:attr/colorAccent"
-            android:background="@drawable/bg_overview_clear_all_button"
-            android:theme="@style/ThemeControlHighlightWorkspaceColor"
-            android:visibility="gone" />
+            <ImageButton
+                android:id="@+id/action_screenshot"
+                style="@style/OverviewActionButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:src="@drawable/ic_screenshot"
+                android:tint="?android:attr/colorAccent"
+                android:background="@drawable/bg_overview_clear_all_button"
+                android:theme="@style/ThemeControlHighlightWorkspaceColor"
+                android:visibility="gone" />
 
-        <Space
-            android:id="@+id/end_space"
-            android:layout_width="24dp"
-            android:layout_height="1dp" />
+            <Space
+                android:id="@+id/action_split_space"
+                android:layout_width="24dp"
+                android:layout_height="1dp"
+                android:visibility="gone" />
 
+            <ImageButton
+                android:id="@+id/action_split"
+                style="@style/OverviewActionButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:theme="@style/ThemeControlHighlightWorkspaceColor"
+                android:visibility="gone" />
+
+            <Space
+                android:id="@+id/action_lens_space"
+                android:layout_width="24dp"
+                android:layout_height="1dp"
+                android:visibility="gone" />
+
+            <ImageButton
+                android:id="@+id/action_lens"
+                style="@style/OverviewActionButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:src="@drawable/ic_share"
+                android:tint="?android:attr/colorAccent"
+                android:background="@drawable/bg_overview_clear_all_button"
+                android:theme="@style/ThemeControlHighlightWorkspaceColor"
+                android:visibility="gone" />
+
+            <Space
+                android:id="@+id/end_space"
+                android:layout_width="24dp"
+                android:layout_height="1dp" />
+
+        </LinearLayout>
+        
     </LinearLayout>
 
     <!-- Currently, the only "group action button" is this save app pair button. If more are added,
@@ -110,5 +135,5 @@
         android:theme="@style/ThemeControlHighlightWorkspaceColor"
         android:layout_gravity="bottom|center_horizontal"
         android:visibility="gone" />
-
+            
 </com.android.quickstep.views.OverviewActionsView>
