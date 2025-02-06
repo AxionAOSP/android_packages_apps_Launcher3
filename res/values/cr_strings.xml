@@ -17,13 +17,13 @@
 <resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
 
     <!-- Application name -->
-    <string name="risingOS_app_name" translatable="false">Ortus Launcher</string>
+    <string name="AxionOS_app_name" translatable="false">Axion Launcher</string>
 
     <!-- Folder titles -->
     <string name="google_folder_title" translatable="false">Google</string>
 
     <!-- General -->
-    <string name="settings_title">Ortus settings</string>
+    <string name="settings_title">Axion launcher settings</string>
 
     <!-- Categories -->
     <string name="home_category_title">Home screen</string>
@@ -37,7 +37,7 @@
     <string name="misc_category_title">Misc</string>
     <string name="misc_category_summary">Other options</string>
     <string name="about_category_title">About</string>
-    <string name="about_category_summary">About ortus launcher</string>
+    <string name="about_category_summary">About Axion launcher</string>
     <string name="general_category_title">General</string>
     <string name="interface_category_title">Interface</string>
     <string name="quickspace_category_title">Quickspace</string>
@@ -221,8 +221,8 @@
     <string name="quickspace_date_format_minimalistic" translatable="false">EEEE, MMMM d</string>
 
     <!-- QuickSpace: QuickEvent: Device Intro Event -->
-    <string name="quick_event_rom_intro_welcome">Welcome to risingOS!</string>
-    <string name="quick_event_rom_intro_welcome_ext">risingOS time!</string>
+    <string name="quick_event_rom_intro_welcome">Welcome to AxionOS!</string>
+    <string name="quick_event_rom_intro_welcome_ext">AxionOS time!</string>
     <string-array name="welcome_message_variants">
         <item>Thank you for choosing us</item>
         <item>Loving us? Send us a beer</item>
@@ -369,12 +369,12 @@
         <item>Oh hey, what\'s up?</item>
         <item>Focus on your tasks</item>
         <item>How many screenshots do you take?</item>
-        <item>Open goodness with risingOS</item>
+        <item>Open goodness with AxionOS</item>
         <item>Spread love, not havoc</item>
         <item>We didn\'t start the fire!</item>
         <item>Time for some good music</item>
         <item>\u003C\u003C\u003C\u003C\u003C\u003C\u003C HEAD</item>
-        <item>You need risingOS Premium to see this</item>
+        <item>You need AxionOS Premium to see this</item>
         <item>Remember the Lineage of the Unicorn</item>
         <item>Enjoy Xtended battery life</item>
         <item>Starting from the ground zero</item>
@@ -469,6 +469,6 @@
     <!-- About -->
     <string name="about_launcher_version">3.0.0</string>
     <string name="about_credits_title">Built upon contributions from</string>
-    <string name="about_version_title">Ortus version</string>
-    <string name="about_version_developer">risingOS Team</string>
+    <string name="about_version_title">Axion Launcher version</string>
+    <string name="about_version_developer">AxionOS Team</string>
 </resources>
