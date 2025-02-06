@@ -45,10 +45,9 @@
                 android:layout_width="150dp"
                 android:layout_height="48dp"
                 android:text="@string/recents_clear_all_title"
-                android:src="@drawable/ic_clear_all"
                 android:tint="?android:attr/colorAccent"
+                android:textColor="?android:attr/colorAccent"
                 android:background="@drawable/bg_overview_clear_all_button"
-                android:theme="@style/ThemeControlHighlightWorkspaceColor"
                 android:visibility="gone" />
 
             <Space
