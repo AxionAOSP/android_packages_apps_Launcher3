@@ -42,16 +42,6 @@
         android:title="@string/trust_apps_manager_name"
         android:layout="@layout/settings_layout_middle_no_summary" />
 
-     <com.android.launcher3.settings.preferences.CustomSeekBarPreference
-        android:key="pref_blur_depth"
-        android:title="@string/background_blur_title"
-        android:summary="@string/background_blur_summary"
-        android:persistent="true"
-        android:max="175"
-        android:min="0"
-        settings:units="px"
-        android:defaultValue="23" />
-
     <androidx.preference.PreferenceScreen
         android:persistent="false"
         android:layout="@layout/settings_layout_middle"
