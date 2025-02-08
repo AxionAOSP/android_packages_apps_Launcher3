@@ -21,4 +21,7 @@
     <!-- Rising -->
     <color name="op_control_text_color_secondary">#66000000</color>
     <color name="rising_color">#1C1C1C</color>
+    
+    <color name="primaryBackground">#ffffffff</color>
+    <color name="primaryForeground">#ff000000</color>
 </resources>

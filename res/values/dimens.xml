@@ -563,4 +563,6 @@
 
     <!-- WindowManagerProxy -->
     <dimen name="max_width_and_height_of_small_display_cutout">136px</dimen>
+    
+    <dimen name="theme_icon_size">24.0dip</dimen>
 </resources>
