@@ -96,6 +96,9 @@ public class MemInfoView extends TextView implements Insettable {
     private MemInfoReader mMemInfoReader;
 
     private Context mContext;
+    
+    private int mCurrentTextColor;
+    private String mCurrentText = "";
 
     String mTotalResult;
 
@@ -118,7 +121,7 @@ public class MemInfoView extends TextView implements Insettable {
 
         mMemInfoText = context.getResources().getString(R.string.meminfo_text);
         setListener(context);
-        setTextColor(0xFFFFFFFF);
+        updateTextColor();
     }
 
     @Override
@@ -278,6 +281,22 @@ public class MemInfoView extends TextView implements Insettable {
         }
     }
 
+    private void updateTextColor() {
+        int nightModeFlags = getResources().getConfiguration().uiMode & Configuration.UI_MODE_NIGHT_MASK;
+        int color = (nightModeFlags == Configuration.UI_MODE_NIGHT_YES) ? 0xFFFFFFFF : 0xFF000000;
+        if (mCurrentTextColor != color) {
+            mCurrentTextColor = color;
+            ThreadUtils.postOnMainThread(() -> setTextColor(color));
+        }
+    }
+
+    private void updateDisplayedText(String text) {
+        if (!text.equals(mCurrentText)) {
+            mCurrentText = text;
+            ThreadUtils.postOnMainThread(() -> setText(text));
+        }
+    }
+
     private static class MemoryWorker implements Runnable {
         private final WeakReference<MemInfoView> viewRef;
 
@@ -307,7 +326,8 @@ public class MemInfoView extends TextView implements Insettable {
                 text = String.format(Locale.getDefault(), view.mMemInfoText, availResult, view.mTotalResult);
             }
 
-            ThreadUtils.postOnMainThread(() -> view.setText(text));
+            view.updateDisplayedText(text);
+            view.updateTextColor();
 
             if (view.mHandler != null) {
                 view.mHandler.postDelayed(this, 1000);
