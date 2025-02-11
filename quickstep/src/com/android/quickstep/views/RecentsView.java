@@ -2901,10 +2901,6 @@ public abstract class RecentsView<
         animateActionsViewIn();
 
         mCurrentGestureEndTarget = null;
-
-        switchToScreenshot(
-            () -> finishRecentsAnimation(true /* toRecents */, false /* shouldPip */,
-                    null));
     }
 
     /**
