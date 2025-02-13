@@ -37,6 +37,14 @@
         android:layout="@layout/settings_layout_middle" />
 
     <SwitchPreferenceCompat
+        android:key="pref_show_qsb_apps_bg"
+        android:title="@string/show_qsb_apps_bg_title"
+        android:summary="@string/show_qsb_apps_bg_summary"
+        android:defaultValue="true"
+        launcher:iconSpaceReserved="false"
+        android:layout="@layout/settings_layout_middle" />
+
+    <SwitchPreferenceCompat
         android:key="pref_drawer_search"
         android:title="@string/drawer_search_title"
         android:summary="@string/drawer_search_summary"

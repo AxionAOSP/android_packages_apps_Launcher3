@@ -159,7 +159,8 @@ public class AppsSearchContainerLayout extends ExtendedEditText
         PaintDrawable pd = new PaintDrawable(color);
         pd.setCornerRadius(cornerRadius);
         setClipToOutline(cornerRadius > 0);
-        setBackground(pd);
+        boolean showAppsSearchBarBg = Utilities.showAppsQsbBg(getContext());
+        setBackground(showAppsSearchBarBg ? pd : null);
     }
 
     private float getCornerRadius(Context context) {

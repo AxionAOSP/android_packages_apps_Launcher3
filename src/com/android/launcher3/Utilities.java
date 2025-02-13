@@ -208,6 +208,7 @@ public final class Utilities {
     public static final String KEY_DRAWER_SCROLLBAR = "pref_drawer_scrollbar";
     public static final String KEY_FORCE_MONOCHROME_ICON = "pref_force_monochrome_icon";
     public static final String KEY_AUTO_KEYABORD = "pref_auto_keyboard";
+    public static final String KEY_SHOW_QSB_APPS_BG = "pref_show_qsb_apps_bg";
 
     /**
      * Returns true if theme is dark.
@@ -1243,5 +1244,10 @@ public final class Utilities {
     public static boolean isLongPressSearchEnabled(Context context) {
         return Settings.Secure.getInt(
             context.getApplicationContext().getContentResolver(), "search_press_hold_nav_handle_enabled", 1) == 1;
+    }
+    
+    public static boolean showAppsQsbBg(Context context) {
+        SharedPreferences prefs = LauncherPrefs.getPrefs(context.getApplicationContext());
+        return prefs.getBoolean(KEY_SHOW_QSB_APPS_BG, true);
     }
 }

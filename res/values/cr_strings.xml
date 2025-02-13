@@ -471,4 +471,8 @@
     <string name="about_credits_title">Built upon contributions from</string>
     <string name="about_version_title">Axion Launcher version</string>
     <string name="about_version_developer">AxionOS Team</string>
+    
+    <!-- App QSB BG -->
+    <string name="show_qsb_apps_bg_title">Search bar background</string>
+    <string name="show_qsb_apps_bg_summary">Show search bar background</string>
 </resources>
