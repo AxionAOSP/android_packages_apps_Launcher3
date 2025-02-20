@@ -469,7 +469,7 @@
     <!-- About -->
     <string name="about_launcher_version">3.0.0</string>
     <string name="about_credits_title">Built upon contributions from</string>
-    <string name="about_version_title">Axion Launcher version</string>
+    <string name="about_version_title">Axion Launcher</string>
     <string name="about_version_developer">AxionOS Team</string>
     
     <!-- App QSB BG -->

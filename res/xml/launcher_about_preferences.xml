@@ -32,6 +32,17 @@
 
         <Preference
             android:key="launchercontributor"
+            android:title="risingOS"
+            android:persistent="false"
+            android:selectable="true"
+            android:layout="@layout/settings_layout_middle">
+            <intent
+               android:action="android.intent.action.VIEW"
+               android:data="https://github.com/risingOS" />
+        </Preference>
+
+        <Preference
+            android:key="launchercontributor"
             android:title="Amir Zaidi (Shade Launcher)"
             android:persistent="false"
             android:selectable="true"

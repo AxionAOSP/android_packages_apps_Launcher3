@@ -1,5 +1,6 @@
 /*
  * Copyright (C) 2023-2024 The risingOS Android Project
+ *                    2025 The AxionAOSP Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,8 +19,7 @@ package com.android.launcher3.utils
 
 import android.app.WallpaperManager
 import android.content.Context
-import android.graphics.RenderEffect
-import android.graphics.Shader
+import android.graphics.*
 import android.graphics.drawable.Drawable
 import android.os.Handler
 import android.os.Looper
@@ -37,6 +37,7 @@ open class WallpaperView @JvmOverloads constructor(
     private val handler = Handler(Looper.getMainLooper())
     private var currentWallpaperDrawable: Drawable? = null
     private var isBlurred: Boolean = false
+    private var dimLevel: Int = 0
 
     private val wallpaperChecker = object : Runnable {
         override fun run() {
@@ -48,6 +49,7 @@ open class WallpaperView @JvmOverloads constructor(
     init {
         context.theme.obtainStyledAttributes(attrs, R.styleable.WallpaperView, 0, 0).use {
             isBlurred = it.getBoolean(R.styleable.WallpaperView_blurred, false)
+            dimLevel = it.getInt(R.styleable.WallpaperView_dimLevel, 0).coerceIn(0, 100)
         }
         setWallpaperPreview()
         handler.postDelayed(wallpaperChecker, 2000)
@@ -62,6 +64,7 @@ open class WallpaperView @JvmOverloads constructor(
             wallpaperDrawable?.let {
                 setImageDrawable(it)
                 applyBlurEffect()
+                applyDimEffect()
             }
         }
     }
@@ -77,6 +80,16 @@ open class WallpaperView @JvmOverloads constructor(
         } else {
             setRenderEffect(null)
         }
+    }
+
+    private fun applyDimEffect() {
+        val brightness = 1.0f - (dimLevel / 100f)
+
+        val colorMatrix = ColorMatrix().apply {
+            setScale(brightness, brightness, brightness, 1.0f)
+        }
+
+        colorFilter = ColorMatrixColorFilter(colorMatrix)
     }
 
     override fun onDetachedFromWindow() {
