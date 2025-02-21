@@ -79,7 +79,6 @@
                 android:src="@drawable/ic_screenshot"
                 android:tint="?android:attr/colorAccent"
                 android:background="@drawable/bg_overview_clear_all_button"
-                android:theme="@style/ThemeControlHighlightWorkspaceColor"
                 android:visibility="gone" />
 
             <Space
@@ -93,7 +92,8 @@
                 style="@style/OverviewActionButton"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:theme="@style/ThemeControlHighlightWorkspaceColor"
+                android:tint="?android:attr/colorAccent"
+                android:background="@drawable/bg_overview_clear_all_button"
                 android:visibility="gone" />
 
             <Space
@@ -110,7 +110,6 @@
                 android:src="@drawable/ic_share"
                 android:tint="?android:attr/colorAccent"
                 android:background="@drawable/bg_overview_clear_all_button"
-                android:theme="@style/ThemeControlHighlightWorkspaceColor"
                 android:visibility="gone" />
 
             <Space
@@ -131,7 +130,6 @@
         android:layout_height="wrap_content"
         android:tint="?android:attr/colorAccent"
         android:background="@drawable/bg_overview_clear_all_button"
-        android:theme="@style/ThemeControlHighlightWorkspaceColor"
         android:layout_gravity="bottom|center_horizontal"
         android:visibility="gone" />
             
