@@ -267,4 +267,9 @@
     
     <!-- Preference default value -->
     <string name="pref_value_default">Default</string>
+    
+    <!-- Categories -->
+    <string name="app_drawer_title">App drawer</string>
+    <string name="general_settings_title">General settings</string>
+    <string name="home_settings_title">Home Settings</string>
 </resources>
