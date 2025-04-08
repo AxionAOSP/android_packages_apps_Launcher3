@@ -15,7 +15,8 @@
 -->
 <resources>
     <!-- Application name -->
-    <string name="lineageos_app_name" translatable="false">Trebuchet</string>
+    <string name="lineageos_app_name" translatable="false">Pulse</string>
+    <string name="pulse_settings">Pulse settings</string>
 
     <!-- Settings -->
 
