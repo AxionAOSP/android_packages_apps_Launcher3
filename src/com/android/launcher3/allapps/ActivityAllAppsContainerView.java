@@ -315,7 +315,7 @@ public class ActivityAllAppsContainerView<T extends Context & ActivityContext>
                 0,
                 0 // Bottom left
         };
-        mBottomSheetBackgroundColor = getContext().getColor(R.color.materialColorSurfaceDim);
+        mBottomSheetBackgroundColor = mScrimColor;
         updateBackgroundVisibility(mActivityContext.getDeviceProfile());
         mSearchUiManager.initializeSearch(this);
     }
