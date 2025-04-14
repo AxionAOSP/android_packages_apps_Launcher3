@@ -5434,6 +5434,9 @@ public abstract class RecentsView<
                 .addScrimBehindAnim(pendingAnimation, mContainer, getContext());
         FloatingTaskView firstFloatingTaskView =
                 mSplitSelectStateController.getFirstFloatingTaskView();
+        if (firstFloatingTaskView == null) {
+            return false;
+        }
         firstFloatingTaskView.getBoundsOnScreen(firstTaskStartingBounds);
         firstFloatingTaskView.addConfirmAnimation(pendingAnimation,
                 new RectF(firstTaskStartingBounds), firstTaskEndingBounds,
