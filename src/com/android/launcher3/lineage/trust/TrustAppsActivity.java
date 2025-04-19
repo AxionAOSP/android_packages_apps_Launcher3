@@ -49,6 +49,7 @@ import com.android.launcher3.lineage.LineageUtils;
 import com.android.launcher3.lineage.trust.db.TrustComponent;
 import com.android.launcher3.lineage.trust.db.TrustDatabaseHelper;
 
+import java.util.Arrays;
 import java.util.List;
 
 public class TrustAppsActivity extends Activity implements
@@ -91,8 +92,11 @@ public class TrustAppsActivity extends Activity implements
 
         showOnBoarding(false);
 
+        List<String> appLockAllowedSystemApps = Arrays.asList(getResources().getStringArray(
+                com.android.internal.R.array.config_appLockAllowedSystemApps));
+
         final AppFilter appFilter = new AppFilter(this);
-        new LoadTrustComponentsTask(mDbHelper, getPackageManager(), appFilter, this).execute();
+        new LoadTrustComponentsTask(mDbHelper, getPackageManager(), appFilter, appLockAllowedSystemApps, this).execute();
     }
 
     @Override

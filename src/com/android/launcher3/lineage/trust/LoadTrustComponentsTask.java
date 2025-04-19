@@ -44,14 +44,18 @@ public class LoadTrustComponentsTask extends AsyncTask<Void, Integer, List<Trust
 
     @NonNull
     private Callback mCallback;
+    
+    private List<String> mSystemAppsWhitelist;
 
     LoadTrustComponentsTask(@NonNull TrustDatabaseHelper dbHelper,
             @NonNull PackageManager packageManager,
             @NonNull AppFilter appFilter,
+            @NonNull List<String> systemAppsWhitelist,
             @NonNull Callback callback) {
         mDbHelper = dbHelper;
         mPackageManager = packageManager;
         mAppFilter = appFilter;
+        mSystemAppsWhitelist = systemAppsWhitelist;
         mCallback = callback;
     }
 
@@ -68,13 +72,19 @@ public class LoadTrustComponentsTask extends AsyncTask<Void, Integer, List<Trust
         int numPackages = apps.size();
         for (int i = 0; i < numPackages; i++) {
             ResolveInfo app = apps.get(i);
+            String pkgName = app.activityInfo.packageName;
 
-            if (!mAppFilter.shouldShowApp(app.activityInfo.getComponentName())) {
+            boolean isFilteredOut = !mAppFilter.shouldShowApp(app.activityInfo.getComponentName());
+            boolean isNotLaunchable = mPackageManager.getLaunchIntentForPackage(pkgName) == null;
+            boolean isSystemApp = app.activityInfo.applicationInfo.isSystemApp();
+            boolean isNotWhitelisted = !mSystemAppsWhitelist.contains(pkgName);
+            boolean shouldSkip = isFilteredOut || isNotLaunchable || (isSystemApp && isNotWhitelisted);
+
+            if (shouldSkip) {
                 continue;
             }
 
             try {
-                String pkgName = app.activityInfo.packageName;
                 String label = mPackageManager.getApplicationLabel(
                         mPackageManager.getApplicationInfo(pkgName,
                                 PackageManager.GET_META_DATA)).toString();
