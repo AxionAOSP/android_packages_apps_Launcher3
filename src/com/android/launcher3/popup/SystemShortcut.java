@@ -80,6 +80,10 @@ public abstract class SystemShortcut<T extends ActivityContext> extends ItemInfo
     protected final T mTarget;
     protected final ItemInfo mItemInfo;
     protected final View mOriginalView;
+    private boolean mIsLockAppShortcut = false;
+    private boolean mIsLocked = false;
+    private View mIconView = null;
+    private TextView mLabelView = null;
 
     private final AbstractFloatingViewHelper mAbstractFloatingViewHelper;
 
@@ -101,8 +105,36 @@ public abstract class SystemShortcut<T extends ActivityContext> extends ItemInfo
     }
 
     public void setIconAndLabelFor(View iconView, TextView labelView) {
-        iconView.setBackgroundResource(mIconResId);
-        labelView.setText(mLabelResId);
+        if (mIsLockAppShortcut) {
+            mIconView = iconView;
+            mLabelView = labelView;
+        } else {
+            iconView.setBackgroundResource(mIconResId);
+            labelView.setText(mLabelResId);
+        }
+    }
+    
+    public void setLockAppShortcut(boolean isLockAppShortcut, boolean isLocked) {
+        mIsLockAppShortcut = isLockAppShortcut;
+        mIsLocked = isLocked;
+    }
+    
+    public boolean isLockShortcut() {
+        return mIsLockAppShortcut;
+    }
+    
+    public boolean isLocked() {
+        return mIsLocked;
+    }
+
+    public void setIcon(int res) {
+        if (mIconView == null) return;
+        mIconView.setBackgroundResource(res);
+    }
+    
+    public void setLabel(int res) {
+        if (mLabelView == null) return;
+        mLabelView.setText(res);
     }
 
     public void setIconAndContentDescriptionFor(ImageView view) {

@@ -93,6 +93,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.LocusId;
 import android.content.res.Configuration;
+import android.database.ContentObserver;
 import android.graphics.Bitmap;
 import android.graphics.BlendMode;
 import android.graphics.Canvas;
@@ -340,6 +341,13 @@ public abstract class RecentsView<
                     return recentsView.mRunningTaskAttachAlpha;
                 }
             };
+
+    private final ContentObserver recentsLockedTasksObserver = new ContentObserver(null) {
+        @Override
+        public void onChange(boolean selfChange) {
+            updateLockIcon();
+        }
+    };
 
     public static final int SCROLL_VIBRATION_PRIMITIVE =
             VibrationEffect.Composition.PRIMITIVE_LOW_TICK;
@@ -812,8 +820,6 @@ public abstract class RecentsView<
     @Nullable
     private DesktopRecentsTransitionController mDesktopRecentsTransitionController;
  
-    List<String> mLockedTasks = new ArrayList<>();
- 
     private ImageButton mLockButtonView;
  
     private String mStartPkg, mEndPkg;
@@ -942,15 +948,6 @@ public abstract class RecentsView<
         // Initialize quickstep specific cache params here, as this is constructed only once
         mContainer.getViewCache().setCacheSize(R.layout.digital_wellbeing_toast, 5);
 
-        String lockedTasks = Settings.System.getStringForUser(
-                     context.getContentResolver(),
-                     "recents_locked_tasks",
-                     UserHandle.USER_CURRENT);
- 
-        if (mLockedTasks.size() == 0 && lockedTasks != null && !lockedTasks.isEmpty()) {
-            mLockedTasks = new ArrayList<String>(Arrays.asList(lockedTasks.split(",")));
-        }
-
         mTintingColor = getForegroundScrimDimColor(context);
 
         mScrollScale = getResources().getFloat(R.dimen.overview_scroll_scale);
@@ -983,6 +980,42 @@ public abstract class RecentsView<
         }
         // make sure filter is turned off by default
         mFilterState.setFilterBy(null);
+    }
+    
+    private List<String> getLockedTasks() {
+        String lockedTasks = Settings.System.getStringForUser(
+                getContext().getContentResolver(),
+                "recents_locked_tasks",
+                UserHandle.USER_CURRENT);
+
+        if (lockedTasks != null && !lockedTasks.isEmpty()) {
+            return new ArrayList<>(Arrays.asList(lockedTasks.split(",")));
+        } else {
+            return new ArrayList<>();
+        }
+    }
+
+    private void updateLockedTask(String packageName, boolean add) {
+        List<String> taskList = getLockedTasks();
+        boolean modified = false;
+        if (add) {
+            if (!taskList.contains(packageName)) {
+                taskList.add(packageName);
+                modified = true;
+            }
+        } else {
+            if (taskList.remove(packageName)) {
+                modified = true;
+            }
+        }
+        if (modified) {
+            String updatedTasks = String.join(",", taskList);
+            Settings.System.putStringForUser(
+                    getContext().getContentResolver(),
+                    "recents_locked_tasks",
+                    updatedTasks,
+                    UserHandle.USER_CURRENT);
+        }
     }
 
     /** Get the state of the filter */
@@ -1233,6 +1266,12 @@ public abstract class RecentsView<
         if (enableRefactorTaskThumbnail()) {
             mHelper.onAttachedToWindow();
         }
+        getContext().getContentResolver().registerContentObserver(
+            Settings.System.getUriFor("recents_locked_tasks"),
+            false,
+            recentsLockedTasksObserver,
+            UserHandle.USER_CURRENT
+        );
     }
 
     @Override
@@ -1259,6 +1298,7 @@ public abstract class RecentsView<
         if (enableRefactorTaskThumbnail()) {
             mHelper.onDetachedFromWindow();
         }
+        getContext().getContentResolver().unregisterContentObserver(recentsLockedTasksObserver);
     }
 
     @Override
@@ -1646,7 +1686,7 @@ public abstract class RecentsView<
         if (getCurrentPageTaskView() != null) {
             mEndPkg = getCurrentPageTaskView().getFirstTask().key.getPackageName();
         }
-        if (mLockedTasks.contains(mStartPkg) != mLockedTasks.contains(mEndPkg)) {
+        if (getLockedTasks().contains(mStartPkg) != getLockedTasks().contains(mEndPkg)) {
             updateLockIcon();
         }
         ActiveGestureProtoLogProxy.logOnPageEndTransition(getNextPage());
@@ -2105,7 +2145,7 @@ public abstract class RecentsView<
                 // only Task is one with excludeFromRecents, in which case we should not remove it.
                 continue;
             }
-            if (mLockedTasks.contains(taskView.getFirstTask().key.getPackageName())) continue;
+            if (getLockedTasks().contains(taskView.getFirstTask().key.getPackageName())) continue;
             removeView(taskView);
         }
         if (getTaskViewCount() == 0 && indexOfChild(mClearAllButton) != -1) {
@@ -3682,7 +3722,7 @@ public abstract class RecentsView<
             @Nullable TaskView dismissedTaskView,
             boolean animateTaskView, boolean shouldRemoveTask, long duration,
             boolean dismissingForSplitSelection) {
-        boolean isTaskLocked = mLockedTasks.contains(dismissedTaskView.getFirstTask().key.getPackageName());
+        boolean isTaskLocked = getLockedTasks().contains(dismissedTaskView.getFirstTask().key.getPackageName());
         if (isTaskLocked) return;
         if (mPendingAnimation != null) {
             mPendingAnimation.createPlaybackController().dispatchOnCancel().dispatchOnEnd();
@@ -4507,7 +4547,7 @@ public abstract class RecentsView<
         PendingAnimation anim = new PendingAnimation(duration);
 
         for (TaskView taskView : getTaskViews()) {
-            if (mLockedTasks.contains(taskView.getFirstTask().key.getPackageName())) continue;
+            if (getLockedTasks().contains(taskView.getFirstTask().key.getPackageName())) continue;
             addDismissedTaskAnimations(taskView, duration, anim);
         }
 
@@ -4622,16 +4662,13 @@ public abstract class RecentsView<
         if (taskView != null) {
             Task t = taskView.getFirstTask();
             String pkg = t.key.getPackageName();
-            if (mLockedTasks.contains(pkg)) {
-                mLockedTasks.remove(pkg);
+            if (getLockedTasks().contains(pkg)) {
+                updateLockedTask(pkg, false);
             } else {
-                mLockedTasks.add(pkg);
+                updateLockedTask(pkg, true);
             }
             updateLockIcon(pkg);
         }
-        Settings.System.putStringForUser(getContext().getContentResolver(),
-        "recents_locked_tasks", String.join(",", mLockedTasks),
-                UserHandle.USER_CURRENT);
     }
 
     private void updateLockIcon() {
@@ -4640,8 +4677,10 @@ public abstract class RecentsView<
     }
 
     private void updateLockIcon(String pkg) {
-        boolean isLocked = mLockedTasks.contains(pkg);
-        mLockButtonView.setImageResource(isLocked ? R.drawable.recents_locked : R.drawable.recents_unlocked);
+        boolean isLocked = getLockedTasks().contains(pkg);
+        if (mLockButtonView != null) {
+            mLockButtonView.setImageResource(isLocked ? R.drawable.recents_locked : R.drawable.recents_unlocked);
+        }
     }
 
     @Override

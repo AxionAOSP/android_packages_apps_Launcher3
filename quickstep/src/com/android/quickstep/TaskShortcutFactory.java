@@ -636,47 +636,75 @@ public interface TaskShortcutFactory {
         private static final String TAG = "LockAppSystemShortcut";
         private final Task mTask;
         private final String mPackageName;
-        List<String> mLockedTasks = new ArrayList<>();
-        private String mStartPkg, mEndPkg;
         private Context mContext;
 
         public LockAppSystemShortcut(Context context, RecentsViewContainer target, TaskContainer taskContainer, String packageName) {
-            super(R.drawable.recents_locked, R.string.action_lock,
+            super(R.drawable.recents_locked, R.string.action_locked,
                     target, taskContainer.getItemInfo(), taskContainer.getTaskView());
+
+            mContext = context;
             mTask = taskContainer.getTask();
             mPackageName = packageName;
-            mContext = context;
-
-            String lockedTasks = Settings.System.getStringForUser(
-                    mContext.getContentResolver(),
-                    "recents_locked_tasks",
-                    UserHandle.USER_CURRENT);
-
-            if (mLockedTasks.size() == 0 && lockedTasks != null && !lockedTasks.isEmpty()) {
-                mLockedTasks = new ArrayList<String>(Arrays.asList(lockedTasks.split(",")));
-            }
+            setLockAppShortcut(true, getLockedTasks().contains(packageName));
         }
 
         @Override
         public void onClick(View view) {
             if (mPackageName != null) {
                 if (mTask != null) {
-                    if (mLockedTasks.contains(mPackageName)) {
-                        mLockedTasks.remove(mPackageName);
+                    if (getLockedTasks().contains(mPackageName)) {
+                        updateLockedTask(mPackageName, false);
                         Toast unlockApp = Toast.makeText(mContext, R.string.unlock_app,
                             Toast.LENGTH_SHORT);
                         unlockApp.show();
+                        setIcon(R.drawable.recents_locked);
+                        setLabel(R.string.action_locked);
                     } else {
-                        mLockedTasks.add(mPackageName);
+                        updateLockedTask(mPackageName, true);
                         Toast lockApp = Toast.makeText(mContext, R.string.lock_app,
                             Toast.LENGTH_SHORT);
                         lockApp.show();
+                        setIcon(R.drawable.recents_unlocked);
+                        setLabel(R.string.action_unlocked);
                     }
                 }
             }
-           Settings.System.putStringForUser(mContext.getContentResolver(),
-           "recents_locked_tasks", String.join(",", mLockedTasks),
-                UserHandle.USER_CURRENT);
+        }
+        
+        private List<String> getLockedTasks() {
+            String lockedTasks = Settings.System.getStringForUser(
+                    mContext.getContentResolver(),
+                    "recents_locked_tasks",
+                    UserHandle.USER_CURRENT);
+
+            if (lockedTasks != null && !lockedTasks.isEmpty()) {
+                return new ArrayList<>(Arrays.asList(lockedTasks.split(",")));
+            } else {
+                return new ArrayList<>();
+            }
+        }
+
+        private void updateLockedTask(String packageName, boolean add) {
+            List<String> taskList = getLockedTasks();
+            boolean modified = false;
+            if (add) {
+                if (!taskList.contains(packageName)) {
+                    taskList.add(packageName);
+                    modified = true;
+                }
+            } else {
+                if (taskList.remove(packageName)) {
+                    modified = true;
+                }
+            }
+            if (modified) {
+                String updatedTasks = String.join(",", taskList);
+                Settings.System.putStringForUser(
+                        mContext.getContentResolver(),
+                        "recents_locked_tasks",
+                        updatedTasks,
+                        UserHandle.USER_CURRENT);
+            }
         }
     }
 }
