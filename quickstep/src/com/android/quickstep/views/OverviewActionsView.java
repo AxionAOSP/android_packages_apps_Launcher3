@@ -380,18 +380,17 @@ public class OverviewActionsView<T extends OverlayUICallbacks> extends FrameLayo
                 actionParams.rightMargin, getBottomMargin());
     }
 
-    private int getBottomMargin() {
-        if (mDp == null) {
-            return 0;
+    private int getBottomMargin() {    
+        if (com.android.launcher3.Utilities.isTaskbarEnabled(getContext())) {
+            return getContext().getResources().getDimensionPixelSize(
+                R.dimen.overview_action_bottom_margin_taskbar);
         }
 
-        if (mDp.isTablet && Flags.enableGridOnlyOverview()) {
+        if (mDp != null && mDp.isTablet && Flags.enableGridOnlyOverview()) {
             return mDp.stashedTaskbarHeight;
         }
 
-        // Align to bottom of task Rect.
-        return mDp.heightPx - mTaskSize.bottom - mDp.overviewActionsTopMarginPx
-                - mDp.overviewActionsHeight;
+        return getContext().getResources().getDimensionPixelSize(R.dimen.overview_action_bottom_margin);
     }
 
     /**

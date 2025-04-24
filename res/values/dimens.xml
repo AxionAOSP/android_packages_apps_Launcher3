@@ -590,4 +590,6 @@
     
     <!-- Overview scrolling scale animation -->
     <dimen name="overview_scroll_scale">0.9</dimen>
+    <dimen name="overview_action_bottom_margin">52dp</dimen>
+    <dimen name="overview_action_bottom_margin_taskbar">100dp</dimen>
 </resources>
