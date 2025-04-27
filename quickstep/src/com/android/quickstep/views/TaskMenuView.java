@@ -223,14 +223,6 @@ public class TaskMenuView extends AbstractFloatingView {
         // Set an onClick listener on each menu option. The onClick method is responsible for
         // ending LiveTile mode on the thumbnail if needed.
         menuOptionView.setOnClickListener(menuOption::onClick);
-        if (menuOption.isLockShortcut()) {
-            menuOption.setIcon(menuOption.isLocked() 
-                ? R.drawable.recents_unlocked 
-                : R.drawable.recents_locked);
-            menuOption.setLabel(menuOption.isLocked() 
-                ? R.string.action_unlocked 
-                : R.string.action_locked);
-        }
         mOptionLayout.addView(menuOptionView);
     }
 

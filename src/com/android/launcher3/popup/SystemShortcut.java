@@ -106,6 +106,12 @@ public abstract class SystemShortcut<T extends ActivityContext> extends ItemInfo
 
     public void setIconAndLabelFor(View iconView, TextView labelView) {
         if (mIsLockAppShortcut) {
+            iconView.setBackgroundResource(mIsLocked 
+                ? R.drawable.recents_unlocked
+                : R.drawable.recents_locked);
+            labelView.setText(mIsLocked 
+                ? R.string.action_unlocked
+                : R.string.action_locked);
             mIconView = iconView;
             mLabelView = labelView;
         } else {
