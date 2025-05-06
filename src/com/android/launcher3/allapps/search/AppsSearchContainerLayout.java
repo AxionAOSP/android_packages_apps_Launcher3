@@ -22,16 +22,22 @@ import static android.view.View.MeasureSpec.makeMeasureSpec;
 import static com.android.launcher3.Utilities.prefixTextWithIcon;
 import static com.android.launcher3.icons.IconNormalizer.ICON_VISIBLE_AREA_FACTOR;
 
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
+import android.graphics.drawable.Drawable;
 import android.graphics.Rect;
 import android.text.Selection;
 import android.text.SpannableStringBuilder;
 import android.text.method.TextKeyListener;
 import android.util.AttributeSet;
+import android.view.ContextThemeWrapper;
+import android.view.MotionEvent;
 import android.view.KeyEvent;
 import android.view.View;
 import android.view.ViewGroup.MarginLayoutParams;
+
+import androidx.core.content.ContextCompat;
 
 import com.android.launcher3.DeviceProfile;
 import com.android.launcher3.ExtendedEditText;
@@ -40,11 +46,18 @@ import com.android.launcher3.R;
 import com.android.launcher3.allapps.ActivityAllAppsContainerView;
 import com.android.launcher3.allapps.AllAppsStore;
 import com.android.launcher3.allapps.BaseAllAppsAdapter.AdapterItem;
+import com.android.launcher3.LauncherPrefChangeListener;
+import com.android.launcher3.LauncherPrefs;
 import com.android.launcher3.allapps.PrivateProfileManager;
 import com.android.launcher3.allapps.SearchUiManager;
 import com.android.launcher3.search.SearchCallback;
+import com.android.launcher3.util.ActivityLauncher;
+import com.android.launcher3.util.Themes;
 import com.android.launcher3.util.ApiWrapper;
+import com.android.launcher3.Utilities;
 import com.android.launcher3.views.ActivityContext;
+
+import com.android.internal.util.android.Utils;
 
 import java.util.ArrayList;
 
@@ -53,13 +66,14 @@ import java.util.ArrayList;
  */
 public class AppsSearchContainerLayout extends ExtendedEditText
         implements SearchUiManager, SearchCallback<AdapterItem>,
-        AllAppsStore.OnUpdateListener, Insettable {
+        AllAppsStore.OnUpdateListener, Insettable, LauncherPrefChangeListener {
 
     private final ActivityContext mLauncher;
     private final AllAppsSearchBarController mSearchBarController;
     private final SpannableStringBuilder mSearchQueryBuilder;
 
     private ActivityAllAppsContainerView<?> mAppsView;
+    private int mHorizontalMargin = 0;
 
     // The amount of pixels to shift down and overlap with the rest of the content.
     private final int mContentOverlap;
@@ -83,18 +97,65 @@ public class AppsSearchContainerLayout extends ExtendedEditText
 
         mContentOverlap =
                 getResources().getDimensionPixelSize(R.dimen.all_apps_search_bar_content_overlap);
+                
+        mHorizontalMargin =
+                getResources().getDimensionPixelSize(R.dimen.search_box_background_offset);
     }
 
     @Override
     protected void onAttachedToWindow() {
         super.onAttachedToWindow();
         mAppsView.getAppsStore().addUpdateListener(this);
+        LauncherPrefs.Companion.get(getContext()).addListener(this, LauncherPrefs.THEMED_ICONS);
+        updateSearchBar();
     }
 
     @Override
     protected void onDetachedFromWindow() {
         super.onDetachedFromWindow();
+        LauncherPrefs.Companion.get(getContext()).removeListener(this, LauncherPrefs.THEMED_ICONS);
         mAppsView.getAppsStore().removeUpdateListener(this);
+    }
+
+    @Override
+    public void onPrefChanged(String key) {
+        if ("themed_icons".equals(key)) {
+            updateSearchBar();
+        }
+    }
+
+    void updateSearchBar() {
+        Context context = getContext();
+        boolean isGsaInstalled = Utils.isPackageInstalled(
+                context, Utilities.GSA_PACKAGE);
+
+        int attrColor = Themes.getAttrColor(context, R.attr.qsbFillColor);
+        int style = R.style.QsbIconTint;
+
+        if (Themes.isThemedIconEnabled(context)) {
+            attrColor = Themes.getAttrColor(context, R.attr.qsbFillColorThemedAllApps);
+            style = R.style.QsbIconTint_Themed;
+        }
+
+        Context themedContext = new ContextThemeWrapper(context, style);
+
+        if (getBackground() != null) getBackground().setTint(attrColor);
+
+        int startDrawableRes = isGsaInstalled ? R.drawable.ic_super_g_color : R.drawable.ic_allapps_search;
+        Drawable startDrawable = ContextCompat.getDrawable(themedContext, startDrawableRes);
+
+        Drawable endDrawable = null;
+        if (isGsaInstalled) {
+            endDrawable = ContextCompat.getDrawable(themedContext, R.drawable.ic_lens_color);
+        }
+
+        setCompoundDrawablesRelativeWithIntrinsicBounds(startDrawable, null, endDrawable, null);
+        
+        if (isGsaInstalled) {
+            setHint(null);
+        } else {
+            setHint(getContext().getString(R.string.all_apps_search_bar_hint));
+        }
     }
 
     @Override
@@ -195,12 +256,75 @@ public class AppsSearchContainerLayout extends ExtendedEditText
     public void setInsets(Rect insets) {
         MarginLayoutParams mlp = (MarginLayoutParams) getLayoutParams();
         mlp.topMargin = insets.top;
+        mlp.leftMargin = mHorizontalMargin;
+        mlp.rightMargin = mHorizontalMargin;
         requestLayout();
     }
 
     @Override
     public ExtendedEditText getEditText() {
         return this;
+    }
+
+    @Override
+    public boolean onTouchEvent(MotionEvent event) {
+        if (event.getAction() == MotionEvent.ACTION_UP) {
+            float x = event.getX();
+            float y = event.getY();
+
+            Drawable endDrawable = getCompoundDrawablesRelative()[2];
+            if (endDrawable != null) {
+                int endWidth = endDrawable.getIntrinsicWidth();
+                int endHeight = endDrawable.getIntrinsicHeight();
+
+                int paddingEnd = getPaddingEnd();
+                int endLeft = getWidth() - getCompoundPaddingRight();
+                int endTop = (getHeight() - endHeight) / 2;
+
+                Rect lensBounds = new Rect(
+                    endLeft - paddingEnd,
+                    endTop - paddingEnd,
+                    endLeft + endWidth + paddingEnd,
+                    endTop + endHeight + paddingEnd
+                );
+
+                if (lensBounds.contains((int) x, (int) y)) {
+                    ActivityLauncher.launchLensSearch(getContext());
+                    return true;
+                }
+            }
+
+            Drawable startDrawable = getCompoundDrawablesRelative()[0];
+            if (startDrawable != null) {
+                int startWidth = startDrawable.getIntrinsicWidth();
+                int startHeight = startDrawable.getIntrinsicHeight();
+
+                int startLeft = getPaddingStart();
+                int startTop = (getHeight() - startHeight) / 2;
+
+                Rect searchBounds = new Rect(
+                    startLeft,
+                    startTop,
+                    startLeft + startWidth,
+                    startTop + startHeight
+                );
+
+                if (searchBounds.contains((int) x, (int) y)) {
+                    ActivityLauncher.launchSearch(getContext());
+                    return true;
+                }
+            }
+
+            if (Utilities.isPixelSearchInstalled(getContext())) {
+                Rect fullBounds = new Rect(0, 0, getWidth(), getHeight());
+                if (fullBounds.contains((int) x, (int) y)) {
+                    ActivityLauncher.launchPixelSearch(getContext());
+                    return true;
+                }
+            }
+        }
+
+        return super.onTouchEvent(event);
     }
 
     private void privateSpaceQuery() {

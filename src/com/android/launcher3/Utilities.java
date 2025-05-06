@@ -109,6 +109,8 @@ import java.util.function.Predicate;
 
 import static com.android.launcher3.util.Executors.MODEL_EXECUTOR;
 
+import com.android.internal.util.android.Utils;
+
 /**
  * Various utilities shared amongst the Launcher's classes.
  */
@@ -159,6 +161,11 @@ public final class Utilities {
 
     @IntDef({TRANSLATE_UP, TRANSLATE_DOWN, TRANSLATE_LEFT, TRANSLATE_RIGHT})
     public @interface AdjustmentDirection{}
+    
+    public static final String GSA_PACKAGE = "com.google.android.googlequicksearchbox";
+    public static final String LENS_ACTIVITY = "com.google.android.apps.search.lens.LensExportedActivity";
+    public static final String LENS_URI = "google://lens";
+    public static final String PIXEL_SEARCH_PACKAGE = "rk.android.app.pixelsearch";
 
     public static final String DESKTOP_SHOW_QUICKSPACE = "pref_show_quickspace";
     public static final String KEY_SHOW_ALT_QUICKSPACE = "pref_show_alt_quickspace";
@@ -1055,5 +1062,13 @@ public final class Utilities {
     public static boolean isTablet(Context context) {
         int smallestWidthDp = context.getResources().getConfiguration().smallestScreenWidthDp;
         return smallestWidthDp >= 600;
+    }
+
+    public static boolean isGsaInstalled(Context context) {
+        return Utils.isPackageInstalled(context, GSA_PACKAGE);
+    }
+     
+    public static boolean isPixelSearchInstalled(Context context) {
+        return Utils.isPackageInstalled(context, PIXEL_SEARCH_PACKAGE);
     }
 }

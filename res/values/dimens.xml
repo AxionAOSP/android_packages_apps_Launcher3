@@ -110,7 +110,8 @@
     <dimen name="all_apps_search_bar_content_overlap">24dp</dimen>
     <!-- affects padding above apps lists when tabs and floating header rows are not visible -->
     <!-- (always affects padding above search results) -->
-    <dimen name="all_apps_search_bar_bottom_padding">24dp</dimen>
+    <dimen name="search_box_background_offset">24dp</dimen>
+    <dimen name="all_apps_search_bar_bottom_padding">36dp</dimen>
     <!-- margin adjustment for layout relative to bottom of search container -->
     <!-- if the search container is obscuring things, try adjusting this -->
     <dimen name="all_apps_search_bar_bottom_adjustment">-6dp</dimen>

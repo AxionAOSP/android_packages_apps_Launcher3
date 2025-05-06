@@ -24,4 +24,14 @@
         <attr name="units" format="string|reference" />
         <attr name="continuousUpdates" format="boolean" />
     </declare-styleable>
+    
+    <attr name="qsbEdgeRadius" format="dimension"/>
+    <attr name="qsbFillColor" format="color"/>
+    <attr name="qsbFillColorThemedAllApps" format="color"/>
+    <attr name="qsbFillColorThemedHomeScreen" format="color"/>
+    <attr name="qsbIconTintPrimary" format="color"/>
+    <attr name="qsbIconTintQuaternary" format="color"/>
+    <attr name="qsbIconTintSecondary" format="color"/>
+    <attr name="qsbIconTintTertiary" format="color"/>
+    <attr name="searchboxHighlight" format="color"/>
 </resources>
