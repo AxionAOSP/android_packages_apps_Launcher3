@@ -65,7 +65,7 @@
             android:orientation="horizontal">
 
             <Space
-                android:id="@+id/action_screenshot_space"
+                android:id="@+id/start_space"
                 android:layout_width="0dp"
                 android:layout_height="1dp"
                 android:layout_weight="1" />

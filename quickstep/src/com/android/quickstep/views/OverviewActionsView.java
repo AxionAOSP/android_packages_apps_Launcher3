@@ -19,6 +19,7 @@ package com.android.quickstep.views;
 import android.app.ActivityManager;
 import android.content.Context;
 import android.content.res.Configuration;
+import android.content.SharedPreferences;
 import android.graphics.Rect;
 import android.util.AttributeSet;
 import android.util.Log;
@@ -36,6 +37,7 @@ import com.android.launcher3.Flags;
 import com.android.launcher3.Insettable;
 import com.android.launcher3.R;
 import com.android.launcher3.anim.AnimatedFloat;
+import com.android.launcher3.LauncherPrefs;
 import com.android.launcher3.util.DisplayController;
 import com.android.launcher3.util.MultiValueAlpha;
 import com.android.launcher3.util.NavigationMode;
@@ -50,7 +52,7 @@ import java.util.Arrays;
  * View for showing action buttons in Overview
  */
 public class OverviewActionsView<T extends OverlayUICallbacks> extends FrameLayout
-        implements OnClickListener, Insettable {
+        implements OnClickListener, Insettable, SharedPreferences.OnSharedPreferenceChangeListener {
     public static final String TAG = "OverviewActionsView";
     private final Rect mInsets = new Rect();
 
@@ -114,6 +116,7 @@ public class OverviewActionsView<T extends OverlayUICallbacks> extends FrameLayo
     /** Container for the action buttons below a focused, non-split Overview tile. */
     protected LinearLayout mActionButtons;
     private ImageButton mSplitButton;
+    private View mScreenshotButton;
     /**
      * The "save app pair" button. Currently this is the only button that is not contained in
      * mActionButtons, since it is the sole button that appears for a grouped task.
@@ -151,6 +154,69 @@ public class OverviewActionsView<T extends OverlayUICallbacks> extends FrameLayo
     }
 
     @Override
+    protected void onAttachedToWindow() {
+        super.onAttachedToWindow();
+        LauncherPrefs.getPrefs(getContext()).registerOnSharedPreferenceChangeListener(this);
+    }
+
+    @Override
+    protected void onDetachedFromWindow() {
+        super.onDetachedFromWindow();
+        LauncherPrefs.getPrefs(getContext()).unregisterOnSharedPreferenceChangeListener(this);
+    }
+
+    @Override
+    public void onSharedPreferenceChanged(SharedPreferences prefs, String key) {
+        if ("overview_show_screenshot".equals(key) ||
+            "overview_show_lock".equals(key) ||
+            "overview_show_split".equals(key)) {
+            updateButtonsVisibility();
+        }
+    }
+    
+    private void updateButtonsVisibility() {
+        boolean isScreenShotVisible = getButtonSettingsBool("overview_show_screenshot");
+        boolean isSplitVisible = getButtonSettingsBool("overview_show_split");
+        boolean isLockVisible = getButtonSettingsBool("overview_show_lock");
+
+        int visibleButtonCount = 0;
+        if (isScreenShotVisible) visibleButtonCount++;
+        if (isSplitVisible) visibleButtonCount++;
+        if (isLockVisible) visibleButtonCount++;
+
+        mSplitButton.setVisibility(isSplitVisible ? View.VISIBLE : View.GONE);
+        mScreenshotButton.setVisibility(isScreenShotVisible ? View.VISIBLE : View.GONE);
+
+        View splitSpace = findViewById(R.id.action_split_space);
+        View lockButton = findViewById(R.id.action_lock);
+        View lockSpace = findViewById(R.id.action_lock_space);
+        
+        lockButton.setVisibility(isLockVisible ? View.VISIBLE : View.GONE);
+        
+        if (visibleButtonCount == 1) {
+            lockSpace.setVisibility(View.GONE);
+            splitSpace.setVisibility(View.GONE);
+        } else if (visibleButtonCount == 2) {
+            if (!isScreenShotVisible) {
+                lockSpace.setVisibility(View.GONE);
+                splitSpace.setVisibility(View.VISIBLE);
+            } else {
+                lockSpace.setVisibility(isLockVisible ? View.VISIBLE : View.GONE);
+                splitSpace.setVisibility(isSplitVisible ? View.VISIBLE : View.GONE);
+            }
+        } else {
+            lockSpace.setVisibility(View.VISIBLE);
+            splitSpace.setVisibility(View.VISIBLE);
+        }
+
+        mActionButtons.requestLayout();
+    }
+    
+    private boolean getButtonSettingsBool(String key) {
+        return LauncherPrefs.getPrefs(getContext()).getBoolean(key, true);
+    }
+
+    @Override
     protected void onFinishInflate() {
         super.onFinishInflate();
         // Initialize 2 view containers: one for single tasks, one for grouped tasks.
@@ -177,12 +243,13 @@ public class OverviewActionsView<T extends OverlayUICallbacks> extends FrameLayo
         // The screenshot button is implemented as a Button in launcher3 and NexusLauncher, but is
         // an ImageButton in go launcher (does not share a common class with Button). Take care when
         // casting this.
-        View screenshotButton = findViewById(R.id.action_screenshot);
-        screenshotButton.setOnClickListener(this);
+        mScreenshotButton = findViewById(R.id.action_screenshot);
+        mScreenshotButton.setOnClickListener(this);
         mSplitButton = findViewById(R.id.action_split);
         mSplitButton.setOnClickListener(this);
         mSaveAppPairButton.setOnClickListener(this);
         findViewById(R.id.action_clear_all).setOnClickListener(this);
+        updateButtonsVisibility();
     }
 
     /**
@@ -321,7 +388,6 @@ public class OverviewActionsView<T extends OverlayUICallbacks> extends FrameLayo
         }
         int desiredVisibility = mSplitButtonHiddenFlags == 0 ? VISIBLE : GONE;
         if (mSplitButton.getVisibility() != desiredVisibility) {
-            mSplitButton.setVisibility(desiredVisibility);
             mActionButtons.requestLayout();
         }
     }

@@ -229,4 +229,30 @@
              android:persistent="true"
              launcher:iconSpaceReserved="false" />
     </PreferenceCategory>
+    
+    <PreferenceCategory
+        android:title="@string/recents_category_title">
+
+        <SwitchPreferenceCompat
+             android:key="overview_show_lock"
+             android:title="@string/overview_show_lock_title"
+             android:defaultValue="true"
+             android:persistent="true"
+             launcher:iconSpaceReserved="false" />
+             
+        <SwitchPreferenceCompat
+             android:key="overview_show_split"
+             android:title="@string/overview_show_split_title"
+             android:defaultValue="true"
+             android:persistent="true"
+             launcher:iconSpaceReserved="false" />
+             
+        <SwitchPreferenceCompat
+             android:key="overview_show_screenshot"
+             android:title="@string/overview_show_screenshot_title"
+             android:defaultValue="true"
+             android:persistent="true"
+             launcher:iconSpaceReserved="false" />
+
+    </PreferenceCategory>
 </androidx.preference.PreferenceScreen>

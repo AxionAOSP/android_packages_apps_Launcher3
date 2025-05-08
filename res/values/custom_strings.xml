@@ -278,4 +278,10 @@
     <string name="action_unlocked">Unlock app</string>
     <string name="unlock_app">Unlocked app in recents</string>
     <string name="lock_app">Locked app in recents</string>
+    
+    <!-- Recents -->
+    <string name="recents_category_title">Recents</string>
+    <string name="overview_show_screenshot_title">Show screenshot button</string>
+    <string name="overview_show_split_title">Show split action button</string>
+    <string name="overview_show_lock_title">Show lock task button</string>
 </resources>
