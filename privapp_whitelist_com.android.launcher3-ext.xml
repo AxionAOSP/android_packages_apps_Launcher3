@@ -30,5 +30,6 @@
         <permission name="android.permission.READ_EXTERNAL_STORAGE"/>
         <permission name="android.permission.READ_MEDIA_IMAGES"/>
         <permission name="android.permission.MANAGE_EXTERNAL_STORAGE"/>
+        <permission name="android.permission.QUERY_USERS"/>
     </privapp-permissions>
 </permissions>
