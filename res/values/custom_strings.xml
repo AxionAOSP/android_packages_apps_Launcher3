@@ -284,4 +284,7 @@
     <string name="overview_show_screenshot_title">Show screenshot button</string>
     <string name="overview_show_split_title">Show split action button</string>
     <string name="overview_show_lock_title">Show lock task button</string>
+    
+    <string name="label_search">Search</string>
+    <string name="pref_show_hotseat_search_title">Show hotseat search bar</string>
 </resources>

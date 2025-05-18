@@ -212,5 +212,11 @@
             android:label="@string/trust_apps_manager_name"
             android:theme="@android:style/Theme.DeviceDefault.Settings"
             android:autoRemoveFromRecents="true" />
+            
+        <activity
+            android:name="com.android.launcher3.qsb.QsbSetupActivity"
+            android:theme="@android:style/Theme.Translucent.NoTitleBar"
+            android:exported="false"
+            android:autoRemoveFromRecents="true" />
     </application>
 </manifest>
