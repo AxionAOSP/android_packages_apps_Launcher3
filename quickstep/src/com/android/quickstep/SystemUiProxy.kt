@@ -463,6 +463,12 @@ class SystemUiProxy @Inject constructor(@ApplicationContext private val context:
             systemUiProxy?.toggleQuickSettingsPanel()
         }
 
+    fun notifyGoingToSleepByDoubleClick(x: Int,y: Int) {
+        executeWithErrorLog({ "Failed call notifyGoingToSleepByDoubleClick" }) {
+            systemUiProxy?.notifyGoingToSleepByDoubleClick(x, y)
+        }
+    }
+
     //
     // Pip
     //
