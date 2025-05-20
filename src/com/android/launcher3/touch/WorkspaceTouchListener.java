@@ -231,7 +231,10 @@ public class WorkspaceTouchListener extends GestureDetector.SimpleOnGestureListe
     @Override
     public boolean onDoubleTap(MotionEvent event) {
         if (LauncherPrefs.getPrefs(mContext).getBoolean(SLEEP_GESTURE, true)) {
-            VibratorWrapper.INSTANCE.get(mContext).vibrate(VibratorWrapper.EFFECT_CLICK);
+            com.android.quickstep.SystemUiProxy.INSTANCE.get(mContext).notifyGoingToSleepByDoubleClick(
+                (int) mTouchDownPoint.x,
+                (int) mTouchDownPoint.y
+            );
             mPm.goToSleep(event.getEventTime());
         }
         return true;

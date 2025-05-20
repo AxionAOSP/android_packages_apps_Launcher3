@@ -640,6 +640,17 @@ public class SystemUiProxy implements ISystemUiProxy, NavHandle {
             }
         }
     }
+    
+    @Override
+    public void notifyGoingToSleepByDoubleClick(int x, int y) {
+        if (mSystemUiProxy != null) {
+            try {
+                mSystemUiProxy.notifyGoingToSleepByDoubleClick(x, y);
+            } catch (RemoteException e) {
+                Log.w(TAG, "Failed call notifyGoingToSleepByDoubleClick", e);
+            }
+        }
+    }
 
     //
     // Pip
