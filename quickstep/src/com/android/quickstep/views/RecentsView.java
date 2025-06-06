@@ -4667,22 +4667,29 @@ public abstract class RecentsView<
             } else {
                 updateLockedTask(pkg, true);
             }
-            updateLockIcon(pkg);
+            updateLockIcon(pkg, true);
         }
     }
 
     private void updateLockIcon() {
         if (getNextPageTaskView() != null)
-            updateLockIcon(getNextPageTaskView().getFirstTask().key.getPackageName());
+            updateLockIcon(getNextPageTaskView().getFirstTask().key.getPackageName(), false);
     }
 
-    private void updateLockIcon(String pkg) {
+    private void updateLockIcon(String pkg, boolean byUser) {
         boolean isLocked = getLockedTasks().contains(pkg);
         if (mLockButtonView != null) {
             int resId = isLocked ? R.drawable.recents_locked : R.drawable.recents_unlocked;
             Drawable icon = androidx.core.content.ContextCompat.getDrawable(getContext(), resId);
             if (icon != null) {
                 mLockButtonView.setImageDrawable(icon);
+            }
+            if (byUser) {
+                Toast lockToast = Toast.makeText(getContext(), 
+                    isLocked ? R.string.lock_app 
+                        : R.string.unlock_app,
+                    Toast.LENGTH_SHORT);
+                lockToast.show();
             }
         }
     }
