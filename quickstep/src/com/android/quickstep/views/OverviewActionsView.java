@@ -175,9 +175,9 @@ public class OverviewActionsView<T extends OverlayUICallbacks> extends FrameLayo
     }
     
     private void updateButtonsVisibility() {
-        boolean isScreenShotVisible = getButtonSettingsBool("overview_show_screenshot");
-        boolean isSplitVisible = getButtonSettingsBool("overview_show_split");
-        boolean isLockVisible = getButtonSettingsBool("overview_show_lock");
+        boolean isScreenShotVisible = getButtonSettingsBool("overview_show_screenshot", true);
+        boolean isSplitVisible = getButtonSettingsBool("overview_show_split", false);
+        boolean isLockVisible = getButtonSettingsBool("overview_show_lock", true);
 
         int visibleButtonCount = 0;
         if (isScreenShotVisible) visibleButtonCount++;
@@ -212,8 +212,8 @@ public class OverviewActionsView<T extends OverlayUICallbacks> extends FrameLayo
         mActionButtons.requestLayout();
     }
     
-    private boolean getButtonSettingsBool(String key) {
-        return LauncherPrefs.getPrefs(getContext()).getBoolean(key, true);
+    private boolean getButtonSettingsBool(String key, boolean defaultValue) {
+        return LauncherPrefs.getPrefs(getContext()).getBoolean(key, defaultValue);
     }
 
     @Override

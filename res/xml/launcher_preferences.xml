@@ -248,7 +248,7 @@
         <SwitchPreferenceCompat
              android:key="overview_show_split"
              android:title="@string/overview_show_split_title"
-             android:defaultValue="true"
+             android:defaultValue="false"
              android:persistent="true"
              launcher:iconSpaceReserved="false" />
              
