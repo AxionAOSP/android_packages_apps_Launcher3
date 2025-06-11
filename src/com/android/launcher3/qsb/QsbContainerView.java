@@ -65,6 +65,7 @@ import com.android.launcher3.widget.util.WidgetSizes;
 public class QsbContainerView extends FrameLayout implements SharedPreferences.OnSharedPreferenceChangeListener {
 
     public static final String SEARCH_ENGINE_SETTINGS_KEY = "selected_search_engine";
+    private static final String PREF_SEARCH_DISABLED_FLAG = "search_package_disabled";
 
     /**
      * Returns the package name for user configured search provider or from searchManager
@@ -136,9 +137,24 @@ public class QsbContainerView extends FrameLayout implements SharedPreferences.O
                 || ACTION_PACKAGE_REMOVED.equals(action)))
                 return;
             String pkgName = intent.getData().getSchemeSpecificPart();
+            String searchPackage = getSearchWidgetPackageName(context);
             if ((mWidgetInfo != null && mWidgetInfo.provider.getPackageName().equals(pkgName))
-                || (pkgName != null && pkgName.equals(getSearchWidgetPackageName(context)))) {
+                || (pkgName != null && pkgName.equals(searchPackage))) {
                 rebindFragment();
+            }
+            SharedPreferences prefs = LauncherPrefs.getPrefs(context);
+            AppWidgetManager appWidgetManager = AppWidgetManager.getInstance(context);
+            java.util.List<AppWidgetProviderInfo> providers = appWidgetManager.getInstalledProvidersForPackage(searchPackage, null);
+            if (providers == null || providers.isEmpty()) {
+                prefs.edit().putBoolean(PREF_SEARCH_DISABLED_FLAG, true).apply();
+                restartIfNeeded();
+            }
+            boolean wasDisabled = prefs.getBoolean(PREF_SEARCH_DISABLED_FLAG, false);
+            if (providers != null && !providers.isEmpty()) {
+                if (wasDisabled) {
+                    prefs.edit().remove(PREF_SEARCH_DISABLED_FLAG).apply();
+                    restartIfNeeded();
+                }
             }
         }
     };
@@ -281,6 +297,12 @@ public class QsbContainerView extends FrameLayout implements SharedPreferences.O
         if (getContext() != null) {
             removeAllViews();
             if (isQsbEnabled()) addView(createQsb(this));
+        }
+    }
+    
+    private void restartIfNeeded() {
+        if (isQsbEnabled()) {
+            LauncherAppState.INSTANCE.executeIfCreated(app -> app.checkIfRestartNeeded(true));
         }
     }
 

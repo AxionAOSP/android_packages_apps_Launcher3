@@ -1074,9 +1074,15 @@ public final class Utilities {
     public static boolean isPixelSearchInstalled(Context context) {
         return Utils.isPackageInstalled(context, PIXEL_SEARCH_PACKAGE);
     }
-    
+
+    public static boolean isPackageEnabled(Context context, String pkg) {
+        return Utils.isPackageEnabled(context, pkg);
+    }
+
     public static boolean isHotseatEnabled(Context context) {
-        SharedPreferences prefs = LauncherPrefs.getPrefs(context.getApplicationContext());
-        return prefs.getBoolean(KEY_SHOW_HOTSEAT_SEARCH, false);
+        Context ctx = context.getApplicationContext();
+        SharedPreferences prefs = LauncherPrefs.getPrefs(ctx);
+        return prefs.getBoolean(KEY_SHOW_HOTSEAT_SEARCH, false) 
+            && isGsaInstalled(ctx) && isPackageEnabled(ctx, GSA_PACKAGE);
     }
 }

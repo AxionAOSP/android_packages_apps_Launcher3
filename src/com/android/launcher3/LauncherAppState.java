@@ -222,10 +222,10 @@ public class LauncherAppState implements SafeCloseable {
         mNeedsRestart = true;
     }
 
-    public void checkIfRestartNeeded() {
+    public void checkIfRestartNeeded(boolean forced) {
         // we destroyed Settings activity with the back button
         // so we force a restart now if needed without waiting for home button press
-        if (mNeedsRestart) {
+        if (mNeedsRestart || forced) {
             Toast.makeText(mContext, R.string.restarting_launcher_changes, Toast.LENGTH_SHORT).show();
             Utilities.restart(mContext);
         }
