@@ -107,7 +107,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.function.Predicate;
 
-import static com.android.launcher3.util.Executors.MODEL_EXECUTOR;
+import static com.android.launcher3.util.Executors.MAIN_EXECUTOR;
 
 import com.android.internal.util.android.Utils;
 
@@ -971,12 +971,9 @@ public final class Utilities {
     }
 
     public static void restart(final Context context) {
-        MODEL_EXECUTOR.execute(() -> {
-            final Handler handler = new Handler(Looper.getMainLooper());
-            handler.postDelayed(() -> {
-                System.exit(0);
-            }, WAIT_BEFORE_RESTART);
-        });
+        MAIN_EXECUTOR.getHandler().postDelayed(() -> {
+            System.exit(0);
+        }, WAIT_BEFORE_RESTART);
     }
 
     public static String formatDateTime(Context context) {
