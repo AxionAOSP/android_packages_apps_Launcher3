@@ -1223,13 +1223,15 @@ public class DeviceProfile {
             );
             updateAllAppsWithResponsiveMeasures();
         } else {
+            final boolean skipScale = inv.numColumns == 4 && inv.numRows >= 6;
+            final float overrideScale = skipScale ? 1.05f : scale;
             mAllAppsProfile = AllAppsProfile.Factory.createAllAppsProfile(
                     context.getResources(),
                     inv,
                     mMetrics,
                     mIsScalableGrid,
                     mTypeIndex,
-                    scale,
+                    overrideScale,
                     iconSizePx,
                     mIconDrawablePaddingOriginalPx
             );
