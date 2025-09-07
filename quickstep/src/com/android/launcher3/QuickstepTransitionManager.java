@@ -142,6 +142,7 @@ import com.android.launcher3.util.RunnableList;
 import com.android.launcher3.util.StableViewInfo;
 import com.android.launcher3.views.FloatingIconView;
 import com.android.launcher3.widget.LauncherAppWidgetHostView;
+import com.android.quickstep.BoostAnimatorListener;
 import com.android.quickstep.LauncherBackAnimationController;
 import com.android.quickstep.RemoteAnimationTargets;
 import com.android.quickstep.SystemUiProxy;
@@ -560,6 +561,8 @@ public class QuickstepTransitionManager implements OnDeviceProfileChangeListener
 
         // Pause expensive view updates as they can lead to layer thrashing and skipped frames.
         mLauncher.pauseExpensiveViewUpdates();
+        
+        launcherAnimator.addListener(new BoostAnimatorListener());
 
         if (mLauncher.isInState(ALL_APPS)) {
             // All Apps in portrait mode is full screen, so we only animate AllAppsContainerView.
@@ -1970,6 +1973,7 @@ public class QuickstepTransitionManager implements OnDeviceProfileChangeListener
             } else {
                 composeIconLaunchAnimator(anim, mV, appTargets, wallpaperTargets, nonAppTargets,
                         launcherClosing);
+                anim.addListener(new BoostAnimatorListener());
                 addCujInstrumentation(anim, Cuj.CUJ_LAUNCHER_APP_LAUNCH_FROM_ICON);
                 skipFirstFrame = false;
             }

@@ -32,6 +32,7 @@ import com.android.launcher3.statemanager.BaseState
 import com.android.launcher3.statemanager.StateManager.StateListener
 import com.android.launcher3.statemanager.StatefulContainer
 import com.android.launcher3.touch.SingleAxisSwipeDetector
+import com.android.launcher3.util.AxCpuBindController
 import com.android.launcher3.util.MSDLPlayerWrapper
 import com.android.launcher3.util.TouchController
 import com.android.mechanics.spec.Breakpoint
@@ -229,6 +230,7 @@ CONTAINER : StatefulContainer<T> {
 
     override fun onDragStart(start: Boolean, startDisplacement: Float) {
         val taskBeingDragged = taskBeingDragged ?: return
+        AxCpuBindController.get().acquireTaskDismissBoost()
         debugLog(TAG, "Handling touch event.")
 
         initialDisplacement =
@@ -308,7 +310,7 @@ CONTAINER : StatefulContainer<T> {
         val taskBeingDragged = taskBeingDragged ?: return
         taskDragDisplacementValue?.dispose()
         taskBeingDragged.isBeingDraggedForDismissal = false
-
+        AxCpuBindController.get().releaseTaskDismissBoost()
         val currentDisplacement =
             taskBeingDragged.secondaryDismissTranslationProperty.get(taskBeingDragged)
         val isBeyondDismissThreshold =
