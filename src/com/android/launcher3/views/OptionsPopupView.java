@@ -274,23 +274,13 @@ public class OptionsPopupView<T extends Context & ActivityContext> extends Arrow
      */
     private static boolean startWallpaperPicker(View v) {
         Launcher launcher = Launcher.getLauncher(v.getContext());
-        if (!Utilities.isWallpaperAllowed(launcher)) {
-            String message = launcher.getStringCache() != null
-                    ? launcher.getStringCache().disabledByAdminMessage
-                    : launcher.getString(R.string.msg_disabled_by_admin);
-            Toast.makeText(launcher, message, Toast.LENGTH_SHORT).show();
-            return false;
-        }
-        Intent intent = new Intent(Intent.ACTION_SET_WALLPAPER)
-                .addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK)
-                .putExtra(EXTRA_WALLPAPER_OFFSET,
-                        launcher.getWorkspace().getWallpaperOffsetForCenterPage())
-                .putExtra(EXTRA_WALLPAPER_LAUNCH_SOURCE, "app_launched_launcher")
-                .putExtra(EXTRA_WALLPAPER_FLAVOR, "focus_wallpaper");
-        String pickerPackage = launcher.getString(R.string.wallpaper_picker_package);
-        if (!TextUtils.isEmpty(pickerPackage)) {
-            intent.setPackage(pickerPackage);
-        }
+        Intent intent = new Intent();
+        intent.setClassName(
+                "com.android.axion.themepicker",
+                "com.android.axion.themepicker.ui.MainActivity"
+        );
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+        intent.putExtra("is_launch_extra", true);
         return launcher.startActivitySafely(v, intent, placeholderInfo(intent)) != null;
     }
 
