@@ -23,6 +23,7 @@ import static com.android.launcher3.preview.PreviewSurfaceRenderer.MIN_BITMAP_GE
 import static com.android.launcher3.graphics.ThemeManager.PREF_ICON_SHAPE;
 import static com.android.launcher3.util.Executors.MAIN_EXECUTOR;
 import static com.android.launcher3.util.Executors.UI_HELPER_EXECUTOR;
+import static com.android.launcher3.LauncherPrefs.GRID_NAME;
 
 import static java.util.Objects.requireNonNullElse;
 import static java.util.concurrent.CompletableFuture.delayedExecutor;
@@ -138,6 +139,7 @@ public class GridCustomizationsProxy implements ProxyProvider {
     public static final String KEY_HIDE_BOTTOM_ROW = "hide_bottom_row";
     public static final String KEY_GRID_NAME = "grid_name";
     public static final String KEY_IMAGE = "image";
+    private static final String GET_CURRENT_GRID = "/get_grid_name";
 
     public static final String KEY_UPDATE_METHOD = "update_method";
 
@@ -251,6 +253,12 @@ public class GridCustomizationsProxy implements ProxyProvider {
                 cursor.newRow().add(BOOLEAN_VALUE, mThemeManager.isMonoThemeEnabled() ? 1 : 0);
                 Log.d(TAG, "query: path=" + path
                         + ", isMonoThemeEnabled=" + mThemeManager.isMonoThemeEnabled());
+                return cursor;
+            }
+            case GET_CURRENT_GRID: {
+                MatrixCursor cursor = new MatrixCursor(new String[]{KEY_GRID_NAME});
+                String gridName = LauncherPrefs.get(mContext).get(GRID_NAME);
+                cursor.newRow().add(KEY_GRID_NAME, gridName != null ? gridName : "");
                 return cursor;
             }
             default: {
