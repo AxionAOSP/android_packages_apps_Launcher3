@@ -25,8 +25,10 @@ import static com.android.launcher3.logging.StatsLogManager.LauncherEvent.LAUNCH
 import static com.android.launcher3.logging.StatsLogManager.LauncherEvent.LAUNCHER_SYSTEM_SHORTCUT_FREE_FORM_TAP;
 import static com.android.launcher3.util.SplitConfigurationOptions.STAGE_POSITION_BOTTOM_OR_RIGHT;
 
+import android.app.ActivityManager;
 import android.app.ActivityOptions;
 import android.app.FreeformLauncher;
+import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.graphics.Rect;
@@ -227,9 +229,17 @@ public interface TaskShortcutFactory {
             if (recentsView != null) {
                 dismissTaskMenuView();
                 recentsView.dismissTaskView(taskView, true, true);
+                forceStopCurrentApp();
                 mTarget.getStatsLogManager().logger().withItemInfo(mTaskContainer.getItemInfo())
                         .log(LAUNCHER_SYSTEM_SHORTCUT_CLOSE_APP_TAP);
             }
+        }
+        
+        private void forceStopCurrentApp() {
+            Context context = mTaskContainer.getTaskView().getContext();
+            final String pkg = mTaskContainer.getTask().getKey().getPackageName();
+            ActivityManager am = (ActivityManager) context.getSystemService(Context.ACTIVITY_SERVICE);
+            if (am != null) am.forceStopPackage(pkg);
         }
     }
 
