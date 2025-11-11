@@ -413,14 +413,11 @@ public class LauncherBackAnimationController {
                 ? MAX_SCRIM_ALPHA_DARK : MAX_SCRIM_ALPHA_LIGHT;
         setBlur(MAX_BLUR_RADIUS);
         mTransaction
-                .setAlpha(mScrimLayer, 0f) 
                 .setColor(mScrimLayer, colorComponents)
+                .setAlpha(mScrimLayer, mScrimAlpha)
                 .show(mScrimLayer)
                 // Ensure the scrim layer occludes opening task & wallpaper
-                .setLayer(mScrimLayer, 1000)
-                .apply();
-                
-        mTransaction.setAlpha(mScrimLayer, mScrimAlpha).apply();
+                .setLayer(mScrimLayer, 1000);
     }
 
     void removeScrimLayer() {
