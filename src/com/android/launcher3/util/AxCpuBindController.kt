@@ -30,7 +30,7 @@ class AxCpuBindController private constructor() {
             return
         }
         bindStatus = STATUS_BIND_BIG_CORE
-        BoostHelper.setThreadAffinity(pid, STATUS_BIND_BIG_CORE)
+        Process.setThreadAffinity(pid, STATUS_BIND_BIG_CORE)
     }
 
     private fun unbind() {
@@ -38,7 +38,7 @@ class AxCpuBindController private constructor() {
             return
         }
         bindStatus = STATUS_UNBIND
-        BoostHelper.setThreadAffinity(pid, STATUS_UNBIND)
+        Process.setThreadAffinity(pid, STATUS_UNBIND)
     }
 
     private fun animationBoostOn(type: Int) {
