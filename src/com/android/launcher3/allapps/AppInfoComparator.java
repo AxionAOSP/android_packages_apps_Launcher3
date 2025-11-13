@@ -55,8 +55,12 @@ public class AppInfoComparator implements Comparator<AppInfo> {
             return result;
         }
 
-        if (mMyUser.equals(a.user)) {
-            return -1;
+        if (mMyUser.equals(a.user) && !mMyUser.equals(b.user)) {
+            return -1;  // a is primary user, comes first
+        } else if (!mMyUser.equals(a.user) && mMyUser.equals(b.user)) {
+            return 1;   // b is primsry user, comes first
+        } else if (mMyUser.equals(a.user) && mMyUser.equals(b.user)) {
+            return 0;   // both primary user
         } else {
             Long aUserSerial = mUserManager.getSerialNumberForUser(a.user);
             Long bUserSerial = mUserManager.getSerialNumberForUser(b.user);
