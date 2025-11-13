@@ -18,6 +18,7 @@ package com.android.launcher3.util;
 import static android.os.Process.THREAD_PRIORITY_BACKGROUND;
 import static android.os.Process.THREAD_PRIORITY_FOREGROUND;
 
+import android.os.HandlerThread;
 import android.os.Looper;
 import android.os.Process;
 
@@ -29,6 +30,8 @@ import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
+
+import com.android.internal.util.BoostHelper;
 
 /**
  * Various different executors used in Launcher
@@ -91,6 +94,11 @@ public class Executors {
      */
     public static LooperExecutor getPackageExecutor(String packageName) {
         return PACKAGE_EXECUTORS.computeIfAbsent(packageName, LooperExecutor::new);
+    }
+
+    static {
+        int tid = ((HandlerThread) UI_HELPER_EXECUTOR.getThread()).getThreadId();
+        BoostHelper.boostThread(tid);
     }
 
     /**
