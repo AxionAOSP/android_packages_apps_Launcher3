@@ -1368,9 +1368,7 @@ public class DeviceProfile {
         if (mIsResponsiveGrid) {
             updateAllAppsWithResponsiveMeasures();
         } else {
-            final boolean skipScale = inv.numColumns == 4 && inv.numRows >= 6;
-            final float overrideScale = skipScale ? 1.05f : scale;
-            updateAllAppsIconSize(overrideScale, context.getResources());
+            updateAllAppsIconSize(scale, context.getResources());
         }
         updateAllAppsContainerWidth();
         if (isVerticalLayout && !mIsResponsiveGrid) {
