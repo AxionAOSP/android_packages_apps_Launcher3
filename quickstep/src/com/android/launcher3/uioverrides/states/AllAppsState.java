@@ -18,6 +18,7 @@ package com.android.launcher3.uioverrides.states;
 import static com.android.app.animation.Interpolators.DECELERATE_2;
 import static com.android.launcher3.Flags.enableScalingRevealHomeAnimation;
 import static com.android.launcher3.logging.StatsLogManager.LAUNCHER_STATE_ALLAPPS;
+import static com.android.launcher3.LauncherPrefs.ALLAPPS_THEMED_ICONS;
 
 import android.content.Context;
 
@@ -207,11 +208,12 @@ public class AllAppsState extends LauncherState {
     @Override
     public int getWorkspaceScrimColor(Launcher launcher) {
         if (!launcher.getDeviceProfile().shouldShowAllAppsOnSheet()) {
-            if (!com.android.launcher3.graphics.ThemeManager.INSTANCE
-                    .get(launcher).isMonoThemeEnabled()) {
-                return launcher.getResources().getColor(R.color.nt_all_apps_scrim_color);
+            final boolean isThemeEnabled = com.android.launcher3.graphics.ThemeManager.INSTANCE
+                    .get(launcher).isMonoThemeEnabled();
+            if (isThemeEnabled && ALLAPPS_THEMED_ICONS.get(launcher)) {
+                return launcher.getResources().getColor(R.color.nt_all_apps_scrim_color_nt_mono);
             }
-            return Themes.getAttrColor(launcher, R.attr.allAppsScrimColor);
+            return launcher.getResources().getColor(R.color.nt_all_apps_scrim_color);
         }
         if (Flags.allAppsBlur()) {
             return Themes.getAttrColor(launcher, R.attr.allAppsScrimColorOverBlur);

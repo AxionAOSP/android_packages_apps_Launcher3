@@ -20,6 +20,7 @@ import android.graphics.*
 import android.util.Log
 import com.android.launcher3.R
 import com.android.launcher3.graphics.ThemeManager
+import com.android.launcher3.LauncherPrefs
 
 class NTAllAppsRecyclerView(private val ctx: Context, private val rv: AllAppsRecyclerView) {
 
@@ -28,7 +29,7 @@ class NTAllAppsRecyclerView(private val ctx: Context, private val rv: AllAppsRec
     val topOffset: Int = ctx.resources.getDimensionPixelSize(R.dimen.all_apps_padding_bg_top_offset)
     val scrollOffset: Int get() = rv.computeVerticalScrollOffset()
     val Int.f: Float get() = this.toFloat()
-    val bgColorRes: Int get() = if (themeManager.isMonoThemeEnabled) {
+    val bgColorRes: Int get() = if (themeManager.isMonoThemeEnabled && LauncherPrefs.ALLAPPS_THEMED_ICONS.get(ctx)) {
         R.color.nt_all_apps_content_background_color 
     } else {
         R.color.color_all_apps_content_background_color

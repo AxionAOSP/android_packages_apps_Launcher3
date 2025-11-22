@@ -17,6 +17,7 @@
 package com.android.launcher3.appprediction;
 
 import static android.os.Build.VERSION_CODES.UPSIDE_DOWN_CAKE;
+import static com.android.launcher3.LauncherPrefs.ALLAPPS_THEMED_ICONS;
 
 import android.content.Context;
 import android.graphics.Canvas;
@@ -167,8 +168,9 @@ public class PredictionRowView<T extends Context & ActivityContext>
     }
 
     private void updatePaintIfNeeded() {
-        int colorRes = com.android.launcher3.graphics.ThemeManager.INSTANCE
-                .get(getContext()).isMonoThemeEnabled()
+        boolean themedEnabled = com.android.launcher3.graphics.ThemeManager.INSTANCE
+                .get(getContext()).isMonoThemeEnabled();
+        int colorRes = themedEnabled && ALLAPPS_THEMED_ICONS.get(getContext())
                 ? R.color.nt_all_apps_content_background_color
                 : R.color.color_all_apps_content_background_color;
         int newColor = getContext().getColor(colorRes);
