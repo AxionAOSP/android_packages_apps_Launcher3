@@ -208,6 +208,10 @@
 
     <string-array name="supported_overlay_apps" translatable="false"/>
 
+    <!-- Burn-in protection for gesture navigation handle -->
+    <bool name="config_enableBurnInProtection">true</bool>
+    <integer name="config_burnInProtectionShiftInterval">60</integer>
+
     <!-- Hardcoded game packages for smart drawer categorization 
           Apps that don't report CATEGORY_GAME but should be in Games folder -->
     <string-array name="config_categorize_force_game_packages" translatable="false">
