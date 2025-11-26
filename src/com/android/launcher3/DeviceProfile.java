@@ -23,6 +23,7 @@ import static com.android.launcher3.InvariantDeviceProfile.INDEX_DEFAULT;
 import static com.android.launcher3.InvariantDeviceProfile.INDEX_LANDSCAPE;
 import static com.android.launcher3.InvariantDeviceProfile.INDEX_TWO_PANEL_LANDSCAPE;
 import static com.android.launcher3.InvariantDeviceProfile.INDEX_TWO_PANEL_PORTRAIT;
+import static com.android.launcher3.LauncherPrefs.ICON_SIZE;
 import static com.android.launcher3.Utilities.dpiFromPx;
 import static com.android.launcher3.Utilities.pxFromSp;
 import static com.android.launcher3.icons.IconNormalizer.ICON_VISIBLE_AREA_FACTOR;
@@ -1368,7 +1369,10 @@ public class DeviceProfile {
         if (mIsResponsiveGrid) {
             updateAllAppsWithResponsiveMeasures();
         } else {
-            updateAllAppsIconSize(scale, context.getResources());
+            final boolean needsScale = inv.numColumns == 4 && inv.numRows >= 6;
+            final float iconScale = scale * (ICON_SIZE.get(context) / 100f);
+            final float overrideScale = needsScale ? iconScale : scale;
+            updateAllAppsIconSize(overrideScale, context.getResources());
         }
         updateAllAppsContainerWidth();
         if (isVerticalLayout && !mIsResponsiveGrid) {
