@@ -21,15 +21,32 @@ import com.android.internal.util.BoostHelper
 class AxCpuBindController private constructor() {
 
     private var animationBoostType = 0
+    private var bindStatus = STATUS_UNBIND
     private var animationBoost = ANIMATION_BOOST_OFF
-    private val pid 
-        get() = Process.myPid()
+    private val pid get() = Process.myPid()
+
+    private fun bindBigCore() {
+        if (bindStatus == STATUS_BIND_BIG_CORE) {
+            return
+        }
+        bindStatus = STATUS_BIND_BIG_CORE
+        BoostHelper.setThreadAffinity(pid, STATUS_BIND_BIG_CORE)
+    }
+
+    private fun unbind() {
+        if (bindStatus == STATUS_UNBIND) {
+            return
+        }
+        bindStatus = STATUS_UNBIND
+        BoostHelper.setThreadAffinity(pid, STATUS_UNBIND)
+    }
 
     private fun animationBoostOn(type: Int) {
         animationBoostType = animationBoostType or type
         if (animationBoost == ANIMATION_BOOST_ON) {
             return
         }
+        bindBigCore()
         animationBoost = ANIMATION_BOOST_ON
         BoostHelper.animationBoost(pid, ANIMATION_BOOST_ON)
     }
@@ -37,6 +54,7 @@ class AxCpuBindController private constructor() {
     private fun animationBoostOff(type: Int) {
         animationBoostType = animationBoostType and type.inv()
         if (animationBoostType <= 0 && animationBoost != ANIMATION_BOOST_OFF) {
+            unbind()
             animationBoost = ANIMATION_BOOST_OFF
             BoostHelper.animationBoost(pid, ANIMATION_BOOST_OFF)
         }
@@ -67,6 +85,10 @@ class AxCpuBindController private constructor() {
     fun releaseTaskDismissBoost() = animationBoostOff(REQUEST_ANIMATION_BOOST_TYPE_TASK_DISMISS)
 
     companion object {
+        private const val STATUS_BIND_BIG_CORE = 0
+        private const val STATUS_BIND_SMALL_CORE = 1
+        private const val STATUS_UNBIND = 2
+
         private const val ANIMATION_BOOST_ON = 0L
         private const val ANIMATION_BOOST_OFF = -1L
 
