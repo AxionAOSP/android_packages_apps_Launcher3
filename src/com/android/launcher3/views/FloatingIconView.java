@@ -25,6 +25,7 @@ import static com.android.launcher3.views.FloatingIconViewCompanion.setPropertie
 
 import android.animation.Animator;
 import android.content.Context;
+import android.content.res.ThemeEngine;
 import android.graphics.Canvas;
 import android.graphics.Rect;
 import android.graphics.RectF;
@@ -363,8 +364,28 @@ public class FloatingIconView extends FrameLayout implements
         final InsettableFrameLayout.LayoutParams lp =
                 (InsettableFrameLayout.LayoutParams) getLayoutParams();
         mBadge = badge;
-        mClipIconView.setIcon(drawable, iconOffset, lp, mIsOpening, dp);
-        if (drawable instanceof AdaptiveIconDrawable) {
+        
+        boolean hasIconPack = false;
+        try {
+            ThemeEngine engine = ThemeEngine.getInstance(mLauncher);
+            hasIconPack = engine != null && engine.hasActiveIconPack();
+        } catch (Throwable t) {
+        }
+        
+        // When icon pack is active, pass null to ClipIconView to use simple background rendering
+        // This prevents adaptive icon transformations that cause size jumps
+        if (hasIconPack && drawable != null && !(drawable instanceof AdaptiveIconDrawable)) {
+            mClipIconView.setIcon(drawable, iconOffset, lp, mIsOpening, dp);
+        } else if (hasIconPack) {
+            // Even if the icon pack provides an AdaptiveIconDrawable, 
+            // use the btvIcon for consistent sizing during animations
+            Drawable simpleIcon = btvIcon != null ? btvIcon.get() : drawable;
+            mClipIconView.setIcon(simpleIcon, 0, lp, mIsOpening, dp);
+        } else {
+            mClipIconView.setIcon(drawable, iconOffset, lp, mIsOpening, dp);
+        }
+        
+        if (!hasIconPack && drawable instanceof AdaptiveIconDrawable) {
             final int originalHeight = lp.height;
             final int originalWidth = lp.width;
 
