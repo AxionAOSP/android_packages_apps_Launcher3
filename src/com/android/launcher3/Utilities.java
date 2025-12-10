@@ -35,6 +35,7 @@ import android.content.pm.LauncherApps;
 import android.content.pm.ShortcutInfo;
 import android.content.res.Configuration;
 import android.content.res.Resources;
+import android.content.res.ThemeEngine;
 import android.graphics.Color;
 import android.graphics.ColorFilter;
 import android.graphics.LightingColorFilter;
@@ -711,6 +712,19 @@ public final class Utilities {
         if (mainIcon instanceof AdaptiveIconDrawable aid) {
             result = aid;
         } else {
+            boolean skipWrapping = false;
+            try {
+                ThemeEngine engine = ThemeEngine.getInstance(context);
+                if (engine != null && engine.hasActiveIconPack()) {
+                    skipWrapping = true;
+                }
+            } catch (Throwable t) {
+            }
+            
+            if (skipWrapping) {
+                return null;
+            }
+            
             // Wrap the main icon in AID
             try (LauncherIcons li = LauncherIcons.obtain(context)) {
                 result = li.wrapToAdaptiveIcon(mainIcon);
