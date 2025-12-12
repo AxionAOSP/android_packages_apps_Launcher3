@@ -163,10 +163,16 @@ class TaskIconCache(
         iconCache.remove(taskKey)
     }
 
-    fun invalidateCacheEntries(pkg: String, handle: UserHandle) {
+    fun invalidateCacheEntries(pkg: String?, handle: UserHandle?) {
         bgExecutor.execute {
-            iconCache.removeAll { key: TaskKey ->
-                pkg == key.packageName && handle.identifier == key.userId
+            if (pkg == null || handle == null) {
+                iconCache.evictAll()
+                return@execute
+            }
+            iconCache.removeAll { key ->
+                key?.let {
+                    it.packageName == pkg && it.userId == handle.identifier
+                } ?: true
             }
         }
     }

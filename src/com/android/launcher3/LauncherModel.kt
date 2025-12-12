@@ -135,7 +135,11 @@ constructor(
 
     /** Called when the icon for an app changes, outside of package event */
     @WorkerThread
-    fun onAppIconChanged(packageName: String, user: UserHandle) {
+    fun onAppIconChanged(packageName: String?, user: UserHandle?) {
+        if (packageName == null || user == null) {
+            forceReload()
+            return
+        }
         // Update the icon for the calendar package
         enqueueModelUpdateTask(PackageUpdatedTask(PackageUpdatedTask.OP_UPDATE, user, packageName))
         ShortcutRequest(context, user).forPackage(packageName).query(ShortcutRequest.PINNED).let {
