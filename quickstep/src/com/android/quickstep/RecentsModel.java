@@ -347,6 +347,10 @@ public class RecentsModel implements RecentTasksDataSource, TaskStackChangeListe
     }
 
     private void onAppIconChanged(String packageName, UserHandle user) {
+        if (packageName == null || user == null) {
+            mIconCache.clearCache();
+            return;
+        }
         mIconCache.invalidateCacheEntries(packageName, user);
         for (TaskVisualsChangeListener listener : mThumbnailChangeListeners) {
             listener.onTaskIconChanged(packageName, user);
