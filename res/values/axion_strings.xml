@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Pulse Settings -->
+    <string name="pulse_settings_title">Pulse</string>
+    <string name="pulse_settings_brand_subtitle">Launcher Settings</string>
+    <string name="settings_category_home">Home Screen</string>
+    <string name="settings_category_drawer">App Drawer</string>
+    <string name="settings_category_behavior">Behavior</string>
+    <string name="settings_category_privacy">Privacy</string>
+    
+    <string name="pref_themed_icons_global_title">Enable themed icons</string>
+    <string name="pref_themed_icons_global_summary">Use monochrome themed icons throughout the launcher</string>
+    <string name="pref_themed_icons_drawer_title">Show themed icons in drawer</string>
+    <string name="pref_themed_icons_drawer_summary">Apply themed icons to app drawer when enabled</string>
+</resources>
