@@ -23,9 +23,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.res.stringResource
 import com.android.launcher3.R
-import com.android.launcher3.lineage.trust.TrustAppsActivity
 import com.android.launcher3.states.RotationHelper
-
 
 @Composable
 fun HomeScreenSettings(viewModel: SettingsState, context: Context) {
@@ -123,20 +121,6 @@ fun BehaviorSettings(viewModel: SettingsState) {
             description = stringResource(R.string.msg_minus_one_on_left),
             checked = showGoogleApp,
             onCheckedChange = { viewModel.setBoolean("pref_enable_minus_one", it) }
-        )
-    }
-}
-
-@Composable
-fun PrivacySettings(context: Context) {
-    SettingsGroup(title = stringResource(R.string.settings_category_privacy)) {
-        ClickablePreference(
-            title = stringResource(R.string.trust_apps_manager_name),
-            description = stringResource(R.string.trust_apps_auth_manager),
-            onClick = {
-                val intent = Intent(context, TrustAppsActivity::class.java)
-                context.startActivity(intent)
-            }
         )
     }
 }

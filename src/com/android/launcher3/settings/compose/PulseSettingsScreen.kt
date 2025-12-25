@@ -67,14 +67,13 @@ fun PulseSettingsScreen(
 ) {
     val context = LocalContext.current
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
-    val pagerState = rememberPagerState(pageCount = { 4 })
+    val pagerState = rememberPagerState(pageCount = { 3 })
     val coroutineScope = rememberCoroutineScope()
     
     val categories = listOf(
         stringResource(R.string.settings_category_home),
         stringResource(R.string.settings_category_drawer),
-        stringResource(R.string.settings_category_behavior),
-        stringResource(R.string.settings_category_privacy)
+        stringResource(R.string.settings_category_behavior)
     )
 
     Scaffold(
@@ -161,7 +160,6 @@ fun PulseSettingsScreen(
                             0 -> HomeScreenSettings(viewModel, context)
                             1 -> AppDrawerSettings(viewModel)
                             2 -> BehaviorSettings(viewModel)
-                            3 -> PrivacySettings(context)
                         }
                     }
                 }
