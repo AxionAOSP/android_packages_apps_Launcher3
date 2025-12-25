@@ -65,6 +65,14 @@ fun HomeScreenSettings(viewModel: SettingsState, context: Context) {
             checked = autoAddIcons,
             onCheckedChange = { viewModel.setBoolean("pref_add_icon_to_home", it) }
         )
+
+        val themedIconsEnabled by viewModel.themedIconsEnabled.collectAsState()
+        SwitchPreference(
+            title = stringResource(R.string.pref_themed_icons_global_title),
+            description = stringResource(R.string.pref_themed_icons_global_summary),
+            checked = themedIconsEnabled,
+            onCheckedChange = { viewModel.setBoolean("themed_icons", it) }
+        )
     }
 }
 
@@ -73,8 +81,8 @@ fun AppDrawerSettings(viewModel: SettingsState) {
     SettingsGroup(title = stringResource(R.string.settings_category_drawer)) {
         val themedIcons by viewModel.themedIcons.collectAsState()
         SwitchPreference(
-            title = stringResource(R.string.pref_themed_icons_title),
-            description = stringResource(R.string.pref_themed_icons_summary),
+            title = stringResource(R.string.pref_themed_icons_drawer_title),
+            description = stringResource(R.string.pref_themed_icons_drawer_summary),
             checked = themedIcons,
             onCheckedChange = { viewModel.setBoolean("pref_allapps_themed_icons", it) }
         )

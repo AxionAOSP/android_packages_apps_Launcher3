@@ -58,6 +58,9 @@ class SettingsState(context: Context) : ViewModel(), SharedPreferences.OnSharedP
     private val _swipeToSearch = MutableStateFlow(prefs.getBoolean("pref_drawer_open_keyboard", false))
     val swipeToSearch: StateFlow<Boolean> = _swipeToSearch.asStateFlow()
 
+    private val _themedIconsEnabled = MutableStateFlow(prefs.getBoolean("themed_icons", false))
+    val themedIconsEnabled: StateFlow<Boolean> = _themedIconsEnabled.asStateFlow()
+
     private val _themedIcons = MutableStateFlow(prefs.getBoolean("pref_allapps_themed_icons", false))
     val themedIcons: StateFlow<Boolean> = _themedIcons.asStateFlow()
 
@@ -82,6 +85,7 @@ class SettingsState(context: Context) : ViewModel(), SharedPreferences.OnSharedP
             RotationHelper.ALLOW_ROTATION_PREFERENCE_KEY -> _allowRotation.value = prefs.getBoolean(key, false)
             "pref_enable_minus_one" -> _showGoogleApp.value = prefs.getBoolean(key, true)
             "pref_drawer_open_keyboard" -> _swipeToSearch.value = prefs.getBoolean(key, false)
+            "themed_icons" -> _themedIconsEnabled.value = prefs.getBoolean(key, false)
             "pref_allapps_themed_icons" -> _themedIcons.value = prefs.getBoolean(key, false)
             "pref_sleep_gesture" -> _doubleTapToSleep.value = prefs.getBoolean(key, true)
             "pref_desktop_show_labels" -> _desktopShowLabels.value = prefs.getBoolean(key, true)
