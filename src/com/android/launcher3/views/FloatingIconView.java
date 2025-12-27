@@ -366,18 +366,27 @@ public class FloatingIconView extends FrameLayout implements
         mBadge = badge;
         
         boolean hasIconPack = false;
+        boolean isAxIconsStyle = false;
         try {
             ThemeEngine engine = ThemeEngine.getInstance(mLauncher);
             hasIconPack = engine != null && engine.hasActiveIconPack();
+            
+            if (!hasIconPack) {
+                String style = android.provider.Settings.Secure.getString(
+                        mLauncher.getContentResolver(), "themed_icon_style");
+                isAxIconsStyle = !"aosp".equals(style);
+            }
         } catch (Throwable t) {
         }
-        
-        // When icon pack is active, pass null to ClipIconView to use simple background rendering
+
+        // When icon pack/themes is active, pass null to ClipIconView to use simple background rendering
         // This prevents adaptive icon transformations that cause size jumps
-        if (hasIconPack && drawable != null && !(drawable instanceof AdaptiveIconDrawable)) {
+        boolean useSimpleRendering = hasIconPack || isAxIconsStyle;
+        
+        if (useSimpleRendering && drawable != null && !(drawable instanceof AdaptiveIconDrawable)) {
             mClipIconView.setIcon(drawable, iconOffset, lp, mIsOpening, dp);
-        } else if (hasIconPack) {
-            // Even if the icon pack provides an AdaptiveIconDrawable, 
+        } else if (useSimpleRendering) {
+            // Even if the icon provides an AdaptiveIconDrawable, 
             // use the btvIcon for consistent sizing during animations
             Drawable simpleIcon = btvIcon != null ? btvIcon.get() : drawable;
             mClipIconView.setIcon(simpleIcon, 0, lp, mIsOpening, dp);
@@ -385,7 +394,7 @@ public class FloatingIconView extends FrameLayout implements
             mClipIconView.setIcon(drawable, iconOffset, lp, mIsOpening, dp);
         }
         
-        if (!hasIconPack && drawable instanceof AdaptiveIconDrawable) {
+        if (!useSimpleRendering && drawable instanceof AdaptiveIconDrawable) {
             final int originalHeight = lp.height;
             final int originalWidth = lp.width;
 
