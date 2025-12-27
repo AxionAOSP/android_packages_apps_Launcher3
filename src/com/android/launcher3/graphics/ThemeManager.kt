@@ -18,6 +18,9 @@ package com.android.launcher3.graphics
 
 import android.content.Context
 import android.content.res.Resources
+import android.database.ContentObserver
+import android.net.Uri
+import android.provider.Settings
 import com.android.launcher3.EncryptionType
 import com.android.launcher3.Item
 import com.android.launcher3.LauncherPrefChangeListener
@@ -74,12 +77,37 @@ constructor(
 
     private val listeners = CopyOnWriteArrayList<ThemeChangeListener>()
 
+    private inner class SettingsObserver : ContentObserver(uiExecutor.handler), AutoCloseable {
+        
+        fun register() {
+            context.contentResolver.registerContentObserver(
+                Settings.Secure.getUriFor(KEY_THEMED_ICONS),
+                false,
+                this
+            )
+            context.contentResolver.registerContentObserver(
+                Settings.Secure.getUriFor(KEY_THEMED_ICON_STYLE),
+                false,
+                this
+            )
+        }
+
+        override fun onChange(selfChange: Boolean, uri: Uri?) {
+            super.onChange(selfChange, uri)
+            syncSettingsToPrefs()
+        }
+
+        override fun close() {
+            context.contentResolver.unregisterContentObserver(this)
+        }
+    }
+
     init {
         val receiver = SimpleBroadcastReceiver(
             context, uiExecutor) { verifyIconState() }
         receiver.registerPkgActions("android", ACTION_OVERLAY_CHANGED)
 
-        val keys = (iconControllerFactory.prefKeys + PREF_ICON_SHAPE)
+        val keys = (iconControllerFactory.prefKeys + PREF_ICON_SHAPE + THEMED_ICON_STYLE)
 
         val keysArray = keys.toTypedArray()
         val prefKeySet = keys.map { it.sharedPrefKey }
@@ -87,9 +115,32 @@ constructor(
             if (prefKeySet.contains(key)) verifyIconState()
         }
         prefs.addListener(prefListener, *keysArray)
+        
+        val settingsObserver = SettingsObserver()
+        settingsObserver.register()
+        
+        syncSettingsToPrefs()
+
         lifecycle.addCloseable {
             receiver.unregisterReceiverSafely()
             prefs.removeListener(prefListener, *keysArray)
+            settingsObserver.close()
+        }
+    }
+
+    private fun syncSettingsToPrefs() {
+        val contentResolver = context.contentResolver
+        val themedIconsEnabled = Settings.Secure.getInt(
+            contentResolver, KEY_THEMED_ICONS, 0) == 1
+        val themedIconStyle = Settings.Secure.getString(
+            contentResolver, KEY_THEMED_ICON_STYLE) ?: "axion"
+            
+        if (prefs.get(THEMED_ICONS) != themedIconsEnabled) {
+            prefs.put(THEMED_ICONS, themedIconsEnabled)
+        }
+        
+        if (prefs.get(THEMED_ICON_STYLE) != themedIconStyle) {
+            prefs.put(THEMED_ICON_STYLE, themedIconStyle)
         }
     }
 
@@ -130,6 +181,8 @@ constructor(
             } else {
                 ShapeDelegate.RoundedSquare(folderRadius)
             }
+        
+        val themedIconStyle = prefs.get(THEMED_ICON_STYLE)
 
         return IconState(
             iconMask = iconMask,
@@ -138,6 +191,7 @@ constructor(
             iconShape = iconShape,
             folderShape = folderShape,
             shapeRadius = shapeModel?.shapeRadius ?: DEFAULT_ICON_RADIUS,
+            themedIconStyle = themedIconStyle
         )
     }
 
@@ -149,8 +203,9 @@ constructor(
         val iconShape: ShapeDelegate,
         val folderShape: ShapeDelegate,
         val shapeRadius: Float,
+        val themedIconStyle: String = "axion"
     ) {
-        fun toUniqueId() = "${iconMask.hashCode()},$themeCode"
+        fun toUniqueId() = "${iconMask.hashCode()},$themeCode,$themedIconStyle"
     }
 
     /** Interface for receiving theme change events */
@@ -173,7 +228,10 @@ constructor(
         const val KEY_ICON_SHAPE = "icon_shape_model"
 
         const val KEY_THEMED_ICONS = "themed_icons"
+        const val KEY_THEMED_ICON_STYLE = "themed_icon_style"
+        
         @JvmField val THEMED_ICONS = backedUpItem(KEY_THEMED_ICONS, false, EncryptionType.ENCRYPTED)
+        @JvmField val THEMED_ICON_STYLE = backedUpItem(KEY_THEMED_ICON_STYLE, "axion", EncryptionType.ENCRYPTED)
         @JvmField val PREF_ICON_SHAPE = backedUpItem(KEY_ICON_SHAPE, "", EncryptionType.ENCRYPTED)
 
         private const val ACTION_OVERLAY_CHANGED = "android.intent.action.OVERLAY_CHANGED"
