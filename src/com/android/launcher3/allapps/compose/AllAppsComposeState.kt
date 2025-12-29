@@ -1,0 +1,58 @@
+/*
+ * Copyright (C) 2025 AxionOS
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package com.android.launcher3.allapps.compose
+
+import androidx.compose.runtime.Immutable
+import androidx.compose.runtime.Stable
+import com.android.launcher3.allapps.BaseAllAppsAdapter.AdapterItem
+import com.android.launcher3.model.data.AppInfo
+
+@Stable
+data class AllAppsComposeState(
+    val apps: List<AppInfo> = emptyList(),
+    val predictedApps: List<AppInfo> = emptyList(),
+    val pinnedApps: List<AppInfo> = emptyList(),
+    val adapterItems: List<AdapterItem> = emptyList(),
+    val searchQuery: String = "",
+    val isSearching: Boolean = false,
+    val currentTab: Int = TAB_PERSONAL,
+    val hasWorkApps: Boolean = false,
+    val hasPrivateApps: Boolean = false,
+    val numColumns: Int = 4,
+    val iconSizePx: Int = 0,
+    val cellWidthPx: Int = 0,
+    val cellHeightPx: Int = 0,
+    val showLabels: Boolean = true,
+    val sectionIndices: Map<String, Int> = emptyMap()
+) {
+    companion object {
+        const val TAB_PERSONAL = 0
+        const val TAB_WORK = 1
+        const val TAB_SEARCH = 2
+    }
+}
+
+@Immutable
+sealed class AllAppsComposeItem {
+    data class AppItem(val appInfo: AppInfo) : AllAppsComposeItem()
+    data class SectionHeader(val letter: String) : AllAppsComposeItem()
+    object PredictionsHeader : AllAppsComposeItem()
+    object PinnedAppsHeader : AllAppsComposeItem()
+    object AllAppsHeader : AllAppsComposeItem()
+    data class PrivateSpaceHeader(val isExpanded: Boolean) : AllAppsComposeItem()
+    object EmptySearchResult : AllAppsComposeItem()
+}

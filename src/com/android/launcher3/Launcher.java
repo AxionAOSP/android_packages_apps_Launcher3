@@ -94,6 +94,8 @@ import static com.android.launcher3.model.ItemInstallQueue.FLAG_DRAG_AND_DROP;
 import static com.android.launcher3.popup.SystemShortcut.APP_INFO;
 import static com.android.launcher3.popup.SystemShortcut.INSTALL;
 import static com.android.launcher3.popup.SystemShortcut.REMOVE;
+import static com.android.launcher3.popup.SystemShortcut.PIN_TO_TOP;
+import static com.android.launcher3.popup.SystemShortcut.UNINSTALL_APP;
 import static com.android.launcher3.popup.SystemShortcut.WIDGETS;
 import static com.android.launcher3.states.RotationHelper.REQUEST_LOCK;
 import static com.android.launcher3.states.RotationHelper.REQUEST_NONE;
@@ -413,6 +415,18 @@ public class Launcher extends StatefulActivity<LauncherState>
     protected WallpaperThemeManager mWallpaperThemeManager;
 
     private boolean mIsTopResumedActivity;
+    
+    private boolean mSkipFloatingIconReturnAnimation = false;
+    
+    public void setSkipFloatingIconReturnAnimation(boolean skip) {
+        mSkipFloatingIconReturnAnimation = skip;
+    }
+    
+    public boolean shouldSkipFloatingIconReturnAnimation() {
+        boolean result = mSkipFloatingIconReturnAnimation;
+        mSkipFloatingIconReturnAnimation = false;
+        return result;
+    }
 
     public static Launcher getLauncher(Context context) {
         return fromContext(context);
@@ -2886,6 +2900,9 @@ public class Launcher extends StatefulActivity<LauncherState>
         if (enableLongPressRemoveShortcut()
                 && (container == CONTAINER_DESKTOP || container == CONTAINER_HOTSEAT)) {
             return Stream.of(APP_INFO, WIDGETS, INSTALL, REMOVE);
+        }
+        if (container == LauncherSettings.Favorites.CONTAINER_ALL_APPS) {
+            return Stream.of(APP_INFO, WIDGETS, INSTALL, UNINSTALL_APP, PIN_TO_TOP);
         }
         return Stream.of(APP_INFO, WIDGETS, INSTALL);
     }
