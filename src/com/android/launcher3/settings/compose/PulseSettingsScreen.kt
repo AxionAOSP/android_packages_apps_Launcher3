@@ -15,28 +15,19 @@
  */
 package com.android.launcher3.settings.compose
 
-import android.app.Activity
 import android.content.Context
-import android.content.Intent
-import android.provider.Settings
 import androidx.compose.animation.*
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.pager.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.Check
-import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -44,22 +35,15 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.Stroke
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.colorResource
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.android.axion.compose.preferences.*
 import com.android.launcher3.R
-import com.android.launcher3.lineage.trust.TrustAppsActivity
-import androidx.compose.runtime.DisposableEffect
-import androidx.compose.runtime.remember
-import androidx.compose.ui.graphics.graphicsLayer
-import com.android.launcher3.states.RotationHelper
 import com.android.launcher3.allapps.compose.search.UniversalSearchManager
 import kotlinx.coroutines.launch
 
@@ -184,183 +168,66 @@ fun SearchSettingsPage(context: Context) {
         onDispose { searchManager.cleanup() }
     }
 
-    SettingsGroup("Search Providers") {
-        SwitchPreference(
-            title = "Contacts",
-            description = "Search your contacts",
-            checked = preferences.searchContacts,
-            onCheckedChange = { searchManager.setSearchContacts(it) }
-        )
-        HorizontalDivider()
-        SwitchPreference(
-            title = "Messages",
-            description = "Search your SMS messages",
-            checked = preferences.searchMessages,
-            onCheckedChange = { searchManager.setSearchMessages(it) }
-        )
-        HorizontalDivider()
-        SwitchPreference(
-            title = "Files",
-            description = "Search local files",
-            checked = preferences.searchFiles,
-            onCheckedChange = { searchManager.setSearchFiles(it) }
-        )
-        HorizontalDivider()
-        SwitchPreference(
-            title = "Photos",
-            description = "Search device photos",
-            checked = preferences.searchPhotos,
-            onCheckedChange = { searchManager.setSearchPhotos(it) }
-        )
-        HorizontalDivider()
-        SwitchPreference(
-            title = "Calendar",
-            description = "Search calendar events",
-            checked = preferences.searchCalendar,
-            onCheckedChange = { searchManager.setSearchCalendar(it) }
-        )
-        HorizontalDivider()
-        SwitchPreference(
-            title = "Settings",
-            description = "Search system settings",
-            checked = preferences.searchSettings,
-            onCheckedChange = { searchManager.setSearchSettings(it) }
-        )
-        HorizontalDivider()
-        SwitchPreference(
-            title = "Web Search",
-            description = "Allow web search actions",
-            checked = preferences.searchWeb,
-            onCheckedChange = { searchManager.setSearchWeb(it) }
-        )
-    }
-}
-
-@Composable
-fun HorizontalDivider() {
-    Divider(
-        color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f),
-        thickness = 1.dp,
-        modifier = Modifier.padding(horizontal = 16.dp)
-    )
-}
-
-@Composable
-fun SettingsGroup(
-    title: String,
-    content: @Composable () -> Unit
-) {
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 12.dp)
+    PreferenceGroup(
+        title = "Search Providers",
+        modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp)
     ) {
-        Text(
-            text = title,
-            style = MaterialTheme.typography.titleSmall.copy(
-                fontWeight = FontWeight.Bold
-            ),
-            color = MaterialTheme.colorScheme.primary,
-            modifier = Modifier.padding(start = 16.dp, bottom = 8.dp)
-        )
-        Surface(
-            shape = RoundedCornerShape(24.dp),
-            color = MaterialTheme.colorScheme.surface,
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Column(modifier = Modifier.padding(vertical = 4.dp)) {
-                content()
-            }
-        }
-    }
-}
-
-@Composable
-fun SwitchPreference(
-    title: String,
-    description: String? = null,
-    checked: Boolean,
-    onCheckedChange: (Boolean) -> Unit
-) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable { onCheckedChange(!checked) }
-            .padding(horizontal = 20.dp, vertical = 16.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Column(modifier = Modifier.weight(1f)) {
-            Text(
-                text = title,
-                style = MaterialTheme.typography.titleMedium.copy(
-                    fontWeight = FontWeight.Normal,
-                    fontSize = 20.sp
-                ),
-                color = MaterialTheme.colorScheme.onSurface
+        item {
+            SwitchPreference(
+                title = "Contacts",
+                summary = "Search your contacts",
+                checked = preferences.searchContacts,
+                onCheckedChange = { searchManager.setSearchContacts(it) }
             )
-            if (description != null) {
-                Spacer(modifier = Modifier.height(2.dp))
-                Text(
-                    text = description,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
         }
-        Spacer(modifier = Modifier.width(16.dp))
-        Switch(
-            checked = checked,
-            onCheckedChange = onCheckedChange,
-            thumbContent = {
-                if (checked) {
-                    Icon(
-                        imageVector = Icons.Filled.Check,
-                        contentDescription = null,
-                        modifier = Modifier.size(SwitchDefaults.IconSize)
-                    )
-                } 
-            }
-        )
-    }
-}
-
-@Composable
-fun ClickablePreference(
-    title: String,
-    description: String? = null,
-    onClick: () -> Unit
-) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable(onClick = onClick)
-            .padding(horizontal = 20.dp, vertical = 16.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Column(modifier = Modifier.weight(1f)) {
-            Text(
-                text = title,
-                style = MaterialTheme.typography.titleMedium.copy(
-                    fontWeight = FontWeight.Normal,
-                    fontSize = 20.sp
-                ),
-                color = MaterialTheme.colorScheme.onSurface
+        item {
+            SwitchPreference(
+                title = "Messages",
+                summary = "Search your SMS messages",
+                checked = preferences.searchMessages,
+                onCheckedChange = { searchManager.setSearchMessages(it) }
             )
-            if (description != null) {
-                Spacer(modifier = Modifier.height(2.dp))
-                Text(
-                    text = description,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
         }
-        Icon(
-            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-            contentDescription = null,
-            modifier = Modifier.size(20.dp).graphicsLayer { rotationZ = 180f },
-            tint = MaterialTheme.colorScheme.onSurfaceVariant
-        )
+        item {
+            SwitchPreference(
+                title = "Files",
+                summary = "Search local files",
+                checked = preferences.searchFiles,
+                onCheckedChange = { searchManager.setSearchFiles(it) }
+            )
+        }
+        item {
+            SwitchPreference(
+                title = "Photos",
+                summary = "Search device photos",
+                checked = preferences.searchPhotos,
+                onCheckedChange = { searchManager.setSearchPhotos(it) }
+            )
+        }
+        item {
+            SwitchPreference(
+                title = "Calendar",
+                summary = "Search calendar events",
+                checked = preferences.searchCalendar,
+                onCheckedChange = { searchManager.setSearchCalendar(it) }
+            )
+        }
+        item {
+            SwitchPreference(
+                title = "Settings",
+                summary = "Search system settings",
+                checked = preferences.searchSettings,
+                onCheckedChange = { searchManager.setSearchSettings(it) }
+            )
+        }
+        item {
+            SwitchPreference(
+                title = "Web Search",
+                summary = "Allow web search actions",
+                checked = preferences.searchWeb,
+                onCheckedChange = { searchManager.setSearchWeb(it) }
+            )
+        }
     }
 }
 
