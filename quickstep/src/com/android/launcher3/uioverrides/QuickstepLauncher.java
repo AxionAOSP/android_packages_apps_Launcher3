@@ -55,6 +55,7 @@ import static com.android.launcher3.popup.SystemShortcut.INSTALL;
 import static com.android.launcher3.popup.SystemShortcut.PRIVATE_PROFILE_INSTALL;
 import static com.android.launcher3.popup.SystemShortcut.REMOVE;
 import static com.android.launcher3.popup.SystemShortcut.UNINSTALL_APP;
+import static com.android.launcher3.popup.SystemShortcut.PIN_TO_TOP;
 import static com.android.launcher3.popup.SystemShortcut.WIDGETS;
 import static com.android.launcher3.taskbar.LauncherTaskbarUIController.ALL_APPS_PAGE_PROGRESS_INDEX;
 import static com.android.launcher3.taskbar.LauncherTaskbarUIController.MINUS_ONE_PAGE_PROGRESS_INDEX;
@@ -522,6 +523,12 @@ public class QuickstepLauncher extends Launcher implements RecentsViewContainer,
         }
         if (Flags.enablePrivateSpace()) {
             shortcuts.add(UNINSTALL_APP);
+        }
+        if (container == Favorites.CONTAINER_ALL_APPS) {
+            if (!shortcuts.contains(UNINSTALL_APP)) {
+                shortcuts.add(UNINSTALL_APP);
+            }
+            shortcuts.add(PIN_TO_TOP);
         }
         if (BubbleAnythingFlagHelper.enableCreateAnyBubble()) {
             shortcuts.add(BUBBLE_SHORTCUT);
@@ -1524,6 +1531,11 @@ public class QuickstepLauncher extends Launcher implements RecentsViewContainer,
     public View getFirstVisibleElementForAppClose(
             @Nullable StableViewInfo svi, String packageName, UserHandle user) {
         if (isInState(LauncherState.ALL_APPS)) {
+            View composeIcon = getAppsView().getComposeIconForClose(packageName);
+            if (composeIcon != null) {
+                return composeIcon;
+            }
+            
             AllAppsRecyclerView activeRecyclerView = getAppsView().getActiveRecyclerView();
             View v = null;
             if (svi != null) {

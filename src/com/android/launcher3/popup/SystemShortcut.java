@@ -27,6 +27,7 @@ import androidx.annotation.Nullable;
 
 import com.android.launcher3.AbstractFloatingView;
 import com.android.launcher3.AbstractFloatingViewHelper;
+import com.android.launcher3.allapps.compose.PinnedAppsManager;
 import com.android.launcher3.DropTargetHandler;
 import com.android.launcher3.Flags;
 import com.android.launcher3.LauncherSettings;
@@ -266,6 +267,49 @@ public abstract class SystemShortcut<T extends ActivityContext> extends ItemInfo
                     ActivityContext.lookupContext(view.getContext()).getDropTargetHandler();
             dropTargetHandler.prepareToUndoDelete();
             dropTargetHandler.onDeleteComplete(mItemInfo, mOriginalView);
+        }
+    }
+
+    public static final Factory<ActivityContext> PIN_TO_TOP =
+            (context, itemInfo, originalView) -> {
+                if (originalView == null) {
+                    return null;
+                }
+                if (!(itemInfo instanceof com.android.launcher3.model.data.AppInfo)
+                        || itemInfo.container != LauncherSettings.Favorites.CONTAINER_ALL_APPS) {
+                    return null;
+                }
+                return new PinToTop<>(context, itemInfo, originalView);
+            };
+
+    public static class PinToTop<T extends ActivityContext> extends SystemShortcut<T> {
+        
+        private final PinnedAppsManager mManager;
+        private final boolean mIsPinned;
+
+        public PinToTop(T target, ItemInfo itemInfo, @NonNull View originalView) {
+            super(R.drawable.ic_pin, 
+                    isPinnedApp(originalView.getContext(), itemInfo) 
+                        ? R.string.action_unpin 
+                        : R.string.action_pin_to_top, 
+                    target, itemInfo, originalView, false);
+            mManager = new PinnedAppsManager(originalView.getContext());
+            mIsPinned = mManager.isPinned(itemInfo.getTargetComponent().flattenToString());
+        }
+
+        private static boolean isPinnedApp(Context context, ItemInfo itemInfo) {
+            if (itemInfo.getTargetComponent() == null) return false;
+            PinnedAppsManager manager = 
+                new PinnedAppsManager(context);
+            return manager.isPinned(itemInfo.getTargetComponent().flattenToString());
+        }
+
+        @Override
+        public void onClick(View view) {
+            if (mItemInfo.getTargetComponent() == null) return;
+            String componentName = mItemInfo.getTargetComponent().flattenToString();
+            mManager.togglePin(componentName);
+            AbstractFloatingView.closeAllOpenViews(mTarget);
         }
     }
 

@@ -236,6 +236,8 @@
     <string name="pin_prediction">Pin Prediction</string>
     <!-- Label for bubbling a launcher item. [CHAR_LIMIT=20] -->
     <string name="bubble">Bubble</string>
+    <string name="action_pin_to_top">Pin to top</string>
+    <string name="action_unpin">Unpin</string>
 
     <!-- Permissions: -->
     <skip />

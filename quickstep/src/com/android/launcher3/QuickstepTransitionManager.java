@@ -1457,7 +1457,8 @@ public class QuickstepTransitionManager implements OnDeviceProfileChangeListener
                     mDeviceProfile.getDeviceProperties().isMultiWindowMode() ? 0 : getWindowCornerRadius(mLauncher),
                     isTransluscent, fallbackBackgroundColor);
         } else if (launcherView != null && !RemoveAnimationSettingsTracker.INSTANCE.get(
-                mLauncher).isRemoveAnimationEnabled()) {
+                mLauncher).isRemoveAnimationEnabled()
+                && !mLauncher.shouldSkipFloatingIconReturnAnimation()) {
             floatingIconView = getFloatingIconView(mLauncher, launcherView, null,
                     mLauncher.getTaskbarUIController() == null
                             ? null

@@ -31,10 +31,13 @@ class PulseSettingsActivity : ComponentActivity() {
 
         WindowCompat.setDecorFitsSystemWindows(window, false)
 
+        val initialPage = intent.getIntExtra("initial_page", 0)
+        
         setContent {
             PulseTheme {
                 PulseSettingsScreen(
-                    onBack = { finish() }
+                    onBack = { finish() },
+                    initialPage = initialPage
                 )
             }
         }

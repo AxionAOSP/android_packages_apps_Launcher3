@@ -179,7 +179,9 @@ public final class FeatureFlags {
             "USE_LOCAL_ICON_OVERRIDES", ENABLED,
             "Use inbuilt monochrome icons if app doesn't provide one");
 
-    // TODO(Block 29): Clean up flags
+    public static final BooleanFlag ENABLE_ALL_APPS_COMPOSE = getDebugFlag(270394974,
+            "ENABLE_ALL_APPS_COMPOSE", ENABLED,
+            "Enable Compose-based All Apps UI");
     // Aconfig migration complete for ENABLE_ALL_APPS_BUTTON_IN_HOTSEAT.
     public static final BooleanFlag ENABLE_ALL_APPS_BUTTON_IN_HOTSEAT = getDebugFlag(270393897,
             "ENABLE_ALL_APPS_BUTTON_IN_HOTSEAT", DISABLED,

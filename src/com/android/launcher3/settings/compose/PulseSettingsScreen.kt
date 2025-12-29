@@ -56,24 +56,30 @@ import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.android.launcher3.R
 import com.android.launcher3.lineage.trust.TrustAppsActivity
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.remember
+import androidx.compose.ui.graphics.graphicsLayer
 import com.android.launcher3.states.RotationHelper
+import com.android.launcher3.allapps.compose.search.UniversalSearchManager
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
 fun PulseSettingsScreen(
     onBack: () -> Unit,
+    initialPage: Int = 0,
     viewModel: SettingsState = viewModel(factory = SettingsViewModelFactory(LocalContext.current))
 ) {
     val context = LocalContext.current
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
-    val pagerState = rememberPagerState(pageCount = { 3 })
+    val pagerState = rememberPagerState(initialPage = initialPage, pageCount = { 4 })
     val coroutineScope = rememberCoroutineScope()
     
     val categories = listOf(
         stringResource(R.string.settings_category_home),
         stringResource(R.string.settings_category_drawer),
-        stringResource(R.string.settings_category_behavior)
+        stringResource(R.string.settings_category_behavior),
+        "Search"
     )
 
     Scaffold(
@@ -99,7 +105,6 @@ fun PulseSettingsScreen(
             
             PulseHeader()
             
-            
             LazyRow(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -113,7 +118,7 @@ fun PulseSettingsScreen(
                     
                     Box(
                         modifier = Modifier
-                            .clip(RoundedCornerShape(16.dp))
+                            .clip(RoundedCornerShape(24.dp))
                             .background(
                                 if (isSelected) {
                                     Brush.linearGradient(
@@ -122,8 +127,8 @@ fun PulseSettingsScreen(
                                 } else {
                                     Brush.linearGradient(
                                         colors = listOf(
-                                            MaterialTheme.colorScheme.surface,
-                                            MaterialTheme.colorScheme.surface
+                                            MaterialTheme.colorScheme.surfaceContainer,
+                                            MaterialTheme.colorScheme.surfaceContainer
                                         )
                                     )
                                 }
@@ -133,7 +138,7 @@ fun PulseSettingsScreen(
                                     pagerState.animateScrollToPage(index)
                                 }
                             }
-                            .padding(horizontal = 20.dp, vertical = 12.dp)
+                            .padding(horizontal = 20.dp, vertical = 10.dp)
                     ) {
                         Text(
                             text = categories[index],
@@ -145,7 +150,6 @@ fun PulseSettingsScreen(
                     }
                 }
             }
-            
             
             HorizontalPager(
                 state = pagerState,
@@ -160,11 +164,203 @@ fun PulseSettingsScreen(
                             0 -> HomeScreenSettings(viewModel, context)
                             1 -> AppDrawerSettings(viewModel)
                             2 -> BehaviorSettings(viewModel)
+                            3 -> SearchSettingsPage(context)
                         }
                     }
                 }
             }
+
+
         }
+    }
+}
+
+@Composable
+fun SearchSettingsPage(context: Context) {
+    val searchManager = remember { UniversalSearchManager(context) }
+    val preferences by searchManager.preferences.collectAsState()
+    
+    DisposableEffect(Unit) {
+        onDispose { searchManager.cleanup() }
+    }
+
+    SettingsGroup("Search Providers") {
+        SwitchPreference(
+            title = "Contacts",
+            description = "Search your contacts",
+            checked = preferences.searchContacts,
+            onCheckedChange = { searchManager.setSearchContacts(it) }
+        )
+        HorizontalDivider()
+        SwitchPreference(
+            title = "Messages",
+            description = "Search your SMS messages",
+            checked = preferences.searchMessages,
+            onCheckedChange = { searchManager.setSearchMessages(it) }
+        )
+        HorizontalDivider()
+        SwitchPreference(
+            title = "Files",
+            description = "Search local files",
+            checked = preferences.searchFiles,
+            onCheckedChange = { searchManager.setSearchFiles(it) }
+        )
+        HorizontalDivider()
+        SwitchPreference(
+            title = "Photos",
+            description = "Search device photos",
+            checked = preferences.searchPhotos,
+            onCheckedChange = { searchManager.setSearchPhotos(it) }
+        )
+        HorizontalDivider()
+        SwitchPreference(
+            title = "Calendar",
+            description = "Search calendar events",
+            checked = preferences.searchCalendar,
+            onCheckedChange = { searchManager.setSearchCalendar(it) }
+        )
+        HorizontalDivider()
+        SwitchPreference(
+            title = "Settings",
+            description = "Search system settings",
+            checked = preferences.searchSettings,
+            onCheckedChange = { searchManager.setSearchSettings(it) }
+        )
+        HorizontalDivider()
+        SwitchPreference(
+            title = "Web Search",
+            description = "Allow web search actions",
+            checked = preferences.searchWeb,
+            onCheckedChange = { searchManager.setSearchWeb(it) }
+        )
+    }
+}
+
+@Composable
+fun HorizontalDivider() {
+    Divider(
+        color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f),
+        thickness = 1.dp,
+        modifier = Modifier.padding(horizontal = 16.dp)
+    )
+}
+
+@Composable
+fun SettingsGroup(
+    title: String,
+    content: @Composable () -> Unit
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 12.dp)
+    ) {
+        Text(
+            text = title,
+            style = MaterialTheme.typography.titleSmall.copy(
+                fontWeight = FontWeight.Bold
+            ),
+            color = MaterialTheme.colorScheme.primary,
+            modifier = Modifier.padding(start = 16.dp, bottom = 8.dp)
+        )
+        Surface(
+            shape = RoundedCornerShape(24.dp),
+            color = MaterialTheme.colorScheme.surface,
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Column(modifier = Modifier.padding(vertical = 4.dp)) {
+                content()
+            }
+        }
+    }
+}
+
+@Composable
+fun SwitchPreference(
+    title: String,
+    description: String? = null,
+    checked: Boolean,
+    onCheckedChange: (Boolean) -> Unit
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { onCheckedChange(!checked) }
+            .padding(horizontal = 20.dp, vertical = 16.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = title,
+                style = MaterialTheme.typography.titleMedium.copy(
+                    fontWeight = FontWeight.Normal,
+                    fontSize = 20.sp
+                ),
+                color = MaterialTheme.colorScheme.onSurface
+            )
+            if (description != null) {
+                Spacer(modifier = Modifier.height(2.dp))
+                Text(
+                    text = description,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+        }
+        Spacer(modifier = Modifier.width(16.dp))
+        Switch(
+            checked = checked,
+            onCheckedChange = onCheckedChange,
+            thumbContent = {
+                if (checked) {
+                    Icon(
+                        imageVector = Icons.Filled.Check,
+                        contentDescription = null,
+                        modifier = Modifier.size(SwitchDefaults.IconSize)
+                    )
+                } 
+            }
+        )
+    }
+}
+
+@Composable
+fun ClickablePreference(
+    title: String,
+    description: String? = null,
+    onClick: () -> Unit
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick)
+            .padding(horizontal = 20.dp, vertical = 16.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = title,
+                style = MaterialTheme.typography.titleMedium.copy(
+                    fontWeight = FontWeight.Normal,
+                    fontSize = 20.sp
+                ),
+                color = MaterialTheme.colorScheme.onSurface
+            )
+            if (description != null) {
+                Spacer(modifier = Modifier.height(2.dp))
+                Text(
+                    text = description,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+        }
+        Icon(
+            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+            contentDescription = null,
+            modifier = Modifier.size(20.dp).graphicsLayer { rotationZ = 180f },
+            tint = MaterialTheme.colorScheme.onSurfaceVariant
+        )
     }
 }
 
@@ -269,135 +465,5 @@ fun PulseHeader() {
                 color = Color.White.copy(alpha = 0.85f)
             )
         }
-    }
-}
-
-@Composable
-fun SettingsGroup(
-    title: String,
-    content: @Composable () -> Unit
-) {
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 12.dp)
-    ) {
-        Text(
-            text = title,
-            style = MaterialTheme.typography.titleMedium.copy(
-                fontWeight = FontWeight.Bold,
-                letterSpacing = 0.5.sp
-            ),
-            color = MaterialTheme.colorScheme.primary,
-            modifier = Modifier.padding(start = 16.dp, bottom = 12.dp)
-        )
-        Card(
-            shape = RoundedCornerShape(24.dp),
-            colors = CardDefaults.cardColors(
-                containerColor = MaterialTheme.colorScheme.surface
-            ),
-            elevation = CardDefaults.cardElevation(
-                defaultElevation = 2.dp
-            )
-        ) {
-            Column(modifier = Modifier.padding(vertical = 4.dp)) {
-                content()
-            }
-        }
-    }
-}
-
-@Composable
-fun SwitchPreference(
-    title: String,
-    description: String? = null,
-    checked: Boolean,
-    onCheckedChange: (Boolean) -> Unit
-) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable { onCheckedChange(!checked) }
-            .padding(horizontal = 20.dp, vertical = 16.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Column(modifier = Modifier.weight(1f)) {
-            Text(
-                text = title,
-                style = MaterialTheme.typography.titleMedium.copy(
-                    fontWeight = FontWeight.SemiBold
-                ),
-                color = MaterialTheme.colorScheme.onSurface
-            )
-            if (description != null) {
-                Spacer(modifier = Modifier.height(4.dp))
-                Text(
-                    text = description,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    lineHeight = 20.sp
-                )
-            }
-        }
-        Spacer(modifier = Modifier.width(20.dp))
-        Switch(
-            checked = checked,
-            onCheckedChange = onCheckedChange,
-            thumbContent = {
-                if (checked) {
-                    Icon(
-                        imageVector = Icons.Filled.Check,
-                        contentDescription = null,
-                        modifier = Modifier.size(SwitchDefaults.IconSize)
-                    )
-                } else {
-                    Icon(
-                        imageVector = Icons.Filled.Close,
-                        contentDescription = null,
-                        modifier = Modifier.size(SwitchDefaults.IconSize)
-                    )
-                }
-            }
-        )
-    }
-}
-
-@Composable
-fun ClickablePreference(
-    title: String,
-    description: String? = null,
-    onClick: () -> Unit
-) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable(onClick = onClick)
-            .padding(horizontal = 20.dp, vertical = 16.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Column(modifier = Modifier.weight(1f)) {
-            Text(
-                text = title,
-                style = MaterialTheme.typography.titleMedium.copy(
-                    fontWeight = FontWeight.SemiBold
-                ),
-                color = MaterialTheme.colorScheme.onSurface
-            )
-            if (description != null) {
-                Spacer(modifier = Modifier.height(4.dp))
-                Text(
-                    text = description,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    lineHeight = 20.sp
-                )
-            }
-        }
-        Icon(
-            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-            contentDescription = null,
-            modifier = Modifier.size(20.dp),
-            tint = MaterialTheme.colorScheme.onSurfaceVariant
-        )
     }
 }

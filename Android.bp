@@ -333,6 +333,14 @@ quickstep_compose_java_defaults {
                 "androidx.compose.material3_material3",
                 "androidx.compose.ui_ui-tooling-preview",
                 "androidx.compose.ui_ui-tooling",
+                "androidx.compose.ui_ui",
+                "androidx.compose.foundation_foundation",
+                "androidx.compose.foundation_foundation-layout",
+                "androidx.compose.animation_animation",
+                "androidx.activity_activity-compose",
+                "androidx.lifecycle_lifecycle-viewmodel-compose",
+                "androidx.compose.material_material-icons-core",
+                "androidx.compose.material_material-icons-extended",
             ],
 
             // By default, Compose is disabled and we compile the ComposeFacade
@@ -564,6 +572,7 @@ android_library {
         "dagger2",
         "protolog-group",
         "displaylib",
+        "ax_compose",
     ],
     manifest: "quickstep/AndroidManifest.xml",
     min_sdk_version: "current",
