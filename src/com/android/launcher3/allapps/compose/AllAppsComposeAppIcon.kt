@@ -19,7 +19,6 @@ import android.content.res.Configuration
 import android.view.HapticFeedbackConstants
 import android.view.LayoutInflater
 import android.view.View
-import android.view.ViewConfiguration
 import androidx.compose.foundation.*
 import androidx.compose.foundation.gestures.*
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -27,7 +26,6 @@ import androidx.compose.foundation.interaction.PressInteraction
 import androidx.compose.foundation.layout.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.*
-import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.input.pointer.*
 import androidx.compose.ui.platform.*
 import androidx.compose.ui.unit.dp
@@ -36,8 +34,6 @@ import com.android.launcher3.BubbleTextView
 import com.android.launcher3.LauncherSettings
 import com.android.launcher3.R
 import com.android.launcher3.model.data.AppInfo
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
 
 @Composable
 @OptIn(ExperimentalFoundationApi::class)
@@ -54,20 +50,13 @@ fun AllAppsComposeAppIcon(
 ) {
     val configuration = LocalConfiguration.current
     val uiMode = configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK
-    val density = LocalDensity.current
-    val context = LocalContext.current
-    val scope = rememberCoroutineScope()
-    
-    val longPressTimeout = ViewConfiguration.getLongPressTimeout().toLong()
-    val touchSlop = ViewConfiguration.get(context).scaledTouchSlop
 
     val heightModifier = if (cellHeightPx > 0) {
-        with(density) { Modifier.height(cellHeightPx.toDp()) }
+        with(LocalDensity.current) { Modifier.height(cellHeightPx.toDp()) }
     } else {
         Modifier
     }
     
-
     val currentOnClick by rememberUpdatedState(onClick)
     val currentOnLongClick by rememberUpdatedState(onLongClick)
     val currentOnDragStart by rememberUpdatedState(onDragStart)
@@ -76,7 +65,6 @@ fun AllAppsComposeAppIcon(
     var bubbleTextView by remember { mutableStateOf<BubbleTextView?>(null) }
 
     val interactionSource = remember { MutableInteractionSource() }
-
 
     LaunchedEffect(interactionSource) {
         interactionSource.interactions.collect { interaction ->
@@ -98,7 +86,9 @@ fun AllAppsComposeAppIcon(
             .combinedClickable(
                 interactionSource = interactionSource,
                 indication = null,
-                onClick = { bubbleTextView?.let { view -> currentOnClick(appInfo, view) } },
+                onClick = { 
+                    bubbleTextView?.let { view -> currentOnClick(appInfo, view) } 
+                },
                 onLongClick = {
                     bubbleTextView?.let { view ->
                         view.performHapticFeedback(HapticFeedbackConstants.LONG_PRESS)
@@ -115,18 +105,8 @@ fun AllAppsComposeAppIcon(
                         }
                     },
                     onDrag = { _, _ -> },
-                    onDragEnd = {
-                        bubbleTextView?.let { view ->
-                            view.visibility = View.VISIBLE
-                            view.alpha = 1f
-                        }
-                    },
-                    onDragCancel = {
-                        bubbleTextView?.let { view ->
-                            view.visibility = View.VISIBLE
-                            view.alpha = 1f
-                        }
-                    }
+                    onDragEnd = {},
+                    onDragCancel = {}
                 )
             },
         contentAlignment = Alignment.TopCenter

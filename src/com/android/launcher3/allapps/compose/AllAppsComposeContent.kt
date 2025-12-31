@@ -18,6 +18,7 @@ package com.android.launcher3.allapps.compose
 import android.app.SearchManager
 import android.content.Context
 import android.content.Intent
+import android.content.SharedPreferences
 import android.content.pm.ApplicationInfo
 import android.view.HapticFeedbackConstants
 import android.view.LayoutInflater
@@ -37,6 +38,8 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.*
 import androidx.compose.ui.draw.alpha
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
@@ -54,6 +57,7 @@ import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.*
 import androidx.compose.ui.viewinterop.AndroidView
 import com.android.launcher3.BubbleTextView
+import com.android.launcher3.LauncherFiles
 import com.android.launcher3.LauncherPrefs
 import com.android.launcher3.LauncherSettings
 import com.android.launcher3.R
@@ -81,11 +85,12 @@ interface AllAppsComposeCallbacks {
 
 private const val TAB_PERSONAL = 0
 private const val TAB_WORK = 1
-private const val TAB_CATEGORIES = 2
+
+private val bigIconSize = 64.dp
+private val smallIconSize = 28.dp
 
 private sealed interface ContentScreen {
     data object AllApps : ContentScreen
-    data object Categories : ContentScreen
     data object Search : ContentScreen
     data object SearchSettings : ContentScreen
 }
@@ -103,6 +108,28 @@ fun AllAppsComposeContent(
     var showWorkApps by remember { mutableStateOf(false) }
     var expandedCategory by remember { mutableStateOf<AppCategory?>(null) }
     var dismissRequest by remember { mutableStateOf(false) }
+    
+    var drawerLayoutMode by remember { 
+        mutableStateOf(LauncherPrefs.DRAWER_LAYOUT_MODE.get(context))
+    }
+    
+    DisposableEffect(context) {
+        val prefs = context.getSharedPreferences(
+            LauncherFiles.SHARED_PREFERENCES_KEY,
+            Context.MODE_PRIVATE
+        )
+        val listener = SharedPreferences.OnSharedPreferenceChangeListener { _, key ->
+            if (key == "pref_drawer_layout_mode") {
+                drawerLayoutMode = LauncherPrefs.DRAWER_LAYOUT_MODE.get(context)
+            }
+        }
+        prefs.registerOnSharedPreferenceChangeListener(listener)
+        onDispose {
+            prefs.unregisterOnSharedPreferenceChangeListener(listener)
+        }
+    }
+    
+    val isSmartLayout = remember(drawerLayoutMode) { drawerLayoutMode == "smart" }
     
     var wasFullyClosed by remember { mutableStateOf(true) }
     var openCounter by remember { mutableIntStateOf(0) }
@@ -131,7 +158,7 @@ fun AllAppsComposeContent(
     }
     
     LaunchedEffect(transitionProgress) {
-        if (transitionProgress <= 0.01f) {
+        if (transitionProgress <= 0.05f) {
             if (!wasFullyClosed) {
                 wasFullyClosed = true
                 if (!isLaunching) {
@@ -145,7 +172,7 @@ fun AllAppsComposeContent(
                 isSearchSettingsOpen = false
                 expandedCategory = null
             }
-        } else if (wasFullyClosed && transitionProgress > 0.01f) {
+        } else if (wasFullyClosed && transitionProgress > 0.05f) {
             wasFullyClosed = false
             openCounter++
             isLaunching = false
@@ -157,262 +184,262 @@ fun AllAppsComposeContent(
     }
     
     LaunchedEffect(expandedCategory) {
-        if (expandedCategory != null) {
-            callbacks.setDismissFolderHandler {
-                dismissRequest = true
-            }
-        } else {
+        if (expandedCategory == null) {
             dismissRequest = false
-            callbacks.setDismissFolderHandler(null)
         }
     }
 
     Box(modifier = modifier.fillMaxSize().alpha(transitionProgress)) {
-        Column(modifier = Modifier.fillMaxSize()) {
-        
-
-        val isSearching = isSearchActive
-        
         val keyboardController = LocalSoftwareKeyboardController.current
         val isImeVisible = WindowInsets.ime.getBottom(LocalDensity.current) > 0
         
-        LaunchedEffect(isSearching, isImeVisible) {
-            callbacks.onSearchExpandedChanged(isSearching)
-            if (isSearching) {
+        val currentScreen = remember(isSearchActive) {
+            when {
+                isSearchActive -> ContentScreen.Search
+                else -> ContentScreen.AllApps
+            }
+        }
+        
+        val currentExpandedCategory by rememberUpdatedState(expandedCategory)
+        val currentIsSearchActive by rememberUpdatedState(isSearchActive)
+        val currentIsImeVisible by rememberUpdatedState(isImeVisible)
+        
+        LaunchedEffect(isSearchActive, isImeVisible, expandedCategory) {
+            callbacks.onSearchExpandedChanged(isSearchActive)
+            
+            val hasActiveState = isSearchActive || expandedCategory != null || isImeVisible
+            
+            if (hasActiveState) {
                 callbacks.setDismissFolderHandler {
-                    if (isImeVisible) {
-                        keyboardController?.hide()
-                    } else {
-                        searchQuery = ""
-                        callbacks.onSearchQueryChanged("")
-                        isSearchActive = false
+                    when {
+                        currentIsImeVisible -> {
+                            keyboardController?.hide()
+                        }
+                        currentExpandedCategory != null -> {
+                            dismissRequest = true
+                        }
+                        currentIsSearchActive -> {
+                            searchQuery = ""
+                            callbacks.onSearchQueryChanged("")
+                            isSearchActive = false
+                        }
                     }
                 }
-            } else if (expandedCategory == null) {
+            } else {
                 callbacks.setDismissFolderHandler(null)
             }
         }
         
-        AnimatedVisibility(
-            visible = !isSearching,
-            enter = fadeIn(animationSpec = tween(300, easing = EaseOutCubic)) + 
-                    expandVertically(animationSpec = tween(300, easing = EaseOutCubic)),
-            exit = fadeOut(animationSpec = tween(200, easing = EaseInCubic)) + 
-                   shrinkVertically(animationSpec = tween(200, easing = EaseInCubic))
-        ) {
-        AllAppsTabBar(
-            hasWorkApps = state.hasWorkApps,
-            selectedTab = when {
-                showCategories -> TAB_CATEGORIES
-                showWorkApps -> TAB_WORK
-                else -> TAB_PERSONAL
-            },
-            onTabSelected = { tab ->
-                when (tab) {
-                    TAB_PERSONAL -> {
-                        showCategories = false
-                        showWorkApps = false
-                        callbacks.onTabSelected(AllAppsComposeState.TAB_PERSONAL)
-                    }
-                    TAB_WORK -> {
-                        showCategories = false
-                        showWorkApps = true
-                        callbacks.onTabSelected(AllAppsComposeState.TAB_WORK)
-                    }
-                    TAB_CATEGORIES -> {
-                        showCategories = true
-                        showWorkApps = false
-                    }
-                }
-            }
-        )
-        }
-
-        val currentScreen = remember(showCategories, isSearching) {
-            when {
-                isSearching -> ContentScreen.Search
-                showCategories -> ContentScreen.Categories
-                else -> ContentScreen.AllApps
-            }
-        }
-
-        AnimatedContent(
-            targetState = currentScreen,
-            transitionSpec = {
-                when {
-                    targetState == ContentScreen.Search -> {
-                        (fadeIn(animationSpec = tween(300)) + 
-                         slideInVertically(animationSpec = tween(300)) { height -> height / 10 }) togetherWith
-                            (fadeOut(animationSpec = tween(200)))
-                    }
-                    initialState == ContentScreen.Search -> {
-                        (fadeIn(animationSpec = tween(300))) togetherWith
-                            (fadeOut(animationSpec = tween(200)) + 
-                             slideOutVertically(animationSpec = tween(200)) { height -> height / 10 })
-                    }
-                    targetState == ContentScreen.Categories -> {
-                        (slideInHorizontally(animationSpec = tween(400, easing = EaseOutCubic)) { width -> width } + 
-                         fadeIn(animationSpec = tween(300, easing = EaseOutCubic))) togetherWith
-                            (slideOutHorizontally(animationSpec = tween(300, easing = EaseInCubic)) { width -> -width } + 
-                             fadeOut(animationSpec = tween(200, easing = EaseInCubic)))
-                    }
-                    else -> {
-                        (slideInHorizontally(animationSpec = tween(400, easing = EaseOutCubic)) { width -> -width } + 
-                         fadeIn(animationSpec = tween(300, easing = EaseOutCubic))) togetherWith
-                            (slideOutHorizontally(animationSpec = tween(300, easing = EaseInCubic)) { width -> width } + 
-                             fadeOut(animationSpec = tween(200, easing = EaseInCubic)))
-                    }
-                }.using(SizeTransform(clip = false))
-            },
-            modifier = Modifier.weight(1f)
-        ) { screen ->
-            key(openCounter) {
-            when (screen) {
-                ContentScreen.AllApps -> {
-                AllAppsComposeGrid(
-                    items = items,
-                    sections = sections,
-                    numColumns = state.numColumns,
-                    iconSizePx = state.iconSizePx,
-                    cellHeightPx = state.cellHeightPx,
-                    showLabels = state.showLabels,
-                    onAppClick = { appInfo, icon ->
-                         isLaunching = true
-                         callbacks.onAppClicked(appInfo, icon)
+        Column(modifier = Modifier.fillMaxSize()) {
+            Spacer(modifier = Modifier.height(48.dp))
+            
+            AnimatedVisibility(
+                visible = currentScreen is ContentScreen.AllApps && !isSmartLayout && state.hasWorkApps,
+                enter = fadeIn(animationSpec = tween(300, easing = EaseOutCubic)) + 
+                        expandVertically(animationSpec = tween(300, easing = EaseOutCubic)),
+                exit = fadeOut(animationSpec = tween(200, easing = EaseInCubic)) + 
+                       shrinkVertically(animationSpec = tween(200, easing = EaseInCubic))
+            ) {
+                AllAppsTabBar(
+                    hasWorkApps = state.hasWorkApps,
+                    selectedTab = when {
+                        showWorkApps -> TAB_WORK
+                        else -> TAB_PERSONAL
                     },
-                    onAppLongClick = callbacks::onAppLongClicked,
-                    onAppDragStart = callbacks::onAppDragStart,
-                    onScrollStateChanged = callbacks::onScrollStateChanged,
-                    transitionProgress = transitionProgress,
-                    modifier = Modifier.fillMaxSize(),
-                    contentPadding = PaddingValues(
-                        start = 16.dp,
-                        end = 16.dp,
-                        top = 0.dp,
-                        bottom = 16.dp
-                    )
-                )
-                }
-                ContentScreen.Search -> {
-                UniversalSearchResults(
-                    state = searchState,
-                    onAppClick = { app, view ->
-                        isLaunching = true
-                        val btv = view as? BubbleTextView ?: (LayoutInflater.from(context)
-                            .inflate(R.layout.all_apps_icon, null) as BubbleTextView).apply {
-                            applyFromItemInfoWithIcon(app.appInfo)
-                        }
-                        callbacks.onAppClicked(app.appInfo, btv)
-                    },
-                    onContactClick = { contact ->
-                        isLaunching = true
-                        callbacks.startActivity(searchManager.getContactIntent(contact))
-                    },
-                    onMessageClick = { message ->
-                        isLaunching = true
-                        callbacks.startActivity(searchManager.getMessageIntent(message))
-                    },
-                    onFileClick = { file ->
-                        try {
-                            isLaunching = true
-                            callbacks.startActivity(searchManager.getFileIntent(file))
-                        } catch (e: Exception) {
-                        }
-                    },
-                    onPhotoClick = { photo ->
-                        try {
-                            isLaunching = true
-                            callbacks.startActivity(searchManager.getPhotoIntent(photo))
-                        } catch (e: Exception) {
-                        }
-                    },
-
-                    onCalendarClick = { calendar ->
-                        isLaunching = true
-                        callbacks.startActivity(searchManager.getCalendarIntent(calendar))
-                    },
-                    onSettingClick = { setting ->
-                        isLaunching = true
-                        callbacks.startActivity(setting.intent)
-                    },
-                    onInAppSearchClick = { search ->
-                        if (search.appInfo.componentName != null) {
-                            val intent = Intent(Intent.ACTION_SEARCH).apply {
-                                setPackage(search.appInfo.componentName!!.packageName)
-                                putExtra("query", search.query)
-                                putExtra(SearchManager.QUERY, search.query)
+                    onTabSelected = { tab ->
+                        when (tab) {
+                            TAB_PERSONAL -> {
+                                showWorkApps = false
+                                callbacks.onTabSelected(AllAppsComposeState.TAB_PERSONAL)
                             }
-                            isLaunching = true
-                            callbacks.startActivity(intent)
-                        }
-                    },
-                    onWebActionClick = { action ->
-                        isLaunching = true
-                        when (action.type) {
-                            WebActionType.GOOGLE -> callbacks.startActivity(searchManager.getGoogleSearchIntent(action.query))
-                            WebActionType.BROWSER -> callbacks.startActivity(searchManager.getBrowserSearchIntent(action.query))
-                            WebActionType.STORE -> callbacks.startActivity(searchManager.getStoreSearchIntent(action.query))
-                            WebActionType.SUGGESTION -> {
-                                action.packageName?.let { pkg ->
-                                    callbacks.startActivity(searchManager.getAppSearchIntent(pkg, action.query))
-                                }
+                            TAB_WORK -> {
+                                showWorkApps = true
+                                callbacks.onTabSelected(AllAppsComposeState.TAB_WORK)
                             }
                         }
-                    },
-                    onScrollStateChanged = callbacks::onScrollStateChanged,
-                    onRequestContactsPermission = { callbacks.requestContactsPermission() },
-                    onRequestSmsPermission = { callbacks.requestSmsPermission() },
-
-                    onRequestFilePermission = { callbacks.requestFilePermission() },
-                    onRequestCalendarPermission = { callbacks.requestCalendarPermission() },
-                    modifier = Modifier.fillMaxSize()
+                    }
                 )
-                }
-                ContentScreen.Categories -> {
-                    AllAppsCategoriesView(
-                        state = state,
-                        expandedCategory = expandedCategory,
-                        onExpandedCategoryChange = { 
-                            expandedCategory = it
-                            callbacks.onFolderExpandedChanged(it != null)
-                        },
-                        onAppClick = callbacks::onAppClicked,
-                        onAppClickedFromFolder = callbacks::onAppClickedFromFolder,
-                        onAppLongClick = callbacks::onAppLongClicked,
-                        onAppDragStart = callbacks::onAppDragStart,
-                        onScrollStateChanged = callbacks::onScrollStateChanged,
-                        transitionProgress = transitionProgress,
-                        dismissRequest = dismissRequest,
-                        onDismissRequestChange = { dismissRequest = it },
-                        modifier = Modifier.fillMaxSize()
-                    )
-                }
-                else -> { /* Noop for other screens managed elsewhere */ }
             }
+        
+            AnimatedContent(
+                targetState = currentScreen,
+                transitionSpec = {
+                    when {
+                        targetState == ContentScreen.Search -> {
+                            (fadeIn(animationSpec = tween(300)) + 
+                             slideInVertically(animationSpec = tween(300)) { height -> height / 10 }) togetherWith
+                                (fadeOut(animationSpec = tween(200)))
+                        }
+                        initialState == ContentScreen.Search -> {
+                            (fadeIn(animationSpec = tween(300))) togetherWith
+                                (fadeOut(animationSpec = tween(200)))
+                        }
+                        else -> {
+                           fadeIn(animationSpec = tween(300)) togetherWith fadeOut(animationSpec = tween(200))
+                        }
+                    }.using(SizeTransform(clip = false))
+                },
+                modifier = Modifier.weight(1f)
+            ) { screen ->
+                when (screen) {
+                    ContentScreen.AllApps -> {
+                        if (isSmartLayout) {
+                            key("smart_layout") {
+                                AllAppsCategoriesView(
+                                    state = state,
+                                    expandedCategory = expandedCategory,
+                                    onExpandedCategoryChange = { 
+                                        expandedCategory = it
+                                        callbacks.onFolderExpandedChanged(it != null)
+                                    },
+                                    onAppClick = callbacks::onAppClicked,
+                                    onAppClickedFromFolder = callbacks::onAppClickedFromFolder,
+                                    onAppLongClick = callbacks::onAppLongClicked,
+                                    onAppDragStart = callbacks::onAppDragStart,
+                                    onScrollStateChanged = callbacks::onScrollStateChanged,
+                                    transitionProgress = transitionProgress,
+                                    dismissRequest = dismissRequest,
+                                    onDismissRequestChange = { dismissRequest = it },
+                                    modifier = Modifier.fillMaxSize()
+                                )
+                            }
+                        } else {
+                            key("grid_layout") {
+                                AllAppsComposeGrid(
+                                    items = items,
+                                    sections = sections,
+                                    numColumns = state.numColumns,
+                                    iconSizePx = state.iconSizePx,
+                                    cellHeightPx = state.cellHeightPx,
+                                    showLabels = state.showLabels,
+                                    onAppClick = { appInfo, icon ->
+                                        isLaunching = true
+                                        callbacks.onAppClicked(appInfo, icon)
+                                    },
+                                    onAppLongClick = callbacks::onAppLongClicked,
+                                    onAppDragStart = callbacks::onAppDragStart,
+                                    onScrollStateChanged = callbacks::onScrollStateChanged,
+                                    transitionProgress = transitionProgress,
+                                    modifier = Modifier.fillMaxSize(),
+                                    contentPadding = PaddingValues(
+                                        start = 16.dp,
+                                        end = 16.dp,
+                                        top = 0.dp,
+                                        bottom = 16.dp
+                                    )
+                                )
+                            }
+                        }
+                    }
+                    ContentScreen.Search -> {
+                            UniversalSearchResults(
+                                state = searchState,
+                                onAppClick = { app, view ->
+                                    isLaunching = true
+                                    val btv = view as? BubbleTextView ?: (LayoutInflater.from(context)
+                                        .inflate(R.layout.all_apps_icon, null) as BubbleTextView).apply {
+                                        applyFromItemInfoWithIcon(app.appInfo)
+                                    }
+                                    callbacks.onAppClicked(app.appInfo, btv)
+                                },
+                                onAppLongClick = callbacks::onAppLongClicked,
+                                onAppDragStart = callbacks::onAppDragStart,
+                                iconSizePx = state.iconSizePx,
+                                cellHeightPx = state.cellHeightPx,
+                                onContactClick = { contact ->
+                                    isLaunching = true
+                                    callbacks.startActivity(searchManager.getContactIntent(contact))
+                                },
+                                onMessageClick = { message ->
+                                    isLaunching = true
+                                    callbacks.startActivity(searchManager.getMessageIntent(message))
+                                },
+                                onFileClick = { file ->
+                                    try {
+                                        isLaunching = true
+                                        callbacks.startActivity(searchManager.getFileIntent(file))
+                                    } catch (e: Exception) {
+                                    }
+                                },
+                                onPhotoClick = { photo ->
+                                    try {
+                                        isLaunching = true
+                                        callbacks.startActivity(searchManager.getPhotoIntent(photo))
+                                    } catch (e: Exception) {
+                                    }
+                                },
+                                onCalendarClick = { calendar ->
+                                    isLaunching = true
+                                    callbacks.startActivity(searchManager.getCalendarIntent(calendar))
+                                },
+                                onSettingClick = { setting ->
+                                    isLaunching = true
+                                    callbacks.startActivity(setting.intent)
+                                },
+                                onInAppSearchClick = { search ->
+                                    if (search.appInfo.componentName != null) {
+                                        val intent = Intent(Intent.ACTION_SEARCH).apply {
+                                            setPackage(search.appInfo.componentName!!.packageName)
+                                            putExtra("query", search.query)
+                                            putExtra(SearchManager.QUERY, search.query)
+                                        }
+                                        isLaunching = true
+                                        callbacks.startActivity(intent)
+                                    }
+                                },
+                                onWebActionClick = { action ->
+                                    isLaunching = true
+                                    when (action.type) {
+                                        WebActionType.GOOGLE -> callbacks.startActivity(searchManager.getGoogleSearchIntent(action.query))
+                                        WebActionType.BROWSER -> callbacks.startActivity(searchManager.getBrowserSearchIntent(action.query))
+                                        WebActionType.STORE -> callbacks.startActivity(searchManager.getStoreSearchIntent(action.query))
+                                        WebActionType.SUGGESTION -> {
+                                            action.packageName?.let { pkg ->
+                                                callbacks.startActivity(searchManager.getAppSearchIntent(pkg, action.query))
+                                            }
+                                        }
+                                    }
+                                },
+                                onScrollStateChanged = callbacks::onScrollStateChanged,
+                                onRequestContactsPermission = { callbacks.requestContactsPermission() },
+                                onRequestSmsPermission = { callbacks.requestSmsPermission() },
+                                onRequestFilePermission = { callbacks.requestFilePermission() },
+                                onRequestCalendarPermission = { callbacks.requestCalendarPermission() },
+                                modifier = Modifier.fillMaxSize()
+                            )
+                        }
+                        else -> { }
+                    }
+                }
+        
+            AnimatedVisibility(
+                visible = true,
+                enter = slideInVertically(animationSpec = tween(300)) { it } + fadeIn(animationSpec = tween(300)),
+                exit = slideOutVertically(animationSpec = tween(300)) { it } + fadeOut(animationSpec = tween(300))
+            ) {
+                AllAppsComposeSearchBar(
+                    query = searchQuery,
+                    onQueryChange = { query ->
+                        searchQuery = query
+                        callbacks.onSearchQueryChanged(query)
+                    },
+                    onClearQuery = {
+                        searchQuery = ""
+                        callbacks.onSearchQueryChanged("")
+                    },
+                    onMenuClick = {
+                        isLaunching = true
+                        val intent = Intent(context, PulseSettingsActivity::class.java).apply {
+                            putExtra("initial_page", 3)
+                            flags = Intent.FLAG_ACTIVITY_NEW_TASK
+                        }
+                        context.startActivity(intent)
+                    },
+                    shouldAutoFocus = LauncherPrefs.DRAWER_OPEN_KEYBOARD.get(LocalContext.current),
+                    focusTrigger = openCounter,
+                    modifier = Modifier.fillMaxWidth()
+                )
             }
-        }
-
-        AllAppsComposeSearchBar(
-            query = searchQuery,
-            onQueryChange = { query ->
-                searchQuery = query
-                callbacks.onSearchQueryChanged(query)
-            },
-            onClearQuery = {
-                searchQuery = ""
-                callbacks.onSearchQueryChanged("")
-            },
-            onMenuClick = {
-                 isLaunching = true
-                 val intent = Intent(context, PulseSettingsActivity::class.java).apply {
-                     putExtra("initial_page", 3)
-                     flags = Intent.FLAG_ACTIVITY_NEW_TASK
-                 }
-                 context.startActivity(intent)
-            },
-            autoFocus = LauncherPrefs.DRAWER_OPEN_KEYBOARD.get(LocalContext.current),
-            modifier = Modifier.fillMaxWidth()
-        )
         }
     }
 }
@@ -428,13 +455,11 @@ private fun AllAppsTabBar(
         if (hasWorkApps) {
             listOf(
                 TAB_PERSONAL to "Personal",
-                TAB_WORK to "Work",
-                TAB_CATEGORIES to "Categories"
+                TAB_WORK to "Work"
             )
         } else {
             listOf(
-                TAB_PERSONAL to "All",
-                TAB_CATEGORIES to "Categories"
+                TAB_PERSONAL to "All"
             )
         }
     }
@@ -543,12 +568,10 @@ private fun AllAppsCategoriesView(
 ) {
 
     val context = LocalContext.current
+    var internalExpandedCategory by remember(expandedCategory) { mutableStateOf(expandedCategory) }
     val categories = remember(state.apps) {
         categorizeApps(state.apps, context)
     }
-    
-    var folderPositions by remember { mutableStateOf(mapOf<Int, Offset>()) }
-    var containerSize by remember { mutableStateOf(IntSize.Zero) }
 
     val gridState = rememberLazyGridState()
     val canScrollUp by remember { derivedStateOf { gridState.canScrollBackward } }
@@ -560,129 +583,259 @@ private fun AllAppsCategoriesView(
         }
     }
     
-    var expandedPinnedApps by remember { mutableStateOf(false) }
-    var pinnedAppsPosition by remember { mutableStateOf(Offset.Zero) }
-    
-    Box(
-        modifier = modifier
-            .fillMaxSize()
-            .onGloballyPositioned { containerSize = it.size }
-    ) {
-        LazyVerticalGrid(
-            columns = GridCells.Fixed(2),
-            state = gridState,
-            contentPadding = PaddingValues(16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp),
-            horizontalArrangement = Arrangement.spacedBy(16.dp),
-            modifier = Modifier.fillMaxSize()
-        ) {
-            if (state.pinnedApps.isNotEmpty()) {
-                item(span = { GridItemSpan(2) }) {
-                    val pinnedAlpha by animateFloatAsState(
-                        targetValue = if (expandedPinnedApps) 0f else 1f,
-                        animationSpec = tween(durationMillis = 200),
-                        label = "pinnedAlpha"
-                    )
-                    
-                    Box(
-                        modifier = Modifier
-                            .alpha(pinnedAlpha)
-                            .onGloballyPositioned { coordinates ->
-                                val position = coordinates.positionInParent()
-                                val centerX = position.x + coordinates.size.width / 2f
-                                val centerY = position.y + coordinates.size.height / 2f
-                                pinnedAppsPosition = Offset(centerX, centerY)
-                            }
-                    ) {
-                        PinnedAppsCard(
-                            pinnedApps = state.pinnedApps,
-                            onClick = { expandedPinnedApps = true },
-                            onAppClick = onAppClick,
-                            onAppLongClick = onAppLongClick,
-                            onAppDragStart = onAppDragStart
-                        )
-                    }
-                }
-            }
-            
-            items(
-                count = categories.size,
-                key = { categories[it].id }
-            ) { index ->
-                val isExpanded = expandedCategory?.id == categories[index].id
-                val folderAlpha by animateFloatAsState(
-                    targetValue = if (isExpanded) 0f else 1f,
-                    animationSpec = tween(durationMillis = 200),
-                    label = "folderAlpha"
-                )
-                
-                Box(
-                    modifier = Modifier
-                        .alpha(folderAlpha)
-                        .onGloballyPositioned { coordinates ->
-                            val position = coordinates.positionInParent()
-                            val centerX = position.x + coordinates.size.width / 2f
-                            val centerY = position.y + coordinates.size.height / 2f
-                            folderPositions = folderPositions + (categories[index].id to Offset(centerX, centerY))
-                        }
-                ) {
-                    Column(
-                        verticalArrangement = Arrangement.spacedBy(8.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
-                        CategoryFolder(
-                            category = categories[index],
-                            onClick = { onExpandedCategoryChange(categories[index]) },
-                            onAppClick = onAppClick,
-                            onAppLongClick = onAppLongClick,
-                            onAppDragStart = onAppDragStart
-                        )
-                        Text(
-                            text = categories[index].name,
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurface,
-                            maxLines = 1
-                        )
-                    }
-                }
-            }
+    LaunchedEffect(dismissRequest) {
+        if (dismissRequest && expandedCategory != null) {
+            onExpandedCategoryChange(null)
+            onDismissRequestChange(false)
         }
+    }
+    
+    val pinnedCategory = remember(state.pinnedApps) {
+        AppCategory(-2, "Pinned Apps", state.pinnedApps)
+    }
 
-        expandedCategory?.let { category ->
-            val folderCenter = folderPositions[category.id]
-            key(category.id) {
-                ExpandedFolderOverlay(
-                    category = category,
-                    onAppClickedFromFolder = onAppClickedFromFolder,
-                    onAppLongClick = onAppLongClick,
-                    onAppDragStart = onAppDragStart,
-                    onDismiss = { 
-                        onExpandedCategoryChange(null)
-                        onDismissRequestChange(false)
-                    },
-                    iconSizePx = state.iconSizePx,
-                    cellHeightPx = state.cellHeightPx,
-                    onScrollStateChanged = onScrollStateChanged,
-                    originOffset = folderCenter,
-                    containerSize = containerSize,
-                    dismissRequest = dismissRequest
-                )
+    Column(
+        modifier = modifier.fillMaxSize()
+    ) {
+        AnimatedVisibility(
+            visible = expandedCategory == null,
+            enter = fadeIn(animationSpec = tween(300, easing = LinearOutSlowInEasing)) +
+                    scaleIn(
+                        animationSpec = spring(
+                            dampingRatio = 0.85f,
+                            stiffness = Spring.StiffnessMediumLow
+                        ),
+                        initialScale = 0.92f
+                    ),
+            exit = fadeOut(animationSpec = tween(200, easing = LinearOutSlowInEasing)) +
+                   scaleOut(
+                       animationSpec = tween(200, easing = FastOutSlowInEasing),
+                       targetScale = 0.95f
+                   )
+        ) {
+            Column(modifier = Modifier.fillMaxSize()) {
+                if (state.pinnedApps.isNotEmpty()) {
+                    PinnedAppsCard(
+                        pinnedApps = state.pinnedApps,
+                        onClick = { 
+                            internalExpandedCategory = pinnedCategory
+                            onExpandedCategoryChange(pinnedCategory)
+                        },
+                        onAppClick = onAppClick,
+                        onAppLongClick = onAppLongClick,
+                        onAppDragStart = onAppDragStart,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp, vertical = 8.dp)
+                    )
+                    Spacer(modifier = Modifier.height(16.dp))
+                }
+
+                LazyVerticalGrid(
+                    columns = GridCells.Fixed(2),
+                    state = gridState,
+                    contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 0.dp, bottom = 16.dp),
+                    verticalArrangement = Arrangement.spacedBy(16.dp),
+                    horizontalArrangement = Arrangement.spacedBy(16.dp),
+                    modifier = Modifier.fillMaxSize().weight(1f)
+                ) {
+                    items(
+                        count = categories.size,
+                        key = { categories[it].id }
+                    ) { index ->
+                        val staggerDelay = (index % 2) * 40 + (index / 2) * 60
+                        var itemVisible by remember { mutableStateOf(false) }
+                        
+                        LaunchedEffect(Unit) {
+                            kotlinx.coroutines.delay(staggerDelay.toLong())
+                            itemVisible = true
+                        }
+                        
+                        AnimatedVisibility(
+                            visible = itemVisible,
+                            enter = scaleIn(
+                                animationSpec = spring(
+                                    dampingRatio = 0.8f,
+                                    stiffness = Spring.StiffnessLow
+                                ),
+                                initialScale = 0.9f
+                            ) + fadeIn(animationSpec = tween(250))
+                        ) {
+                            Column(
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                verticalArrangement = Arrangement.spacedBy(8.dp),
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                CategoryFolder(
+                                    category = categories[index],
+                                    onClick = {
+                                        internalExpandedCategory = categories[index]
+                                        onExpandedCategoryChange(categories[index])
+                                    },
+                                    onAppClick = onAppClick,
+                                    onAppLongClick = onAppLongClick,
+                                    onAppDragStart = onAppDragStart
+                                )
+                                Text(
+                                    text = categories[index].name,
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.onSurface,
+                                    maxLines = 1,
+                                    modifier = Modifier.clickable(
+                                        indication = null,
+                                        interactionSource = remember { MutableInteractionSource() }
+                                    ) {
+                                        internalExpandedCategory = categories[index]
+                                        onExpandedCategoryChange(categories[index])
+                                    }
+                                )
+                            }
+                        }
+                    }
+                }
             }
         }
         
-        if (expandedPinnedApps && state.pinnedApps.isNotEmpty()) {
-            ExpandedPinnedAppsOverlay(
-                pinnedApps = state.pinnedApps,
-                onAppClick = onAppClick,
-                onAppLongClick = onAppLongClick,
-                onAppDragStart = onAppDragStart,
-                onDismiss = { expandedPinnedApps = false },
-                iconSizePx = state.iconSizePx,
-                cellHeightPx = state.cellHeightPx,
-                onScrollStateChanged = onScrollStateChanged,
-                originOffset = pinnedAppsPosition,
-                containerSize = containerSize
+        AnimatedVisibility(
+            visible = expandedCategory != null,
+            enter = scaleIn(
+                animationSpec = spring(
+                    dampingRatio = 0.85f,
+                    stiffness = Spring.StiffnessMediumLow
+                ),
+                initialScale = 0.92f,
+                transformOrigin = TransformOrigin(0.5f, 0.8f)
+            ) + fadeIn(
+                animationSpec = tween(350, easing = LinearOutSlowInEasing)
+            ) + slideInVertically(
+                animationSpec = spring(
+                    dampingRatio = 0.8f,
+                    stiffness = Spring.StiffnessMedium
+                ),
+                initialOffsetY = { it / 8 }
+            ),
+            exit = scaleOut(
+                animationSpec = tween(200, easing = FastOutSlowInEasing),
+                targetScale = 0.9f,
+                transformOrigin = TransformOrigin(0.5f, 0.8f)
+            ) + fadeOut(
+                animationSpec = tween(150, easing = LinearOutSlowInEasing)
+            ) + slideOutVertically(
+                animationSpec = tween(200, easing = FastOutSlowInEasing),
+                targetOffsetY = { it / 6 }
             )
+        ) {
+            expandedCategory?.let { category ->
+                ExpandedFolderContent(
+                    category = category,
+                    onDismiss = { onExpandedCategoryChange(null) },
+                    onAppClick = onAppClick,
+                    onAppLongClick = onAppLongClick,
+                    onAppDragStart = onAppDragStart,
+                    iconSizePx = state.iconSizePx,
+                    cellHeightPx = state.cellHeightPx
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun ExpandedFolderContent(
+    category: AppCategory,
+    onDismiss: () -> Unit,
+    onAppClick: (AppInfo, BubbleTextView) -> Unit,
+    onAppLongClick: (AppInfo, BubbleTextView) -> Unit,
+    onAppDragStart: ((AppInfo, BubbleTextView) -> Unit)?,
+    iconSizePx: Int,
+    cellHeightPx: Int
+) {
+    var isVisible by remember { mutableStateOf(false) }
+    
+    LaunchedEffect(Unit) {
+        isVisible = true
+    }
+    
+    Column(
+        modifier = Modifier.fillMaxSize()
+    ) {
+        AnimatedVisibility(
+            visible = isVisible,
+            enter = fadeIn(animationSpec = tween(300)) + 
+                    slideInVertically(animationSpec = tween(350, easing = LinearOutSlowInEasing)) { -it / 6 } +
+                    scaleIn(
+                        animationSpec = spring(
+                            dampingRatio = 0.75f,
+                            stiffness = Spring.StiffnessLow
+                        ),
+                        initialScale = 0.9f
+                    ),
+            exit = fadeOut(animationSpec = tween(150)) + 
+                   slideOutVertically(animationSpec = tween(200, easing = FastOutSlowInEasing)) { -it / 4 }
+        ) {
+            Column(modifier = Modifier.fillMaxSize()) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 24.dp, vertical = 16.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(40.dp)
+                            .clip(RoundedCornerShape(12.dp))
+                            .background(MaterialTheme.colorScheme.surfaceContainerHighest)
+                            .clickable(
+                                onClick = onDismiss,
+                                indication = null,
+                                interactionSource = remember { MutableInteractionSource() }
+                            ),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = "Back",
+                            tint = MaterialTheme.colorScheme.onSurface
+                        )
+                    }
+                    Spacer(modifier = Modifier.width(16.dp))
+                    Text(
+                        text = category.name,
+                        style = MaterialTheme.typography.headlineSmall,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                }
+            
+                LazyVerticalGrid(
+                    columns = GridCells.Fixed(4),
+                    contentPadding = PaddingValues(
+                        start = 24.dp,
+                        end = 24.dp,
+                        top = 16.dp,
+                        bottom = 32.dp
+                    ),
+                    verticalArrangement = Arrangement.spacedBy(16.dp),
+                    horizontalArrangement = Arrangement.spacedBy(16.dp),
+                    modifier = Modifier.fillMaxSize().weight(1f)
+                ) {
+                    items(
+                        count = category.apps.size,
+                        key = { category.apps[it].componentName.toString() }
+                    ) { index ->
+                        AllAppsComposeAppIcon(
+                            appInfo = category.apps[index],
+                            showLabel = true,
+                            iconSizePx = iconSizePx,
+                            cellHeightPx = cellHeightPx,
+                            onClick = onAppClick,
+                            onLongClick = onAppLongClick,
+                            onDragStart = onAppDragStart,
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                    }
+                }
+            }
         }
     }
 }
@@ -696,14 +849,14 @@ private fun CategoryFolder(
     onAppDragStart: ((AppInfo, BubbleTextView) -> Unit)?
 ) {
     val hasMoreThanFour = category.apps.size > 4
-    val bigIconSize = 64.dp
-    val smallIconSize = 28.dp
+    val density = LocalDensity.current
+    val iconSizePx = with(density) { bigIconSize.roundToPx() }
     
     Box(
         modifier = Modifier
             .aspectRatio(1f)
             .clip(RoundedCornerShape(24.dp))
-            .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
+            .background(MaterialTheme.colorScheme.surfaceBright.copy(alpha = 0.5f))
             .clickable(
                 onClick = onClick,
                 indication = null,
@@ -715,17 +868,17 @@ private fun CategoryFolder(
             Column(
                 modifier = Modifier.wrapContentSize(),
                 verticalArrangement = Arrangement.spacedBy(12.dp),
-                horizontalAlignment = Alignment.Start
+                horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Row(
                     horizontalArrangement = Arrangement.spacedBy(12.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     category.apps.getOrNull(0)?.let { app ->
-                        FolderPreviewIcon(app, onAppClick, onAppLongClick, onAppDragStart, iconSize = bigIconSize)
+                        PreviewAppIcon(app, bigIconSize, iconSizePx, onAppClick, onAppLongClick, onAppDragStart)
                     }
                     category.apps.getOrNull(1)?.let { app ->
-                        FolderPreviewIcon(app, onAppClick, onAppLongClick, onAppDragStart, iconSize = bigIconSize)
+                        PreviewAppIcon(app, bigIconSize, iconSizePx, onAppClick, onAppLongClick, onAppDragStart)
                     }
                 }
                 Row(
@@ -733,38 +886,34 @@ private fun CategoryFolder(
                     verticalAlignment = Alignment.Top
                 ) {
                     category.apps.getOrNull(2)?.let { app ->
-                        FolderPreviewIcon(app, onAppClick, onAppLongClick, onAppDragStart, iconSize = bigIconSize)
+                        PreviewAppIcon(app, bigIconSize, iconSizePx, onAppClick, onAppLongClick, onAppDragStart)
                     }
                     Box(
-                        modifier = Modifier
-                            .size(bigIconSize)
-                            .clickable(
-                                onClick = onClick,
-                                indication = null,
-                                interactionSource = remember { MutableInteractionSource() }
-                            )
+                        modifier = Modifier.size(bigIconSize),
+                        contentAlignment = Alignment.Center
                     ) {
                         Column(
-                            verticalArrangement = Arrangement.spacedBy(4.dp)
+                            verticalArrangement = Arrangement.spacedBy(4.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally
                         ) {
                             Row(
                                 horizontalArrangement = Arrangement.spacedBy(4.dp)
                             ) {
                                 category.apps.getOrNull(3)?.let { app ->
-                                    FolderPreviewIcon(app, { _, _ -> onClick() }, { _, _ -> }, null, iconSize = smallIconSize)
+                                    PreviewBaseAppIcon(app, smallIconSize)
                                 }
                                 category.apps.getOrNull(4)?.let { app ->
-                                    FolderPreviewIcon(app, { _, _ -> onClick() }, { _, _ -> }, null, iconSize = smallIconSize)
+                                    PreviewBaseAppIcon(app, smallIconSize)
                                 }
                             }
                             Row(
                                 horizontalArrangement = Arrangement.spacedBy(4.dp)
                             ) {
                                 category.apps.getOrNull(5)?.let { app ->
-                                    FolderPreviewIcon(app, { _, _ -> onClick() }, { _, _ -> }, null, iconSize = smallIconSize)
+                                    PreviewBaseAppIcon(app, smallIconSize)
                                 }
                                 category.apps.getOrNull(6)?.let { app ->
-                                    FolderPreviewIcon(app, { _, _ -> onClick() }, { _, _ -> }, null, iconSize = smallIconSize)
+                                    PreviewBaseAppIcon(app, smallIconSize)
                                 }
                             }
                         }
@@ -776,17 +925,17 @@ private fun CategoryFolder(
             Column(
                 modifier = Modifier.wrapContentSize(),
                 verticalArrangement = Arrangement.spacedBy(12.dp),
-                horizontalAlignment = Alignment.Start
+                horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Row(
                     horizontalArrangement = Arrangement.spacedBy(12.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     previewApps.getOrNull(0)?.let { app ->
-                        FolderPreviewIcon(app, onAppClick, onAppLongClick, onAppDragStart, iconSize = bigIconSize)
+                        PreviewAppIcon(app, bigIconSize, iconSizePx, onAppClick, onAppLongClick, onAppDragStart)
                     }
                     previewApps.getOrNull(1)?.let { app ->
-                        FolderPreviewIcon(app, onAppClick, onAppLongClick, onAppDragStart, iconSize = bigIconSize)
+                        PreviewAppIcon(app, bigIconSize, iconSizePx, onAppClick, onAppLongClick, onAppDragStart)
                     }
                 }
                 if (previewApps.size > 2) {
@@ -795,16 +944,110 @@ private fun CategoryFolder(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         previewApps.getOrNull(2)?.let { app ->
-                            FolderPreviewIcon(app, onAppClick, onAppLongClick, onAppDragStart, iconSize = bigIconSize)
+                            PreviewAppIcon(app, bigIconSize, iconSizePx, onAppClick, onAppLongClick, onAppDragStart)
                         }
                         previewApps.getOrNull(3)?.let { app ->
-                            FolderPreviewIcon(app, onAppClick, onAppLongClick, onAppDragStart, iconSize = bigIconSize)
+                            PreviewAppIcon(app, bigIconSize, iconSizePx, onAppClick, onAppLongClick, onAppDragStart)
                         }
                     }
                 }
             }
         }
     }
+}
+
+@OptIn(ExperimentalFoundationApi::class)
+@Composable
+private fun PreviewAppIcon(
+    app: AppInfo,
+    iconSize: Dp,
+    iconSizePx: Int,
+    onAppClick: (AppInfo, BubbleTextView) -> Unit,
+    onAppLongClick: (AppInfo, BubbleTextView) -> Unit,
+    onAppDragStart: ((AppInfo, BubbleTextView) -> Unit)?
+) {
+    var bubbleTextView by remember { mutableStateOf<BubbleTextView?>(null) }
+    var imageView by remember { mutableStateOf<ImageView?>(null) }
+    val view = LocalView.current
+    val density = LocalDensity.current
+    val iconSizeInPx = with(density) { iconSize.roundToPx() }
+    
+    fun syncBubbleTextViewBounds() {
+        val iv = imageView ?: return
+        val btv = bubbleTextView ?: return
+        val location = IntArray(2)
+        iv.getLocationOnScreen(location)
+        btv.layout(location[0], location[1], location[0] + iconSizeInPx, location[1] + iconSizeInPx)
+    }
+    
+    Box(
+        modifier = Modifier
+            .size(iconSize)
+            .combinedClickable(
+                onClick = {
+                    syncBubbleTextViewBounds()
+                    bubbleTextView?.let { onAppClick(app, it) }
+                },
+                onLongClick = {
+                    syncBubbleTextViewBounds()
+                    bubbleTextView?.let { btv ->
+                        view.performHapticFeedback(HapticFeedbackConstants.LONG_PRESS)
+                        onAppLongClick(app, btv)
+                    }
+                },
+                indication = null,
+                interactionSource = remember { MutableInteractionSource() }
+            )
+            .pointerInput(Unit) {
+                detectDragGesturesAfterLongPress(
+                    onDragStart = {
+                        syncBubbleTextViewBounds()
+                        bubbleTextView?.let { btv ->
+                            onAppDragStart?.invoke(app, btv)
+                        }
+                    },
+                    onDrag = { _, _ -> },
+                    onDragEnd = {},
+                    onDragCancel = {}
+                )
+            },
+        contentAlignment = Alignment.Center
+    ) {
+        AndroidView(
+            factory = { context ->
+                val btv = (LayoutInflater.from(context)
+                    .inflate(R.layout.all_apps_icon, null) as BubbleTextView).apply {
+                    app.container = LauncherSettings.Favorites.CONTAINER_ALL_APPS
+                    applyFromItemInfoWithIcon(app)
+                    setDisplay(BubbleTextView.DISPLAY_ALL_APPS)
+                    setTextVisibility(false)
+                }
+                bubbleTextView = btv
+                ImageView(context).apply {
+                    setImageDrawable(btv.icon)
+                }.also { imageView = it }
+            },
+            modifier = Modifier.size(iconSize)
+        )
+    }
+}
+
+@Composable
+private fun PreviewBaseAppIcon(app: AppInfo, iconSize: Dp) {
+    AndroidView(
+        factory = { context ->
+            val btv = (LayoutInflater.from(context)
+                .inflate(R.layout.all_apps_icon, null) as BubbleTextView).apply {
+                app.container = LauncherSettings.Favorites.CONTAINER_ALL_APPS
+                applyFromItemInfoWithIcon(app)
+                setDisplay(BubbleTextView.DISPLAY_ALL_APPS)
+            }
+            ImageView(context).apply {
+                setImageDrawable(btv.icon)
+            }
+        },
+        modifier = Modifier.size(iconSize)
+    )
 }
 
 @OptIn(ExperimentalFoundationApi::class)
@@ -922,9 +1165,7 @@ private fun ExpandedFolderOverlay(
         (originOffset.x / containerSize.width).coerceIn(0f, 1f)
     } else 0.5f
     
-    val originY = if (containerSize.height > 0 && originOffset != null) {
-        (originOffset.y / containerSize.height).coerceIn(0f, 1f)
-    } else 0.5f
+    val originY = 0.45f
     
     val scale by animateFloatAsState(
         targetValue = if (visible) 1f else 0.5f,
@@ -979,7 +1220,7 @@ private fun ExpandedFolderOverlay(
                     interactionSource = remember { MutableInteractionSource() }
                 )
                 .clip(RoundedCornerShape(32.dp))
-                .background(MaterialTheme.colorScheme.surface)
+                .background(MaterialTheme.colorScheme.surfaceContainer)
         ) {
             Box(
                 modifier = Modifier
@@ -1039,7 +1280,8 @@ private fun PinnedAppsCard(
     onClick: () -> Unit,
     onAppClick: (AppInfo, BubbleTextView) -> Unit,
     onAppLongClick: (AppInfo, BubbleTextView) -> Unit,
-    onAppDragStart: ((AppInfo, BubbleTextView) -> Unit)?
+    onAppDragStart: ((AppInfo, BubbleTextView) -> Unit)?,
+    modifier: Modifier = Modifier
 ) {
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -1050,13 +1292,13 @@ private fun PinnedAppsCard(
             modifier = Modifier
                 .wrapContentSize()
                 .clip(RoundedCornerShape(24.dp))
-                .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
+                .background(MaterialTheme.colorScheme.surfaceBright.copy(alpha = 0.5f))
                 .clickable(
                     onClick = onClick,
                     indication = null,
                     interactionSource = remember { MutableInteractionSource() }
                 )
-                .padding(12.dp),
+                .padding(24.dp),
             contentAlignment = Alignment.Center
         ) {
             Row(
@@ -1064,8 +1306,18 @@ private fun PinnedAppsCard(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 val previewApps = pinnedApps.take(4)
+                val density = LocalDensity.current
+                val iconSizePx = with(density) { 48.dp.roundToPx() }
+                
                 previewApps.forEach { app ->
-                    FolderPreviewIcon(app, onAppClick, onAppLongClick, onAppDragStart)
+                    PreviewAppIcon(
+                        app = app, 
+                        iconSize = 64.dp,
+                        iconSizePx = iconSizePx,
+                        onAppClick = onAppClick,
+                        onAppLongClick = onAppLongClick,
+                        onAppDragStart = onAppDragStart
+                    )
                 }
             }
         }
@@ -1079,142 +1331,23 @@ private fun PinnedAppsCard(
     }
 }
 
-@Composable
-private fun ExpandedPinnedAppsOverlay(
-    pinnedApps: List<AppInfo>,
-    onAppClick: (AppInfo, BubbleTextView) -> Unit,
-    onAppLongClick: (AppInfo, BubbleTextView) -> Unit,
-    onAppDragStart: ((AppInfo, BubbleTextView) -> Unit)?,
-    onDismiss: () -> Unit,
-    iconSizePx: Int,
-    cellHeightPx: Int,
-    onScrollStateChanged: (canScrollUp: Boolean, canScrollDown: Boolean) -> Unit,
-    originOffset: Offset?,
-    containerSize: IntSize
-) {
-    var visible by remember { mutableStateOf(false) }
-    
-    val originX = if (containerSize.width > 0 && originOffset != null) {
-        (originOffset.x / containerSize.width).coerceIn(0f, 1f)
-    } else 0.5f
-    
-    val originY = if (containerSize.height > 0 && originOffset != null) {
-        (originOffset.y / containerSize.height).coerceIn(0f, 1f)
-    } else 0.5f
-    
-    val scale by animateFloatAsState(
-        targetValue = if (visible) 1f else 0.5f,
-        animationSpec = tween(durationMillis = 200, easing = FastOutSlowInEasing),
-        label = "pinnedScale"
-    )
-    val alpha by animateFloatAsState(
-        targetValue = if (visible) 1f else 0f,
-        animationSpec = tween(durationMillis = 200, easing = FastOutSlowInEasing),
-        finishedListener = { if (!visible) onDismiss() },
-        label = "pinnedAlpha"
-    )
-    
-    val gridState = rememberLazyGridState()
-    val canScrollUp by remember { derivedStateOf { gridState.canScrollBackward } }
-    val canScrollDown by remember { derivedStateOf { gridState.canScrollForward } }
-    
-    LaunchedEffect(canScrollUp, canScrollDown) {
-        onScrollStateChanged(canScrollUp, canScrollDown)
-    }
-    
-    LaunchedEffect(Unit) { visible = true }
-    
-    val handleDismiss = {
-        visible = false
-    }
-    
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .clickable(
-                onClick = handleDismiss,
-                indication = null,
-                interactionSource = remember { MutableInteractionSource() }
-            ),
-        contentAlignment = Alignment.Center
-    ) {
-        Box(
-            modifier = Modifier
-                .fillMaxWidth(0.88f)
-                .wrapContentHeight()
-                .graphicsLayer(
-                    scaleX = scale,
-                    scaleY = scale,
-                    alpha = alpha,
-                    transformOrigin = TransformOrigin(originX, originY)
-                )
-                .clickable(
-                    enabled = false,
-                    onClick = {},
-                    indication = null,
-                    interactionSource = remember { MutableInteractionSource() }
-                )
-                .clip(RoundedCornerShape(32.dp))
-                .background(MaterialTheme.colorScheme.surface)
-        ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clip(RoundedCornerShape(32.dp))
-                    .padding(16.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                LazyVerticalGrid(
-                    columns = GridCells.Fixed(4),
-                    state = gridState,
-                    contentPadding = PaddingValues(start = 8.dp, end = 8.dp, top = 16.dp, bottom = 8.dp),
-                    verticalArrangement = Arrangement.spacedBy(16.dp),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    modifier = Modifier.heightIn(max = 400.dp)
-                ) {
-                    items(
-                        count = pinnedApps.size,
-                        key = { pinnedApps[it].componentName.toString() }
-                    ) { index ->
-                        AllAppsComposeAppIcon(
-                            appInfo = pinnedApps[index],
-                            showLabel = true,
-                            iconSizePx = iconSizePx,
-                            cellHeightPx = cellHeightPx,
-                            onClick = { appInfo, view -> 
-                                onAppClick(appInfo, view)
-                                onDismiss()
-                            },
-                            onLongClick = onAppLongClick,
-                            onDragStart = onAppDragStart,
-                            modifier = Modifier.fillMaxWidth()
-                        )
-                    }
-                }
-
-                Spacer(modifier = Modifier.height(12.dp))
-
-                Text(
-                    text = "Pinned",
-                    style = MaterialTheme.typography.titleMedium,
-                    color = MaterialTheme.colorScheme.primary
-                )
-            }
-        }
-    }
-}
 
 private fun categorizeApps(apps: List<AppInfo>, context: Context): List<AppCategory> {
     val pm = context.packageManager
+    val configForceGamePackages = context.resources.getStringArray(R.array.config_categorize_force_game_packages).toSet()
     
     val categoryMap = mutableMapOf<Int, MutableList<AppInfo>>()
     
     apps.forEach { appInfo ->
         val pkg = appInfo.intent?.`package` ?: appInfo.componentName?.packageName ?: ""
-        val androidCategory = try {
-            pm.getApplicationInfo(pkg, 0).category
-        } catch (e: Exception) {
-            ApplicationInfo.CATEGORY_UNDEFINED
+        
+        val androidCategory = when {
+            configForceGamePackages.contains(pkg) -> ApplicationInfo.CATEGORY_GAME
+            else -> try {
+                pm.getApplicationInfo(pkg, 0).category
+            } catch (e: Exception) {
+                ApplicationInfo.CATEGORY_UNDEFINED
+            }
         }
         
         categoryMap.getOrPut(androidCategory) { mutableListOf() }.add(appInfo)
@@ -1285,6 +1418,7 @@ private fun buildComposeItems(
     }
 
     if (state.pinnedApps.isNotEmpty()) {
+        sections.add("\uD83D\uDCCC" to items.size)
         items.add(AllAppsComposeItem.PinnedAppsHeader)
         state.pinnedApps.forEach { items.add(AllAppsComposeItem.AppItem(it)) }
     }

@@ -157,6 +157,8 @@ fun AllAppsComposeGrid(
         if (sections.isNotEmpty()) {
             AllAppsComposeFastScroller(
                 sections = sections,
+                gridState = gridState,
+                totalItems = items.size,
                 onSectionSelected = { index ->
                     scope.launch {
                         gridState.scrollToItem(index)

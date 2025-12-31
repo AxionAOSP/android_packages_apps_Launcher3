@@ -353,10 +353,10 @@ public class ActivityAllAppsContainerView<T extends Context & ActivityContext>
             mBottomSheetBackground.setVisibility(GONE);
         }
         if (mBottomSheetHandleArea != null) {
-            mBottomSheetHandleArea.setVisibility(GONE);
+            mBottomSheetHandleArea.setVisibility(VISIBLE);
         }
         if (mBottomSheetHandle != null) {
-            mBottomSheetHandle.setVisibility(GONE);
+            mBottomSheetHandle.setVisibility(VISIBLE);
         }
 
         mComposeView = findViewById(R.id.all_apps_compose_view);

@@ -13,9 +13,7 @@ import android.view.Gravity
 import android.view.View
 import androidx.compose.animation.*
 import androidx.compose.animation.core.*
-import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
@@ -28,9 +26,9 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.*
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.ImageBitmap
-import androidx.compose.ui.graphics.asImageBitmap
-import androidx.compose.ui.graphics.toArgb
+import androidx.compose.ui.geometry.*
+import androidx.compose.ui.graphics.*
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
@@ -41,6 +39,8 @@ import androidx.core.graphics.drawable.toBitmap
 import com.android.launcher3.BubbleTextView
 import com.android.launcher3.Launcher
 import com.android.launcher3.Utilities
+import com.android.launcher3.allapps.compose.AllAppsComposeAppIcon
+import com.android.launcher3.model.data.AppInfo
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
@@ -48,6 +48,10 @@ import kotlinx.coroutines.withContext
 fun UniversalSearchResults(
     state: UniversalSearchState,
     onAppClick: (UniversalSearchResult.App, View) -> Unit,
+    onAppLongClick: (AppInfo, BubbleTextView) -> Unit,
+    onAppDragStart: ((AppInfo, BubbleTextView) -> Unit)?,
+    iconSizePx: Int,
+    cellHeightPx: Int,
     onContactClick: (UniversalSearchResult.Contact) -> Unit,
     onMessageClick: (UniversalSearchResult.Message) -> Unit,
     onFileClick: (UniversalSearchResult.File) -> Unit,
@@ -89,7 +93,14 @@ fun UniversalSearchResults(
                         contentPadding = PaddingValues(horizontal = 4.dp, vertical = 4.dp)
                     ) {
                         items(state.apps, key = { it.appInfo.componentName.toString() }) { app ->
-                            AppResultIconItem(app, onClick = { view -> onAppClick(app, view) })
+                            AppResultIconItem(
+                                app = app,
+                                iconSizePx = iconSizePx,
+                                cellHeightPx = cellHeightPx,
+                                onClick = { appInfo, view -> onAppClick(app, view) },
+                                onLongClick = onAppLongClick,
+                                onDragStart = onAppDragStart
+                            )
                         }
                     }
                 }
@@ -305,6 +316,42 @@ fun UniversalSearchResults(
             }
         }
         
+        val hasNoResults = state.apps.isEmpty() && 
+                           state.contacts.isEmpty() && 
+                           state.messages.isEmpty() && 
+                           state.files.isEmpty() && 
+                           state.photos.isEmpty() && 
+                           state.calendar.isEmpty() && 
+                           state.settings.isEmpty() && 
+                           state.webActions.isEmpty() && 
+                           state.inAppSearches.isEmpty() &&
+                           !state.isLoading
+        
+        if (hasNoResults) {
+            item(key = "empty_state") {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 64.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(24.dp)
+                    ) {
+                        NoResultsIllustration(
+                            modifier = Modifier.size(120.dp)
+                        )
+                        Text(
+                            text = if (state.query.isEmpty()) "Start typing to search" else "No results found",
+                            style = MaterialTheme.typography.bodyLarge,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
+                        )
+                    }
+                }
+            }
+        }
+        
         item {
             Spacer(modifier = Modifier.height(100.dp))
         }
@@ -390,41 +437,25 @@ private fun ResultGroupSection(
 @Composable
 private fun AppResultIconItem(
     app: UniversalSearchResult.App,
-    onClick: (View) -> Unit
+    iconSizePx: Int,
+    cellHeightPx: Int,
+    onClick: (AppInfo, BubbleTextView) -> Unit,
+    onLongClick: (AppInfo, BubbleTextView) -> Unit,
+    onDragStart: ((AppInfo, BubbleTextView) -> Unit)?
 ) {
-    val context = LocalContext.current
-    val textColor = MaterialTheme.colorScheme.onSurface.toArgb()
-    val cellHeight = remember(context) {
-        (context as? Launcher)?.deviceProfile?.allAppsProfile?.cellHeightPx 
-            ?: Utilities.dpToPx(110f)
-    }
-    
     Box(
-        modifier = Modifier
-            .width(80.dp)
-            .height(with(LocalDensity.current) { cellHeight.toDp() })
-            .clip(RoundedCornerShape(16.dp))
-            .padding(4.dp),
+        modifier = Modifier.width(80.dp),
         contentAlignment = Alignment.Center
     ) {
-        AndroidView(
-            factory = { ctx ->
-                BubbleTextView(ctx).apply {
-                    setDisplay(BubbleTextView.DISPLAY_ALL_APPS)
-                    applyFromItemInfoWithIcon(app.appInfo)
-                    setTextSize(TypedValue.COMPLEX_UNIT_PX, Utilities.dpToPx(12f).toFloat())
-                    compoundDrawablePadding = Utilities.dpToPx(8f)
-                    setOnClickListener { view -> onClick(view) }
-                    setTextColor(textColor)
-                    gravity = Gravity.CENTER
-                }
-            },
-            update = { btv ->
-                btv.applyFromItemInfoWithIcon(app.appInfo)
-                btv.setOnClickListener { view -> onClick(view) }
-                btv.setTextColor(textColor)
-            },
-            modifier = Modifier.fillMaxSize()
+        AllAppsComposeAppIcon(
+            appInfo = app.appInfo,
+            showLabel = true,
+            iconSizePx = iconSizePx,
+            cellHeightPx = cellHeightPx,
+            onClick = onClick,
+            onLongClick = onLongClick,
+            onDragStart = onDragStart,
+            modifier = Modifier.fillMaxWidth()
         )
     }
 }
@@ -854,5 +885,136 @@ private fun CalendarResultItem(
                 overflow = TextOverflow.Ellipsis
             )
         }
+    }
+}
+
+@Composable
+private fun NoResultsIllustration(
+    modifier: Modifier = Modifier
+) {
+    val primaryColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.6f)
+    val secondaryColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.3f)
+    val accentColor = MaterialTheme.colorScheme.tertiary.copy(alpha = 0.5f)
+    
+    val infiniteTransition = rememberInfiniteTransition(label = "noResults")
+    
+    val floatOffset by infiniteTransition.animateFloat(
+        initialValue = 0f,
+        targetValue = 8f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(2000, easing = FastOutSlowInEasing),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "float"
+    )
+    
+    val rotation by infiniteTransition.animateFloat(
+        initialValue = -3f,
+        targetValue = 3f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(3000, easing = FastOutSlowInEasing),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "rotation"
+    )
+    
+    val documentScale by infiniteTransition.animateFloat(
+        initialValue = 1f,
+        targetValue = 1.02f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(2500, easing = FastOutSlowInEasing),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "pulse"
+    )
+    
+    Canvas(
+        modifier = modifier.graphicsLayer {
+            rotationZ = rotation
+            translationY = -floatOffset
+        }
+    ) {
+        val canvasSize = size.minDimension
+        val centerX = size.width / 2
+        val centerY = size.height / 2
+        
+        val baseDocumentWidth = canvasSize * 0.35f
+        val baseDocumentHeight = canvasSize * 0.45f
+        val documentWidth = baseDocumentWidth * documentScale
+        val documentHeight = baseDocumentHeight * documentScale
+        val documentX = centerX - canvasSize * 0.15f - (documentWidth - baseDocumentWidth) / 2
+        val documentY = centerY - canvasSize * 0.1f - (documentHeight - baseDocumentHeight) / 2
+        
+        drawRoundRect(
+            color = secondaryColor,
+            topLeft = Offset(documentX + 8f, documentY + 8f),
+            size = androidx.compose.ui.geometry.Size(documentWidth, documentHeight),
+            cornerRadius = androidx.compose.ui.geometry.CornerRadius(8f, 8f)
+        )
+        drawRoundRect(
+            color = secondaryColor.copy(alpha = 0.5f),
+            topLeft = Offset(documentX + 4f, documentY + 4f),
+            size = androidx.compose.ui.geometry.Size(documentWidth, documentHeight),
+            cornerRadius = androidx.compose.ui.geometry.CornerRadius(8f, 8f)
+        )
+        drawRoundRect(
+            color = accentColor,
+            topLeft = Offset(documentX, documentY),
+            size = androidx.compose.ui.geometry.Size(documentWidth, documentHeight),
+            cornerRadius = androidx.compose.ui.geometry.CornerRadius(8f, 8f)
+        )
+        
+        val lineStartX = documentX + documentWidth * 0.2f
+        val lineEndX = documentX + documentWidth * 0.8f
+        for (i in 0..2) {
+            val lineY = documentY + documentHeight * (0.35f + i * 0.18f)
+            drawLine(
+                color = secondaryColor,
+                start = Offset(lineStartX, lineY),
+                end = Offset(lineEndX - (i * 10f), lineY),
+                strokeWidth = 4f,
+                cap = StrokeCap.Round
+            )
+        }
+        
+        val searchRadius = canvasSize * 0.22f
+        val searchCenterX = centerX + canvasSize * 0.12f
+        val searchCenterY = centerY - canvasSize * 0.12f
+        
+        drawCircle(
+            color = primaryColor,
+            radius = searchRadius,
+            center = Offset(searchCenterX, searchCenterY),
+            style = Stroke(width = canvasSize * 0.06f, cap = StrokeCap.Round)
+        )
+        
+        val handleLength = canvasSize * 0.18f
+        val handleAngle = Math.toRadians(45.0)
+        val handleStartX = searchCenterX + (searchRadius * kotlin.math.cos(handleAngle)).toFloat()
+        val handleStartY = searchCenterY + (searchRadius * kotlin.math.sin(handleAngle)).toFloat()
+        drawLine(
+            color = primaryColor,
+            start = Offset(handleStartX, handleStartY),
+            end = Offset(handleStartX + (handleLength * kotlin.math.cos(handleAngle)).toFloat(), 
+                         handleStartY + (handleLength * kotlin.math.sin(handleAngle)).toFloat()),
+            strokeWidth = canvasSize * 0.07f,
+            cap = StrokeCap.Round
+        )
+        
+        val xSize = searchRadius * 0.4f
+        drawLine(
+            color = secondaryColor.copy(alpha = 0.8f),
+            start = Offset(searchCenterX - xSize, searchCenterY - xSize),
+            end = Offset(searchCenterX + xSize, searchCenterY + xSize),
+            strokeWidth = canvasSize * 0.04f,
+            cap = StrokeCap.Round
+        )
+        drawLine(
+            color = secondaryColor.copy(alpha = 0.8f),
+            start = Offset(searchCenterX + xSize, searchCenterY - xSize),
+            end = Offset(searchCenterX - xSize, searchCenterY + xSize),
+            strokeWidth = canvasSize * 0.04f,
+            cap = StrokeCap.Round
+        )
     }
 }

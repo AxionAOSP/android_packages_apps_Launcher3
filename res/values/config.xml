@@ -213,4 +213,34 @@
     <bool name="desktop_form_factor">false</bool>
 
     <string-array name="grid_control_known_signers" translatable="false" />
+    
+    <!-- Hardcoded game packages for smart drawer categorization 
+          Apps that don't report CATEGORY_GAME but should be in Games folder -->
+    <string-array name="config_categorize_force_game_packages" translatable="false">
+        <item>com.tencent.ig</item>
+        <item>com.pubg.imobile</item>
+        <item>com.pubg.krmobile</item>
+        <item>com.rekoo.pubgm</item>
+        <item>com.vng.pubgmobile</item>
+        <item>com.tencent.iglite</item>
+        <item>com.activision.callofduty.shooter</item>
+        <item>com.garena.game.codm</item>
+        <item>com.chess</item>
+        <item>com.chess.android</item>
+        <item>org.lichess.mobileapp</item>
+        <item>com.chesscom.android</item>
+        <item>com.epicgames.fortnite</item>
+        <item>com.riotgames.league.wildrift</item>
+        <item>com.riotgames.league.valorant</item>
+        <item>com.miHoYo.GenshinImpact</item>
+        <item>com.HoYoverse.hkrpgoversea</item>
+        <item>com.mobile.legends</item>
+        <item>com.supercell.clashofclans</item>
+        <item>com.supercell.clashroyale</item>
+        <item>com.supercell.brawlstars</item>
+        <item>com.king.candycrushsaga</item>
+        <item>com.mojang.minecraftpe</item>
+        <item>com.innersloth.spacemafia</item>
+        <item>com.roblox.client</item>
+    </string-array>
 </resources>

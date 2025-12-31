@@ -18,10 +18,15 @@ package com.android.launcher3.settings.compose
 
 import android.content.Context
 import android.content.Intent
+import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.*
 import androidx.compose.runtime.*
-import androidx.compose.ui.Modifier
+import androidx.compose.ui.*
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.android.axion.compose.preferences.*
 import com.android.launcher3.R
@@ -80,6 +85,44 @@ fun HomeScreenSettings(viewModel: SettingsState, context: Context) {
 
 @Composable
 fun AppDrawerSettings(viewModel: SettingsState) {
+    PreferenceGroup(
+        title = "Drawer Layout",
+        modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp)
+    ) {
+        item {
+            val drawerLayoutMode by viewModel.drawerLayoutMode.collectAsState()
+            
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 8.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    LayoutModeCard(
+                        title = "Default",
+                        description = "Normal grid layout",
+                        isSelected = drawerLayoutMode == "default",
+                        onClick = { viewModel.setDrawerLayoutMode("default") },
+                        modifier = Modifier.weight(1f)
+                    )
+                    
+                    LayoutModeCard(
+                        title = "Smart",
+                        description = "Category folders",
+                        badge = "BETA",
+                        isSelected = drawerLayoutMode == "smart",
+                        onClick = { viewModel.setDrawerLayoutMode("smart") },
+                        modifier = Modifier.weight(1f)
+                    )
+                }
+            }
+        }
+    }
+    
     PreferenceGroup(
         title = stringResource(R.string.settings_category_drawer),
         modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp)
@@ -144,6 +187,78 @@ fun BehaviorSettings(viewModel: SettingsState) {
                 summary = stringResource(R.string.msg_minus_one_on_left),
                 checked = showGoogleApp,
                 onCheckedChange = { viewModel.setBoolean("pref_enable_minus_one", it) }
+            )
+        }
+    }
+}
+
+@Composable
+private fun LayoutModeCard(
+    title: String,
+    description: String,
+    isSelected: Boolean,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    badge: String? = null
+) {
+    Card(
+        modifier = modifier
+            .clip(RoundedCornerShape(16.dp))
+            .clickable(onClick = onClick),
+        colors = CardDefaults.cardColors(
+            containerColor = if (isSelected)
+                MaterialTheme.colorScheme.primaryContainer
+            else
+                MaterialTheme.colorScheme.surfaceVariant
+        )
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = title,
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.SemiBold,
+                    color = if (isSelected)
+                        MaterialTheme.colorScheme.onPrimaryContainer
+                    else
+                        MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                
+                badge?.let {
+                    androidx.compose.foundation.layout.Box(
+                        modifier = Modifier
+                            .background(
+                                MaterialTheme.colorScheme.tertiary,
+                                RoundedCornerShape(4.dp)
+                            )
+                            .padding(horizontal = 6.dp, vertical = 2.dp)
+                    ) {
+                        Text(
+                            text = it,
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onTertiary,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                }
+            }
+            
+            Text(
+                text = description,
+                style = MaterialTheme.typography.bodySmall,
+                color = if (isSelected)
+                    MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f)
+                else
+                    MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f)
             )
         }
     }
