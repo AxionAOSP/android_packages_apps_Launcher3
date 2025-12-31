@@ -72,6 +72,9 @@ class SettingsState(context: Context) : ViewModel(), SharedPreferences.OnSharedP
     private val _drawerShowLabels = MutableStateFlow(prefs.getBoolean("pref_drawer_show_labels", true))
     val drawerShowLabels: StateFlow<Boolean> = _drawerShowLabels.asStateFlow()
 
+    private val _drawerLayoutMode = MutableStateFlow(prefs.getString("pref_drawer_layout_mode", "smart") ?: "smart")
+    val drawerLayoutMode: StateFlow<String> = _drawerLayoutMode.asStateFlow()
+
     init {
         prefs.registerOnSharedPreferenceChangeListener(this)
     }
@@ -89,11 +92,16 @@ class SettingsState(context: Context) : ViewModel(), SharedPreferences.OnSharedP
             "pref_sleep_gesture" -> _doubleTapToSleep.value = prefs.getBoolean(key, true)
             "pref_desktop_show_labels" -> _desktopShowLabels.value = prefs.getBoolean(key, true)
             "pref_drawer_show_labels" -> _drawerShowLabels.value = prefs.getBoolean(key, true)
+            "pref_drawer_layout_mode" -> _drawerLayoutMode.value = prefs.getString(key, "smart") ?: "smart"
         }
     }
 
     fun setBoolean(key: String, value: Boolean) {
         prefs.edit().putBoolean(key, value).apply()
+    }
+
+    fun setDrawerLayoutMode(mode: String) {
+        prefs.edit().putString("pref_drawer_layout_mode", mode).apply()
     }
 
     override fun onCleared() {

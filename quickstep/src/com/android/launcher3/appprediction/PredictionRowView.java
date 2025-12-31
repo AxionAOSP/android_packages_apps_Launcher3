@@ -37,6 +37,7 @@ import com.android.launcher3.DeviceProfile.OnDeviceProfileChangeListener;
 import com.android.launcher3.Flags;
 import com.android.launcher3.R;
 import com.android.launcher3.Utilities;
+import com.android.launcher3.allapps.ActivityAllAppsContainerView;
 import com.android.launcher3.allapps.FloatingHeaderRow;
 import com.android.launcher3.allapps.FloatingHeaderView;
 import com.android.launcher3.anim.AlphaUpdateListener;
@@ -271,6 +272,15 @@ public class PredictionRowView<T extends Context & ActivityContext>
             updateVisibility();
         }
         mParent.onHeightUpdated();
+
+        ActivityContext activityContext = ActivityContext.lookupContext(getContext());
+        if (activityContext instanceof ActivityAllAppsContainerView) {
+            ((ActivityAllAppsContainerView<?>) activityContext)
+                    .onPredictionsUpdated(new ArrayList<ItemInfo>(mPredictedApps));
+        } else if (mParent.getParent() instanceof ActivityAllAppsContainerView) {
+             ((ActivityAllAppsContainerView<?>) mParent.getParent())
+                    .onPredictionsUpdated(new ArrayList<ItemInfo>(mPredictedApps));
+        }
     }
 
     @Override

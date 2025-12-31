@@ -44,6 +44,8 @@ fun AllAppsComposeGrid(
     onAppDragStart: ((AppInfo, BubbleTextView) -> Unit)? = null,
     onScrollStateChanged: (canScrollUp: Boolean, canScrollDown: Boolean) -> Unit,
     transitionProgress: Float = 1f,
+    keyPrefix: String = "main",
+    recompositionKey: Int = 0,
     modifier: Modifier = Modifier,
     contentPadding: PaddingValues = PaddingValues(horizontal = 16.dp, vertical = 8.dp)
 ) {
@@ -85,8 +87,8 @@ fun AllAppsComposeGrid(
             items(
                 count = items.size,
                 key = { index ->
-                    when (val item = items[index]) {
-                        is AllAppsComposeItem.AppItem -> "app_${item.appInfo.componentName}"
+                    val base = when (val item = items[index]) {
+                        is AllAppsComposeItem.AppItem -> "${item.section}_app_${item.appInfo.componentName}"
                         is AllAppsComposeItem.SectionHeader -> "section_${item.letter}"
                         is AllAppsComposeItem.PrivateSpaceHeader -> "private_header"
                         AllAppsComposeItem.PredictionsHeader -> "predictions_header"
@@ -94,6 +96,7 @@ fun AllAppsComposeGrid(
                         AllAppsComposeItem.AllAppsHeader -> "all_apps_header"
                         AllAppsComposeItem.EmptySearchResult -> "empty_search"
                     }
+                    "${keyPrefix}_${recompositionKey}_$base"
                 },
                 span = { index ->
                     when (items[index]) {
@@ -157,6 +160,8 @@ fun AllAppsComposeGrid(
         if (sections.isNotEmpty()) {
             AllAppsComposeFastScroller(
                 sections = sections,
+                gridState = gridState,
+                totalItems = items.size,
                 onSectionSelected = { index ->
                     scope.launch {
                         gridState.scrollToItem(index)

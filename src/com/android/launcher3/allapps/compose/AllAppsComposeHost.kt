@@ -67,9 +67,21 @@ fun <T> AllAppsComposeHost(
         controller?.setUpdateTransitionProgressAction { progress ->
             viewModel.setTransitionProgress(progress)
         }
+        controller?.setUpdatePredictedAppsAction { apps ->
+            viewModel.updatePredictedApps(apps)
+        }
+        controller?.setUpdatePrivateSpaceHiddenAction { hidden ->
+            viewModel.setPrivateSpaceHidden(hidden)
+        }
+        controller?.setUpdateIconSizingAction { iconSizePx, cellWidthPx, cellHeightPx ->
+            viewModel.setIconSizing(iconSizePx, cellWidthPx, cellHeightPx)
+        }
         onDispose { 
             controller?.setUpdateNumColumnsAction {} 
             controller?.setUpdateTransitionProgressAction {}
+            controller?.setUpdatePredictedAppsAction {}
+            controller?.setUpdatePrivateSpaceHiddenAction {}
+            controller?.setUpdateIconSizingAction { _, _, _ -> }
         }
     }
     
@@ -80,20 +92,20 @@ fun <T> AllAppsComposeHost(
         state = state,
         transitionProgress = transitionProgress,
         callbacks = object : AllAppsComposeCallbacks {
-            override fun onAppClicked(appInfo: AppInfo, icon: BubbleTextView) {
-                callbacks.onAppClicked(appInfo, icon)
+            override fun onAppClicked(appInfo: AppInfo, view: BubbleTextView) {
+                callbacks.onAppClicked(appInfo, view)
             }
             
             override fun onAppClickedFromFolder(appInfo: AppInfo) {
                 callbacks.onAppClickedFromFolder(appInfo)
             }
 
-            override fun onAppLongClicked(appInfo: AppInfo, icon: BubbleTextView) {
-                callbacks.onAppLongClicked(appInfo, icon)
+            override fun onAppLongClicked(appInfo: AppInfo, view: BubbleTextView) {
+                callbacks.onAppLongClicked(appInfo, view)
             }
             
-            override fun onAppDragStart(appInfo: AppInfo, icon: BubbleTextView) {
-                callbacks.onAppDragStart(appInfo, icon)
+            override fun onAppDragStart(appInfo: AppInfo, view: BubbleTextView) {
+                callbacks.onAppDragStart(appInfo, view)
             }
 
             override fun onSearchQueryChanged(query: String) {
@@ -140,6 +152,14 @@ fun <T> AllAppsComposeHost(
 
             override fun requestCalendarPermission() {
                 callbacks.requestCalendarPermission()
+            }
+            
+            override fun onPrivateSpaceClicked(isLocked: Boolean) {
+                callbacks.onPrivateSpaceClicked(isLocked)
+            }
+            
+            override fun onWorkProfileClicked() {
+                callbacks.onWorkProfileClicked()
             }
         },
         modifier = Modifier.fillMaxSize()

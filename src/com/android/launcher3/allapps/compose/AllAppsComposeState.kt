@@ -24,14 +24,20 @@ import com.android.launcher3.model.data.AppInfo
 @Stable
 data class AllAppsComposeState(
     val apps: List<AppInfo> = emptyList(),
+    val workApps: List<AppInfo> = emptyList(),
+    val privateApps: List<AppInfo> = emptyList(),
     val predictedApps: List<AppInfo> = emptyList(),
+    val filteredPredictedApps: List<AppInfo> = emptyList(),
     val pinnedApps: List<AppInfo> = emptyList(),
     val adapterItems: List<AdapterItem> = emptyList(),
     val searchQuery: String = "",
     val isSearching: Boolean = false,
+    val isLoading: Boolean = true,
     val currentTab: Int = TAB_PERSONAL,
     val hasWorkApps: Boolean = false,
     val hasPrivateApps: Boolean = false,
+    val isPrivateSpaceLocked: Boolean = true,
+    val isPrivateSpaceHidden: Boolean = false,
     val numColumns: Int = 4,
     val iconSizePx: Int = 0,
     val cellWidthPx: Int = 0,
@@ -42,13 +48,14 @@ data class AllAppsComposeState(
     companion object {
         const val TAB_PERSONAL = 0
         const val TAB_WORK = 1
-        const val TAB_SEARCH = 2
+        const val TAB_PRIVATE = 2
+        const val TAB_SEARCH = 3
     }
 }
 
 @Immutable
 sealed class AllAppsComposeItem {
-    data class AppItem(val appInfo: AppInfo) : AllAppsComposeItem()
+    data class AppItem(val appInfo: AppInfo, val section: String = "main") : AllAppsComposeItem()
     data class SectionHeader(val letter: String) : AllAppsComposeItem()
     object PredictionsHeader : AllAppsComposeItem()
     object PinnedAppsHeader : AllAppsComposeItem()

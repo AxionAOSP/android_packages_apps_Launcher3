@@ -119,7 +119,13 @@ class UniversalSearchManager(private val context: Context) {
         }
     }
     
-    fun search(query: String, apps: List<AppInfo>) {
+    fun search(
+        query: String,
+        apps: List<AppInfo>,
+        hasPrivateSpace: Boolean = false,
+        isPrivateSpaceLocked: Boolean = true,
+        privateAppCount: Int = 0
+    ) {
         searchJob?.cancel()
         
         if (query.isBlank()) {
@@ -135,6 +141,13 @@ class UniversalSearchManager(private val context: Context) {
             val filteredApps = apps.filter { appInfo ->
                 appInfo.title?.toString()?.contains(query, ignoreCase = true) == true
             }.take(10).map { UniversalSearchResult.App(it) }
+            
+            val privateSpaceResult = if (hasPrivateSpace && isPrivateSpaceKeyword(query)) {
+                UniversalSearchResult.PrivateSpace(
+                    isLocked = isPrivateSpaceLocked,
+                    appCount = privateAppCount
+                )
+            } else null
             
             val contactsDeferred = async {
                 if (preferences.value.searchContacts && hasContactsPermission()) {
@@ -220,6 +233,7 @@ class UniversalSearchManager(private val context: Context) {
                 settings = settings,
                 inAppSearches = inAppSearches,
                 webActions = webActions,
+                privateSpace = privateSpaceResult,
                 isLoading = false,
                 hasContactsPermission = hasContactsPermission(),
                 hasSmsPermission = hasSmsPermission(),
@@ -228,6 +242,10 @@ class UniversalSearchManager(private val context: Context) {
                 hasCalendarPermission = hasCalendarPermission()
             )
         }
+    }
+
+    private fun isPrivateSpaceKeyword(query: String): Boolean {
+        return query.equals("private space", ignoreCase = true)
     }
     
     fun getContactIntent(contact: UniversalSearchResult.Contact): Intent {

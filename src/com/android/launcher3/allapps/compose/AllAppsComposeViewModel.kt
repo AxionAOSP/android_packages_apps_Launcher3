@@ -23,8 +23,12 @@ import com.android.launcher3.LauncherFiles
 import com.android.launcher3.allapps.AllAppsStore
 import com.android.launcher3.allapps.AlphabeticalAppsList
 import com.android.launcher3.model.data.AppInfo
+import com.android.launcher3.pm.UserCache
 import com.android.launcher3.util.ItemInfoMatcher
+import com.android.launcher3.util.ComponentKey
+import com.android.launcher3.search.StringMatcherUtility
 import com.android.launcher3.views.ActivityContext
+import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
 
 class AllAppsComposeViewModel<T>(
@@ -37,6 +41,9 @@ class AllAppsComposeViewModel<T>(
     )
     
     val pinnedAppsManager = PinnedAppsManager(context)
+    
+    private val viewModelScope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
+    private var updateAppsJob: Job? = null
 
     private val _state = MutableStateFlow(AllAppsComposeState())
     val state: StateFlow<AllAppsComposeState> = _state.asStateFlow()
@@ -74,13 +81,73 @@ class AllAppsComposeViewModel<T>(
     private fun observePinnedApps() {
         pinnedAppsManager.pinnedApps.onEach { pinnedSet ->
             updateApps()
-        }.launchIn(kotlinx.coroutines.GlobalScope)
+        }.launchIn(viewModelScope)
     }
 
     private fun updateApps() {
-        val allApps = allAppsStore.apps?.toList() ?: emptyList()
+        updateAppsJob?.cancel()
+        updateAppsJob = viewModelScope.launch {
+            val allApps = allAppsStore.apps?.toList() ?: emptyList()
+            
+            if (allApps.isEmpty() && _state.value.apps.isEmpty()) {
+                _state.update { it.copy(isLoading = true) }
+                return@launch
+            }
+            
+            val result = withContext(Dispatchers.Default) {
+                processApps(allApps)
+            }
+            
+            _state.update { currentState ->
+                currentState.copy(
+                    apps = result.nonPinnedApps,
+                    workApps = result.workApps,
+                    privateApps = result.privateApps,
+                    pinnedApps = result.pinnedApps,
+                    hasWorkApps = result.workApps.isNotEmpty(),
+                    hasPrivateApps = result.privateApps.isNotEmpty() || result.isPrivateLocked,
+                    isPrivateSpaceLocked = result.isPrivateLocked,
+                    isPrivateSpaceHidden = result.isPrivateHidden,
+                    isLoading = false,
+                    filteredPredictedApps = if (currentState.currentTab == AllAppsComposeState.TAB_PERSONAL) {
+                        currentState.predictedApps.filter { personalMatcher.test(it) }
+                    } else if (currentState.currentTab == AllAppsComposeState.TAB_WORK) {
+                        currentState.predictedApps.filter { !personalMatcher.test(it) }
+                    } else {
+                        emptyList()
+                    }
+                )
+            }
+        }
+    }
+    
+    private data class ProcessedApps(
+        val nonPinnedApps: List<AppInfo>,
+        val pinnedApps: List<AppInfo>,
+        val workApps: List<AppInfo>,
+        val privateApps: List<AppInfo>,
+        val isPrivateLocked: Boolean,
+        val isPrivateHidden: Boolean
+    )
+    
+    private fun processApps(allApps: List<AppInfo>): ProcessedApps {
         val pinnedSet = pinnedAppsManager.pinnedApps.value
-        val filteredApps = filterAppsForCurrentTab(allApps)
+        val userCache = UserCache.getInstance(context)
+        
+        val personalApps = mutableListOf<AppInfo>()
+        val workApps = mutableListOf<AppInfo>()
+        val privateApps = mutableListOf<AppInfo>()
+        
+        for (app in allApps) {
+            val userInfo = userCache.getUserInfo(app.user)
+            when {
+                userInfo.isPrivate() -> privateApps.add(app)
+                personalMatcher.test(app) -> personalApps.add(app)
+                else -> workApps.add(app)
+            }
+        }
+        
+        val filteredApps = filterAppsForCurrentTab(personalApps)
         
         val pinnedApps = filteredApps.filter { 
             it.componentName?.flattenToString() in pinnedSet 
@@ -88,21 +155,48 @@ class AllAppsComposeViewModel<T>(
         val nonPinnedApps = filteredApps.filter { 
             it.componentName?.flattenToString() !in pinnedSet 
         }
+        
+        val isPrivateLocked = allAppsStore.hasModelFlag(
+            com.android.launcher3.model.data.AppsListData.FLAG_PRIVATE_PROFILE_QUIET_MODE_ENABLED
+        )
+        
+        val isPrivateHidden = isPrivateLocked && com.android.launcher3.util.SettingsCache.INSTANCE
+            .get(context)
+            .getValue(com.android.launcher3.util.SettingsCache.PRIVATE_SPACE_HIDE_WHEN_LOCKED_URI, 0)
+            
+        return ProcessedApps(
+            nonPinnedApps = nonPinnedApps,
+            pinnedApps = pinnedApps,
+            workApps = workApps.sortedBy { it.title?.toString()?.lowercase() ?: "" },
+            privateApps = privateApps.sortedBy { it.title?.toString()?.lowercase() ?: "" },
+            isPrivateLocked = isPrivateLocked,
+            isPrivateHidden = isPrivateHidden
+        )
+    }
 
-        _state.update { currentState ->
-            currentState.copy(
-                apps = nonPinnedApps,
-                pinnedApps = pinnedApps,
-                hasWorkApps = allApps.any { !personalMatcher.test(it) },
-                hasPrivateApps = false
-            )
-        }
+
+
+    fun updatePredictedApps(items: List<com.android.launcher3.model.data.ItemInfo>) {
+        val predictedApps = items.filterIsInstance<com.android.launcher3.model.data.WorkspaceItemInfo>()
+            .mapNotNull { wsItem ->
+                allAppsStore.getApp(ComponentKey(wsItem.targetComponent, wsItem.user))
+            }
+        
+        _state.update { it.copy(predictedApps = predictedApps) }
+        updateApps()
     }
 
     private fun filterAppsForCurrentTab(apps: List<AppInfo>): List<AppInfo> {
         val currentTab = _state.value.currentTab
         val query = _searchQuery.value
-
+        val predicted = _state.value.predictedApps
+        
+        val filteredPredicted = when (currentTab) {
+            AllAppsComposeState.TAB_PERSONAL -> predicted.filter { personalMatcher.test(it) }
+            AllAppsComposeState.TAB_WORK -> predicted.filter { !personalMatcher.test(it) }
+            else -> emptyList()
+        }
+        
         var filtered = when (currentTab) {
             AllAppsComposeState.TAB_PERSONAL -> apps.filter { personalMatcher.test(it) }
             AllAppsComposeState.TAB_WORK -> apps.filter { !personalMatcher.test(it) }
@@ -173,7 +267,12 @@ class AllAppsComposeViewModel<T>(
         ) }
     }
 
+    fun setPrivateSpaceHidden(hidden: Boolean) {
+        _state.update { it.copy(isPrivateSpaceHidden = hidden) }
+    }
+
     fun cleanup() {
         allAppsStore.removeUpdateListener(appsUpdateListener)
+        viewModelScope.cancel()
     }
 }

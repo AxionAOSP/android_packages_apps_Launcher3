@@ -332,12 +332,18 @@ public class ActivityAllAppsContainerView<T extends Context & ActivityContext>
         mUsingCompose = true;
         getLayoutInflater().inflate(R.layout.all_apps_compose_content, this);
         mHeader = findViewById(R.id.all_apps_header);
+        if (mHeader != null) {
+            mHeader.setVisibility(GONE);
+        }
         mAdditionalHeaderRows.clear();
         mAdditionalHeaderRows.addAll(getAdditionalHeaderRows());
         mBottomSheetBackground = findViewById(R.id.bottom_sheet_background);
         mBottomSheetHandleArea = findViewById(R.id.bottom_sheet_handle_area);
         mBottomSheetHandle = findViewById(R.id.bottom_sheet_handle);
         mSearchRecyclerView = findViewById(R.id.search_results_list_view);
+        if (mSearchRecyclerView != null) {
+            mSearchRecyclerView.setVisibility(GONE);
+        }
         mFastScroller = findViewById(R.id.fast_scroller);
         if (mFastScroller != null) {
             mFastScroller.setPopupView(findViewById(R.id.fast_scroller_popup));
@@ -353,10 +359,10 @@ public class ActivityAllAppsContainerView<T extends Context & ActivityContext>
             mBottomSheetBackground.setVisibility(GONE);
         }
         if (mBottomSheetHandleArea != null) {
-            mBottomSheetHandleArea.setVisibility(GONE);
+            mBottomSheetHandleArea.setVisibility(VISIBLE);
         }
         if (mBottomSheetHandle != null) {
-            mBottomSheetHandle.setVisibility(GONE);
+            mBottomSheetHandle.setVisibility(VISIBLE);
         }
 
         mComposeView = findViewById(R.id.all_apps_compose_view);
@@ -543,7 +549,24 @@ public class ActivityAllAppsContainerView<T extends Context & ActivityContext>
                     }
                 }
             }
+
+            @Override
+            public void onPrivateSpaceClicked(boolean isLocked) {
+                if (isLocked) {
+                    mPrivateProfileManager.setQuietMode(false);
+                }
+            }
+
+            @Override
+            public void onWorkProfileClicked() {
+            }
         };
+    }
+
+    public void onPredictionsUpdated(List<ItemInfo> items) {
+        if (mComposeController != null) {
+            mComposeController.updatePredictedApps(items);
+        }
     }
 
     public List<AllAppsRow> getAdditionalHeaderRows() {
@@ -1362,6 +1385,11 @@ public class ActivityAllAppsContainerView<T extends Context & ActivityContext>
         }
         if (mComposeController != null) {
             mComposeController.setNumColumns(dp.numShownAllAppsColumns);
+            mComposeController.setIconSizing(
+                dp.getAllAppsProfile().getIconSizePx(), 
+                dp.getAllAppsProfile().getCellWidthPx(), 
+                dp.getAllAppsProfile().getCellHeightPx()
+            );
         }
         updateBackgroundVisibility(dp);
 

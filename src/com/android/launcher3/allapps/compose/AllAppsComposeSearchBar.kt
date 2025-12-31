@@ -46,14 +46,15 @@ fun AllAppsComposeSearchBar(
     onMenuClick: () -> Unit,
     modifier: Modifier = Modifier,
     placeholder: String = "Search apps",
-    autoFocus: Boolean = false
+    shouldAutoFocus: Boolean = false,
+    focusTrigger: Int = 0
 ) {
     val isImeVisible = WindowInsets.ime.getBottom(LocalDensity.current) > 0
     val horizontalPadding by animateDpAsState(if (isImeVisible) 8.dp else 16.dp)
     val focusRequester = remember { FocusRequester() }
     
-    LaunchedEffect(autoFocus) {
-        if (autoFocus) {
+    LaunchedEffect(focusTrigger) {
+        if (shouldAutoFocus && focusTrigger > 0) {
             focusRequester.requestFocus()
         }
     }

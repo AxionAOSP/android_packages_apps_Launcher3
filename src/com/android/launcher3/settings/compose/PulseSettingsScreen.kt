@@ -67,7 +67,7 @@ fun PulseSettingsScreen(
     )
 
     Scaffold(
-        containerColor = MaterialTheme.colorScheme.background,
+        containerColor = MaterialTheme.colorScheme.surfaceContainer,
         topBar = {
             TopAppBar(
                 title = { Text(stringResource(R.string.pulse_settings_title)) },
@@ -111,8 +111,8 @@ fun PulseSettingsScreen(
                                 } else {
                                     Brush.linearGradient(
                                         colors = listOf(
-                                            MaterialTheme.colorScheme.surfaceContainer,
-                                            MaterialTheme.colorScheme.surfaceContainer
+                                            MaterialTheme.colorScheme.surfaceBright,
+                                            MaterialTheme.colorScheme.surfaceBright
                                         )
                                     )
                                 }

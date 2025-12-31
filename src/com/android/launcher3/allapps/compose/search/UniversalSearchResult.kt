@@ -79,6 +79,12 @@ sealed interface UniversalSearchResult {
         val subtitle: String? = null,
         val packageName: String? = null
     ) : UniversalSearchResult
+
+    @Immutable
+    data class PrivateSpace(
+        val isLocked: Boolean,
+        val appCount: Int
+    ) : UniversalSearchResult
 }
 
 enum class WebActionType {
@@ -100,6 +106,7 @@ data class UniversalSearchState(
     val calendar: List<UniversalSearchResult.Calendar> = emptyList(),
     val inAppSearches: List<UniversalSearchResult.InAppSearch> = emptyList(),
     val webActions: List<UniversalSearchResult.WebAction> = emptyList(),
+    val privateSpace: UniversalSearchResult.PrivateSpace? = null,
     val isLoading: Boolean = false,
     val hasContactsPermission: Boolean = true,
     val hasSmsPermission: Boolean = true,
