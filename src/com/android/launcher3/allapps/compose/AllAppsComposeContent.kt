@@ -617,6 +617,7 @@ private fun AllAppsCategoriesView(
                 if (state.pinnedApps.isNotEmpty()) {
                     PinnedAppsCard(
                         pinnedApps = state.pinnedApps,
+                        
                         onClick = { 
                             internalExpandedCategory = pinnedCategory
                             onExpandedCategoryChange(pinnedCategory)
@@ -668,6 +669,7 @@ private fun AllAppsCategoriesView(
                             ) {
                                 CategoryFolder(
                                     category = categories[index],
+                                    
                                     onClick = {
                                         internalExpandedCategory = categories[index]
                                         onExpandedCategoryChange(categories[index])
@@ -728,12 +730,14 @@ private fun AllAppsCategoriesView(
             expandedCategory?.let { category ->
                 ExpandedFolderContent(
                     category = category,
+                    
                     onDismiss = { onExpandedCategoryChange(null) },
                     onAppClick = onAppClick,
                     onAppLongClick = onAppLongClick,
                     onAppDragStart = onAppDragStart,
                     iconSizePx = state.iconSizePx,
-                    cellHeightPx = state.cellHeightPx
+                    cellHeightPx = state.cellHeightPx,
+                    onScrollStateChanged = onScrollStateChanged
                 )
             }
         }
@@ -748,10 +752,19 @@ private fun ExpandedFolderContent(
     onAppLongClick: (AppInfo, BubbleTextView) -> Unit,
     onAppDragStart: ((AppInfo, BubbleTextView) -> Unit)?,
     iconSizePx: Int,
-    cellHeightPx: Int
+    cellHeightPx: Int,
+    onScrollStateChanged: (canScrollUp: Boolean, canScrollDown: Boolean) -> Unit
 ) {
     var isVisible by remember { mutableStateOf(false) }
     
+    val gridState = rememberLazyGridState()
+    val canScrollUp by remember { derivedStateOf { gridState.canScrollBackward } }
+    val canScrollDown by remember { derivedStateOf { gridState.canScrollForward } }
+
+    LaunchedEffect(canScrollUp, canScrollDown) {
+        onScrollStateChanged(canScrollUp, canScrollDown)
+    }
+
     LaunchedEffect(Unit) {
         isVisible = true
     }
@@ -809,6 +822,7 @@ private fun ExpandedFolderContent(
             
                 LazyVerticalGrid(
                     columns = GridCells.Fixed(4),
+                    state = gridState,
                     contentPadding = PaddingValues(
                         start = 24.dp,
                         end = 24.dp,
@@ -831,6 +845,7 @@ private fun ExpandedFolderContent(
                             onClick = onAppClick,
                             onLongClick = onAppLongClick,
                             onDragStart = onAppDragStart,
+                            
                             modifier = Modifier.fillMaxWidth()
                         )
                     }
@@ -875,10 +890,10 @@ private fun CategoryFolder(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     category.apps.getOrNull(0)?.let { app ->
-                        PreviewAppIcon(app, bigIconSize, iconSizePx, onAppClick, onAppLongClick, onAppDragStart)
+                        PreviewAppIcon(app, bigIconSize, iconSizePx,  onAppClick, onAppLongClick, onAppDragStart)
                     }
                     category.apps.getOrNull(1)?.let { app ->
-                        PreviewAppIcon(app, bigIconSize, iconSizePx, onAppClick, onAppLongClick, onAppDragStart)
+                        PreviewAppIcon(app, bigIconSize, iconSizePx,  onAppClick, onAppLongClick, onAppDragStart)
                     }
                 }
                 Row(
@@ -886,7 +901,7 @@ private fun CategoryFolder(
                     verticalAlignment = Alignment.Top
                 ) {
                     category.apps.getOrNull(2)?.let { app ->
-                        PreviewAppIcon(app, bigIconSize, iconSizePx, onAppClick, onAppLongClick, onAppDragStart)
+                        PreviewAppIcon(app, bigIconSize, iconSizePx,  onAppClick, onAppLongClick, onAppDragStart)
                     }
                     Box(
                         modifier = Modifier.size(bigIconSize),
@@ -932,10 +947,10 @@ private fun CategoryFolder(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     previewApps.getOrNull(0)?.let { app ->
-                        PreviewAppIcon(app, bigIconSize, iconSizePx, onAppClick, onAppLongClick, onAppDragStart)
+                        PreviewAppIcon(app, bigIconSize, iconSizePx,  onAppClick, onAppLongClick, onAppDragStart)
                     }
                     previewApps.getOrNull(1)?.let { app ->
-                        PreviewAppIcon(app, bigIconSize, iconSizePx, onAppClick, onAppLongClick, onAppDragStart)
+                        PreviewAppIcon(app, bigIconSize, iconSizePx,  onAppClick, onAppLongClick, onAppDragStart)
                     }
                 }
                 if (previewApps.size > 2) {
@@ -944,10 +959,10 @@ private fun CategoryFolder(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         previewApps.getOrNull(2)?.let { app ->
-                            PreviewAppIcon(app, bigIconSize, iconSizePx, onAppClick, onAppLongClick, onAppDragStart)
+                            PreviewAppIcon(app, bigIconSize, iconSizePx,  onAppClick, onAppLongClick, onAppDragStart)
                         }
                         previewApps.getOrNull(3)?.let { app ->
-                            PreviewAppIcon(app, bigIconSize, iconSizePx, onAppClick, onAppLongClick, onAppDragStart)
+                            PreviewAppIcon(app, bigIconSize, iconSizePx,  onAppClick, onAppLongClick, onAppDragStart)
                         }
                     }
                 }
@@ -1013,7 +1028,8 @@ private fun PreviewAppIcon(
             },
         contentAlignment = Alignment.Center
     ) {
-        AndroidView(
+        key(app.componentName) {
+            AndroidView(
             factory = { context ->
                 val btv = (LayoutInflater.from(context)
                     .inflate(R.layout.all_apps_icon, null) as BubbleTextView).apply {
@@ -1028,7 +1044,8 @@ private fun PreviewAppIcon(
                 }.also { imageView = it }
             },
             modifier = Modifier.size(iconSize)
-        )
+            )
+        }
     }
 }
 
@@ -1314,6 +1331,7 @@ private fun PinnedAppsCard(
                         app = app, 
                         iconSize = 64.dp,
                         iconSizePx = iconSizePx,
+                        
                         onAppClick = onAppClick,
                         onAppLongClick = onAppLongClick,
                         onAppDragStart = onAppDragStart

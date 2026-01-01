@@ -19,15 +19,21 @@ import android.content.res.Configuration
 import android.view.HapticFeedbackConstants
 import android.view.LayoutInflater
 import android.view.View
+import android.widget.ImageView
 import androidx.compose.foundation.*
 import androidx.compose.foundation.gestures.*
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.PressInteraction
 import androidx.compose.foundation.layout.*
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.*
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.*
 import androidx.compose.ui.platform.*
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import com.android.launcher3.BubbleTextView
@@ -60,9 +66,16 @@ fun AllAppsComposeAppIcon(
     val currentOnClick by rememberUpdatedState(onClick)
     val currentOnLongClick by rememberUpdatedState(onLongClick)
     val currentOnDragStart by rememberUpdatedState(onDragStart)
-    val currentOnLongPressStatusChanged by rememberUpdatedState(onLongPressStatusChanged)
 
     var bubbleTextView by remember { mutableStateOf<BubbleTextView?>(null) }
+    var imageView by remember { mutableStateOf<ImageView?>(null) }
+    
+    val density = LocalDensity.current
+    val textColor = MaterialTheme.colorScheme.onSurface
+    
+    var textSizePx by remember { mutableFloatStateOf(with(density) { 12.dp.toPx() }) }
+    var iconPaddingPx by remember { mutableIntStateOf(with(density) { 4.dp.roundToPx() }) }
+    var labelText by remember { mutableStateOf("") }
 
     val interactionSource = remember { MutableInteractionSource() }
 
@@ -80,16 +93,26 @@ fun AllAppsComposeAppIcon(
         }
     }
 
-    Box(
+    fun syncBubbleTextViewBounds() {
+        val iv = imageView ?: return
+        val btv = bubbleTextView ?: return
+        val location = IntArray(2)
+        iv.getLocationOnScreen(location)
+        btv.layout(location[0], location[1], location[0] + iconSizePx, location[1] + iconSizePx)
+    }
+
+    Column(
         modifier = modifier
             .then(heightModifier)
             .combinedClickable(
                 interactionSource = interactionSource,
                 indication = null,
                 onClick = { 
+                    syncBubbleTextViewBounds()
                     bubbleTextView?.let { view -> currentOnClick(appInfo, view) } 
                 },
                 onLongClick = {
+                    syncBubbleTextViewBounds()
                     bubbleTextView?.let { view ->
                         view.performHapticFeedback(HapticFeedbackConstants.LONG_PRESS)
                         currentOnLongClick(appInfo, view)
@@ -99,6 +122,7 @@ fun AllAppsComposeAppIcon(
             .pointerInput(Unit) {
                 detectDragGesturesAfterLongPress(
                     onDragStart = {
+                        syncBubbleTextViewBounds()
                         bubbleTextView?.let { view ->
                             view.setPressed(false)
                             currentOnDragStart?.invoke(appInfo, view)
@@ -109,38 +133,63 @@ fun AllAppsComposeAppIcon(
                     onDragCancel = {}
                 )
             },
-        contentAlignment = Alignment.TopCenter
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = if (cellHeightPx > 0) Arrangement.Center else Arrangement.Top
     ) {
+        val iconSizeDp = with(density) { iconSizePx.toDp() }
+        
         key(appInfo.componentName, uiMode) {
             AndroidView(
                 factory = { ctx ->
-                    val view = LayoutInflater.from(ctx)
+                    val btv = LayoutInflater.from(ctx)
                         .inflate(R.layout.all_apps_icon, null) as BubbleTextView
                     appInfo.container = LauncherSettings.Favorites.CONTAINER_ALL_APPS
-                    view.applyFromItemInfoWithIcon(appInfo)
-                    if (!showLabel) {
-                        view.setTextVisibility(false)
-                    }
-                    view.isClickable = false
-                    view.isLongClickable = false
-                    view.isFocusable = false
-                    bubbleTextView = view
-                    view
+                    btv.applyFromItemInfoWithIcon(appInfo)
+                    
+                    textSizePx = btv.textSize
+                    iconPaddingPx = btv.compoundDrawablePadding
+                    labelText = appInfo.title?.toString() ?: ""
+                    
+                    btv.setTextVisibility(false)
+                    btv.isClickable = false
+                    btv.isLongClickable = false
+                    btv.isFocusable = false
+                    
+                    bubbleTextView = btv
+                    
+                    ImageView(ctx).apply {
+                         scaleType = ImageView.ScaleType.FIT_CENTER
+                         setImageDrawable(btv.icon)
+                    }.also { imageView = it }
                 },
                 update = { view ->
-                    view.reapplyItemInfo(appInfo)
-                    if (!showLabel) {
-                        view.setTextVisibility(false)
-                    }
-                    view.isLongClickable = false
-                    view.isClickable = false
+                    val btv = bubbleTextView ?: return@AndroidView
+                    btv.reapplyItemInfo(appInfo)
+                    view.setImageDrawable(btv.icon)
+                    
+                    textSizePx = btv.textSize
+                    iconPaddingPx = btv.compoundDrawablePadding
+                    labelText = appInfo.title?.toString() ?: ""
                     
                     view.visibility = View.VISIBLE
                     view.alpha = 1f
-                    
-                    bubbleTextView = view
+                    view.invalidate()
                 },
-                modifier = Modifier.wrapContentSize()
+                modifier = Modifier.size(iconSizeDp)
+            )
+        }
+        
+        if (showLabel) {
+            Spacer(modifier = Modifier.height(with(density) { iconPaddingPx.toDp() }))
+            
+            Text(
+                text = labelText.ifEmpty { appInfo.title?.toString() ?: "" },
+                color = textColor,
+                fontSize = with(density) { textSizePx.toSp() },
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.width(iconSizeDp)
             )
         }
     }
