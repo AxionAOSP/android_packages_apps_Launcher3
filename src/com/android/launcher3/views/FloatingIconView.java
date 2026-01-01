@@ -367,6 +367,7 @@ public class FloatingIconView extends FrameLayout implements
         
         boolean hasIconPack = false;
         boolean isAxIconsStyle = false;
+        boolean isFolderIcon = mOriginalIcon instanceof FolderIcon;
         try {
             ThemeEngine engine = ThemeEngine.getInstance(mLauncher);
             hasIconPack = engine != null && engine.hasActiveIconPack();
@@ -381,7 +382,7 @@ public class FloatingIconView extends FrameLayout implements
 
         // When icon pack/themes is active, pass null to ClipIconView to use simple background rendering
         // This prevents adaptive icon transformations that cause size jumps
-        boolean useSimpleRendering = hasIconPack || isAxIconsStyle;
+        boolean useSimpleRendering = (hasIconPack || isAxIconsStyle) && !isFolderIcon;
         
         if (useSimpleRendering && drawable != null && !(drawable instanceof AdaptiveIconDrawable)) {
             mClipIconView.setIcon(drawable, iconOffset, lp, mIsOpening, dp);
