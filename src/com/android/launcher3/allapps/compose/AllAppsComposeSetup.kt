@@ -45,7 +45,7 @@ object AllAppsComposeSetup {
         composeView.repeatWhenAttached {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
                 composeView.setViewCompositionStrategy(
-                    ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed
+                    ViewCompositionStrategy.DisposeOnDetachedFromWindowOrReleasedFromPool
                 )
                 composeView.setContent {
                     AllAppsComposeTheme {
