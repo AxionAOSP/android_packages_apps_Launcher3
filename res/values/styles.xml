@@ -572,4 +572,8 @@
         <item name="widgetsTheme">@style/WidgetContainerTheme</item>
         <item name="pageIndicatorDotColor">@color/page_indicator_dot_color_light</item>
     </style>
+    
+    <style name="NTCellStyleDefault" parent="@style/CellStyleDefault">
+        <item name="iconDrawablePadding">@dimen/grid_icon_drawable_padding</item>
+    </style>
 </resources>
