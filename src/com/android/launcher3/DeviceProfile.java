@@ -503,6 +503,7 @@ public class DeviceProfile {
         }
 
         hotseatProfile = HotseatProfile.Factory.createHotseatProfile(
+                context,
                 getDeviceProperties(),
                 res,
                 inv,
@@ -695,6 +696,10 @@ public class DeviceProfile {
             DeviceProperties deviceProperties,
             boolean isScalableGrid
     ) {
+        final boolean hasWideSpace = deviceProperties.isLandscape() || inv.isFixedLandscape;
+        if (deviceProperties.isTablet() && hasWideSpace) {
+            return true;
+        }
         // For foldable (two panel), we inline the qsb if we have the screen open and we are in
         // either Landscape or Portrait. This cal also be disabled in the device_profile.xml
         boolean twoPanelCanInline = inv.inlineQsb[INDEX_TWO_PANEL_PORTRAIT]
@@ -1720,7 +1725,7 @@ public class DeviceProfile {
                 hotseatBarPadding.set(getHotseatProfile().getBarWorkspaceSpacePx(), paddingTop,
                         mInsets.right + getHotseatProfile().getBarEdgePaddingPx(), paddingBottom);
             }
-        } else if (inv.isFixedLandscape) {
+        } else if (mDeviceProperties.isTablet() || inv.isFixedLandscape) {
             // Center the QSB vertically with hotseat
             int hotseatBarBottomPadding = getHotseatBarBottomPadding();
             int hotseatPlusQSBWidth = getIconToIconWidthForColumns(inv.numColumns);
@@ -1858,7 +1863,7 @@ public class DeviceProfile {
         if (isQsbInline) {
             return getHotseatBarBottomPadding()
                     - ((getHotseatProfile().getQsbHeight() - hotseatCellHeightPx) / 2);
-        } else if (isTaskbarPresent) { // QSB on top
+        } else if (isTaskbarPresent || mDeviceProperties.isTablet()) { // QSB on top
             return hotseatBarSizePx - getHotseatProfile().getQsbHeight()
                     + getHotseatProfile().getQsbShadowHeight();
         } else {
@@ -1870,7 +1875,7 @@ public class DeviceProfile {
      * Returns the number of pixels the hotseat is translated from the bottom of the screen.
      */
     private int getHotseatBarBottomPadding() {
-        if (isTaskbarPresent || isQsbInline) { // QSB on top or inline
+        if (isTaskbarPresent || mDeviceProperties.isTablet() || isQsbInline) { // QSB on top or inline
             return hotseatBarBottomSpacePx - (Math.abs(hotseatCellHeightPx - iconSizePx) / 2);
         } else {
             return hotseatBarSizePx - hotseatCellHeightPx;

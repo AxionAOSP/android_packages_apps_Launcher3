@@ -207,6 +207,7 @@ public class TaskbarLauncherStateController {
                         // where isQsbInline = false, then we need to reset the alpha.
                         mLauncher.getHotseat().setQsbAlpha(1f, ALPHA_CHANNEL_TASKBAR_ALIGNMENT);
                     }
+                    mLauncher.getHotseat().setIconsAlpha(1f, ALPHA_CHANNEL_TASKBAR_ALIGNMENT);
                     mIsQsbInline = dp.isQsbInline;
                     TaskbarLauncherStateController.this.updateIconAlphaForHome(
                             mTaskbarAlphaForHome.getValue(), ALPHA_CHANNEL_TASKBAR_ALIGNMENT);
@@ -787,11 +788,9 @@ public class TaskbarLauncherStateController {
     private void setupPinnedTaskbarAnimation(AnimatorSet animatorSet, boolean showTaskbar,
             AnimatedFloat taskbarBgOffset, float taskbarBgOffsetStart, float taskbarBgOffsetEnd,
             long duration, Animator taskbarBackgroundAlpha) {
-        float targetAlpha = !showTaskbar ? 1 : 0;
-        mLauncher.getHotseat().setIconsAlpha(targetAlpha, ALPHA_CHANNEL_TASKBAR_ALIGNMENT);
-        if (mIsQsbInline) {
-            mLauncher.getHotseat().setQsbAlpha(targetAlpha,
-                    ALPHA_CHANNEL_TASKBAR_ALIGNMENT);
+        if (!mIsQsbInline) {
+            float targetAlpha = !showTaskbar ? 1 : 0;
+            mLauncher.getHotseat().setIconsAlpha(targetAlpha, ALPHA_CHANNEL_TASKBAR_ALIGNMENT);
         }
 
         float targetTaskbarIconAlpha = showTaskbar ? 1f : 0f;
@@ -1018,9 +1017,10 @@ public class TaskbarLauncherStateController {
          * should not be visible at the same time.
          */
         float targetAlpha = hotseatVisible ? 1 : 0;
-        mLauncher.getHotseat().setIconsAlpha(targetAlpha, alphaChannel);
-        if (mIsQsbInline) {
-            mLauncher.getHotseat().setQsbAlpha(targetAlpha, alphaChannel);
+        if (!mIsQsbInline) {
+            mLauncher.getHotseat().setIconsAlpha(targetAlpha, alphaChannel);
+        } else if (isAnimatingToLauncher() || mLauncherState == LauncherState.NORMAL) {
+            mTaskbarAlphaForHome.setValue(0);
         }
     }
 

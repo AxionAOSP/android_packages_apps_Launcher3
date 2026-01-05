@@ -80,6 +80,32 @@ fun HomeScreenSettings(viewModel: SettingsState, context: Context) {
                 onCheckedChange = { viewModel.setBoolean("pref_add_icon_to_home", it) }
             )
         }
+        item {
+            val searchWidgetHelper = remember { com.android.launcher3.qsb.SearchWidgetHelper.getAvailableSearchWidgets(context) }
+            val searchWidgetOptions = remember(searchWidgetHelper) {
+                searchWidgetHelper
+                    .filter { info -> !info.label.equals("Search", ignoreCase = true) }
+                    .map { info -> info.provider.flattenToString() to info.label }
+            }
+            
+            val searchWidgetPrefs = context.getSharedPreferences(com.android.launcher3.LauncherFiles.SHARED_PREFERENCES_KEY, Context.MODE_PRIVATE)
+            var selectedSearchWidget by remember {
+                mutableStateOf(searchWidgetPrefs.getString("pref_qsb_search_provider", "") ?: "")
+            }
+
+            if (searchWidgetOptions.isNotEmpty()) {
+                ListPreference(
+                    title = "Search Provider",
+                    summary = if (selectedSearchWidget == "none") "None" else searchWidgetOptions.find { it.first == selectedSearchWidget }?.second ?: searchWidgetOptions.firstOrNull()?.second ?: "Select a provider",
+                    options = listOf("none" to "None") + searchWidgetOptions,
+                    value = selectedSearchWidget,
+                    onValueChange = { newValue ->
+                        selectedSearchWidget = newValue
+                        searchWidgetPrefs.edit().putString("pref_qsb_search_provider", newValue).apply()
+                    }
+                )
+            }
+        }
     }
 }
 

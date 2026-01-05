@@ -313,7 +313,8 @@ public class InvariantDeviceProfile {
             } else if (ALLAPPS_THEMED_ICONS.getSharedPrefKey().equals(key) ||
                     DRAWER_OPEN_KEYBOARD.getSharedPrefKey().equals(key) ||
                     SHOW_DESKTOP_LABELS.getSharedPrefKey().equals(key) ||
-                    SHOW_DRAWER_LABELS.getSharedPrefKey().equals(key)) {
+                    SHOW_DRAWER_LABELS.getSharedPrefKey().equals(key) ||
+                    com.android.launcher3.qsb.SearchWidgetHelper.KEY_SEARCH_PROVIDER.equals(key)) {
                 onConfigChanged(context);
             }
         };

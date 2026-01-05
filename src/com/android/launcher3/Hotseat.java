@@ -27,6 +27,7 @@ import android.animation.ValueAnimator;
 import android.content.Context;
 import android.graphics.Rect;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
@@ -103,13 +104,9 @@ public class Hotseat extends CellLayout implements Insettable {
 
     public Hotseat(Context context, AttributeSet attrs, int defStyle) {
         super(context, attrs, defStyle);
-        if (Flags.enableQsbOnHotseat()) {
-            mQsb = LayoutInflater.from(context).inflate(R.layout.qsb_container_hotseat, this,
-                    false);
-        } else {
-            mQsb = LayoutInflater.from(context).inflate(R.layout.search_container_hotseat, this,
-                    false);
-        }
+
+        mQsb = LayoutInflater.from(context).inflate(R.layout.qsb_container_hotseat, this,
+                false);
 
         addView(mQsb);
         mIconsAlphaChannels = new MultiValueAlpha(getShortcutsAndWidgets(),
@@ -319,8 +316,20 @@ public class Hotseat extends CellLayout implements Insettable {
         super.onMeasure(widthMeasureSpec, heightMeasureSpec);
 
         DeviceProfile dp = mActivity.getDeviceProfile();
-        mQsb.measure(makeMeasureSpec(dp.hotseatQsbWidth, MeasureSpec.EXACTLY),
-                makeMeasureSpec(dp.getHotseatProfile().getQsbHeight(), MeasureSpec.EXACTLY));
+        int qsbWidth;
+        if (dp.isQsbInline) {
+            qsbWidth = dp.hotseatQsbWidth;
+        } else {
+            Rect hotseatPadding = dp.getHotseatLayoutPadding(getContext());
+            int availableWidth = dp.getDeviceProperties().getAvailableWidthPx() 
+                    - hotseatPadding.left - hotseatPadding.right;
+            int cellWidth = DeviceProfile.calculateCellWidth(
+                    availableWidth, dp.hotseatBorderSpace, dp.numShownHotseatIcons);
+            int horizontalInset = (int) (cellWidth - (dp.iconSizePx * 0.92f));
+            qsbWidth = availableWidth - horizontalInset;
+        }
+        mQsb.measure(MeasureSpec.makeMeasureSpec(qsbWidth, MeasureSpec.EXACTLY),
+                MeasureSpec.makeMeasureSpec(dp.getHotseatProfile().getQsbHeight(), MeasureSpec.EXACTLY));
     }
 
     @Override
@@ -341,7 +350,16 @@ public class Hotseat extends CellLayout implements Insettable {
 
         int bottom = b - t - dp.getQsbOffsetY();
         int top = bottom - dp.getHotseatProfile().getQsbHeight();
+        
+        Log.d("Hotseat", "mQsb layout: l=" + left + ", t=" + top + ", r=" + right + ", b=" + bottom 
+                + ", isQsbInline=" + dp.isQsbInline + ", visibility=" + mQsb.getVisibility());
+        
         mQsb.layout(left, top, right, bottom);
+
+        if (!dp.getDeviceProperties().isTablet()) {
+            float qsbOffsetY = getResources().getDimension(R.dimen.qsb_translation_y);
+            mQsb.setTranslationY(qsbOffsetY);
+        }
     }
 
     /**

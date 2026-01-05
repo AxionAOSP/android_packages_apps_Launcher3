@@ -30,13 +30,17 @@ import android.appwidget.AppWidgetProviderInfo;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.provider.Settings;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.FrameLayout;
+
+import androidx.compose.ui.platform.ComposeView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -45,6 +49,7 @@ import androidx.annotation.WorkerThread;
 import com.android.launcher3.BuildConfig;
 import com.android.launcher3.InvariantDeviceProfile;
 import com.android.launcher3.LauncherAppState;
+import com.android.launcher3.LauncherFiles;
 import com.android.launcher3.LauncherPrefs;
 import com.android.launcher3.R;
 import com.android.launcher3.graphics.FragmentWithPreview;
@@ -59,8 +64,7 @@ import com.android.launcher3.widget.util.WidgetSizes;
  */
 public class QsbContainerView extends FrameLayout {
 
-    public static final String SEARCH_ENGINE_SETTINGS_KEY = "selected_search_engine";
-
+    public static final String SEARCH_PROVIDER_KEY = SearchWidgetHelper.KEY_SEARCH_PROVIDER;
     /**
      * Returns the package name for user configured search provider or from searchManager
      * @param context
@@ -69,16 +73,7 @@ public class QsbContainerView extends FrameLayout {
     @WorkerThread
     @Nullable
     public static String getSearchWidgetPackageName(@NonNull Context context) {
-        String providerPkg = Settings.Secure.getString(context.getContentResolver(),
-                SEARCH_ENGINE_SETTINGS_KEY);
-        if (providerPkg == null) {
-            SearchManager searchManager = context.getSystemService(SearchManager.class);
-            ComponentName componentName = searchManager.getGlobalSearchActivity();
-            if (componentName != null) {
-                providerPkg = searchManager.getGlobalSearchActivity().getPackageName();
-            }
-        }
-        return providerPkg;
+        return SearchWidgetHelper.getSearchWidgetPackageName(context);
     }
 
     /**
@@ -89,25 +84,7 @@ public class QsbContainerView extends FrameLayout {
     @WorkerThread
     @Nullable
     public static AppWidgetProviderInfo getSearchWidgetProviderInfo(@NonNull Context context) {
-        String providerPkg = getSearchWidgetPackageName(context);
-        if (providerPkg == null) {
-            return null;
-        }
-
-        AppWidgetProviderInfo defaultWidgetForSearchPackage = null;
-        AppWidgetManager appWidgetManager = AppWidgetManager.getInstance(context);
-        for (AppWidgetProviderInfo info :
-                appWidgetManager.getInstalledProvidersForPackage(providerPkg, null)) {
-            if (info.provider.getPackageName().equals(providerPkg) && info.configure == null) {
-                if ((info.widgetCategory
-                        & AppWidgetProviderInfo.WIDGET_CATEGORY_SEARCHBOX) != 0) {
-                    return info;
-                } else if (defaultWidgetForSearchPackage == null) {
-                    defaultWidgetForSearchPackage = info;
-                }
-            }
-        }
-        return defaultWidgetForSearchPackage;
+        return SearchWidgetHelper.getSearchWidgetProvider(context);
     }
 
     /**
@@ -143,6 +120,44 @@ public class QsbContainerView extends FrameLayout {
     }
 
     @Override
+    protected void onAttachedToWindow() {
+        super.onAttachedToWindow();
+        LauncherPrefs.getPrefs(getContext()).registerOnSharedPreferenceChangeListener(mListener);
+        updateVisibility();
+        
+        if (getChildCount() == 0) {
+            ComposeView composeView = new ComposeView(getContext());
+            addView(composeView, new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT));
+            Log.d("QsbContainerView", "ComposeView added");
+            HotseatQsbSetup.setupComposeView(composeView);
+        }
+    }
+
+    @Override
+    protected void onDetachedFromWindow() {
+        LauncherPrefs.getPrefs(getContext()).unregisterOnSharedPreferenceChangeListener(mListener);
+        super.onDetachedFromWindow();
+    }
+
+    private final SharedPreferences.OnSharedPreferenceChangeListener mListener = (prefs, key) -> {
+        if (SearchWidgetHelper.KEY_SEARCH_PROVIDER.equals(key)) {
+            updateVisibility();
+        }
+    };
+
+    private void updateVisibility() {
+        String provider = LauncherPrefs.getPrefs(getContext())
+                .getString(SearchWidgetHelper.KEY_SEARCH_PROVIDER, null);
+        setVisibility("none".equals(provider) ? GONE : VISIBLE);
+    }
+
+    @Override
+    public void setAlpha(float alpha) {
+        super.setAlpha(alpha);
+        Log.d("QsbContainerView", "setAlpha: " + alpha);
+    }
+
+    @Override
     public void setPadding(int left, int top, int right, int bottom) {
         super.setPadding(0, 0, 0, 0);
     }
@@ -174,24 +189,28 @@ public class QsbContainerView extends FrameLayout {
             mOrientation = getContext().getResources().getConfiguration().orientation;
         }
 
-        protected QsbWidgetHost createHost() {
-            return new QsbWidgetHost(getContext(), QSB_WIDGET_HOST_ID,
-                    (c) -> new QsbWidgetHostView(c), this::rebindFragment);
+        @Override
+        public void onDestroy() {
+            mQsbWidgetHost.stopListening();
+            super.onDestroy();
         }
 
-        private FrameLayout mWrapper;
+        protected QsbWidgetHost createHost() {
+            return new QsbWidgetHost(getContext(), QSB_WIDGET_HOST_ID,
+                    (c) -> new QsbWidgetHostView(c));
+        }
 
         @Override
         public View onCreateView(
                 LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+            ComposeView composeView = new ComposeView(getContext());
+            HotseatQsbSetup.setupComposeView(composeView);
+            Log.d("QsbFragment", "ComposeView created");
+            return composeView;
+        }
 
-            mWrapper = new FrameLayout(getContext());
-            // Only add the view when enabled
-            if (isQsbEnabled()) {
-                mQsbWidgetHost.startListening();
-                mWrapper.addView(createQsb(mWrapper));
-            }
-            return mWrapper;
+        public void createQsbView(ViewGroup container) {
+            container.addView(createQsb(container));
         }
 
         private View createQsb(ViewGroup container) {
@@ -212,8 +231,10 @@ public class QsbContainerView extends FrameLayout {
             int oldWidgetId = widgetId;
             if (!isWidgetBound && !isInPreviewMode()) {
                 if (widgetId > -1) {
-                    // widgetId is already bound and its not the correct provider. reset host.
-                    mQsbWidgetHost.deleteHost();
+                    // widgetId is already bound and its not the correct provider.
+                    // do no use deleteHost() as it stops listening. Just delete the old ID.
+                    mQsbWidgetHost.deleteAppWidgetId(widgetId);
+                    widgetId = -1;
                 }
 
                 widgetId = mQsbWidgetHost.allocateAppWidgetId();
@@ -256,9 +277,9 @@ public class QsbContainerView extends FrameLayout {
             if (requestCode == REQUEST_BIND_QSB) {
                 if (resultCode == Activity.RESULT_OK) {
                     saveWidgetId(data.getIntExtra(EXTRA_APPWIDGET_ID, -1));
-                    rebindFragment();
+
                 } else {
-                    mQsbWidgetHost.deleteHost();
+                    mQsbWidgetHost.deleteAppWidgetId(data.getIntExtra(EXTRA_APPWIDGET_ID, -1));
                 }
             }
         }
@@ -267,25 +288,6 @@ public class QsbContainerView extends FrameLayout {
         public void onResume() {
             super.onResume();
             if (mQsb != null && mQsb.isReinflateRequired(mOrientation)) {
-                rebindFragment();
-            }
-        }
-
-        @Override
-        public void onDestroy() {
-            mQsbWidgetHost.stopListening();
-            super.onDestroy();
-        }
-
-        private void rebindFragment() {
-            // Exit if the embedded qsb is disabled
-            if (!isQsbEnabled()) {
-                return;
-            }
-
-            if (mWrapper != null && getContext() != null) {
-                mWrapper.removeAllViews();
-                mWrapper.addView(createQsb(mWrapper));
             }
         }
 
