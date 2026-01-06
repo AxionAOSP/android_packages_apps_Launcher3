@@ -450,6 +450,7 @@ public abstract class SystemShortcut<T extends ActivityContext> extends ItemInfo
                 if (originalView == null) {
                     return null;
                 }
+                /*
                 if (!Flags.enablePrivateSpace()) {
                     return null;
                 }
@@ -457,7 +458,7 @@ public abstract class SystemShortcut<T extends ActivityContext> extends ItemInfo
                         itemInfo.user).isPrivate()) {
                     // If app is not Private Space app.
                     return null;
-                }
+                }*/
                 ComponentName cn = SecondaryDropTarget.getUninstallTarget(originalView.getContext(),
                         itemInfo);
                 if (cn == null) {
