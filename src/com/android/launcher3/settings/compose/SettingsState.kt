@@ -75,6 +75,12 @@ class SettingsState(context: Context) : ViewModel(), SharedPreferences.OnSharedP
     private val _drawerLayoutMode = MutableStateFlow(prefs.getString("pref_drawer_layout_mode", "smart") ?: "smart")
     val drawerLayoutMode: StateFlow<String> = _drawerLayoutMode.asStateFlow()
 
+    private val _workspaceIconScale = MutableStateFlow(prefs.getFloat("pref_workspace_icon_scale", 1.0f))
+    val workspaceIconScale: StateFlow<Float> = _workspaceIconScale.asStateFlow()
+
+    private val _allAppsIconScale = MutableStateFlow(prefs.getFloat("pref_allapps_icon_scale", 1.0f))
+    val allAppsIconScale: StateFlow<Float> = _allAppsIconScale.asStateFlow()
+
     init {
         prefs.registerOnSharedPreferenceChangeListener(this)
     }
@@ -93,11 +99,17 @@ class SettingsState(context: Context) : ViewModel(), SharedPreferences.OnSharedP
             "pref_desktop_show_labels" -> _desktopShowLabels.value = prefs.getBoolean(key, true)
             "pref_drawer_show_labels" -> _drawerShowLabels.value = prefs.getBoolean(key, true)
             "pref_drawer_layout_mode" -> _drawerLayoutMode.value = prefs.getString(key, "smart") ?: "smart"
+            "pref_workspace_icon_scale" -> _workspaceIconScale.value = prefs.getFloat(key, 1.0f)
+            "pref_allapps_icon_scale" -> _allAppsIconScale.value = prefs.getFloat(key, 1.0f)
         }
     }
 
     fun setBoolean(key: String, value: Boolean) {
         prefs.edit().putBoolean(key, value).apply()
+    }
+
+    fun setFloat(key: String, value: Float) {
+        prefs.edit().putFloat(key, value).apply()
     }
 
     fun setDrawerLayoutMode(mode: String) {

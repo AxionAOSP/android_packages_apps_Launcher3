@@ -18,19 +18,30 @@ package com.android.launcher3.settings.compose
 
 import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
+import android.graphics.Bitmap
+import android.graphics.Canvas
+import android.graphics.drawable.Drawable
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.*
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.*
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.android.axion.compose.preferences.*
 import com.android.launcher3.R
+import com.android.launcher3.InvariantDeviceProfile
 import com.android.launcher3.states.RotationHelper
+import kotlin.math.roundToInt
 
 @Composable
 fun HomeScreenSettings(viewModel: SettingsState, context: Context) {
@@ -107,6 +118,8 @@ fun HomeScreenSettings(viewModel: SettingsState, context: Context) {
             }
         }
     }
+
+    IconSizeSettings(viewModel, context)
 }
 
 @Composable
@@ -287,5 +300,224 @@ private fun LayoutModeCard(
                     MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f)
             )
         }
+    }
+}
+
+@Composable
+fun IconSizeSettings(viewModel: SettingsState, context: Context) {
+    val workspaceScale by viewModel.workspaceIconScale.collectAsState()
+    val allAppsScale by viewModel.allAppsIconScale.collectAsState()
+    val haptic = LocalHapticFeedback.current
+
+    val idp = remember { InvariantDeviceProfile.INSTANCE.get(context) }
+    val density = LocalDensity.current
+    val workspaceBaseSize = remember(idp) {
+        with(density) { idp.iconSize[0].dp }
+    }
+    val allAppsBaseSize = remember(idp) {
+        with(density) { idp.allAppsIconSize[0].dp }
+    }
+
+    val settingsIcon = remember {
+        try {
+            context.packageManager.getApplicationIcon("com.android.settings")
+        } catch (e: PackageManager.NameNotFoundException) {
+            context.packageManager.defaultActivityIcon
+        }
+    }
+
+    val iconBitmap = remember(settingsIcon) {
+        val bitmap = Bitmap.createBitmap(
+            settingsIcon.intrinsicWidth.coerceAtLeast(1),
+            settingsIcon.intrinsicHeight.coerceAtLeast(1),
+            Bitmap.Config.ARGB_8888
+        )
+        val canvas = Canvas(bitmap)
+        settingsIcon.setBounds(0, 0, canvas.width, canvas.height)
+        settingsIcon.draw(canvas)
+        bitmap.asImageBitmap()
+    }
+
+    Column(
+        modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp)
+    ) {
+        Text(
+            text = "Icon Sizes",
+            style = MaterialTheme.typography.titleSmall,
+            color = MaterialTheme.colorScheme.primary,
+            fontWeight = FontWeight.SemiBold,
+            modifier = Modifier.padding(bottom = 12.dp, start = 4.dp)
+        )
+
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(28.dp),
+            colors = CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.surfaceBright
+            )
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(24.dp)
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceEvenly,
+                    verticalAlignment = Alignment.Bottom
+                ) {
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .size(112.dp)
+                                .clip(RoundedCornerShape(20.dp))
+                                .background(MaterialTheme.colorScheme.surfaceContainer),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Image(
+                                bitmap = iconBitmap,
+                                contentDescription = null,
+                                modifier = Modifier.size(workspaceBaseSize * workspaceScale)
+                            )
+                        }
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text(
+                            text = "Home",
+                            style = MaterialTheme.typography.labelMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        Text(
+                            text = "${(workspaceScale * 100).roundToInt()}%",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.primary,
+                            fontWeight = FontWeight.SemiBold
+                        )
+                    }
+
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .size(112.dp)
+                                .clip(RoundedCornerShape(20.dp))
+                                .background(MaterialTheme.colorScheme.surfaceContainer),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Image(
+                                bitmap = iconBitmap,
+                                contentDescription = null,
+                                modifier = Modifier.size(allAppsBaseSize * allAppsScale)
+                            )
+                        }
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text(
+                            text = "App Drawer",
+                            style = MaterialTheme.typography.labelMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        Text(
+                            text = "${(allAppsScale * 100).roundToInt()}%",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.primary,
+                            fontWeight = FontWeight.SemiBold
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(24.dp))
+
+                IconSizeSlider(
+                    label = "Home Screen",
+                    scale = workspaceScale,
+                    onScaleChange = { viewModel.setFloat("pref_workspace_icon_scale", it) },
+                    onReset = { viewModel.setFloat("pref_workspace_icon_scale", 1.0f) }
+                )
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                IconSizeSlider(
+                    label = "App Drawer",
+                    scale = allAppsScale,
+                    onScaleChange = { viewModel.setFloat("pref_allapps_icon_scale", it) },
+                    onReset = { viewModel.setFloat("pref_allapps_icon_scale", 1.0f) }
+                )
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalFoundationApi::class)
+@Composable
+private fun IconSizeSlider(
+    label: String,
+    scale: Float,
+    onScaleChange: (Float) -> Unit,
+    onReset: () -> Unit
+) {
+    val haptic = LocalHapticFeedback.current
+
+    Column {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                Text(
+                    text = label,
+                    style = MaterialTheme.typography.bodyMedium
+                )
+                val isModified = scale != 1.0f
+                Box(
+                    modifier = Modifier
+                        .size(24.dp)
+                        .clip(RoundedCornerShape(6.dp))
+                        .then(
+                            if (isModified) {
+                                Modifier.combinedClickable(
+                                    onClick = {},
+                                    onLongClick = {
+                                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                        onReset()
+                                    }
+                                )
+                            } else Modifier
+                        ),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Refresh,
+                        contentDescription = if (isModified) "Long press to reset" else null,
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(
+                            alpha = if (isModified) 1f else 0.3f
+                        ),
+                        modifier = Modifier.size(16.dp)
+                    )
+                }
+            }
+            Text(
+                text = "${(scale * 100).roundToInt()}%",
+                style = MaterialTheme.typography.labelMedium,
+                color = MaterialTheme.colorScheme.primary,
+                fontWeight = FontWeight.SemiBold
+            )
+        }
+        Slider(
+            value = scale,
+            onValueChange = onScaleChange,
+            valueRange = 0.75f..1.25f,
+            steps = 9,
+            colors = SliderDefaults.colors(
+                thumbColor = MaterialTheme.colorScheme.primary,
+                activeTrackColor = MaterialTheme.colorScheme.primary,
+                inactiveTrackColor = MaterialTheme.colorScheme.surfaceContainerHighest
+            )
+        )
     }
 }

@@ -29,6 +29,8 @@ import static com.android.launcher3.LauncherPrefs.GRID_NAME;
 import static com.android.launcher3.LauncherPrefs.NON_FIXED_LANDSCAPE_GRID_NAME;
 import static com.android.launcher3.LauncherPrefs.SHOW_DESKTOP_LABELS;
 import static com.android.launcher3.LauncherPrefs.SHOW_DRAWER_LABELS;
+import static com.android.launcher3.LauncherPrefs.WORKSPACE_ICON_SCALE;
+import static com.android.launcher3.LauncherPrefs.ALLAPPS_ICON_SCALE;
 import static com.android.launcher3.Utilities.dpiFromPx;
 import static com.android.launcher3.testing.shared.ResourceUtils.INVALID_RESOURCE_HANDLE;
 import static com.android.launcher3.util.DisplayController.CHANGE_DENSITY;
@@ -314,11 +316,14 @@ public class InvariantDeviceProfile {
                     DRAWER_OPEN_KEYBOARD.getSharedPrefKey().equals(key) ||
                     SHOW_DESKTOP_LABELS.getSharedPrefKey().equals(key) ||
                     SHOW_DRAWER_LABELS.getSharedPrefKey().equals(key) ||
+                    WORKSPACE_ICON_SCALE.getSharedPrefKey().equals(key) ||
+                    ALLAPPS_ICON_SCALE.getSharedPrefKey().equals(key) ||
                     com.android.launcher3.qsb.SearchWidgetHelper.KEY_SEARCH_PROVIDER.equals(key)) {
                 onConfigChanged(context);
             }
         };
-        prefs.addListener(prefListener, FIXED_LANDSCAPE_MODE, ENABLE_TWOLINE_ALLAPPS_TOGGLE);
+        prefs.addListener(prefListener, FIXED_LANDSCAPE_MODE, ENABLE_TWOLINE_ALLAPPS_TOGGLE,
+                WORKSPACE_ICON_SCALE, ALLAPPS_ICON_SCALE);
         lifeCycle.addCloseable(() -> prefs.removeListener(prefListener,
                 FIXED_LANDSCAPE_MODE, ENABLE_TWOLINE_ALLAPPS_TOGGLE));
 
@@ -423,6 +428,10 @@ public class InvariantDeviceProfile {
         inlineNavButtonsEndSpacing = closestProfile.inlineNavButtonsEndSpacing;
 
         iconSize = displayOption.iconSizes;
+        float workspaceIconScale = mPrefs.get(WORKSPACE_ICON_SCALE);
+        for (int i = 0; i < iconSize.length; i++) {
+            iconSize[i] *= workspaceIconScale;
+        }
         float maxIconSize = iconSize[0];
         for (int i = 1; i < iconSize.length; i++) {
             maxIconSize = Math.max(maxIconSize, iconSize[i]);
@@ -454,6 +463,10 @@ public class InvariantDeviceProfile {
         allAppsCellSize = displayOption.allAppsCellSize;
         allAppsBorderSpaces = displayOption.allAppsBorderSpaces;
         allAppsIconSize = displayOption.allAppsIconSizes;
+        float allAppsIconScale = mPrefs.get(ALLAPPS_ICON_SCALE);
+        for (int i = 0; i < allAppsIconSize.length; i++) {
+            allAppsIconSize[i] *= allAppsIconScale;
+        }
         allAppsIconTextSize = displayOption.allAppsIconTextSizes;
 
         inlineQsb = closestProfile.inlineQsb;
