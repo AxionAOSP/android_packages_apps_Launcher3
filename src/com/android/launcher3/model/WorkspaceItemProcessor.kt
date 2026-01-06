@@ -369,8 +369,10 @@ class WorkspaceItemProcessor(
             c.applyCommonProperties(info)
             info.intent = intent
             info.rank = c.rank
-            info.spanX = 1
-            info.spanY = 1
+            info.spanX = c.getSpanX()
+            info.spanY = c.getSpanY()
+            if (info.spanX < 1) info.spanX = 1
+            if (info.spanY < 1) info.spanY = 1
             info.runtimeStatusFlags = info.runtimeStatusFlags or disabledState
             if (isSafeMode && !appInfoWrapper.isSystem()) {
                 info.runtimeStatusFlags =
@@ -454,10 +456,14 @@ class WorkspaceItemProcessor(
         c.applyCommonProperties(collection)
         // Do not trim the folder label, as is was set by the user.
         collection.title = c.getString(c.mTitleIndex)
-        collection.spanX = 1
-        collection.spanY = 1
+        collection.spanX = c.getSpanX()
+        collection.spanY = c.getSpanY()
+        if (collection.spanX < 1) collection.spanX = 1
+        if (collection.spanY < 1) collection.spanY = 1
         if (collection is FolderInfo) {
             collection.options = c.options
+            collection.folderStyle = c.folderStyle
+            collection.coverText = c.coverText
         } else {
             // An app pair may be inside another folder, so it needs to preserve rank information.
             collection.rank = c.rank

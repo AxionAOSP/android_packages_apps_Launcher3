@@ -186,6 +186,7 @@ public class BubbleTextView extends TextView implements ItemInfoUpdateReceiver,
     private boolean mLayoutHorizontal;
     private final boolean mIsRtl;
     private final int mIconSize;
+    private int mIconSizeDesktop = 0;
 
     @ViewDebug.ExportedProperty(category = "launcher")
     private boolean mHideBadge = false;
@@ -363,6 +364,7 @@ public class BubbleTextView extends TextView implements ItemInfoUpdateReceiver,
 
         mLineIndicatorColor = Color.TRANSPARENT;
         mLineIndicatorWidth = 0;
+        mIconSizeDesktop = 0;
 
         setTag(null);
         if (mIconLoadRequest != null) {
@@ -922,7 +924,7 @@ public class BubbleTextView extends TextView implements ItemInfoUpdateReceiver,
      * Get the icon bounds on the view depending on the layout type.
      */
     public void getIconBounds(Rect outBounds) {
-        getIconBounds(mIconSize, outBounds);
+        getIconBounds(getCustomIconSize(), outBounds);
     }
 
     /**
@@ -964,7 +966,50 @@ public class BubbleTextView extends TextView implements ItemInfoUpdateReceiver,
     @Override
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
         int height = MeasureSpec.getSize(heightMeasureSpec);
-        if (mCenterVertically) {
+        int width = MeasureSpec.getSize(widthMeasureSpec);
+
+        boolean isEnlarge = false;
+
+        int iconSize = mIconSize;
+
+        // Check for desktop icon size changes
+        Object tag = getTag();
+        ItemInfo info = (ItemInfo) tag;
+        if (tag instanceof ItemInfo && info.container == LauncherSettings.Favorites.CONTAINER_DESKTOP) {
+            if (info.spanX == 2 && info.spanY == 2) {
+                final int availableWidth = width;
+                final int availableHeight = height;
+                iconSize = Math.min(availableWidth, availableHeight);
+
+                if (mIcon != null && mIcon.getBounds().width() != iconSize) {
+                    mIcon.setBounds(0, 0, iconSize, iconSize);
+                    // Force update compound drawables to respect new bounds
+                    if (mLayoutHorizontal) {
+                        setCompoundDrawablesRelative(mIcon, null, null, null);
+                    } else {
+                        setCompoundDrawables(null, mIcon, null, null);
+                    }
+                }
+                isEnlarge = true;
+            } else if (info.spanX == 1 && info.spanY == 1) { // refresh if minimizing
+                iconSize = mIconSize;
+                if (mIcon != null && mIcon.getBounds().width() != iconSize) {
+                    mIcon.setBounds(0, 0, iconSize, iconSize);
+                    // Force update compound drawables to respect new bounds
+                    if (mLayoutHorizontal) {
+                        setCompoundDrawablesRelative(mIcon, null, null, null);
+                    } else {
+                        setCompoundDrawables(null, mIcon, null, null);
+                    }
+                }
+            }
+            mIconSizeDesktop = iconSize;
+        }
+
+        if (isEnlarge) {
+            setPadding(getPaddingLeft(), (height - iconSize) / 2, getPaddingRight(),
+                    getPaddingBottom());
+        } else if (mCenterVertically) {
             Paint.FontMetrics fm = getPaint().getFontMetrics();
             int cellHeightPx = mIconSize + getCompoundDrawablePadding() +
                     (int) Math.ceil(fm.bottom - fm.top) * getCellSpecMaxTextLineCount();
@@ -1013,6 +1058,10 @@ public class BubbleTextView extends TextView implements ItemInfoUpdateReceiver,
                     setMaxLines(1);
                 }
             }
+        }
+        if (isEnlarge) {
+            setText(null);
+            setTextVisibility(false);
         }
         super.onMeasure(widthMeasureSpec, heightMeasureSpec);
     }
@@ -1378,7 +1427,9 @@ public class BubbleTextView extends TextView implements ItemInfoUpdateReceiver,
         // same as before.
         mDisableRelayout = mIcon != null;
 
-        icon.setBounds(0, 0, mIconSize, mIconSize);
+        final int iconSize = getCustomIconSize();
+
+        icon.setBounds(0, 0, iconSize, iconSize);
 
         updateIcon(icon);
 
@@ -1441,7 +1492,7 @@ public class BubbleTextView extends TextView implements ItemInfoUpdateReceiver,
     }
 
     public int getIconSize() {
-        return mIconSize;
+        return getCustomIconSize();
     }
 
     public boolean isDisplaySearchResult() {
@@ -1478,11 +1529,11 @@ public class BubbleTextView extends TextView implements ItemInfoUpdateReceiver,
 
     @Override
     public void getWorkspaceVisualDragBounds(Rect bounds) {
-        getIconBounds(mIconSize, bounds);
+        getIconBounds(getCustomIconSize(), bounds);
     }
 
     public void getSourceVisualDragBounds(Rect bounds) {
-        getIconBounds(mIconSize, bounds);
+        getIconBounds(getCustomIconSize(), bounds);
     }
 
     @Override
@@ -1530,5 +1581,9 @@ public class BubbleTextView extends TextView implements ItemInfoUpdateReceiver,
      */
     public boolean canShowLongPressPopup() {
         return getTag() instanceof ItemInfo && ShortcutUtil.supportsShortcuts((ItemInfo) getTag());
+    }
+
+    private int getCustomIconSize() {
+        return mIconSizeDesktop > 0 ? mIconSizeDesktop : mIconSize;
     }
 }

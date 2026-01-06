@@ -7,27 +7,27 @@ public class ClippedFolderIconLayoutRule {
     public static final int MAX_NUM_ITEMS_IN_PREVIEW = 4;
     private static final int MIN_NUM_ITEMS_IN_PREVIEW = 2;
 
-    public static final float MIN_SCALE = 0.44f;
-    public static final float MAX_SCALE = 0.51f;
+    public static final float MIN_SCALE = 0.32f;
+    public static final float MAX_SCALE = 0.36f;
 
     // TODO: figure out exact radius for different icons
-    private static final float MAX_RADIUS_DILATION = 0.25f;
+    private static final float MAX_RADIUS_DILATION = 0.0f;
     // The max amount of overlap the preview items can go outside of the background bounds.
-    public static final float ICON_OVERLAP_FACTOR = 1 + (MAX_RADIUS_DILATION / 2f);
-    private static final float ITEM_RADIUS_SCALE_FACTOR = 1.15f;
-    private static final float ITEM_RADIUS_SCALE_FACTOR_SHAPES = 1.2f;
+    public static final float ICON_OVERLAP_FACTOR = 1.0f;
+    private static final float ITEM_RADIUS_SCALE_FACTOR = 0.92f;
+    private static final float ITEM_RADIUS_SCALE_FACTOR_SHAPES = 0.95f;
 
     public static final int EXIT_INDEX = -2;
     public static final int ENTER_INDEX = -3;
 
     private float[] mTmpPoint = new float[2];
 
-    private float mAvailableSpace;
-    private float mRadius;
-    private float mIconSize;
-    private boolean mIsRtl;
-    private float mBaselineIconScale;
-    private int mNumFolderColumns;
+    protected float mAvailableSpace;
+    protected float mRadius;
+    protected float mIconSize;
+    protected boolean mIsRtl;
+    protected float mBaselineIconScale;
+    protected int mNumFolderColumns;
 
     /**
      * initialize the layout rule
@@ -211,7 +211,7 @@ public class ClippedFolderIconLayoutRule {
         if (numItems == 3) {
             return 0.15f;
         } else if (numItems == MAX_NUM_ITEMS_IN_PREVIEW) {
-            return 0.12f;
+            return 0.20f;
         } else {
             return 0;
         }

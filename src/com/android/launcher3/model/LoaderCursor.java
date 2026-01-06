@@ -123,6 +123,8 @@ public class LoaderCursor extends CursorWrapper {
     private final int mRankIndex;
     private final int mOptionsIndex;
     private final int mAppWidgetSourceIndex;
+    private final int mFolderStyleIndex;
+    private final int mCoverTextIndex;
 
     @Nullable
     private LauncherActivityInfo mActivityInfo;
@@ -176,6 +178,8 @@ public class LoaderCursor extends CursorWrapper {
         mRankIndex = getColumnIndexOrThrow(Favorites.RANK);
         mOptionsIndex = getColumnIndexOrThrow(Favorites.OPTIONS);
         mAppWidgetSourceIndex = getColumnIndexOrThrow(Favorites.APPWIDGET_SOURCE);
+        mFolderStyleIndex = getColumnIndexOrThrow(Favorites.FOLDER_STYLE);
+        mCoverTextIndex = getColumnIndexOrThrow(Favorites.COVER_TEXT);
     }
 
     @Override
@@ -301,6 +305,14 @@ public class LoaderCursor extends CursorWrapper {
      */
     public int getAppWidgetSource() {
         return getInt(mAppWidgetSourceIndex);
+    }
+
+    public int getFolderStyle() {
+        return getInt(mFolderStyleIndex);
+    }
+
+    public String getCoverText() {
+        return getString(mCoverTextIndex);
     }
 
     /**

@@ -23,6 +23,8 @@ import static com.android.launcher3.LauncherAnimUtils.SCALE_PROPERTY;
 import static com.android.launcher3.folder.ClippedFolderIconLayoutRule.MAX_NUM_ITEMS_IN_PREVIEW;
 import static com.android.launcher3.folder.FolderGridOrganizer.createFolderGridOrganizer;
 
+import com.android.launcher3.LauncherSettings;
+
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
 import android.animation.AnimatorSet;
@@ -150,10 +152,21 @@ public class FolderAnimationManager implements FolderAnimationCreator {
         float initialSize = (scaledRadius * 2) * scaleRelativeToDragLayer;
 
         // Match size/scale of icons in the preview
-        float previewScale = rule.scaleForItem(itemsInPreview.size(), 0);
-        float previewSize = rule.getIconSize() * previewScale;
-        float baseIconSize = getBubbleTextView(itemsInPreview.get(0)).getIconSize();
-        float initialScale = previewSize / baseIconSize * scaleRelativeToDragLayer;
+        boolean isEnlargedIcon = mFolderIcon.mInfo != null && mFolderIcon.mInfo.spanX > 1 && mFolderIcon.mInfo.spanY > 1;
+        boolean isCoverStyle = mFolderIcon.getFolderStyle() == LauncherSettings.Favorites.FOLDER_STYLE_COVER;
+
+        float initialScale;
+        if (isCoverStyle) {
+            initialScale = scaleRelativeToDragLayer;
+        } else if (isEnlargedIcon) {
+            initialScale = 0.9f;
+        } else {
+            float previewScale = rule.scaleForItem(itemsInPreview.size(), 0);
+            float previewSize = rule.getIconSize() * previewScale;
+            float baseIconSize = getBubbleTextView(itemsInPreview.get(0)).getIconSize();
+            initialScale = previewSize / baseIconSize * scaleRelativeToDragLayer;
+        }
+
         final float finalScale = 1f;
         float scale = mIsOpening ? initialScale : finalScale;
         mFolder.setPivotX(0);
@@ -224,6 +237,15 @@ public class FolderAnimationManager implements FolderAnimationCreator {
         play(a, getAnimator(mFolder, View.TRANSLATION_Y, yDistance, 0f));
         play(a, getAnimator(mFolder.mContent, SCALE_PROPERTY, initialScale, finalScale));
         play(a, getAnimator(mFolder.mFooter, SCALE_PROPERTY, initialScale, finalScale));
+        if (isEnlargedIcon) {
+            mFolder.mContent.setAlpha(mIsOpening ? 0f : 1f);
+            mFolder.mFooter.setAlpha(mIsOpening ? 0f : 1f);
+            play(a, getAnimator(mFolder.mContent, View.ALPHA, 0f, 1f));
+            play(a, getAnimator(mFolder.mFooter, View.ALPHA, 0f, 1f));
+        } else if (isCoverStyle) {
+            mFolder.mContent.setAlpha(mIsOpening ? 1f : 0f);
+            mFolder.mFooter.setAlpha(mIsOpening ? 1f : 0f);
+        }
 
         final int footerAlphaDuration;
         final int footerStartDelay;
@@ -242,7 +264,12 @@ public class FolderAnimationManager implements FolderAnimationCreator {
         }
         play(a, getAnimator(mFolder.mFooter, ALPHA, 0, 1f), footerStartDelay, footerAlphaDuration);
 
-        ShapeDelegate shapeDelegate = ThemeManager.INSTANCE.get(mContext).getFolderShape();
+        ShapeDelegate shapeDelegate;
+        if (mFolderIcon.getFolderStyle() == LauncherSettings.Favorites.FOLDER_STYLE_GRID) {
+            shapeDelegate = new ShapeDelegate.RoundedSquare(0.3f);
+        } else {
+            shapeDelegate = ThemeManager.INSTANCE.get(mContext).getFolderShape();
+        }
         // Create reveal animator for the folder background
         play(a, shapeDelegate.createRevealAnimator(
                 mFolder, startRect, endRect, finalRadius, !mIsOpening));
@@ -332,9 +359,6 @@ public class FolderAnimationManager implements FolderAnimationCreator {
 
                 mFolder.setClipChildren(mFolderClipChildren);
                 mFolder.setClipToPadding(mFolderClipToPadding);
-                mContent.setClipChildren(mContentClipChildren);
-                mContent.setClipToPadding(mContentClipToPadding);
-                mCellLayout.setClipChildren(mCellLayoutClipChildren);
                 mCellLayout.setClipToPadding(mCellLayoutClipPadding);
             }
         });
@@ -478,7 +502,7 @@ public class FolderAnimationManager implements FolderAnimationCreator {
     }
 
     private boolean isLargeFolder() {
-        return mFolder.getItemCount() > MAX_NUM_ITEMS_IN_PREVIEW;
+        return mFolder.getItemCount() > mFolderIcon.getMaxPreviewItems();
     }
 
     private Interpolator getPreviewItemInterpolator() {

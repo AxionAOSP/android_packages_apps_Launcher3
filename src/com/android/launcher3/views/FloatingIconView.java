@@ -26,10 +26,14 @@ import static com.android.launcher3.views.FloatingIconViewCompanion.setPropertie
 import android.animation.Animator;
 import android.content.Context;
 import android.content.res.ThemeEngine;
+import android.graphics.Bitmap;
 import android.graphics.Canvas;
+import android.graphics.HardwareRenderer;
+import android.graphics.RenderNode;
 import android.graphics.Rect;
 import android.graphics.RectF;
 import android.graphics.drawable.AdaptiveIconDrawable;
+import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.os.CancellationSignal;
 import android.util.AttributeSet;
@@ -320,7 +324,8 @@ public class FloatingIconView extends FrameLayout implements
                 boolean shouldThemeIcon = (btvIcon instanceof FastBitmapDrawable fbd)
                         && fbd.isCreatedForTheme();
                 fullIcon = getFullDrawable(l, info, width, height, shouldThemeIcon);
-            } else if (!(originalView instanceof BubbleTextView)) {
+            } else if (!(originalView instanceof BubbleTextView)
+                    && !(originalView instanceof FolderIcon)) {
                 fullIcon = getFullDrawable(l, info, width, height, true /* shouldThemeIcon */);
             }
 
@@ -588,7 +593,7 @@ public class FloatingIconView extends FrameLayout implements
         RectF position = new RectF();
         getLocationBoundsForView(l, v, isOpening, position);
 
-        final FastBitmapDrawable btvIcon;
+        final Drawable btvIcon;
         final Supplier<Drawable> btvDrawableSupplier;
         if (v instanceof BubbleTextView) {
             BubbleTextView btv = (BubbleTextView) v;
@@ -602,12 +607,28 @@ public class FloatingIconView extends FrameLayout implements
                 // Clone when needed
                 btvDrawableSupplier = () -> btvIcon.getConstantState().newDrawable();
             }
+        } else if (v instanceof FolderIcon) {
+            FolderIcon folderIcon = (FolderIcon) v;
+            Rect r = new Rect();
+            folderIcon.getPreviewBounds(r);
+
+            RenderNode renderNode = new RenderNode("FolderIconSnapshot");
+            renderNode.setPosition(0, 0, r.width(), r.height());
+            Canvas canvas = renderNode.beginRecording();
+            canvas.translate(-r.left, -r.top);
+            folderIcon.draw(canvas);
+            renderNode.endRecording();
+            Bitmap b = HardwareRenderer.createHardwareBitmap(renderNode, r.width(), r.height());
+
+            btvIcon = new BitmapDrawable(l.getResources(), b);
+            btvDrawableSupplier = () -> btvIcon.getConstantState().newDrawable();
         } else {
             btvIcon = null;
             btvDrawableSupplier = null;
         }
 
-        IconLoadResult result = new IconLoadResult(info, btvIcon != null && btvIcon.isThemed());
+        IconLoadResult result = new IconLoadResult(info,
+                btvIcon instanceof FastBitmapDrawable && ((FastBitmapDrawable) btvIcon).isThemed());
         result.btvDrawable = btvDrawableSupplier;
 
         final long fetchIconId = sFetchIconId++;

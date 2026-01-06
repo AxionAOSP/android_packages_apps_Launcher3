@@ -92,11 +92,14 @@ import static com.android.launcher3.logging.StatsLogManager.LauncherLatencyEvent
 import static com.android.launcher3.model.ItemInstallQueue.FLAG_ACTIVITY_PAUSED;
 import static com.android.launcher3.model.ItemInstallQueue.FLAG_DRAG_AND_DROP;
 import static com.android.launcher3.popup.SystemShortcut.APP_INFO;
+import static com.android.launcher3.popup.SystemShortcut.ENLARGE;
 import static com.android.launcher3.popup.SystemShortcut.INSTALL;
+import static com.android.launcher3.popup.SystemShortcut.MINIMIZE;
 import static com.android.launcher3.popup.SystemShortcut.REMOVE;
 import static com.android.launcher3.popup.SystemShortcut.PIN_TO_TOP;
 import static com.android.launcher3.popup.SystemShortcut.UNINSTALL_APP;
 import static com.android.launcher3.popup.SystemShortcut.WIDGETS;
+import static com.android.launcher3.popup.SystemShortcut.CUSTOMIZE_FOLDER;
 import static com.android.launcher3.states.RotationHelper.REQUEST_LOCK;
 import static com.android.launcher3.states.RotationHelper.REQUEST_NONE;
 import static com.android.launcher3.testing.shared.TestProtocol.LAUNCHER_ACTIVITY_STOPPED_MESSAGE;
@@ -1902,7 +1905,14 @@ public class Launcher extends StatefulActivity<LauncherState>
      */
     public FolderIcon addFolder(CellLayout layout, int container, final int screenId, int cellX,
             int cellY) {
+        return addFolder(layout, container, screenId, cellX, cellY, 1, 1);
+    }
+
+    public FolderIcon addFolder(CellLayout layout, int container, final int screenId, int cellX,
+            int cellY, int spanX, int spanY) {
         final FolderInfo folderInfo = new FolderInfo();
+        folderInfo.spanX = spanX;
+        folderInfo.spanY = spanY;
 
         // Update the model
         getModelWriter().addItemToDatabase(folderInfo, container, screenId, cellX, cellY);
@@ -1913,6 +1923,8 @@ public class Launcher extends StatefulActivity<LauncherState>
         // Force measure the new folder icon
         CellLayout parent = mWorkspace.getParentCellLayoutForView(newFolder);
         parent.getShortcutsAndWidgets().measureChild(newFolder);
+        newFolder.requestLayout();
+        parent.requestLayout();
         return newFolder;
     }
 
@@ -2899,9 +2911,18 @@ public class Launcher extends StatefulActivity<LauncherState>
      * @return a stream of supported system shortcuts.
      */
     public Stream<SystemShortcut.Factory> getSupportedShortcuts(int container) {
-        if (enableLongPressRemoveShortcut()
-                && (container == CONTAINER_DESKTOP || container == CONTAINER_HOTSEAT)) {
-            return Stream.of(APP_INFO, WIDGETS, INSTALL, REMOVE);
+        if (container == CONTAINER_DESKTOP) {
+            if (enableLongPressRemoveShortcut()) {
+                return Stream.of(APP_INFO, WIDGETS, INSTALL, REMOVE, ENLARGE, MINIMIZE, CUSTOMIZE_FOLDER);
+            } else {
+                return Stream.of(APP_INFO, WIDGETS, INSTALL, ENLARGE, MINIMIZE, CUSTOMIZE_FOLDER);
+            }
+        }
+        if (container == CONTAINER_HOTSEAT && enableLongPressRemoveShortcut()) {
+            return Stream.of(APP_INFO, WIDGETS, INSTALL, REMOVE, CUSTOMIZE_FOLDER);
+        }
+        if (container == CONTAINER_HOTSEAT) {
+            return Stream.of(APP_INFO, WIDGETS, INSTALL, CUSTOMIZE_FOLDER);
         }
         if (container == LauncherSettings.Favorites.CONTAINER_ALL_APPS) {
             return Stream.of(APP_INFO, WIDGETS, INSTALL, UNINSTALL_APP, PIN_TO_TOP);

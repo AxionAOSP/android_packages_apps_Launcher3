@@ -283,6 +283,9 @@ public class PopupContainerWithArrow<T extends Context & ActivityContext>
         mOriginalIcon.setForceHideDot(true);
         // All views are added. Animate layout from now on.
         setLayoutTransition(new LayoutTransition());
+        if (mDeepShortcuts.isEmpty()) {
+            return;
+        }
         // Load the shortcuts on a background thread and update the container as it animates.
         MODEL_EXECUTOR.getHandler().postAtFrontOfQueue(PopupPopulator.createUpdateRunnable(
                 mActivityContext, originalItemInfo, new Handler(Looper.getMainLooper()),

@@ -75,9 +75,45 @@ public class ItemLongClickListener {
         }
         if (!(v.getTag() instanceof ItemInfo)) return false;
 
+        ItemInfo info = (ItemInfo) v.getTag();
+
+        if (v instanceof com.android.launcher3.folder.FolderIcon) {
+            com.android.launcher3.folder.FolderIcon folder = (com.android.launcher3.folder.FolderIcon) v;
+            boolean isEnlargedOrEnlargeable = info.spanX == 2 || info.spanY == 2 ||
+                    canEnlargeFolder(launcher, info);
+            if (isEnlargedOrEnlargeable) {
+                DragOptions dragOptions = new DragOptions();
+                dragOptions.preDragCondition = folder.startLongPressAction();
+                if (dragOptions.preDragCondition != null) {
+                    launcher.setWaitingForResult(null);
+                    beginDrag(v, launcher, info, dragOptions);
+                    return true;
+                }
+            }
+        }
+
         launcher.setWaitingForResult(null);
-        beginDrag(v, launcher, (ItemInfo) v.getTag(), new DragOptions());
+        beginDrag(v, launcher, info, new DragOptions());
         return true;
+    }
+
+    private static boolean canEnlargeFolder(Launcher launcher, ItemInfo info) {
+        com.android.launcher3.Workspace workspace = launcher.getWorkspace();
+        com.android.launcher3.CellLayout layout = workspace.getScreenWithId(info.screenId);
+        if (layout == null) return false;
+        
+        int cellX = info.cellX;
+        int cellY = info.cellY;
+        int countX = layout.getCountX();
+        int countY = layout.getCountY();
+        
+        if (cellX + 1 >= countX || cellY + 1 >= countY) return false;
+        
+        boolean right = layout.isRegionVacant(cellX + 1, cellY, 1, 1);
+        boolean bottom = layout.isRegionVacant(cellX, cellY + 1, 1, 1);
+        boolean diag = layout.isRegionVacant(cellX + 1, cellY + 1, 1, 1);
+        
+        return right && bottom && diag;
     }
 
     public static void beginDrag(View v, Launcher launcher, ItemInfo info,
