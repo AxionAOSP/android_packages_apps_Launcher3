@@ -102,6 +102,7 @@ import com.android.launcher3.model.data.ItemInfo;
 import com.android.launcher3.pm.UserCache;
 import com.android.launcher3.popup.PopupContainerWithArrow;
 import com.android.launcher3.recyclerview.AllAppsRecyclerViewPool;
+import com.android.launcher3.util.AxCpuBindController;
 import com.android.launcher3.util.ItemInfoMatcher;
 import com.android.launcher3.util.Preconditions;
 import com.android.launcher3.util.Themes;
@@ -386,6 +387,7 @@ public class ActivityAllAppsContainerView<T extends Context & ActivityContext>
         return new AllAppsComposeCallbacks() {
             @Override
             public void onAppClicked(AppInfo appInfo, BubbleTextView icon) {
+                AxCpuBindController.get().acquireAppOpenBoost();
                 mLastLaunchedComposeIcon = new WeakReference<>(icon);
                 mLastLaunchedComponent = appInfo.componentName;
                 if (mActivityContext instanceof Launcher) {
@@ -402,6 +404,7 @@ public class ActivityAllAppsContainerView<T extends Context & ActivityContext>
             
             @Override
             public void onAppClickedFromFolder(AppInfo appInfo) {
+                AxCpuBindController.get().acquireAppOpenBoost();
                 mLastLaunchedComposeIcon = null;
                 mLastLaunchedComponent = appInfo.componentName;
                 if (mActivityContext instanceof Launcher) {
@@ -559,6 +562,26 @@ public class ActivityAllAppsContainerView<T extends Context & ActivityContext>
 
             @Override
             public void onWorkProfileClicked() {
+            }
+
+            @Override
+            public void onScrollStarted() {
+                AxCpuBindController.get().acquireDrawerScrollBoost();
+            }
+
+            @Override
+            public void onScrollStopped() {
+                AxCpuBindController.get().releaseDrawerScrollBoost();
+            }
+
+            @Override
+            public void onAllAppsTransitionStart() {
+                AxCpuBindController.get().acquireHomeTransitionBoost();
+            }
+
+            @Override
+            public void onAllAppsTransitionEnd() {
+                AxCpuBindController.get().releaseHomeTransitionBoost();
             }
         };
     }

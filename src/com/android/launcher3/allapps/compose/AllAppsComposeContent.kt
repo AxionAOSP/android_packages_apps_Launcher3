@@ -84,6 +84,10 @@ interface AllAppsComposeCallbacks {
     fun onSearchExpandedChanged(expanded: Boolean)
     fun onPrivateSpaceClicked(isLocked: Boolean)
     fun onWorkProfileClicked()
+    fun onScrollStarted()
+    fun onScrollStopped()
+    fun onAllAppsTransitionStart()
+    fun onAllAppsTransitionEnd()
 }
 
 private const val TAB_PERSONAL = 0
@@ -188,6 +192,7 @@ fun AllAppsComposeContent(
         if (transitionProgress <= 0.05f) {
             if (!wasFullyClosed) {
                 wasFullyClosed = true
+                callbacks.onAllAppsTransitionEnd()
                 if (!isLaunching) {
                     searchQuery = ""
                     callbacks.onSearchQueryChanged("")
@@ -201,6 +206,7 @@ fun AllAppsComposeContent(
             }
         } else if (wasFullyClosed && transitionProgress > 0.05f) {
             wasFullyClosed = false
+            callbacks.onAllAppsTransitionStart()
             openCounter++
             isLaunching = false
         }
@@ -334,6 +340,8 @@ fun AllAppsComposeContent(
                                     onAppDragStart = callbacks::onAppDragStart,
                                     onScrollStateChanged = callbacks::onScrollStateChanged,
                                     onPrivateSpaceClicked = callbacks::onPrivateSpaceClicked,
+                                    onScrollStarted = callbacks::onScrollStarted,
+                                    onScrollStopped = callbacks::onScrollStopped,
                                     transitionProgress = transitionProgress,
                                     dismissRequest = dismissRequest,
                                     onDismissRequestChange = { dismissRequest = it },
@@ -358,6 +366,8 @@ fun AllAppsComposeContent(
                                         onAppLongClick = callbacks::onAppLongClicked,
                                         onAppDragStart = callbacks::onAppDragStart,
                                         onScrollStateChanged = callbacks::onScrollStateChanged,
+                                        onScrollStarted = callbacks::onScrollStarted,
+                                        onScrollStopped = callbacks::onScrollStopped,
                                         transitionProgress = transitionProgress,
                                         keyPrefix = gridKeyPrefix,
                                         recompositionKey = openCounter,
@@ -641,6 +651,8 @@ private fun AllAppsCategoriesView(
     onAppDragStart: ((AppInfo, BubbleTextView) -> Unit)?,
     onScrollStateChanged: (canScrollUp: Boolean, canScrollDown: Boolean) -> Unit,
     onPrivateSpaceClicked: (Boolean) -> Unit,
+    onScrollStarted: () -> Unit,
+    onScrollStopped: () -> Unit,
     transitionProgress: Float,
     dismissRequest: Boolean,
     onDismissRequestChange: (Boolean) -> Unit,
@@ -690,6 +702,16 @@ private fun AllAppsCategoriesView(
     val gridState = rememberLazyGridState()
     val canScrollUp by remember { derivedStateOf { gridState.canScrollBackward } }
     val canScrollDown by remember { derivedStateOf { gridState.canScrollForward } }
+
+    val isScrollInProgress by remember { derivedStateOf { gridState.isScrollInProgress } }
+
+    LaunchedEffect(isScrollInProgress) {
+        if (isScrollInProgress) {
+            onScrollStarted()
+        } else {
+            onScrollStopped()
+        }
+    }
     
     LaunchedEffect(canScrollUp, canScrollDown, expandedCategory) {
         if (expandedCategory == null) {

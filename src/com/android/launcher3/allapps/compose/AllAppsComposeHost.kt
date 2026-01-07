@@ -161,6 +161,22 @@ fun <T> AllAppsComposeHost(
             override fun onWorkProfileClicked() {
                 callbacks.onWorkProfileClicked()
             }
+
+            override fun onScrollStarted() {
+                callbacks.onScrollStarted()
+            }
+
+            override fun onScrollStopped() {
+                callbacks.onScrollStopped()
+            }
+
+            override fun onAllAppsTransitionStart() {
+                callbacks.onAllAppsTransitionStart()
+            }
+
+            override fun onAllAppsTransitionEnd() {
+                callbacks.onAllAppsTransitionEnd()
+            }
         },
         modifier = Modifier.fillMaxSize()
     )

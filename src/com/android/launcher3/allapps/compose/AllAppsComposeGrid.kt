@@ -43,6 +43,8 @@ fun AllAppsComposeGrid(
     onAppLongClick: (AppInfo, BubbleTextView) -> Unit,
     onAppDragStart: ((AppInfo, BubbleTextView) -> Unit)? = null,
     onScrollStateChanged: (canScrollUp: Boolean, canScrollDown: Boolean) -> Unit,
+    onScrollStarted: () -> Unit,
+    onScrollStopped: () -> Unit,
     transitionProgress: Float = 1f,
     keyPrefix: String = "main",
     recompositionKey: Int = 0,
@@ -58,6 +60,16 @@ fun AllAppsComposeGrid(
 
     val canScrollUp by remember { derivedStateOf { gridState.canScrollBackward } }
     val canScrollDown by remember { derivedStateOf { gridState.canScrollForward } }
+
+    val isScrollInProgress by remember { derivedStateOf { gridState.isScrollInProgress } }
+
+    LaunchedEffect(isScrollInProgress) {
+        if (isScrollInProgress) {
+            onScrollStarted()
+        } else {
+            onScrollStopped()
+        }
+    }
 
     LaunchedEffect(canScrollUp, canScrollDown) {
         onScrollStateChanged(canScrollUp, canScrollDown)
