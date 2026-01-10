@@ -16,6 +16,8 @@
 
 package com.android.launcher3.allapps.compose
 
+import android.content.ComponentName
+
 import android.content.Context
 import android.content.SharedPreferences
 import android.os.Process
@@ -93,6 +95,8 @@ class AllAppsComposeViewModel<T>(
         updateAppsJob?.cancel()
         updateAppsJob = viewModelScope.launch {
             val allApps = allAppsStore.apps?.toList() ?: emptyList()
+            val pinnedSet = pinnedAppsManager.pinnedApps.value
+            val pinnedComponents = pinnedSet.mapNotNull { ComponentName.unflattenFromString(it) }.toSet()
             
             if (allApps.isEmpty() && _state.value.apps.isEmpty()) {
                 _state.update { it.copy(isLoading = true) }
@@ -100,7 +104,7 @@ class AllAppsComposeViewModel<T>(
             }
             
             val result = withContext(Dispatchers.Default) {
-                processApps(allApps)
+                processApps(allApps, pinnedComponents)
             }
             
             _state.update { currentState ->
@@ -115,9 +119,13 @@ class AllAppsComposeViewModel<T>(
                     isPrivateSpaceHidden = result.isPrivateHidden,
                     isLoading = false,
                     filteredPredictedApps = if (currentState.currentTab == AllAppsComposeState.TAB_PERSONAL) {
-                        currentState.predictedApps.filter { personalMatcher.test(it) }
+                        currentState.predictedApps.filter { 
+                            personalMatcher.test(it) && it.componentName !in pinnedComponents 
+                        }
                     } else if (currentState.currentTab == AllAppsComposeState.TAB_WORK) {
-                        currentState.predictedApps.filter { !personalMatcher.test(it) }
+                        currentState.predictedApps.filter { 
+                            !personalMatcher.test(it) && it.componentName !in pinnedComponents 
+                        }
                     } else {
                         emptyList()
                     }
@@ -135,8 +143,7 @@ class AllAppsComposeViewModel<T>(
         val isPrivateHidden: Boolean
     )
     
-    private fun processApps(allApps: List<AppInfo>): ProcessedApps {
-        val pinnedSet = pinnedAppsManager.pinnedApps.value
+    private fun processApps(allApps: List<AppInfo>, pinnedComponents: Set<ComponentName>): ProcessedApps {
         val userCache = UserCache.getInstance(context)
         
         val personalApps = mutableListOf<AppInfo>()
@@ -155,10 +162,10 @@ class AllAppsComposeViewModel<T>(
         val filteredApps = filterAppsForCurrentTab(personalApps)
         
         val pinnedApps = filteredApps.filter { 
-            it.componentName?.flattenToString() in pinnedSet 
+            it.componentName in pinnedComponents 
         }
         val nonPinnedApps = filteredApps.filter { 
-            it.componentName?.flattenToString() !in pinnedSet 
+            it.componentName !in pinnedComponents 
         }
         
         val isPrivateLocked = allAppsStore.hasModelFlag(
