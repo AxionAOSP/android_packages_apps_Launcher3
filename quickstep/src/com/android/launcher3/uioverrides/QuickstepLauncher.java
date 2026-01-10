@@ -1541,7 +1541,7 @@ public class QuickstepLauncher extends Launcher implements RecentsViewContainer,
     public View getFirstVisibleElementForAppClose(
             @Nullable StableViewInfo svi, String packageName, UserHandle user) {
         if (isInState(LauncherState.ALL_APPS)) {
-            View composeIcon = getAppsView().getComposeIconForClose(packageName);
+            View composeIcon = getAppsView().getComposeIconForClose(packageName, user);
             if (composeIcon != null) {
                 return composeIcon;
             }

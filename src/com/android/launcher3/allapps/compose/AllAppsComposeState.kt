@@ -27,7 +27,6 @@ data class AllAppsComposeState(
     val workApps: List<AppInfo> = emptyList(),
     val privateApps: List<AppInfo> = emptyList(),
     val predictedApps: List<AppInfo> = emptyList(),
-    val filteredPredictedApps: List<AppInfo> = emptyList(),
     val pinnedApps: List<AppInfo> = emptyList(),
     val adapterItems: List<AdapterItem> = emptyList(),
     val searchQuery: String = "",

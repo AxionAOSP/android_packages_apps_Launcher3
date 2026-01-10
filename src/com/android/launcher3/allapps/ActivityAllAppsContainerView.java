@@ -47,8 +47,10 @@ import android.graphics.Rect;
 import android.graphics.RectF;
 import android.os.Bundle;
 import android.os.Parcelable;
+import android.os.SystemClock;
 import android.os.Process;
 import android.os.UserManager;
+import android.os.UserHandle;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.util.SparseArray;
@@ -59,6 +61,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewOutlineProvider;
 import android.view.WindowInsets;
+import android.text.TextUtils;
 import android.widget.Toast;
 import android.widget.Button;
 import android.window.OnBackInvokedCallback;
@@ -90,6 +93,9 @@ import com.android.launcher3.allapps.BaseAllAppsAdapter.AdapterItem;
 import com.android.launcher3.allapps.compose.AllAppsComposeCallbacks;
 import com.android.launcher3.allapps.compose.AllAppsComposeController;
 import com.android.launcher3.allapps.compose.AllAppsComposeSetup;
+import com.android.launcher3.allapps.compose.ComposeAppIconView;
+import com.android.launcher3.allapps.compose.ComposeIconInfo;
+import com.android.launcher3.allapps.compose.ComposeDragPreviewProvider;
 import com.android.launcher3.allapps.search.AllAppsSearchUiDelegate;
 import com.android.launcher3.allapps.search.SearchAdapterProvider;
 import com.android.launcher3.config.FeatureFlags;
@@ -212,8 +218,9 @@ public class ActivityAllAppsContainerView<T extends Context & ActivityContext>
     @Nullable private androidx.compose.ui.platform.ComposeView mComposeView;
     private OnBackInvokedCallback mOnBackInvokedCallback;
     private AllAppsComposeController mComposeController;
-    @Nullable private WeakReference<BubbleTextView> mLastLaunchedComposeIcon;
+    @Nullable private WeakReference<View> mLastLaunchedComposeIcon;
     @Nullable private ComponentName mLastLaunchedComponent;
+    private float mTransitionProgress = 1f;
 
     public ActivityAllAppsContainerView(Context context) {
         this(context, null);
@@ -386,18 +393,17 @@ public class ActivityAllAppsContainerView<T extends Context & ActivityContext>
     private AllAppsComposeCallbacks createComposeCallbacks() {
         return new AllAppsComposeCallbacks() {
             @Override
-            public void onAppClicked(AppInfo appInfo, BubbleTextView icon) {
+            public void onAppClicked(ComposeIconInfo iconInfo) {
                 AxCpuBindController.get().acquireAppOpenBoost();
-                mLastLaunchedComposeIcon = new WeakReference<>(icon);
-                mLastLaunchedComponent = appInfo.componentName;
-                if (mActivityContext instanceof Launcher) {
-                    Launcher launcher = (Launcher) mActivityContext;
-                    if (launcher.supportsAdaptiveIconAnimation(icon) && !appInfo.shouldUseBackgroundAnimation()) {
-                        FloatingIconView.fetchIcon(launcher, icon, appInfo, true);
-                    }
+                AppInfo appInfo = iconInfo.getAppInfo();
+                if (mActivityContext instanceof Launcher launcher) {
+                    FloatingIconView.fetchIcon(launcher, iconInfo.getHostView(), appInfo, true);
                 }
+                mLastLaunchedComposeIcon = iconInfo.getHostView() != null 
+                        ? new WeakReference<>(iconInfo.getHostView()) : null;
+                mLastLaunchedComponent = appInfo.componentName;
                 mActivityContext.startActivitySafely(
-                        icon,
+                        iconInfo.getHostView(),
                         appInfo.getIntent(),
                         appInfo);
             }
@@ -407,8 +413,7 @@ public class ActivityAllAppsContainerView<T extends Context & ActivityContext>
                 AxCpuBindController.get().acquireAppOpenBoost();
                 mLastLaunchedComposeIcon = null;
                 mLastLaunchedComponent = appInfo.componentName;
-                if (mActivityContext instanceof Launcher) {
-                    Launcher launcher = (Launcher) mActivityContext;
+                if (mActivityContext instanceof Launcher launcher) {
                     launcher.setSkipFloatingIconReturnAnimation(true);
                 }
                 mActivityContext.startActivitySafely(
@@ -418,18 +423,68 @@ public class ActivityAllAppsContainerView<T extends Context & ActivityContext>
             }
 
             @Override
-            public void onAppLongClicked(AppInfo appInfo, BubbleTextView icon) {
-                if (!(mActivityContext instanceof Launcher)) return;
-                PopupContainerWithArrow.showForIcon(icon);
+            public void onAppLongClicked(ComposeIconInfo iconInfo) {
+                if (!(mActivityContext instanceof Launcher launcher)) return;
+                View hostView = iconInfo.getHostView();
+                if (!(hostView instanceof ComposeAppIconView cav)) return;
+                
+                PopupContainerWithArrow.showForCompose(launcher, cav, 
+                        iconInfo.getIconBoundsOnScreen(), iconInfo.getAppInfo());
             }
 
             @Override
-            public void onAppDragStart(AppInfo appInfo, BubbleTextView icon) {
-                if (mActivityContext instanceof Launcher) {
-                    Launcher launcher = (Launcher) mActivityContext;
+            public void onAppDragStart(ComposeIconInfo iconInfo) {
+                if (mActivityContext instanceof Launcher launcher) {
+                    View hostView = iconInfo.getHostView();
+                    if (!(hostView instanceof ComposeAppIconView cav)) return;
+                    
                     AbstractFloatingView.closeAllOpenViews(launcher);
-                    launcher.getWorkspace().beginDragShared(icon, ActivityAllAppsContainerView.this, 
-                        new DragOptions());
+                    launcher.getWorkspace().beginDragFromCompose(
+                            iconInfo.getAppInfo(),
+                            cav,
+                            iconInfo.getIconBoundsOnScreen(),
+                            ActivityAllAppsContainerView.this,
+                            new DragOptions());
+                }
+            }
+            
+            @Override
+            public void onAppDragMove(float screenX, float screenY) {
+                if (mActivityContext instanceof Launcher launcher) {
+                    int[] dragLayerLoc = new int[2];
+                    launcher.getDragLayer().getLocationOnScreen(dragLayerLoc);
+                    float dragLayerX = screenX - dragLayerLoc[0];
+                    float dragLayerY = screenY - dragLayerLoc[1];
+                    
+                    MotionEvent moveEvent = MotionEvent.obtain(
+                            SystemClock.uptimeMillis(),
+                            SystemClock.uptimeMillis(),
+                            MotionEvent.ACTION_MOVE,
+                            dragLayerX,
+                            dragLayerY,
+                            0);
+                    launcher.getDragController().onControllerTouchEvent(moveEvent);
+                    moveEvent.recycle();
+                }
+            }
+            
+            @Override
+            public void onAppDragEnd(float screenX, float screenY) {
+                if (mActivityContext instanceof Launcher launcher) {
+                    int[] dragLayerLoc = new int[2];
+                    launcher.getDragLayer().getLocationOnScreen(dragLayerLoc);
+                    float dragLayerX = screenX - dragLayerLoc[0];
+                    float dragLayerY = screenY - dragLayerLoc[1];
+                    
+                    MotionEvent upEvent = MotionEvent.obtain(
+                            SystemClock.uptimeMillis(),
+                            SystemClock.uptimeMillis(),
+                            MotionEvent.ACTION_UP,
+                            dragLayerX,
+                            dragLayerY,
+                            0);
+                    launcher.getDragController().onControllerTouchEvent(upEvent);
+                    upEvent.recycle();
                 }
             }
 
@@ -641,16 +696,6 @@ public class ActivityAllAppsContainerView<T extends Context & ActivityContext>
             mSearchUiDelegate.onInitializeSearchBar();
         }
         mActivityContext.addOnDeviceProfileChangeListener(this);
-
-        if (mUsingCompose && mComposeView != null) {
-            AllAppsComposeSetup.setupComposeView(
-                    mComposeView,
-                    mAllAppsStore,
-                    mActivityContext,
-                    createComposeCallbacks(),
-                    mComposeController
-            );
-        }
     }
 
     @Override
@@ -711,6 +756,29 @@ public class ActivityAllAppsContainerView<T extends Context & ActivityContext>
     public void setAllAppsTransitionController(
             AllAppsTransitionController allAppsTransitionController) {
         mAllAppsTransitionController = allAppsTransitionController;
+    }
+
+    public void onAllAppsTransitionProgress(float progress) {
+        mTransitionProgress = progress;
+        if (mComposeController != null) {
+            mComposeController.setTransitionProgress(progress);
+        }
+        updateViewAlpha(mBottomSheetBackground, progress);
+        updateViewAlpha(mBottomSheetHandle, progress);
+    }
+
+    private void updateViewAlpha(View view, float progress) {
+        if (view == null) return;
+        view.setAlpha(progress);
+        if (progress > 0f && progress < 1f) {
+            if (view.getLayerType() != View.LAYER_TYPE_HARDWARE) {
+                view.setLayerType(View.LAYER_TYPE_HARDWARE, null);
+            }
+        } else {
+            if (view.getLayerType() != View.LAYER_TYPE_NONE) {
+                view.setLayerType(View.LAYER_TYPE_NONE, null);
+            }
+        }
     }
 
     void animateToSearchState(boolean goingToSearch, long durationMs) {
@@ -926,6 +994,16 @@ public class ActivityAllAppsContainerView<T extends Context & ActivityContext>
     }
 
     protected void rebindAdapters(boolean force) {
+        if (mUsingCompose && mComposeView != null) {
+            Log.d(TAG, "AllAppsComposeSetup: rebindAdapters recomposing compose view!");
+            AllAppsComposeSetup.setupComposeView(
+                    mComposeView,
+                    mAllAppsStore,
+                    mActivityContext,
+                    createComposeCallbacks(),
+                    mComposeController
+            );
+        }
         Log.d(TAG, "rebindAdapters: force: " + force);
         if (mSearchTransitionController.isRunning()) {
             mRebindAdaptersAfterSearchAnimation = true;
@@ -945,9 +1023,13 @@ public class ActivityAllAppsContainerView<T extends Context & ActivityContext>
         replaceAppsRVContainer(showTabs);
         mUsingTabs = showTabs;
 
-        mAllAppsStore.unregisterIconContainer(mAH.get(AdapterHolder.MAIN).mRecyclerView);
-        mAllAppsStore.unregisterIconContainer(mAH.get(AdapterHolder.WORK).mRecyclerView);
-        mAllAppsStore.unregisterIconContainer(mAH.get(AdapterHolder.SEARCH).mRecyclerView);
+        if (!mUsingCompose) {
+            mAllAppsStore.unregisterIconContainer(mAH.get(AdapterHolder.MAIN).mRecyclerView);
+            mAllAppsStore.unregisterIconContainer(mAH.get(AdapterHolder.WORK).mRecyclerView);
+            mAllAppsStore.unregisterIconContainer(mAH.get(AdapterHolder.SEARCH).mRecyclerView);
+        } else {
+            mAllAppsStore.unregisterIconContainer(mComposeView);
+        }
 
         final AllAppsRecyclerView mainRecyclerView;
         final AllAppsRecyclerView workRecyclerView;
@@ -961,6 +1043,10 @@ public class ActivityAllAppsContainerView<T extends Context & ActivityContext>
                     || FeatureFlags.ENABLE_EXPANDING_PAUSE_WORK_BUTTON.get()) {
                 mAH.get(AdapterHolder.WORK).mRecyclerView.addOnScrollListener(
                         mWorkManager.newScrollListener());
+            }
+            if (mUsingCompose) {
+                mainRecyclerView.setVisibility(View.GONE);
+                workRecyclerView.setVisibility(View.GONE);
             }
             mViewPager.getPageIndicator().setActiveMarker(AdapterHolder.MAIN);
             findViewById(R.id.tab_personal)
@@ -985,6 +1071,9 @@ public class ActivityAllAppsContainerView<T extends Context & ActivityContext>
             }
         } else {
             mainRecyclerView = findViewById(R.id.apps_list_view);
+            if (mUsingCompose && mainRecyclerView != null) {
+                mainRecyclerView.setVisibility(View.GONE);
+            }
             workRecyclerView = null;
             mAH.get(AdapterHolder.MAIN).setup(mainRecyclerView, mPersonalMatcher);
             mAH.get(AdapterHolder.WORK).mRecyclerView = null;
@@ -1004,9 +1093,13 @@ public class ActivityAllAppsContainerView<T extends Context & ActivityContext>
                             R.dimen.fastscroll_bottom_margin_floating_search);
         }
 
-        mAllAppsStore.registerIconContainer(mAH.get(AdapterHolder.MAIN).mRecyclerView);
-        mAllAppsStore.registerIconContainer(mAH.get(AdapterHolder.WORK).mRecyclerView);
-        mAllAppsStore.registerIconContainer(mAH.get(AdapterHolder.SEARCH).mRecyclerView);
+        if (!mUsingCompose) {
+            mAllAppsStore.registerIconContainer(mAH.get(AdapterHolder.MAIN).mRecyclerView);
+            mAllAppsStore.registerIconContainer(mAH.get(AdapterHolder.WORK).mRecyclerView);
+            mAllAppsStore.registerIconContainer(mAH.get(AdapterHolder.SEARCH).mRecyclerView);
+        } else {
+            mAllAppsStore.registerIconContainer(mComposeView);
+        }
     }
 
     /**
@@ -1318,19 +1411,26 @@ public class ActivityAllAppsContainerView<T extends Context & ActivityContext>
     }
 
     @Nullable
-    public View getComposeIconForClose(String packageName) {
+    public View getComposeIconForClose(String packageName, UserHandle user) {
         if (!mUsingCompose) {
             return null;
         }
         if (mLastLaunchedComponent != null 
                 && mLastLaunchedComponent.getPackageName().equals(packageName)
                 && mLastLaunchedComposeIcon != null) {
-            BubbleTextView icon = mLastLaunchedComposeIcon.get();
-            if (icon != null) {
+            View icon = mLastLaunchedComposeIcon.get();
+            if (icon != null && icon.isAttachedToWindow()) {
                 return icon;
             }
         }
-        return null;
+        
+        return mAllAppsStore.findIconView(v -> {
+            if ((v instanceof ComposeAppIconView || v instanceof BubbleTextView) 
+                    && v.getTag() instanceof ItemInfo info) {
+                return info.user.equals(user) && TextUtils.equals(info.getTargetPackage(), packageName);
+            }
+            return false;
+        });
     }
 
     public boolean isUsingCompose() {
@@ -1815,11 +1915,6 @@ public class ActivityAllAppsContainerView<T extends Context & ActivityContext>
     public void setTranslationY(float translationY) {
         super.setTranslationY(translationY);
         invalidateHeader();
-        if (mComposeController != null && getHeight() > 0) {
-            float progress = 1f - (Math.abs(translationY) / getHeight());
-            progress = Math.max(0f, Math.min(1f, progress));
-            mComposeController.setTransitionProgress(progress);
-        }
     }
 
     @Override
@@ -1872,7 +1967,7 @@ public class ActivityAllAppsContainerView<T extends Context & ActivityContext>
         float bottomSheetBackgroundAlpha = Color.alpha(bottomSheetBackgroundColor) / 255.0f;
         if (hasBottomSheet) {
             mHeaderPaint.setColor(bottomSheetBackgroundColor);
-            mHeaderPaint.setAlpha((int) (bottomSheetBackgroundAlpha * 255));
+            mHeaderPaint.setAlpha((int) (bottomSheetBackgroundAlpha * 255 * mTransitionProgress));
 
             mTmpRectF.set(
                     leftWithScale,

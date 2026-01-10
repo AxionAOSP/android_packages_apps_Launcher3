@@ -34,6 +34,7 @@ import android.content.Context;
 import android.graphics.Point;
 import android.graphics.PointF;
 import android.graphics.Rect;
+import android.graphics.RectF;
 import android.graphics.Typeface;
 import android.os.Handler;
 import android.os.Looper;
@@ -56,6 +57,7 @@ import com.android.launcher3.R;
 import com.android.launcher3.Utilities;
 import com.android.launcher3.accessibility.LauncherAccessibilityDelegate;
 import com.android.launcher3.accessibility.ShortcutMenuAccessibilityDelegate;
+import com.android.launcher3.allapps.compose.ComposeAppIconView;
 import com.android.launcher3.dragndrop.DragController;
 import com.android.launcher3.dragndrop.DragOptions;
 import com.android.launcher3.dragndrop.DragView;
@@ -105,6 +107,10 @@ public class PopupContainerWithArrow<T extends Context & ActivityContext>
     protected PopupItemDragHandler mPopupItemDragHandler;
     protected LauncherAccessibilityDelegate mAccessibilityDelegate;
     private float mCurrentHeight;
+
+    private RectF mComposeIconBounds;
+    private View mComposeView;
+    private ItemInfo mComposeItem;
 
     public PopupContainerWithArrow(Context context, AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
@@ -223,6 +229,73 @@ public class PopupContainerWithArrow<T extends Context & ActivityContext>
         launcher.refreshAndBindWidgetsForPackageUser(PackageUserKey.fromItemInfo(item));
         container.requestFocus();
         return container;
+    }
+
+    public static PopupContainerWithArrow<Launcher> showForCompose(
+            Launcher launcher, View composeView, RectF iconBoundsOnScreen, ItemInfo item) {
+        
+        AbstractFloatingView openView = getOpen(launcher);
+        if (openView != null) {
+            openView.close(false);
+        }
+        
+        if (!ShortcutUtil.supportsShortcuts(item)) {
+            return null;
+        }
+
+        PopupDataProvider popupDataProvider = launcher.getPopupDataProvider();
+        int deepShortcutCount = popupDataProvider.getShortcutCountForItem(item);
+        List<SystemShortcut> systemShortcuts = launcher.getSupportedShortcuts(item.container)
+                .map(s -> s.getShortcut(launcher, item, composeView))
+                .filter(Objects::nonNull)
+                .collect(Collectors.toList());
+        
+        PopupContainerWithArrow<Launcher> container = (PopupContainerWithArrow) 
+                launcher.getLayoutInflater().inflate(R.layout.popup_container, 
+                        launcher.getDragLayer(), false);
+        
+        container.mAccessibilityDelegate = new ShortcutMenuAccessibilityDelegate(launcher);
+        launcher.getDragController().addDragListener(container);
+        
+        container.mOriginalIcon = null;
+        container.mComposeIconBounds = iconBoundsOnScreen;
+        container.mComposeView = composeView;
+        container.mComposeItem = item;
+        
+        container.populateAndShowRowsForCompose(item, deepShortcutCount, systemShortcuts, launcher);
+        
+        launcher.refreshAndBindWidgetsForPackageUser(PackageUserKey.fromItemInfo(item));
+        container.requestFocus();
+        return container;
+    }
+
+    private void populateAndShowRowsForCompose(ItemInfo itemInfo, int deepShortcutCount, 
+            List<SystemShortcut> systemShortcuts, Launcher launcher) {
+        mContainerWidth = getResources().getDimensionPixelSize(R.dimen.bg_popup_item_width);
+
+        if (deepShortcutCount > 0) {
+            addAllShortcuts(deepShortcutCount, systemShortcuts);
+        } else if (!systemShortcuts.isEmpty()) {
+            addSystemShortcuts(systemShortcuts,
+                    R.layout.system_shortcut_rows_container,
+                    R.layout.system_shortcut);
+        }
+        
+        showForComposeInternal();
+        
+        setAccessibilityPaneTitle(getTitleForAccessibility());
+        setLayoutTransition(new LayoutTransition());
+        
+        if (!mDeepShortcuts.isEmpty()) {
+            MODEL_EXECUTOR.getHandler().postAtFrontOfQueue(PopupPopulator.createUpdateRunnable(
+                    launcher, itemInfo, new Handler(Looper.getMainLooper()),
+                    this, mDeepShortcuts));
+        }
+    }
+
+    private void showForComposeInternal() {
+        if (mComposeIconBounds == null) return;
+        show();
     }
 
     private void configureForLauncher(Launcher launcher, ItemInfo itemInfo) {
@@ -506,13 +579,22 @@ public class PopupContainerWithArrow<T extends Context & ActivityContext>
 
     @Override
     protected void getTargetObjectLocation(Rect outPos) {
-        getPopupContainer().getDescendantRectRelativeToSelf(mOriginalIcon, outPos);
-        outPos.top += mOriginalIcon.getPaddingTop();
-        outPos.left += mOriginalIcon.getPaddingLeft();
-        outPos.right -= mOriginalIcon.getPaddingRight();
-        outPos.bottom = outPos.top + (mOriginalIcon.getIcon() != null
-                ? mOriginalIcon.getIcon().getBounds().height()
-                : mOriginalIcon.getHeight());
+        if (mOriginalIcon != null) {
+            getPopupContainer().getDescendantRectRelativeToSelf(mOriginalIcon, outPos);
+            outPos.top += mOriginalIcon.getPaddingTop();
+            outPos.left += mOriginalIcon.getPaddingLeft();
+            outPos.right -= mOriginalIcon.getPaddingRight();
+            outPos.bottom = outPos.top + (mOriginalIcon.getIcon() != null
+                    ? mOriginalIcon.getIcon().getBounds().height()
+                    : mOriginalIcon.getHeight());
+        } else if (mComposeIconBounds != null) {
+            int[] dragLayerLoc = new int[2];
+            getPopupContainer().getLocationOnScreen(dragLayerLoc);
+            outPos.left = Math.round(mComposeIconBounds.left) - dragLayerLoc[0];
+            outPos.top = Math.round(mComposeIconBounds.top) - dragLayerLoc[1];
+            outPos.right = Math.round(mComposeIconBounds.right) - dragLayerLoc[0];
+            outPos.bottom = Math.round(mComposeIconBounds.bottom) - dragLayerLoc[1];
+        }
     }
 
     protected void updateHiddenShortcuts() {
@@ -612,6 +694,52 @@ public class PopupContainerWithArrow<T extends Context & ActivityContext>
         };
     }
 
+    public DragOptions.PreDragCondition createPreDragConditionForCompose() {
+        if (mComposeView == null || mComposeItem == null) {
+            return null;
+        }
+        return new DragOptions.PreDragCondition() {
+            @Override
+            public boolean shouldStartDrag(double distanceDragged) {
+                return distanceDragged > mStartDragThreshold;
+            }
+
+            @Override
+            public void onPreDragStart(DropTarget.DragObject dragObject) {
+                if (mComposeView instanceof ComposeAppIconView cav) {
+                    cav.setIconVisible(false);
+                }
+            }
+
+            @Override
+            public void onPreDragEnd(DropTarget.DragObject dragObject, boolean dragStarted) {
+                if (mComposeView instanceof ComposeAppIconView cav) {
+                    cav.setIconVisible(true);
+                }
+            }
+        };
+    }
+
+    public void startDragFromCompose(DragSource source) {
+        if (mComposeView == null || mComposeItem == null || mComposeIconBounds == null) {
+            return;
+        }
+        if (!(mComposeView instanceof ComposeAppIconView cav)) {
+            return;
+        }
+        if (!(mActivityContext instanceof Launcher launcher)) {
+            return;
+        }
+        
+        launcher.getWorkspace().beginDragFromCompose(
+            mComposeItem,
+            cav,
+            mComposeIconBounds,
+            source,
+            new DragOptions()
+        );
+    }
+
     @Override
     public void onDropCompleted(View target, DragObject d, boolean success) {  }
 
@@ -641,8 +769,10 @@ public class PopupContainerWithArrow<T extends Context & ActivityContext>
     @Override
     protected void onCreateCloseAnimation(AnimatorSet anim) {
         // Animate original icon's text back in.
-        anim.play(mOriginalIcon.createTextAlphaAnimator(true /* fadeIn */));
-        mOriginalIcon.setForceHideDot(false);
+        if (mOriginalIcon != null) {
+            anim.play(mOriginalIcon.createTextAlphaAnimator(true /* fadeIn */));
+            mOriginalIcon.setForceHideDot(false);
+        }
     }
 
     @Override
@@ -652,7 +782,7 @@ public class PopupContainerWithArrow<T extends Context & ActivityContext>
             mActivityContext.getDragController().removeDragListener(this);
         }
         PopupContainerWithArrow openPopup = getOpen(mActivityContext);
-        if (openPopup == null || openPopup.mOriginalIcon != mOriginalIcon) {
+        if (mOriginalIcon != null && (openPopup == null || openPopup.mOriginalIcon != mOriginalIcon)) {
             mOriginalIcon.setTextVisibility(mOriginalIcon.shouldTextBeVisible());
             mOriginalIcon.setForceHideDot(false);
         }

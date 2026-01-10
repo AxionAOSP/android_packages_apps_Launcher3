@@ -40,6 +40,7 @@ import com.android.launcher3.BubbleTextView
 import com.android.launcher3.Launcher
 import com.android.launcher3.Utilities
 import com.android.launcher3.allapps.compose.AllAppsComposeAppIcon
+import com.android.launcher3.allapps.compose.ComposeIconInfo
 import com.android.launcher3.model.data.AppInfo
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -47,9 +48,11 @@ import kotlinx.coroutines.withContext
 @Composable
 fun UniversalSearchResults(
     state: UniversalSearchState,
-    onAppClick: (UniversalSearchResult.App, View) -> Unit,
-    onAppLongClick: (AppInfo, BubbleTextView) -> Unit,
-    onAppDragStart: ((AppInfo, BubbleTextView) -> Unit)?,
+    onAppClick: (ComposeIconInfo) -> Unit,
+    onAppLongClick: (ComposeIconInfo) -> Unit,
+    onAppDragStart: ((ComposeIconInfo) -> Unit)?,
+    onAppDragMove: ((screenX: Float, screenY: Float) -> Unit)?,
+    onAppDragEnd: ((screenX: Float, screenY: Float) -> Unit)?,
     iconSizePx: Int,
     cellHeightPx: Int,
     onContactClick: (UniversalSearchResult.Contact) -> Unit,
@@ -107,14 +110,16 @@ fun UniversalSearchResults(
                         horizontalArrangement = Arrangement.spacedBy(12.dp),
                         contentPadding = PaddingValues(horizontal = 4.dp, vertical = 4.dp)
                     ) {
-                        items(state.apps, key = { it.appInfo.componentName.toString() }) { app ->
+                        items(state.apps, key = { "search_${it.appInfo.componentName}" }) { app ->
                             AppResultIconItem(
                                 app = app,
                                 iconSizePx = iconSizePx,
                                 cellHeightPx = cellHeightPx,
-                                onClick = { appInfo, view -> onAppClick(app, view) },
+                                onClick = onAppClick,
                                 onLongClick = onAppLongClick,
-                                onDragStart = onAppDragStart
+                                onDragStart = onAppDragStart,
+                                onDragMove = onAppDragMove,
+                                onDragEnd = onAppDragEnd
                             )
                         }
                     }
@@ -130,7 +135,7 @@ fun UniversalSearchResults(
                 ) {
                     ResultGroupSection(title = "Settings") {
                         state.settings.forEachIndexed { index, setting ->
-                            if (index > 0) HorizontalDivider(color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.1f))
+                            if (index > 0) HorizontalDivider(color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f))
                             SettingResultItem(setting, onClick = { onSettingClick(setting) })
                         }
                     }
@@ -146,7 +151,7 @@ fun UniversalSearchResults(
                 ) {
                     ResultGroupSection(title = "Contacts") {
                         state.contacts.forEachIndexed { index, contact ->
-                            if (index > 0) HorizontalDivider(color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.1f))
+                            if (index > 0) HorizontalDivider(color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f))
                             ContactResultItem(contact, onClick = { onContactClick(contact) })
                         }
                     }
@@ -176,7 +181,7 @@ fun UniversalSearchResults(
                 ) {
                     ResultGroupSection(title = "Messages") {
                         state.messages.forEachIndexed { index, message ->
-                            if (index > 0) HorizontalDivider(color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.1f))
+                            if (index > 0) HorizontalDivider(color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f))
                             MessageResultItem(message, onClick = { onMessageClick(message) })
                         }
                     }
@@ -206,7 +211,7 @@ fun UniversalSearchResults(
                 ) {
                     ResultGroupSection(title = "Files") {
                         state.files.forEachIndexed { index, file ->
-                            if (index > 0) HorizontalDivider(color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.1f))
+                            if (index > 0) HorizontalDivider(color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f))
                             FileResultItem(file, context, onClick = { onFileClick(file) })
                         }
                     }
@@ -277,7 +282,7 @@ fun UniversalSearchResults(
                 ) {
                     ResultGroupSection(title = "Calendar") {
                         state.calendar.forEachIndexed { index, event ->
-                            if (index > 0) HorizontalDivider(color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.1f))
+                            if (index > 0) HorizontalDivider(color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f))
                             CalendarResultItem(event, onClick = { onCalendarClick(event) })
                         }
                     }
@@ -307,7 +312,7 @@ fun UniversalSearchResults(
                 ) {
                     ResultGroupSection(title = "Web Search") {
                         state.webActions.forEachIndexed { index, action ->
-                            if (index > 0) HorizontalDivider(color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.1f))
+                            if (index > 0) HorizontalDivider(color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f))
                             WebActionItem(action, onClick = { onWebActionClick(action) })
                         }
                     }
@@ -323,7 +328,7 @@ fun UniversalSearchResults(
                 ) {
                     ResultGroupSection(title = "Search In Apps") {
                         state.inAppSearches.forEachIndexed { index, search ->
-                            if (index > 0) HorizontalDivider(color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.1f))
+                            if (index > 0) HorizontalDivider(color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f))
                             InAppSearchResultItem(search, onClick = { onInAppSearchClick(search) })
                         }
                     }
@@ -360,7 +365,7 @@ fun UniversalSearchResults(
                         Text(
                             text = if (state.query.isEmpty()) "Start typing to search" else "No results found",
                             style = MaterialTheme.typography.bodyLarge,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
+                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
                         )
                     }
                 }
@@ -443,7 +448,7 @@ private fun ResultGroupSection(
             modifier = Modifier
                 .fillMaxWidth()
                 .clip(RoundedCornerShape(28.dp))
-                .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)),
+                .background(MaterialTheme.colorScheme.surfaceBright.copy(alpha = 0.5f)),
             content = content
         )
     }
@@ -454,9 +459,11 @@ private fun AppResultIconItem(
     app: UniversalSearchResult.App,
     iconSizePx: Int,
     cellHeightPx: Int,
-    onClick: (AppInfo, BubbleTextView) -> Unit,
-    onLongClick: (AppInfo, BubbleTextView) -> Unit,
-    onDragStart: ((AppInfo, BubbleTextView) -> Unit)?
+    onClick: (ComposeIconInfo) -> Unit,
+    onLongClick: (ComposeIconInfo) -> Unit,
+    onDragStart: ((ComposeIconInfo) -> Unit)?,
+    onDragMove: ((screenX: Float, screenY: Float) -> Unit)?,
+    onDragEnd: ((screenX: Float, screenY: Float) -> Unit)?
 ) {
     Box(
         modifier = Modifier.width(80.dp),
@@ -470,6 +477,9 @@ private fun AppResultIconItem(
             onClick = onClick,
             onLongClick = onLongClick,
             onDragStart = onDragStart,
+            onDragMove = onDragMove,
+            onDragEnd = onDragEnd,
+            isScrolling = false,
             modifier = Modifier.fillMaxWidth()
         )
     }
@@ -531,7 +541,7 @@ private fun ContactResultItem(
                 Text(
                     text = phone,
                     style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    color = MaterialTheme.colorScheme.onSurface,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
@@ -556,7 +566,7 @@ private fun MessageResultItem(
             modifier = Modifier
                 .size(40.dp)
                 .clip(CircleShape)
-                .background(MaterialTheme.colorScheme.surfaceVariant),
+                .background(MaterialTheme.colorScheme.surfaceBright),
             contentAlignment = Alignment.Center
         ) {
             Icon(
@@ -587,13 +597,13 @@ private fun MessageResultItem(
                         DateUtils.MINUTE_IN_MILLIS
                     ).toString(),
                     style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    color = MaterialTheme.colorScheme.onSurface
                 )
             }
             Text(
                 text = message.body,
                 style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                color = MaterialTheme.colorScheme.onSurface,
                 maxLines = 2,
                 overflow = TextOverflow.Ellipsis
             )
@@ -627,7 +637,7 @@ private fun FileResultItem(
             modifier = Modifier
                 .size(40.dp)
                 .clip(RoundedCornerShape(12.dp))
-                .background(MaterialTheme.colorScheme.surfaceVariant),
+                .background(MaterialTheme.colorScheme.surfaceBright),
             contentAlignment = Alignment.Center
         ) {
             Icon(
@@ -649,7 +659,7 @@ private fun FileResultItem(
             Text(
                 text = Formatter.formatFileSize(context, file.size),
                 style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
+                color = MaterialTheme.colorScheme.onSurface
             )
         }
     }
@@ -671,7 +681,7 @@ private fun SettingResultItem(
             modifier = Modifier
                 .size(40.dp)
                 .clip(CircleShape)
-                .background(MaterialTheme.colorScheme.surfaceVariant),
+                .background(MaterialTheme.colorScheme.surfaceBright),
             contentAlignment = Alignment.Center
         ) {
             Icon(
@@ -693,7 +703,7 @@ private fun SettingResultItem(
         Icon(
             imageVector = Icons.Default.ChevronRight,
             contentDescription = null,
-            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+            tint = MaterialTheme.colorScheme.onSurface,
             modifier = Modifier.size(20.dp)
         )
     }
@@ -762,7 +772,7 @@ private fun WebActionItem(
         Icon(
             imageVector = Icons.Default.NorthWest,
             contentDescription = null,
-            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+            tint = MaterialTheme.colorScheme.onSurface,
             modifier = Modifier.size(20.dp)
         )
     }
@@ -779,7 +789,7 @@ private fun PermissionRequestItem(
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(24.dp))
-            .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
+            .background(MaterialTheme.colorScheme.surfaceBright.copy(alpha = 0.5f))
             .clickable(onClick = onClick)
             .padding(16.dp),
         verticalAlignment = Alignment.CenterVertically
@@ -800,13 +810,13 @@ private fun PermissionRequestItem(
             Text(
                 text = description,
                 style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
+                color = MaterialTheme.colorScheme.onSurface
             )
         }
         Icon(
             imageVector = Icons.Default.ChevronRight,
             contentDescription = null,
-            tint = MaterialTheme.colorScheme.onSurfaceVariant
+            tint = MaterialTheme.colorScheme.onSurface
         )
     }
 }
@@ -846,7 +856,7 @@ fun PhotoResultItem(
                 .background(MaterialTheme.colorScheme.surfaceContainerHigh),
             contentAlignment = Alignment.Center
         ) {
-            Icon(Icons.Default.Image, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
+            Icon(Icons.Default.Image, contentDescription = null, tint = MaterialTheme.colorScheme.onSurface)
         }
     }
 }
@@ -895,7 +905,7 @@ private fun CalendarResultItem(
             Text(
                 text = timeString,
                 style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                color = MaterialTheme.colorScheme.onSurface,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
             )
@@ -908,7 +918,7 @@ private fun NoResultsIllustration(
     modifier: Modifier = Modifier
 ) {
     val primaryColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.6f)
-    val secondaryColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.3f)
+    val secondaryColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f)
     val accentColor = MaterialTheme.colorScheme.tertiary.copy(alpha = 0.5f)
     
     val infiniteTransition = rememberInfiniteTransition(label = "noResults")
@@ -1043,7 +1053,7 @@ private fun PrivateSpaceResultItem(
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(24.dp))
-            .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
+            .background(MaterialTheme.colorScheme.surfaceBright.copy(alpha = 0.5f))
             .clickable(onClick = onClick)
             .padding(16.dp),
         verticalAlignment = Alignment.CenterVertically
@@ -1055,7 +1065,7 @@ private fun PrivateSpaceResultItem(
             modifier = Modifier
                 .size(40.dp)
                 .clip(CircleShape)
-                .background(MaterialTheme.colorScheme.surfaceVariant),
+                .background(MaterialTheme.colorScheme.surfaceBright),
             contentAlignment = Alignment.Center
         ) {
             Icon(
@@ -1077,14 +1087,14 @@ private fun PrivateSpaceResultItem(
             Text(
                 text = if (privateSpace.isLocked) "Locked" else "${privateSpace.appCount} apps",
                 style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
+                color = MaterialTheme.colorScheme.onSurface
             )
         }
         
         Icon(
             imageVector = Icons.Default.ChevronRight,
             contentDescription = null,
-            tint = MaterialTheme.colorScheme.onSurfaceVariant
+            tint = MaterialTheme.colorScheme.onSurface
         )
     }
 }

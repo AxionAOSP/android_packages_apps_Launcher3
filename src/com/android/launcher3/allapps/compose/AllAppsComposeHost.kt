@@ -102,26 +102,38 @@ fun <T> AllAppsComposeHost(
     }
     
     val transitionProgress by viewModel.transitionProgress.collectAsState()
+    val allAppsExpanded by viewModel.allAppsExpanded.collectAsState()
+    val openCounter by viewModel.openCounter.collectAsState()
     val searchQuery by viewModel.searchQuery.collectAsState()
 
     AllAppsComposeContent(
         state = state,
         transitionProgress = transitionProgress,
+        allAppsExpanded = allAppsExpanded,
+        openCounter = openCounter,
         callbacks = object : AllAppsComposeCallbacks {
-            override fun onAppClicked(appInfo: AppInfo, view: BubbleTextView) {
-                callbacks.onAppClicked(appInfo, view)
+            override fun onAppClicked(iconInfo: ComposeIconInfo) {
+                callbacks.onAppClicked(iconInfo)
             }
             
             override fun onAppClickedFromFolder(appInfo: AppInfo) {
                 callbacks.onAppClickedFromFolder(appInfo)
             }
 
-            override fun onAppLongClicked(appInfo: AppInfo, view: BubbleTextView) {
-                callbacks.onAppLongClicked(appInfo, view)
+            override fun onAppLongClicked(iconInfo: ComposeIconInfo) {
+                callbacks.onAppLongClicked(iconInfo)
             }
             
-            override fun onAppDragStart(appInfo: AppInfo, view: BubbleTextView) {
-                callbacks.onAppDragStart(appInfo, view)
+            override fun onAppDragStart(iconInfo: ComposeIconInfo) {
+                callbacks.onAppDragStart(iconInfo)
+            }
+            
+            override fun onAppDragMove(screenX: Float, screenY: Float) {
+                callbacks.onAppDragMove(screenX, screenY)
+            }
+            
+            override fun onAppDragEnd(screenX: Float, screenY: Float) {
+                callbacks.onAppDragEnd(screenX, screenY)
             }
 
             override fun onSearchQueryChanged(query: String) {

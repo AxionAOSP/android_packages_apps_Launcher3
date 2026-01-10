@@ -45,7 +45,7 @@ fun AllAppsComposeSearchBar(
     onClearQuery: () -> Unit,
     onMenuClick: () -> Unit,
     modifier: Modifier = Modifier,
-    placeholder: String = "Search apps",
+    placeholder: String = "Search",
     shouldAutoFocus: Boolean = false,
     focusTrigger: Int = 0
 ) {
@@ -72,14 +72,14 @@ fun AllAppsComposeSearchBar(
             modifier = Modifier
                 .fillMaxWidth()
                 .clip(RoundedCornerShape(28.dp))
-                .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
+                .background(MaterialTheme.colorScheme.surfaceBright.copy(alpha = 0.5f))
                 .padding(horizontal = 16.dp, vertical = 12.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Icon(
                 imageVector = Icons.Default.Search,
                 contentDescription = "Search",
-                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                tint = MaterialTheme.colorScheme.onSurface,
                 modifier = Modifier.size(24.dp)
             )
 
@@ -90,7 +90,7 @@ fun AllAppsComposeSearchBar(
                     Text(
                         text = placeholder,
                         style = MaterialTheme.typography.bodyLarge,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
                     )
                 }
                 BasicTextField(
@@ -117,7 +117,7 @@ fun AllAppsComposeSearchBar(
                     Icon(
                         imageVector = Icons.Default.Clear,
                         contentDescription = "Clear search",
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant
+                        tint = MaterialTheme.colorScheme.onSurface
                     )
                 }
             }
@@ -129,8 +129,8 @@ fun AllAppsComposeSearchBar(
             ) {
                 Icon(
                     imageVector = Icons.Default.MoreVert,
-                    contentDescription = "Search settings",
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant
+                    contentDescription = "Settings",
+                    tint = MaterialTheme.colorScheme.onSurface
                 )
             }
         }

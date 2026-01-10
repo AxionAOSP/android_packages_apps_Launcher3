@@ -20,6 +20,8 @@ import android.content.Context
 import android.content.Intent
 import android.content.SharedPreferences
 import android.content.pm.ApplicationInfo
+import android.graphics.RectF
+import android.graphics.drawable.Drawable
 import android.view.HapticFeedbackConstants
 import android.view.LayoutInflater
 import android.view.ViewGroup
@@ -38,6 +40,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.*
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.draw.drawBehind
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.*
@@ -46,11 +49,10 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.input.nestedscroll.*
-import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.layout.onGloballyPositioned
-import androidx.compose.ui.layout.positionInParent
+import androidx.compose.ui.input.pointer.*
+import androidx.compose.ui.layout.*
 import androidx.compose.ui.platform.*
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
@@ -65,12 +67,15 @@ import com.android.launcher3.R
 import com.android.launcher3.allapps.compose.search.*
 import com.android.launcher3.model.data.AppInfo
 import com.android.launcher3.settings.PulseSettingsActivity
+import kotlinx.coroutines.delay
 
 interface AllAppsComposeCallbacks {
-    fun onAppClicked(appInfo: AppInfo, icon: BubbleTextView)
+    fun onAppClicked(iconInfo: ComposeIconInfo)
     fun onAppClickedFromFolder(appInfo: AppInfo)
-    fun onAppLongClicked(appInfo: AppInfo, icon: BubbleTextView)
-    fun onAppDragStart(appInfo: AppInfo, icon: BubbleTextView)
+    fun onAppLongClicked(iconInfo: ComposeIconInfo)
+    fun onAppDragStart(iconInfo: ComposeIconInfo)
+    fun onAppDragMove(screenX: Float, screenY: Float)
+    fun onAppDragEnd(screenX: Float, screenY: Float)
     fun onSearchQueryChanged(query: String)
     fun onTabSelected(tab: Int)
     fun onScrollStateChanged(canScrollUp: Boolean, canScrollDown: Boolean)
@@ -106,7 +111,9 @@ private sealed interface ContentScreen {
 fun AllAppsComposeContent(
     state: AllAppsComposeState,
     callbacks: AllAppsComposeCallbacks,
-    transitionProgress: Float = 1f,
+    transitionProgress: Float = 0f,
+    allAppsExpanded: Boolean = false,
+    openCounter: Int = 0,
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
@@ -152,18 +159,13 @@ fun AllAppsComposeContent(
             else -> drawerLayoutMode == "smart"
         }
     }
-    
-    var wasFullyClosed by remember { mutableStateOf(true) }
-    var openCounter by remember { mutableIntStateOf(0) }
+
     var isLaunching by remember { mutableStateOf(false) }
     
     var isSearchActive by remember { mutableStateOf(false) }
-    
 
     LaunchedEffect(searchQuery) {
-        if (searchQuery.isNotEmpty()) {
-            isSearchActive = true
-        }
+        isSearchActive = searchQuery.isNotEmpty()
     }
     
     var isSearchSettingsOpen by remember { mutableStateOf(false) }
@@ -193,26 +195,22 @@ fun AllAppsComposeContent(
         onDispose { searchManager.cleanup() }
     }
     
-    LaunchedEffect(transitionProgress) {
-        if (transitionProgress <= 0.05f) {
-            if (!wasFullyClosed) {
-                wasFullyClosed = true
-                callbacks.onAllAppsTransitionEnd()
-                if (!isLaunching) {
-                    searchQuery = ""
-                    callbacks.onSearchQueryChanged("")
-                    isSearchActive = false
-                    searchManager.clear()
-                } else {
-                    isLaunching = false 
-                }
-                isSearchSettingsOpen = false
-                expandedCategory = null
+    LaunchedEffect(transitionProgress, allAppsExpanded) {
+        if (allAppsExpanded && transitionProgress == 0f) {
+            callbacks.onAllAppsTransitionEnd()
+            if (!isLaunching) {
+                searchQuery = ""
+                callbacks.onSearchQueryChanged("")
+                isSearchActive = false
+                searchManager.clear()
+            } else {
+                isLaunching = false 
             }
-        } else if (wasFullyClosed && transitionProgress > 0.05f) {
-            wasFullyClosed = false
+            isSearchSettingsOpen = false
+            expandedCategory = null
+        } else if (!allAppsExpanded && transitionProgress == 1f) {
+            delay(16)
             callbacks.onAllAppsTransitionStart()
-            openCounter++
             isLaunching = false
         }
     }
@@ -272,248 +270,248 @@ fun AllAppsComposeContent(
                 callbacks.setDismissFolderHandler(null)
             }
         }
-        
-        Column(modifier = Modifier.fillMaxSize()) {
-            Spacer(modifier = Modifier.height(48.dp))
-            
-            AnimatedVisibility(
-                visible = currentScreen is ContentScreen.AllApps && expandedCategory == null,
-                enter = fadeIn(animationSpec = tween(300, easing = EaseOutCubic)) + 
-                        expandVertically(animationSpec = tween(300, easing = EaseOutCubic)),
-                exit = fadeOut(animationSpec = tween(200, easing = EaseInCubic)) + 
-                       shrinkVertically(animationSpec = tween(200, easing = EaseInCubic))
-            ) {
+
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .graphicsLayer { alpha = transitionProgress }
+        ) {
+                Spacer(modifier = Modifier.height(48.dp))
+                
+                val onAppClick = remember(callbacks) {
+                    { iconInfo: ComposeIconInfo ->
+                        isLaunching = true
+                        callbacks.onAppClicked(iconInfo)
+                    }
+                }
+                
                 if (isDynamicMode) {
                     AllAppsTabBar(
                         selectedLayout = selectedLayoutStyle,
                         onLayoutSelected = { layout -> selectedLayoutStyle = layout }
                     )
                 }
-            }
-        
-            AnimatedContent(
-                targetState = currentScreen,
-                transitionSpec = {
-                    when {
-                        targetState == ContentScreen.Search -> {
-                            (fadeIn(animationSpec = tween(300)) + 
-                             slideInVertically(animationSpec = tween(300)) { height -> height / 10 }) togetherWith
-                                (fadeOut(animationSpec = tween(200)))
-                        }
-                        initialState == ContentScreen.Search -> {
-                            (fadeIn(animationSpec = tween(300))) togetherWith
-                                (fadeOut(animationSpec = tween(200)))
-                        }
-                        else -> {
-                           fadeIn(animationSpec = tween(300)) togetherWith fadeOut(animationSpec = tween(200))
-                        }
-                    }.using(SizeTransform(clip = false))
-                },
-                modifier = Modifier.weight(1f)
-            ) { screen ->
-                androidx.compose.animation.Crossfade(
-                    targetState = state.isLoading,
-                    animationSpec = tween(200),
-                    label = "loading_crossfade"
-                ) { isLoading ->
-                    if (isLoading) {
-                        Box(
-                            modifier = Modifier.fillMaxSize(),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            androidx.compose.material3.CircularProgressIndicator(
-                                modifier = Modifier.size(48.dp),
-                                color = MaterialTheme.colorScheme.primary,
-                                strokeWidth = 4.dp
-                            )
-                        }
-                    } else {
-                when (screen) {
-                    ContentScreen.AllApps -> {
-                        if (isSmartLayout) {
-                            key("smart_layout") {
-                                AllAppsCategoriesView(
-                                    state = state,
-                                    expandedCategory = expandedCategory,
-                                    onExpandedCategoryChange = { 
-                                        expandedCategory = it
-                                        callbacks.onFolderExpandedChanged(it != null)
-                                    },
-                                    onAppClick = callbacks::onAppClicked,
-                                    onAppClickedFromFolder = callbacks::onAppClickedFromFolder,
-                                    onAppLongClick = callbacks::onAppLongClicked,
-                                    onAppDragStart = callbacks::onAppDragStart,
-                                    onScrollStateChanged = callbacks::onScrollStateChanged,
-                                    onPrivateSpaceClicked = callbacks::onPrivateSpaceClicked,
-                                    onScrollStarted = callbacks::onScrollStarted,
-                                    onScrollStopped = callbacks::onScrollStopped,
-                                    transitionProgress = transitionProgress,
-                                    dismissRequest = dismissRequest,
-                                    onDismissRequestChange = { dismissRequest = it },
-                                    modifier = Modifier.fillMaxSize()
-                                )
+            
+                AnimatedContent(
+                    targetState = currentScreen,
+                    transitionSpec = {
+                        when {
+                            targetState == ContentScreen.Search -> {
+                                (fadeIn(animationSpec = tween(200, easing = FastOutSlowInEasing)) + 
+                                 slideInVertically(animationSpec = tween(250, easing = FastOutSlowInEasing)) { height -> height / 8 }) togetherWith
+                                    (fadeOut(animationSpec = tween(150, easing = FastOutSlowInEasing)))
                             }
-                        } else {
-                            val gridKeyPrefix = if (showWorkApps) "work" else "personal"
-                            key("grid_layout_${gridKeyPrefix}_${openCounter}_${selectedLayoutStyle}") {
-                                Column(modifier = Modifier.fillMaxSize()) {
-                                    AllAppsComposeGrid(
-                                        items = items,
-                                        sections = sections,
-                                        numColumns = state.numColumns,
-                                        iconSizePx = state.iconSizePx,
-                                        cellHeightPx = state.cellHeightPx,
-                                        showLabels = state.showLabels,
-                                        onAppClick = { appInfo, icon ->
-                                            isLaunching = true
-                                            callbacks.onAppClicked(appInfo, icon)
-                                        },
-                                        onAppLongClick = callbacks::onAppLongClicked,
-                                        onAppDragStart = callbacks::onAppDragStart,
-                                        onScrollStateChanged = callbacks::onScrollStateChanged,
-                                        onScrollStarted = callbacks::onScrollStarted,
-                                        onScrollStopped = callbacks::onScrollStopped,
-                                        transitionProgress = transitionProgress,
-                                        keyPrefix = gridKeyPrefix,
-                                        recompositionKey = openCounter,
-                                        modifier = Modifier.weight(1f),
-                                        contentPadding = PaddingValues(
-                                            start = 16.dp,
-                                            end = 16.dp,
-                                            top = 0.dp,
-                                            bottom = if (isDynamicMode && state.hasWorkApps) 8.dp else 16.dp
-                                        )
+                            initialState == ContentScreen.Search -> {
+                                (fadeIn(animationSpec = tween(200, easing = FastOutSlowInEasing)) +
+                                 slideInVertically(animationSpec = tween(200, easing = FastOutSlowInEasing)) { height -> -height / 12 }) togetherWith
+                                    (fadeOut(animationSpec = tween(150, easing = FastOutSlowInEasing)) +
+                                     slideOutVertically(animationSpec = tween(150, easing = FastOutSlowInEasing)) { height -> height / 12 })
+                            }
+                            else -> {
+                               fadeIn(animationSpec = tween(200)) togetherWith fadeOut(animationSpec = tween(150))
+                            }
+                        }.using(SizeTransform(clip = false))
+                    },
+                    modifier = Modifier.weight(1f)
+                ) { screen ->
+                        androidx.compose.animation.Crossfade(
+                            targetState = state.isLoading,
+                            animationSpec = tween(200),
+                            label = "loading_crossfade"
+                        ) { isLoading ->
+                            if (isLoading) {
+                                Box(
+                                    modifier = Modifier.fillMaxSize(),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    androidx.compose.material3.CircularProgressIndicator(
+                                        modifier = Modifier.size(48.dp),
+                                        color = MaterialTheme.colorScheme.primary,
+                                        strokeWidth = 4.dp
                                     )
-                                    
-                                    if (isDynamicMode && (state.hasWorkApps || (state.hasPrivateApps && !state.isPrivateSpaceHidden))) {
-                                        ProfileFoldersRow(
-                                            workApps = state.workApps,
-                                            privateApps = if (state.isPrivateSpaceHidden) emptyList() else state.privateApps,
-                                            isPrivateSpaceLocked = state.isPrivateSpaceLocked,
-                                            onWorkFolderClick = {
-                                                quickAccessOriginStyle = selectedLayoutStyle
-                                                selectedLayoutStyle = "smart"
-                                                expandedCategory = AppCategory(-3, "Work", state.workApps)
+                                }
+                            } else {
+                        when (screen) {
+                            ContentScreen.AllApps -> {
+                                if (isSmartLayout) {
+                                    key("smart_layout") {
+                                        AllAppsCategoriesView(
+                                            state = state,
+                                            expandedCategory = expandedCategory,
+                                            onExpandedCategoryChange = { 
+                                                expandedCategory = it
+                                                callbacks.onFolderExpandedChanged(it != null)
                                             },
-                                            onPrivateSpaceClick = {
-                                                if (state.isPrivateSpaceLocked) {
-                                                    callbacks.onPrivateSpaceClicked(true)
-                                                } else {
-                                                    quickAccessOriginStyle = selectedLayoutStyle
-                                                    selectedLayoutStyle = "smart"
-                                                    expandedCategory = AppCategory(-5, "Private", state.privateApps)
-                                                }
-                                            },
-                                            iconSizePx = state.iconSizePx,
-                                            modifier = Modifier
-                                                .fillMaxWidth()
-                                                .padding(horizontal = 16.dp, vertical = 8.dp)
+                                            onAppClick = onAppClick,
+                                            onAppClickedFromFolder = callbacks::onAppClickedFromFolder,
+                                            onAppLongClick = callbacks::onAppLongClicked,
+                                            onAppDragStart = callbacks::onAppDragStart,
+                                            onAppDragMove = callbacks::onAppDragMove,
+                                            onAppDragEnd = callbacks::onAppDragEnd,
+                                            onScrollStateChanged = callbacks::onScrollStateChanged,
+                                            onPrivateSpaceClicked = callbacks::onPrivateSpaceClicked,
+                                            onScrollStarted = callbacks::onScrollStarted,
+                                            onScrollStopped = callbacks::onScrollStopped,
+                                            transitionProgress = transitionProgress,
+                                            dismissRequest = dismissRequest,
+                                            onDismissRequestChange = { dismissRequest = it },
+                                            modifier = Modifier.fillMaxSize()
                                         )
                                     }
-                                }
-                            }
-                        }
-                    }
-                    ContentScreen.Search -> {
-                            UniversalSearchResults(
-                                state = searchState,
-                                onAppClick = { app, view ->
-                                    isLaunching = true
-                                    val btv = view as? BubbleTextView ?: (LayoutInflater.from(context)
-                                        .inflate(R.layout.all_apps_icon, null) as BubbleTextView).apply {
-                                        applyFromItemInfoWithIcon(app.appInfo)
-                                    }
-                                    callbacks.onAppClicked(app.appInfo, btv)
-                                },
-                                onAppLongClick = callbacks::onAppLongClicked,
-                                onAppDragStart = callbacks::onAppDragStart,
-                                iconSizePx = state.iconSizePx,
-                                cellHeightPx = state.cellHeightPx,
-                                onContactClick = { contact ->
-                                    isLaunching = true
-                                    callbacks.startActivity(searchManager.getContactIntent(contact))
-                                },
-                                onMessageClick = { message ->
-                                    isLaunching = true
-                                    callbacks.startActivity(searchManager.getMessageIntent(message))
-                                },
-                                onFileClick = { file ->
-                                    try {
-                                        isLaunching = true
-                                        callbacks.startActivity(searchManager.getFileIntent(file))
-                                    } catch (e: Exception) {
-                                    }
-                                },
-                                onPhotoClick = { photo ->
-                                    try {
-                                        isLaunching = true
-                                        callbacks.startActivity(searchManager.getPhotoIntent(photo))
-                                    } catch (e: Exception) {
-                                    }
-                                },
-                                onPrivateSpaceClick = { space ->
-                                    if (space.isLocked) {
-                                        callbacks.onPrivateSpaceClicked(true)
-                                    } else {
-                                        searchQuery = ""
-                                        callbacks.onSearchQueryChanged("")
-                                        isSearchActive = false
-                                        keyboardController?.hide()
-                                        quickAccessOriginStyle = if (isDynamicMode) "dynamic" else "smart"
-                                        selectedLayoutStyle = "smart"
-                                        expandedCategory = AppCategory(-5, "Private", state.privateApps)
-                                    }
-                                },
-                                onCalendarClick = { calendar ->
-                                    isLaunching = true
-                                    callbacks.startActivity(searchManager.getCalendarIntent(calendar))
-                                },
-                                onSettingClick = { setting ->
-                                    isLaunching = true
-                                    callbacks.startActivity(setting.intent)
-                                },
-                                onInAppSearchClick = { search ->
-                                    if (search.appInfo.componentName != null) {
-                                        val intent = Intent(Intent.ACTION_SEARCH).apply {
-                                            setPackage(search.appInfo.componentName!!.packageName)
-                                            putExtra("query", search.query)
-                                            putExtra(SearchManager.QUERY, search.query)
-                                        }
-                                        isLaunching = true
-                                        callbacks.startActivity(intent)
-                                    }
-                                },
-                                onWebActionClick = { action ->
-                                    isLaunching = true
-                                    when (action.type) {
-                                        WebActionType.GOOGLE -> callbacks.startActivity(searchManager.getGoogleSearchIntent(action.query))
-                                        WebActionType.BROWSER -> callbacks.startActivity(searchManager.getBrowserSearchIntent(action.query))
-                                        WebActionType.STORE -> callbacks.startActivity(searchManager.getStoreSearchIntent(action.query))
-                                        WebActionType.SUGGESTION -> {
-                                            action.packageName?.let { pkg ->
-                                                callbacks.startActivity(searchManager.getAppSearchIntent(pkg, action.query))
+                                } else {
+                                    val gridKeyPrefix = if (showWorkApps) "work" else "personal"
+                                    key("grid_layout_${gridKeyPrefix}_${openCounter}_${selectedLayoutStyle}") {
+                                        Column(modifier = Modifier.fillMaxSize()) {
+                                            AllAppsComposeGrid(
+                                                items = items,
+                                                sections = sections,
+                                                numColumns = state.numColumns,
+                                                iconSizePx = state.iconSizePx,
+                                                cellHeightPx = state.cellHeightPx,
+                                                showLabels = state.showLabels,
+                                                onAppClick = onAppClick,
+                                                onAppLongClick = callbacks::onAppLongClicked,
+                                                onAppDragStart = callbacks::onAppDragStart,
+                                                onAppDragMove = callbacks::onAppDragMove,
+                                                onAppDragEnd = callbacks::onAppDragEnd,
+                                                onScrollStateChanged = callbacks::onScrollStateChanged,
+                                                onScrollStarted = callbacks::onScrollStarted,
+                                                onScrollStopped = callbacks::onScrollStopped,
+                                                transitionProgress = transitionProgress,
+                                                keyPrefix = gridKeyPrefix,
+                                                recompositionKey = openCounter,
+                                                modifier = Modifier.weight(1f),
+                                                contentPadding = PaddingValues(
+                                                    start = 16.dp,
+                                                    end = 16.dp,
+                                                    top = 0.dp,
+                                                    bottom = if (isDynamicMode && state.hasWorkApps) 8.dp else 16.dp
+                                                )
+                                            )
+                                            
+                                            if (isDynamicMode && (state.hasWorkApps || (state.hasPrivateApps && !state.isPrivateSpaceHidden))) {
+                                                ProfileFoldersRow(
+                                                    workApps = state.workApps,
+                                                    privateApps = if (state.isPrivateSpaceHidden) emptyList() else state.privateApps,
+                                                    isPrivateSpaceLocked = state.isPrivateSpaceLocked,
+                                                    onWorkFolderClick = {
+                                                        quickAccessOriginStyle = selectedLayoutStyle
+                                                        selectedLayoutStyle = "smart"
+                                                        expandedCategory = AppCategory(-3, "Work", state.workApps)
+                                                    },
+                                                    onPrivateSpaceClick = {
+                                                        if (state.isPrivateSpaceLocked) {
+                                                            callbacks.onPrivateSpaceClicked(true)
+                                                        } else {
+                                                            quickAccessOriginStyle = selectedLayoutStyle
+                                                            selectedLayoutStyle = "smart"
+                                                            expandedCategory = AppCategory(-5, "Private", state.privateApps)
+                                                        }
+                                                    },
+                                                    iconSizePx = state.iconSizePx,
+                                                    modifier = Modifier
+                                                        .fillMaxWidth()
+                                                        .padding(horizontal = 16.dp, vertical = 8.dp)
+                                                )
                                             }
                                         }
                                     }
-                                },
-                                onScrollStateChanged = callbacks::onScrollStateChanged,
-                                onRequestContactsPermission = { callbacks.requestContactsPermission() },
-                                onRequestSmsPermission = { callbacks.requestSmsPermission() },
-                                onRequestFilePermission = { callbacks.requestFilePermission() },
-                                onRequestCalendarPermission = { callbacks.requestCalendarPermission() },
-                                modifier = Modifier.fillMaxSize()
-                            )
+                                }
+                            }
+                            ContentScreen.Search -> {
+                                    UniversalSearchResults(
+                                        state = searchState,
+                                        onAppClick = { iconInfo ->
+                                            isLaunching = true
+                                            callbacks.onAppClicked(iconInfo)
+                                        },
+                                        onAppLongClick = { iconInfo -> callbacks.onAppLongClicked(iconInfo) },
+                                        onAppDragStart = { iconInfo -> callbacks.onAppDragStart(iconInfo) },
+                                        onAppDragMove = { screenX, screenY -> callbacks.onAppDragMove(screenX, screenY) },
+                                        onAppDragEnd = { screenX, screenY -> callbacks.onAppDragEnd(screenX, screenY) },
+                                        iconSizePx = state.iconSizePx,
+                                        cellHeightPx = state.cellHeightPx,
+                                        onContactClick = { contact ->
+                                            isLaunching = true
+                                            callbacks.startActivity(searchManager.getContactIntent(contact))
+                                        },
+                                        onMessageClick = { message ->
+                                            isLaunching = true
+                                            callbacks.startActivity(searchManager.getMessageIntent(message))
+                                        },
+                                        onFileClick = { file ->
+                                            try {
+                                                isLaunching = true
+                                                callbacks.startActivity(searchManager.getFileIntent(file))
+                                            } catch (e: Exception) {
+                                            }
+                                        },
+                                        onPhotoClick = { photo ->
+                                            try {
+                                                isLaunching = true
+                                                callbacks.startActivity(searchManager.getPhotoIntent(photo))
+                                            } catch (e: Exception) {
+                                            }
+                                        },
+                                        onPrivateSpaceClick = { space ->
+                                            if (space.isLocked) {
+                                                callbacks.onPrivateSpaceClicked(true)
+                                            } else {
+                                                searchQuery = ""
+                                                callbacks.onSearchQueryChanged("")
+                                                isSearchActive = false
+                                                keyboardController?.hide()
+                                                quickAccessOriginStyle = if (isDynamicMode) "dynamic" else "smart"
+                                                selectedLayoutStyle = "smart"
+                                                expandedCategory = AppCategory(-5, "Private", state.privateApps)
+                                            }
+                                        },
+                                        onCalendarClick = { calendar ->
+                                            isLaunching = true
+                                            callbacks.startActivity(searchManager.getCalendarIntent(calendar))
+                                        },
+                                        onSettingClick = { setting ->
+                                            isLaunching = true
+                                            callbacks.startActivity(setting.intent)
+                                        },
+                                        onInAppSearchClick = { search ->
+                                            if (search.appInfo.componentName != null) {
+                                                val intent = Intent(Intent.ACTION_SEARCH).apply {
+                                                    setPackage(search.appInfo.componentName!!.packageName)
+                                                    putExtra("query", search.query)
+                                                    putExtra(SearchManager.QUERY, search.query)
+                                                }
+                                                isLaunching = true
+                                                callbacks.startActivity(intent)
+                                            }
+                                        },
+                                        onWebActionClick = { action ->
+                                            isLaunching = true
+                                            when (action.type) {
+                                                WebActionType.GOOGLE -> callbacks.startActivity(searchManager.getGoogleSearchIntent(action.query))
+                                                WebActionType.BROWSER -> callbacks.startActivity(searchManager.getBrowserSearchIntent(action.query))
+                                                WebActionType.STORE -> callbacks.startActivity(searchManager.getStoreSearchIntent(action.query))
+                                                WebActionType.SUGGESTION -> {
+                                                    action.packageName?.let { pkg ->
+                                                        callbacks.startActivity(searchManager.getAppSearchIntent(pkg, action.query))
+                                                    }
+                                                }
+                                            }
+                                        },
+                                        onScrollStateChanged = callbacks::onScrollStateChanged,
+                                        onRequestContactsPermission = { callbacks.requestContactsPermission() },
+                                        onRequestSmsPermission = { callbacks.requestSmsPermission() },
+                                        onRequestFilePermission = { callbacks.requestFilePermission() },
+                                        onRequestCalendarPermission = { callbacks.requestCalendarPermission() },
+                                        modifier = Modifier.fillMaxSize()
+                                    )
+                                }
+                                else -> { }
+                            }
                         }
-                        else -> { }
-                    }
                     }
                 }
-            }
-            AnimatedVisibility(
-                visible = true,
-                enter = slideInVertically(animationSpec = tween(300)) { it } + fadeIn(animationSpec = tween(300)),
-                exit = slideOutVertically(animationSpec = tween(300)) { it } + fadeOut(animationSpec = tween(300))
-            ) {
+                
                 AllAppsComposeSearchBar(
                     query = searchQuery,
                     onQueryChange = { query ->
@@ -537,7 +535,6 @@ fun AllAppsComposeContent(
                     modifier = Modifier.fillMaxWidth()
                 )
             }
-        }
     }
 }
 
@@ -569,13 +566,15 @@ private fun AllAppsTabBar(
         Box(
             modifier = Modifier
                 .clip(RoundedCornerShape(28.dp))
-                .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
+                .background(MaterialTheme.colorScheme.surfaceBright.copy(alpha = 0.5f))
                 .padding(4.dp)
         ) {
             var tabWidths by remember(tabs.size) { 
                 mutableStateOf(List(tabs.size) { 0 }) 
             }
             
+            var isFirstLaunch by remember { mutableStateOf(true) }
+
             val indicatorOffset by animateDpAsState(
                 targetValue = with(LocalDensity.current) {
                     var offset = 0
@@ -584,15 +583,16 @@ private fun AllAppsTabBar(
                     }
                     offset.toDp()
                 },
-                animationSpec = spring(dampingRatio = 0.8f, stiffness = 400f)
+                animationSpec = if (isFirstLaunch) snap() else spring(dampingRatio = 0.8f, stiffness = 400f),
+                finishedListener = { isFirstLaunch = false }
             )
             val indicatorWidth by animateDpAsState(
                 targetValue = with(LocalDensity.current) { 
                     tabWidths.getOrNull(selectedIndex)?.toDp() ?: 0.dp
                 },
-                animationSpec = spring(dampingRatio = 0.8f, stiffness = 400f)
+                animationSpec = if (isFirstLaunch) snap() else spring(dampingRatio = 0.8f, stiffness = 400f)
             )
-            
+
             Box(
                 modifier = Modifier
                     .offset(x = indicatorOffset)
@@ -601,7 +601,7 @@ private fun AllAppsTabBar(
                     .clip(RoundedCornerShape(24.dp))
                     .background(MaterialTheme.colorScheme.primary)
             )
-            
+
             Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                 tabs.forEachIndexed { index, (_, text) ->
                     val selected = index == selectedIndex
@@ -650,10 +650,12 @@ private fun AllAppsCategoriesView(
     state: AllAppsComposeState,
     expandedCategory: AppCategory?,
     onExpandedCategoryChange: (AppCategory?) -> Unit,
-    onAppClick: (AppInfo, BubbleTextView) -> Unit,
+    onAppClick: (ComposeIconInfo) -> Unit,
     onAppClickedFromFolder: (AppInfo) -> Unit,
-    onAppLongClick: (AppInfo, BubbleTextView) -> Unit,
-    onAppDragStart: ((AppInfo, BubbleTextView) -> Unit)?,
+    onAppLongClick: (ComposeIconInfo) -> Unit,
+    onAppDragStart: ((ComposeIconInfo) -> Unit)?,
+    onAppDragMove: ((screenX: Float, screenY: Float) -> Unit)?,
+    onAppDragEnd: ((screenX: Float, screenY: Float) -> Unit)?,
     onScrollStateChanged: (canScrollUp: Boolean, canScrollDown: Boolean) -> Unit,
     onPrivateSpaceClicked: (Boolean) -> Unit,
     onScrollStarted: () -> Unit,
@@ -731,25 +733,36 @@ private fun AllAppsCategoriesView(
         }
     }
 
-    Column(
-        modifier = modifier.fillMaxSize()
-    ) {
-        AnimatedVisibility(
-            visible = expandedCategory == null,
-            enter = fadeIn(animationSpec = tween(300, easing = LinearOutSlowInEasing)) +
-                    scaleIn(
-                        animationSpec = spring(
-                            dampingRatio = 0.85f,
-                            stiffness = Spring.StiffnessMediumLow
-                        ),
-                        initialScale = 0.92f
-                    ),
-            exit = fadeOut(animationSpec = tween(200, easing = LinearOutSlowInEasing)) +
-                   scaleOut(
-                       animationSpec = tween(200, easing = FastOutSlowInEasing),
-                       targetScale = 0.95f
-                   )
-        ) {
+    AnimatedContent(
+        targetState = expandedCategory,
+        transitionSpec = {
+            if (targetState != null) {
+                (fadeIn(animationSpec = tween(300)) + 
+                    slideInVertically(animationSpec = tween(350)) { it / 6 })
+                    .togetherWith(fadeOut(animationSpec = tween(200)))
+            } else {
+                (fadeIn(animationSpec = tween(200)))
+                    .togetherWith(fadeOut(animationSpec = tween(150)) + 
+                        slideOutVertically(animationSpec = tween(200)) { it / 6 })
+            }
+        },
+        modifier = modifier.fillMaxSize(),
+        label = "category_content"
+    ) { category ->
+        if (category != null) {
+            ExpandedFolderContent(
+                category = category,
+                onDismiss = { onExpandedCategoryChange(null) },
+                onAppClick = onAppClick,
+                onAppLongClick = onAppLongClick,
+                onAppDragStart = onAppDragStart,
+                onAppDragMove = onAppDragMove,
+                onAppDragEnd = onAppDragEnd,
+                iconSizePx = state.iconSizePx,
+                cellHeightPx = state.cellHeightPx,
+                onScrollStateChanged = onScrollStateChanged
+            )
+        } else {
             LazyVerticalGrid(
                 columns = GridCells.Adaptive(minSize = 150.dp),
                 state = gridState,
@@ -758,115 +771,58 @@ private fun AllAppsCategoriesView(
                 horizontalArrangement = Arrangement.spacedBy(16.dp),
                 modifier = Modifier.fillMaxSize()
             ) {
-                    items(
-                        count = categories.size,
-                        key = { categories[it].id }
-                    ) { index ->
-                        val staggerDelay = (index % 2) * 40 + (index / 2) * 60
-                        var itemVisible by remember { mutableStateOf(false) }
+                items(
+                    count = categories.size,
+                    key = { categories[it].id }
+                ) { index ->
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(8.dp),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        val cat = categories[index]
+                        val isWorkCategory = cat.id == -3
+                        val isPrivateCategory = cat.id == -5
+                        val isPrivateLocked = isPrivateCategory && state.isPrivateSpaceLocked
                         
-                        LaunchedEffect(Unit) {
-                            kotlinx.coroutines.delay(staggerDelay.toLong())
-                            itemVisible = true
-                        }
-                        
-                        val itemProgress by animateFloatAsState(
-                            targetValue = if (itemVisible) 1f else 0f,
-                            animationSpec = spring(
-                                dampingRatio = 0.8f,
-                                stiffness = Spring.StiffnessLow
-                            ),
-                            label = "category_item_$index"
+                        CategoryFolder(
+                            category = cat,
+                            onClick = {
+                                if (isPrivateLocked) {
+                                    onPrivateSpaceClicked(true)
+                                } else {
+                                    internalExpandedCategory = cat
+                                    onExpandedCategoryChange(cat)
+                                }
+                            },
+                            onAppClick = onAppClick,
+                            onAppLongClick = onAppLongClick,
+                            onAppDragStart = onAppDragStart,
+                            onAppDragMove = onAppDragMove,
+                            onAppDragEnd = onAppDragEnd,
+                            isLocked = isPrivateLocked,
+                            isWorkProfile = isWorkCategory,
+                            isPrivateCategory = isPrivateCategory && !isPrivateLocked,
+                            isScrolling = isScrollInProgress
                         )
-                        
-                        Column(
-                            horizontalAlignment = Alignment.CenterHorizontally,
-                            verticalArrangement = Arrangement.spacedBy(8.dp),
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .graphicsLayer {
-                                    alpha = itemProgress
-                                    scaleX = 0.9f + (0.1f * itemProgress)
-                                    scaleY = 0.9f + (0.1f * itemProgress)
+                        Text(
+                            text = cat.name,
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurface,
+                            maxLines = 1,
+                            modifier = Modifier.clickable(
+                                indication = null,
+                                interactionSource = remember { MutableInteractionSource() }
+                            ) {
+                                if (isPrivateLocked) {
+                                    onPrivateSpaceClicked(true)
+                                } else {
+                                    internalExpandedCategory = cat
+                                    onExpandedCategoryChange(cat)
                                 }
-                        ) {
-                            val category = categories[index]
-                            val isWorkCategory = category.id == -3
-                            val isPrivateCategory = category.id == -5
-                            val isPrivateLocked = isPrivateCategory && state.isPrivateSpaceLocked
-                            
-                            CategoryFolder(
-                                category = category,
-                                onClick = {
-                                    if (isPrivateLocked) {
-                                        onPrivateSpaceClicked(true)
-                                    } else {
-                                        internalExpandedCategory = category
-                                        onExpandedCategoryChange(category)
-                                    }
-                                },
-                                onAppClick = onAppClick,
-                                onAppLongClick = onAppLongClick,
-                                onAppDragStart = onAppDragStart,
-                                isLocked = isPrivateLocked,
-                                isWorkProfile = isWorkCategory,
-                                isPrivateCategory = isPrivateCategory && !isPrivateLocked
-                            )
-                            Text(
-                                text = category.name,
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.onSurface,
-                                maxLines = 1,
-                                modifier = Modifier.clickable(
-                                    indication = null,
-                                    interactionSource = remember { MutableInteractionSource() }
-                                ) {
-                                    if (isPrivateLocked) {
-                                        onPrivateSpaceClicked(true)
-                                    } else {
-                                        internalExpandedCategory = category
-                                        onExpandedCategoryChange(category)
-                                    }
-                                }
-                            )
-                        }
-                }
-            }
-        }
-        
-        val isExpanded = expandedCategory != null
-        val expandProgress by animateFloatAsState(
-            targetValue = if (isExpanded) 1f else 0f,
-            animationSpec = spring(
-                dampingRatio = 0.85f,
-                stiffness = Spring.StiffnessMediumLow
-            ),
-            label = "expand_progress"
-        )
-        
-        if (expandProgress > 0f) {
-            expandedCategory?.let { category ->
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .graphicsLayer {
-                            alpha = expandProgress
-                            scaleX = 0.92f + (0.08f * expandProgress)
-                            scaleY = 0.92f + (0.08f * expandProgress)
-                            translationY = (1f - expandProgress) * 50f
-                            transformOrigin = TransformOrigin(0.5f, 0.8f)
-                        }
-                ) {
-                    ExpandedFolderContent(
-                        category = category,
-                        onDismiss = { onExpandedCategoryChange(null) },
-                        onAppClick = onAppClick,
-                        onAppLongClick = onAppLongClick,
-                        onAppDragStart = onAppDragStart,
-                        iconSizePx = state.iconSizePx,
-                        cellHeightPx = state.cellHeightPx,
-                        onScrollStateChanged = onScrollStateChanged
-                    )
+                            }
+                        )
+                    }
                 }
             }
         }
@@ -877,108 +833,92 @@ private fun AllAppsCategoriesView(
 private fun ExpandedFolderContent(
     category: AppCategory,
     onDismiss: () -> Unit,
-    onAppClick: (AppInfo, BubbleTextView) -> Unit,
-    onAppLongClick: (AppInfo, BubbleTextView) -> Unit,
-    onAppDragStart: ((AppInfo, BubbleTextView) -> Unit)?,
+    onAppClick: (ComposeIconInfo) -> Unit,
+    onAppLongClick: (ComposeIconInfo) -> Unit,
+    onAppDragStart: ((ComposeIconInfo) -> Unit)?,
+    onAppDragMove: ((screenX: Float, screenY: Float) -> Unit)?,
+    onAppDragEnd: ((screenX: Float, screenY: Float) -> Unit)?,
     iconSizePx: Int,
     cellHeightPx: Int,
-    onScrollStateChanged: (canScrollUp: Boolean, canScrollDown: Boolean) -> Unit
+    onScrollStateChanged: (canScrollUp: Boolean, canScrollDown: Boolean) -> Unit,
+    isScrolling: Boolean = false
 ) {
-    var isVisible by remember { mutableStateOf(false) }
-    
     val gridState = rememberLazyGridState()
     val canScrollUp by remember { derivedStateOf { gridState.canScrollBackward } }
     val canScrollDown by remember { derivedStateOf { gridState.canScrollForward } }
+    val isScrollInProgress by remember { derivedStateOf { gridState.isScrollInProgress } }
 
     LaunchedEffect(canScrollUp, canScrollDown) {
         onScrollStateChanged(canScrollUp, canScrollDown)
     }
 
-    LaunchedEffect(Unit) {
-        isVisible = true
-    }
-    
     Column(
-        modifier = Modifier.fillMaxSize()
+        modifier = Modifier
+            .fillMaxSize()
     ) {
-        AnimatedVisibility(
-            visible = isVisible,
-            enter = fadeIn(animationSpec = tween(300)) + 
-                    slideInVertically(animationSpec = tween(350, easing = LinearOutSlowInEasing)) { -it / 6 } +
-                    scaleIn(
-                        animationSpec = spring(
-                            dampingRatio = 0.75f,
-                            stiffness = Spring.StiffnessLow
-                        ),
-                        initialScale = 0.9f
-                    ),
-            exit = fadeOut(animationSpec = tween(150)) + 
-                   slideOutVertically(animationSpec = tween(200, easing = FastOutSlowInEasing)) { -it / 4 }
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 24.dp, vertical = 16.dp),
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            Column(modifier = Modifier.fillMaxSize()) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 24.dp, vertical = 16.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .size(40.dp)
-                            .clip(RoundedCornerShape(12.dp))
-                            .background(MaterialTheme.colorScheme.surfaceContainerHighest)
-                            .clickable(
-                                onClick = onDismiss,
-                                indication = null,
-                                interactionSource = remember { MutableInteractionSource() }
-                            ),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Back",
-                            tint = MaterialTheme.colorScheme.onSurface
-                        )
-                    }
-                    Spacer(modifier = Modifier.width(16.dp))
-                    Text(
-                        text = category.name,
-                        style = MaterialTheme.typography.headlineSmall,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
-                }
-            
-                LazyVerticalGrid(
-                    columns = GridCells.Fixed(4),
-                    state = gridState,
-                    contentPadding = PaddingValues(
-                        start = 24.dp,
-                        end = 24.dp,
-                        top = 16.dp,
-                        bottom = 32.dp
+            Box(
+                modifier = Modifier
+                    .size(40.dp)
+                    .clip(RoundedCornerShape(12.dp))
+                    .background(MaterialTheme.colorScheme.surfaceContainerHighest)
+                    .clickable(
+                        onClick = onDismiss,
+                        indication = null,
+                        interactionSource = remember { MutableInteractionSource() }
                     ),
-                    verticalArrangement = Arrangement.spacedBy(16.dp),
-                    horizontalArrangement = Arrangement.spacedBy(16.dp),
-                    modifier = Modifier.fillMaxSize().weight(1f)
-                ) {
-                    items(
-                        count = category.apps.size,
-                        key = { "expanded_${category.id}_${category.apps[it].componentName}" }
-                    ) { index ->
-                        AllAppsComposeAppIcon(
-                            appInfo = category.apps[index],
-                            showLabel = true,
-                            iconSizePx = iconSizePx,
-                            cellHeightPx = cellHeightPx,
-                            onClick = onAppClick,
-                            onLongClick = onAppLongClick,
-                            onDragStart = onAppDragStart,
-                            
-                            modifier = Modifier.fillMaxWidth()
-                        )
-                    }
-                }
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                    contentDescription = "Back",
+                    tint = MaterialTheme.colorScheme.onSurface
+                )
+            }
+            Spacer(modifier = Modifier.width(16.dp))
+            Text(
+                text = category.name,
+                style = MaterialTheme.typography.headlineSmall,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+        }
+    
+        LazyVerticalGrid(
+            columns = GridCells.Fixed(4),
+            state = gridState,
+            contentPadding = PaddingValues(
+                start = 24.dp,
+                end = 24.dp,
+                top = 16.dp,
+                bottom = 32.dp
+            ),
+            verticalArrangement = Arrangement.spacedBy(16.dp),
+            horizontalArrangement = Arrangement.spacedBy(16.dp),
+            modifier = Modifier.fillMaxSize().weight(1f)
+        ) {
+            items(
+                count = category.apps.size,
+                key = { "expanded_${category.id}_${category.apps[it].componentName}" }
+            ) { index ->
+                AllAppsComposeAppIcon(
+                    appInfo = category.apps[index],
+                    showLabel = true,
+                    iconSizePx = iconSizePx,
+                    cellHeightPx = cellHeightPx,
+                    onClick = onAppClick,
+                    onLongClick = onAppLongClick,
+                    onDragStart = onAppDragStart,
+                    onDragMove = onAppDragMove,
+                    onDragEnd = onAppDragEnd,
+                    isScrolling = isScrollInProgress,
+                    modifier = Modifier.fillMaxWidth()
+                )
             }
         }
     }
@@ -988,12 +928,15 @@ private fun ExpandedFolderContent(
 private fun CategoryFolder(
     category: AppCategory,
     onClick: () -> Unit,
-    onAppClick: (AppInfo, BubbleTextView) -> Unit,
-    onAppLongClick: (AppInfo, BubbleTextView) -> Unit,
-    onAppDragStart: ((AppInfo, BubbleTextView) -> Unit)?,
+    onAppClick: (ComposeIconInfo) -> Unit,
+    onAppLongClick: (ComposeIconInfo) -> Unit,
+    onAppDragStart: ((ComposeIconInfo) -> Unit)?,
+    onAppDragMove: ((screenX: Float, screenY: Float) -> Unit)?,
+    onAppDragEnd: ((screenX: Float, screenY: Float) -> Unit)?,
     isLocked: Boolean = false,
     isWorkProfile: Boolean = false,
-    isPrivateCategory: Boolean = false
+    isPrivateCategory: Boolean = false,
+    isScrolling: Boolean = false
 ) {
     val hasMoreThanFour = category.apps.size > 4
     val density = LocalDensity.current
@@ -1047,10 +990,30 @@ private fun CategoryFolder(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         category.apps.getOrNull(0)?.let { app ->
-                            PreviewAppIcon(app, bigIconSize, iconSizePx, onAppClick, onAppLongClick, onAppDragStart)
+                            AllAppsComposeAppIcon(
+                                appInfo = app,
+                                showLabel = false,
+                                iconSizePx = iconSizePx,
+                                onClick = onAppClick,
+                                onLongClick = onAppLongClick,
+                                onDragStart = onAppDragStart,
+                                onDragMove = onAppDragMove,
+                                onDragEnd = onAppDragEnd,
+                                isScrolling = isScrolling
+                            )
                         }
                         category.apps.getOrNull(1)?.let { app ->
-                            PreviewAppIcon(app, bigIconSize, iconSizePx, onAppClick, onAppLongClick, onAppDragStart)
+                            AllAppsComposeAppIcon(
+                                appInfo = app,
+                                showLabel = false,
+                                iconSizePx = iconSizePx,
+                                onClick = onAppClick,
+                                onLongClick = onAppLongClick,
+                                onDragStart = onAppDragStart,
+                                onDragMove = onAppDragMove,
+                                onDragEnd = onAppDragEnd,
+                                isScrolling = isScrolling
+                            )
                         }
                     }
                     Row(
@@ -1058,7 +1021,17 @@ private fun CategoryFolder(
                         verticalAlignment = Alignment.Top
                     ) {
                         category.apps.getOrNull(2)?.let { app ->
-                            PreviewAppIcon(app, bigIconSize, iconSizePx, onAppClick, onAppLongClick, onAppDragStart)
+                            AllAppsComposeAppIcon(
+                                appInfo = app,
+                                showLabel = false,
+                                iconSizePx = iconSizePx,
+                                onClick = onAppClick,
+                                onLongClick = onAppLongClick,
+                                onDragStart = onAppDragStart,
+                                onDragMove = onAppDragMove,
+                                onDragEnd = onAppDragEnd,
+                                isScrolling = isScrolling
+                            )
                         }
                         Box(
                             modifier = Modifier.size(bigIconSize),
@@ -1105,10 +1078,30 @@ private fun CategoryFolder(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         previewApps.getOrNull(0)?.let { app ->
-                            PreviewAppIcon(app, bigIconSize, iconSizePx, onAppClick, onAppLongClick, onAppDragStart)
+                            AllAppsComposeAppIcon(
+                                appInfo = app,
+                                showLabel = false,
+                                iconSizePx = iconSizePx,
+                                onClick = onAppClick,
+                                onLongClick = onAppLongClick,
+                                onDragStart = onAppDragStart,
+                                onDragMove = onAppDragMove,
+                                onDragEnd = onAppDragEnd,
+                                isScrolling = isScrolling
+                            )
                         }
                         previewApps.getOrNull(1)?.let { app ->
-                            PreviewAppIcon(app, bigIconSize, iconSizePx, onAppClick, onAppLongClick, onAppDragStart)
+                            AllAppsComposeAppIcon(
+                                appInfo = app,
+                                showLabel = false,
+                                iconSizePx = iconSizePx,
+                                onClick = onAppClick,
+                                onLongClick = onAppLongClick,
+                                onDragStart = onAppDragStart,
+                                onDragMove = onAppDragMove,
+                                onDragEnd = onAppDragEnd,
+                                isScrolling = isScrolling
+                            )
                         }
                     }
                     if (previewApps.size > 2) {
@@ -1117,10 +1110,30 @@ private fun CategoryFolder(
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             previewApps.getOrNull(2)?.let { app ->
-                                PreviewAppIcon(app, bigIconSize, iconSizePx, onAppClick, onAppLongClick, onAppDragStart)
+                                AllAppsComposeAppIcon(
+                                    appInfo = app,
+                                    showLabel = false,
+                                    iconSizePx = iconSizePx,
+                                    onClick = onAppClick,
+                                    onLongClick = onAppLongClick,
+                                    onDragStart = onAppDragStart,
+                                    onDragMove = onAppDragMove,
+                                    onDragEnd = onAppDragEnd,
+                                    isScrolling = isScrolling
+                                )
                             }
                             previewApps.getOrNull(3)?.let { app ->
-                                PreviewAppIcon(app, bigIconSize, iconSizePx, onAppClick, onAppLongClick, onAppDragStart)
+                                AllAppsComposeAppIcon(
+                                    appInfo = app,
+                                    showLabel = false,
+                                    iconSizePx = iconSizePx,
+                                    onClick = onAppClick,
+                                    onLongClick = onAppLongClick,
+                                    onDragStart = onAppDragStart,
+                                    onDragMove = onAppDragMove,
+                                    onDragEnd = onAppDragEnd,
+                                    isScrolling = isScrolling
+                                )
                             }
                         }
                     }
@@ -1130,99 +1143,18 @@ private fun CategoryFolder(
     }
 }
 
-@OptIn(ExperimentalFoundationApi::class)
 @Composable
-private fun PreviewAppIcon(
-    app: AppInfo,
-    iconSize: Dp,
-    iconSizePx: Int,
-    onAppClick: (AppInfo, BubbleTextView) -> Unit,
-    onAppLongClick: (AppInfo, BubbleTextView) -> Unit,
-    onAppDragStart: ((AppInfo, BubbleTextView) -> Unit)?
-) {
-    var bubbleTextView by remember { mutableStateOf<BubbleTextView?>(null) }
-    var imageView by remember { mutableStateOf<ImageView?>(null) }
-    val view = LocalView.current
-    val density = LocalDensity.current
-    val iconSizeInPx = with(density) { iconSize.roundToPx() }
-    
-    fun syncBubbleTextViewBounds() {
-        val iv = imageView ?: return
-        val btv = bubbleTextView ?: return
-        val location = IntArray(2)
-        iv.getLocationOnScreen(location)
-        btv.layout(location[0], location[1], location[0] + iconSizeInPx, location[1] + iconSizeInPx)
-    }
+private fun PreviewBaseAppIcon(app: AppInfo, iconSize: Dp) {
+    val iconDrawable = AllAppsIconProvider.rememberAppIcon(app, iconSize)
     
     Box(
         modifier = Modifier
             .size(iconSize)
-            .combinedClickable(
-                onClick = {
-                    syncBubbleTextViewBounds()
-                    bubbleTextView?.let { onAppClick(app, it) }
-                },
-                onLongClick = {
-                    syncBubbleTextViewBounds()
-                    bubbleTextView?.let { btv ->
-                        view.performHapticFeedback(HapticFeedbackConstants.LONG_PRESS)
-                        onAppLongClick(app, btv)
-                    }
-                },
-                indication = null,
-                interactionSource = remember { MutableInteractionSource() }
-            )
-            .pointerInput(Unit) {
-                detectDragGesturesAfterLongPress(
-                    onDragStart = {
-                        syncBubbleTextViewBounds()
-                        bubbleTextView?.let { btv ->
-                            onAppDragStart?.invoke(app, btv)
-                        }
-                    },
-                    onDrag = { _, _ -> },
-                    onDragEnd = {},
-                    onDragCancel = {}
-                )
-            },
-        contentAlignment = Alignment.Center
-    ) {
-        key(app.componentName) {
-            AndroidView(
-                factory = { context ->
-                    val btv = (LayoutInflater.from(context)
-                        .inflate(R.layout.all_apps_icon, null) as BubbleTextView).apply {
-                        app.container = LauncherSettings.Favorites.CONTAINER_ALL_APPS
-                        applyFromItemInfoWithIcon(app)
-                        setDisplay(BubbleTextView.DISPLAY_ALL_APPS)
-                        setTextVisibility(false)
-                    }
-                    bubbleTextView = btv
-                    ImageView(context).apply {
-                        setImageDrawable(btv.icon)
-                    }.also { imageView = it }
-                },
-                modifier = Modifier.size(iconSize)
-            )
-        }
-    }
-}
-
-@Composable
-private fun PreviewBaseAppIcon(app: AppInfo, iconSize: Dp) {
-    AndroidView(
-        factory = { context ->
-            val btv = (LayoutInflater.from(context)
-                .inflate(R.layout.all_apps_icon, null) as BubbleTextView).apply {
-                app.container = LauncherSettings.Favorites.CONTAINER_ALL_APPS
-                applyFromItemInfoWithIcon(app)
-                setDisplay(BubbleTextView.DISPLAY_ALL_APPS)
+            .drawBehind {
+                drawContext.canvas.nativeCanvas.let { canvas ->
+                    iconDrawable.draw(canvas)
+                }
             }
-            ImageView(context).apply {
-                setImageDrawable(btv.icon)
-            }
-        },
-        modifier = Modifier.size(iconSize)
     )
 }
 
@@ -1308,7 +1240,8 @@ private fun buildComposeItems(
 
     if (state.predictedApps.isNotEmpty()) {
         items.add(AllAppsComposeItem.PredictionsHeader)
-        state.predictedApps.take(state.numColumns).forEach { items.add(AllAppsComposeItem.AppItem(it, section = "prediction")) }
+        state.predictedApps.take(state.numColumns)
+            .forEach { items.add(AllAppsComposeItem.AppItem(it, section = "prediction")) }
     }
 
     if (state.pinnedApps.isNotEmpty()) {
@@ -1392,7 +1325,7 @@ private fun ProfileFolder(
         modifier = modifier
             .clip(RoundedCornerShape(16.dp))
             .clickable(onClick = onClick),
-        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f),
+        color = MaterialTheme.colorScheme.surfaceBright.copy(alpha = 0.6f),
         shape = RoundedCornerShape(16.dp)
     ) {
         Row(
@@ -1406,7 +1339,7 @@ private fun ProfileFolder(
                     .clip(RoundedCornerShape(8.dp))
                     .background(
                         if (isLocked) MaterialTheme.colorScheme.primary.copy(alpha = 0.2f)
-                        else MaterialTheme.colorScheme.surfaceVariant
+                        else MaterialTheme.colorScheme.surfaceBright
                     ),
                 contentAlignment = Alignment.Center
             ) {
@@ -1428,7 +1361,7 @@ private fun ProfileFolder(
                 Text(
                     text = if (isLocked) "Tap to unlock" else "Tap to open",
                     style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    color = MaterialTheme.colorScheme.onSurface
                 )
             }
         }

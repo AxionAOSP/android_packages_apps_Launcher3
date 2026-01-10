@@ -2662,7 +2662,7 @@ public class Launcher extends StatefulActivity<LauncherState>
      * @param progress Transition progress from 0 to 1; where 0 => home and 1 => all apps.
      */
     public void onAllAppsTransition(float progress) {
-        // No-Op
+        mAppsView.onAllAppsTransitionProgress(progress);
     }
 
     /** @return list of View targets to be blurred based on changes to depth. */

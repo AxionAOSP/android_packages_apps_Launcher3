@@ -17,11 +17,12 @@
 package com.android.launcher3.allapps.compose
 
 import android.content.ComponentName
-
 import android.content.Context
 import android.content.SharedPreferences
+import android.content.res.Configuration
 import android.os.Process
 import com.android.launcher3.LauncherFiles
+import com.android.launcher3.LauncherPrefs
 import com.android.launcher3.allapps.AllAppsStore
 import com.android.launcher3.allapps.AlphabeticalAppsList
 import com.android.launcher3.model.data.AppInfo
@@ -53,10 +54,17 @@ class AllAppsComposeViewModel<T>(
     private val _searchQuery = MutableStateFlow("")
     val searchQuery: StateFlow<String> = _searchQuery.asStateFlow()
 
-    private val _transitionProgress = MutableStateFlow(1f)
+    private val _transitionProgress = MutableStateFlow(0f)
     val transitionProgress: StateFlow<Float> = _transitionProgress.asStateFlow()
 
+    private val _allAppsExpanded = MutableStateFlow(false)
+    val allAppsExpanded: StateFlow<Boolean> = _allAppsExpanded.asStateFlow()
+
+    private val _openCounter = MutableStateFlow(0)
+    val openCounter: StateFlow<Int> = _openCounter.asStateFlow()
+
     private val personalMatcher = ItemInfoMatcher.ofUser(Process.myUserHandle())
+    private var predictedKeys: List<ComponentKey> = emptyList()
 
     private val appsUpdateListener = AllAppsStore.OnUpdateListener {
         updateApps()
@@ -107,28 +115,48 @@ class AllAppsComposeViewModel<T>(
                 processApps(allApps, pinnedComponents)
             }
             
+            val predictedApps = predictedKeys.mapNotNull { key ->
+                allAppsStore.getApp(key)
+            }
+
+            val currentIconSize = _state.value.iconSizePx
+            if (currentIconSize > 0) {
+                val iconProvider = AllAppsIconProvider.getInstance(context)
+                iconProvider.clearCache()
+                val themed = LauncherPrefs.ALLAPPS_THEMED_ICONS.get(context)
+                val uiMode = context.resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK
+                iconProvider.preloadIcons(
+                    allApps,
+                    uiMode,
+                    themed,
+                    currentIconSize,
+                    (currentIconSize * 0.75).toInt()
+                )
+            }
+            
             _state.update { currentState ->
+                val finalPredictedApps = if (currentState.currentTab == AllAppsComposeState.TAB_PERSONAL) {
+                    predictedApps.filter {
+                        personalMatcher.test(it) && it.componentName !in pinnedComponents
+                    }
+                } else if (currentState.currentTab == AllAppsComposeState.TAB_WORK) {
+                    predictedApps.filter {
+                        !personalMatcher.test(it) && it.componentName !in pinnedComponents
+                    }
+                } else {
+                    emptyList()
+                }
                 currentState.copy(
                     apps = result.nonPinnedApps,
                     workApps = result.workApps,
                     privateApps = result.privateApps,
                     pinnedApps = result.pinnedApps,
+                    predictedApps = finalPredictedApps,
                     hasWorkApps = result.workApps.isNotEmpty(),
                     hasPrivateApps = result.privateApps.isNotEmpty() || result.isPrivateLocked,
                     isPrivateSpaceLocked = result.isPrivateLocked,
                     isPrivateSpaceHidden = result.isPrivateHidden,
-                    isLoading = false,
-                    filteredPredictedApps = if (currentState.currentTab == AllAppsComposeState.TAB_PERSONAL) {
-                        currentState.predictedApps.filter { 
-                            personalMatcher.test(it) && it.componentName !in pinnedComponents 
-                        }
-                    } else if (currentState.currentTab == AllAppsComposeState.TAB_WORK) {
-                        currentState.predictedApps.filter { 
-                            !personalMatcher.test(it) && it.componentName !in pinnedComponents 
-                        }
-                    } else {
-                        emptyList()
-                    }
+                    isLoading = false
                 )
             }
         }
@@ -189,26 +217,16 @@ class AllAppsComposeViewModel<T>(
 
 
     fun updatePredictedApps(items: List<com.android.launcher3.model.data.ItemInfo>) {
-        val predictedApps = items.filterIsInstance<com.android.launcher3.model.data.WorkspaceItemInfo>()
+        predictedKeys = items.filterIsInstance<com.android.launcher3.model.data.WorkspaceItemInfo>()
             .mapNotNull { wsItem ->
-                allAppsStore.getApp(ComponentKey(wsItem.targetComponent, wsItem.user))
+                wsItem.targetComponent?.let { component -> ComponentKey(component, wsItem.user) }
             }
-        
-        _state.update { it.copy(predictedApps = predictedApps) }
         updateApps()
     }
 
     private fun filterAppsForCurrentTab(apps: List<AppInfo>): List<AppInfo> {
         val currentTab = _state.value.currentTab
         val query = _searchQuery.value
-        val predicted = _state.value.predictedApps
-        
-        val filteredPredicted = when (currentTab) {
-            AllAppsComposeState.TAB_PERSONAL -> predicted.filter { personalMatcher.test(it) }
-            AllAppsComposeState.TAB_WORK -> predicted.filter { !personalMatcher.test(it) }
-            else -> emptyList()
-        }
-        
         var filtered = when (currentTab) {
             AllAppsComposeState.TAB_PERSONAL -> apps.filter { personalMatcher.test(it) }
             AllAppsComposeState.TAB_WORK -> apps.filter { !personalMatcher.test(it) }
@@ -269,6 +287,13 @@ class AllAppsComposeViewModel<T>(
 
     fun setTransitionProgress(progress: Float) {
         _transitionProgress.value = progress
+        val expanded = progress == 1f
+        if (allAppsExpanded.value != expanded) {
+            _allAppsExpanded.value = expanded
+            if (expanded) {
+                _openCounter.value++
+            }
+        }
     }
 
     fun setIconSizing(iconSizePx: Int, cellWidthPx: Int, cellHeightPx: Int) {

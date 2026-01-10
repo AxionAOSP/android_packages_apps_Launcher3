@@ -49,6 +49,7 @@ import androidx.annotation.Nullable;
 import androidx.annotation.UiThread;
 import androidx.annotation.WorkerThread;
 
+import com.android.launcher3.allapps.compose.ComposeAppIconView;
 import com.android.launcher3.BubbleTextView;
 import com.android.launcher3.DeviceProfile;
 import com.android.launcher3.InsettableFrameLayout;
@@ -272,6 +273,8 @@ public class FloatingIconView extends FrameLayout implements
 
         if (v instanceof BubbleTextView) {
             ((BubbleTextView) v).getIconBounds(outViewBounds);
+        } else if (v instanceof ComposeAppIconView) {
+            ((ComposeAppIconView) v).getIconBounds(outViewBounds);
         } else if (v instanceof FolderIcon) {
             ((FolderIcon) v).getPreviewBounds(outViewBounds);
         } else {
@@ -607,6 +610,10 @@ public class FloatingIconView extends FrameLayout implements
                 // Clone when needed
                 btvDrawableSupplier = () -> btvIcon.getConstantState().newDrawable();
             }
+        } else if (v instanceof ComposeAppIconView) {
+            ComposeAppIconView cav = (ComposeAppIconView) v;
+            btvIcon = cav.getIconDrawable();
+            btvDrawableSupplier = () -> btvIcon != null ? btvIcon.getConstantState().newDrawable() : null;
         } else if (v instanceof FolderIcon) {
             FolderIcon folderIcon = (FolderIcon) v;
             Rect r = new Rect();

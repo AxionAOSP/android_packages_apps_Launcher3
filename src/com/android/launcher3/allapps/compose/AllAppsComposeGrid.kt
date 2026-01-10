@@ -22,14 +22,19 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.*
 import androidx.compose.ui.geometry.Offset
+import kotlin.math.abs
+import androidx.compose.animation.core.*
+import androidx.compose.animation.core.Spring
+import androidx.compose.foundation.gestures.ScrollScope
+import androidx.compose.foundation.gestures.FlingBehavior
 import androidx.compose.ui.input.nestedscroll.*
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.platform.LocalDensity
-import com.android.launcher3.BubbleTextView
 import com.android.launcher3.model.data.AppInfo
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.delay
 
 @Composable
 fun AllAppsComposeGrid(
@@ -39,9 +44,11 @@ fun AllAppsComposeGrid(
     iconSizePx: Int,
     cellHeightPx: Int,
     showLabels: Boolean,
-    onAppClick: (AppInfo, BubbleTextView) -> Unit,
-    onAppLongClick: (AppInfo, BubbleTextView) -> Unit,
-    onAppDragStart: ((AppInfo, BubbleTextView) -> Unit)? = null,
+    onAppClick: (ComposeIconInfo) -> Unit,
+    onAppLongClick: (ComposeIconInfo) -> Unit,
+    onAppDragStart: ((ComposeIconInfo) -> Unit)? = null,
+    onAppDragMove: ((screenX: Float, screenY: Float) -> Unit)? = null,
+    onAppDragEnd: ((screenX: Float, screenY: Float) -> Unit)? = null,
     onScrollStateChanged: (canScrollUp: Boolean, canScrollDown: Boolean) -> Unit,
     onScrollStarted: () -> Unit,
     onScrollStopped: () -> Unit,
@@ -93,6 +100,7 @@ fun AllAppsComposeGrid(
             state = gridState,
             contentPadding = contentPadding,
             userScrollEnabled = isScrollEnabled,
+            flingBehavior = rememberSmoothFlingBehavior(),
             modifier = Modifier.fillMaxSize()
         ) {
             
@@ -133,37 +141,45 @@ fun AllAppsComposeGrid(
                     }
                 }
             ) { index ->
-                when (val item = items[index]) {
-                    is AllAppsComposeItem.AppItem -> {
-                        AllAppsComposeAppIcon(
-                            appInfo = item.appInfo,
-                            showLabel = showLabels,
-                            iconSizePx = iconSizePx,
-                            cellHeightPx = cellHeightPx,
-                            onClick = onAppClick,
-                            onLongClick = onAppLongClick,
-                            onDragStart = onAppDragStart,
-                            onLongPressStatusChanged = { isLongPressed ->
-                                isScrollEnabled = !isLongPressed
-                            },
-                            modifier = Modifier.fillMaxWidth()
-                        )
-                    }
-                    is AllAppsComposeItem.SectionHeader -> {
-                        SectionHeaderItem(letter = item.letter)
-                    }
-                    AllAppsComposeItem.PredictionsHeader -> {
-                        GroupHeaderItem(title = "Suggested apps")
-                    }
-                    AllAppsComposeItem.PinnedAppsHeader -> {
-                        GroupHeaderItem(title = "Pinned apps")
-                    }
-                    AllAppsComposeItem.AllAppsHeader -> {
-                        GroupHeaderItem(title = "All apps")
-                    }
-                    is AllAppsComposeItem.PrivateSpaceHeader -> {
-                    }
-                    AllAppsComposeItem.EmptySearchResult -> {
+                val item = items[index]
+                Box(
+                    modifier = Modifier
+                ) {
+                     when (item) {
+                        is AllAppsComposeItem.AppItem -> {
+                            AllAppsComposeAppIcon(
+                                appInfo = item.appInfo,
+                                showLabel = showLabels,
+                                iconSizePx = iconSizePx,
+                                cellHeightPx = cellHeightPx,
+                                onClick = onAppClick,
+                                onLongClick = onAppLongClick,
+                                onDragStart = onAppDragStart,
+                                onDragMove = onAppDragMove,
+                                onDragEnd = onAppDragEnd,
+                                isScrolling = isScrollInProgress,
+                                onLongPressStatusChanged = { isLongPressed ->
+                                    isScrollEnabled = !isLongPressed
+                                },
+                                modifier = Modifier.fillMaxWidth()
+                            )
+                        }
+                        is AllAppsComposeItem.SectionHeader -> {
+                            SectionHeaderItem(letter = item.letter)
+                        }
+                        AllAppsComposeItem.PredictionsHeader -> {
+                            GroupHeaderItem(title = "Suggested apps")
+                        }
+                        AllAppsComposeItem.PinnedAppsHeader -> {
+                            GroupHeaderItem(title = "Pinned apps")
+                        }
+                        AllAppsComposeItem.AllAppsHeader -> {
+                            GroupHeaderItem(title = "All apps")
+                        }
+                        is AllAppsComposeItem.PrivateSpaceHeader -> {
+                        }
+                        AllAppsComposeItem.EmptySearchResult -> {
+                        }
                     }
                 }
             }
@@ -225,7 +241,7 @@ private fun PrivateSpaceHeaderItem(isExpanded: Boolean) {
             .fillMaxWidth()
             .padding(horizontal = 16.dp, vertical = 8.dp),
         shape = MaterialTheme.shapes.medium,
-        color = MaterialTheme.colorScheme.surfaceVariant
+        color = MaterialTheme.colorScheme.surfaceBright
     ) {
         Row(
             modifier = Modifier.padding(16.dp),
@@ -251,7 +267,37 @@ private fun EmptySearchResultItem() {
         Text(
             text = "No apps found",
             style = MaterialTheme.typography.bodyLarge,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
+            color = MaterialTheme.colorScheme.onSurface
         )
+    }
+}
+
+@Composable
+private fun rememberSmoothFlingBehavior(): FlingBehavior {
+    val flingSpec = exponentialDecay<Float>(
+        frictionMultiplier = 0.8f
+    )
+    return remember(flingSpec) {
+        object : FlingBehavior {
+            override suspend fun ScrollScope.performFling(initialVelocity: Float): Float {
+                if (abs(initialVelocity) > 1f) {
+                    var velocityLeft = initialVelocity
+                    var lastValue = 0f
+                    AnimationState(
+                        initialValue = 0f,
+                        initialVelocity = initialVelocity,
+                    ).animateDecay(flingSpec) {
+                        val delta = value - lastValue
+                        val consumed = scrollBy(delta)
+                        lastValue = value
+                        velocityLeft = velocity
+                        if (abs(delta - consumed) > 0.5f) this.cancelAnimation()
+                    }
+                    return velocityLeft
+                } else {
+                    return initialVelocity
+                }
+            }
+        }
     }
 }

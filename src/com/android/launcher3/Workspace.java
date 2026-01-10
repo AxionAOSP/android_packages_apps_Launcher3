@@ -53,6 +53,7 @@ import android.graphics.Bitmap;
 import android.graphics.Point;
 import android.graphics.PointF;
 import android.graphics.Rect;
+import android.graphics.RectF;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.os.Parcelable;
@@ -78,6 +79,7 @@ import com.android.app.animation.Interpolators;
 import com.android.launcher3.accessibility.AccessibleDragListenerAdapter;
 import com.android.launcher3.accessibility.WorkspaceAccessibilityHelper;
 import com.android.launcher3.anim.PendingAnimation;
+import com.android.launcher3.allapps.compose.*;
 import com.android.launcher3.apppairs.AppPairIcon;
 import com.android.launcher3.celllayout.CellInfo;
 import com.android.launcher3.celllayout.CellLayoutLayoutParams;
@@ -1681,6 +1683,15 @@ public class Workspace<T extends View & PageIndicator> extends PagedView<T>
         }
 
         beginDragShared(child, this, options);
+    }
+
+    public DragView beginDragFromCompose(ItemInfo info, ComposeAppIconView cav, RectF iconBounds, DragSource source, DragOptions options) {
+        Rect bounds = new Rect();
+        iconBounds.round(bounds);
+        ComposeDragPreviewProvider previewProvider = 
+            new ComposeDragPreviewProvider(cav, cav.getIcon(), cav.getIconSizePx(), bounds);
+        
+        return beginDragShared(cav, cav, source, info, previewProvider, options);
     }
 
     public void beginDragShared(View child, DragSource source, DragOptions options) {
