@@ -249,9 +249,18 @@ public class PreviewItemManager {
         return params;
     }
 
+    private final PreviewItemDrawingParams mSynthesizedDotParams = new PreviewItemDrawingParams(0, 0, 0);
+
     public void drawParams(Canvas canvas, ArrayList<PreviewItemDrawingParams> params,
             PointF offset, boolean shouldClipPath, Path clipPath) {
         int indicatorIndex = getIndicatorIndex();
+
+        if (mIcon.getFolderStyle() == LauncherSettings.Favorites.FOLDER_STYLE_CIRCLE
+                && indicatorIndex == 6 && params.size() == 6) {
+            computePreviewItemDrawingParams(6, 7, mSynthesizedDotParams);
+            drawIndicatorDots(canvas, mSynthesizedDotParams, offset);
+        }
+
         for (int i = params.size() - 1; i >= 0; i--) {
             PreviewItemDrawingParams p = params.get(i);
             if (!p.hidden) {
