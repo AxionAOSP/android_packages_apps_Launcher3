@@ -21,6 +21,9 @@ import android.content.Intent
 import androidx.compose.foundation.layout.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.*
+import androidx.compose.ui.platform.LocalLifecycleOwner
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
 import com.android.launcher3.allapps.AllAppsStore
 import com.android.launcher3.BubbleTextView
 import com.android.launcher3.model.data.AppInfo
@@ -57,6 +60,19 @@ fun <T> AllAppsComposeHost(
         viewModel.setNumColumns(numColumns)
         allAppsProfile?.let {
             viewModel.setIconSizing(it.iconSizePx, it.cellWidthPx, it.cellHeightPx)
+        }
+    }
+    
+    val lifecycleOwner = LocalLifecycleOwner.current
+    DisposableEffect(lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_RESUME) {
+                viewModel.reloadPreferences()
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose {
+            lifecycleOwner.lifecycle.removeObserver(observer)
         }
     }
     

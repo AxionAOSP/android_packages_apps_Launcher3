@@ -108,7 +108,7 @@ fun AllAppsComposeGrid(
                         AllAppsComposeItem.AllAppsHeader -> "all_apps_header"
                         AllAppsComposeItem.EmptySearchResult -> "empty_search"
                     }
-                    "${keyPrefix}_${recompositionKey}_$base"
+                    "${keyPrefix}_${recompositionKey}_${showLabels}_$base"
                 },
                 span = { index ->
                     when (items[index]) {

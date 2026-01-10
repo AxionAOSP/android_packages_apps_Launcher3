@@ -67,15 +67,20 @@ class AllAppsComposeViewModel<T>(
         observePinnedApps()
     }
 
-    private fun observePreferences() {
+    private val preferenceChangeListener = SharedPreferences.OnSharedPreferenceChangeListener { _, key ->
+        if (key == "pref_drawer_show_labels") {
+            _state.update { it.copy(showLabels = prefs.getBoolean(key, true)) }
+        }
+    }
+
+    fun reloadPreferences() {
         val showLabels = prefs.getBoolean("pref_drawer_show_labels", true)
         _state.update { it.copy(showLabels = showLabels) }
+    }
 
-        prefs.registerOnSharedPreferenceChangeListener { _, key ->
-            if (key == "pref_drawer_show_labels") {
-                _state.update { it.copy(showLabels = prefs.getBoolean(key, true)) }
-            }
-        }
+    private fun observePreferences() {
+        reloadPreferences()
+        prefs.registerOnSharedPreferenceChangeListener(preferenceChangeListener)
     }
     
     private fun observePinnedApps() {
@@ -273,6 +278,7 @@ class AllAppsComposeViewModel<T>(
 
     fun cleanup() {
         allAppsStore.removeUpdateListener(appsUpdateListener)
+        prefs.unregisterOnSharedPreferenceChangeListener(preferenceChangeListener)
         viewModelScope.cancel()
     }
 }
