@@ -72,7 +72,11 @@ class SettingsState(context: Context) : ViewModel(), SharedPreferences.OnSharedP
     private val _drawerShowLabels = MutableStateFlow(prefs.getBoolean("pref_drawer_show_labels", true))
     val drawerShowLabels: StateFlow<Boolean> = _drawerShowLabels.asStateFlow()
 
-    private val _drawerLayoutMode = MutableStateFlow(prefs.getString("pref_drawer_layout_mode", "smart") ?: "smart")
+    private val _drawerLayoutMode = MutableStateFlow(
+        (prefs.getString("pref_drawer_layout_mode", "dynamic") ?: "dynamic").let {
+            if (it == "default") "dynamic" else it
+        }
+    )
     val drawerLayoutMode: StateFlow<String> = _drawerLayoutMode.asStateFlow()
 
     private val _workspaceIconScale = MutableStateFlow(prefs.getFloat("pref_workspace_icon_scale", 1.0f))
@@ -98,7 +102,10 @@ class SettingsState(context: Context) : ViewModel(), SharedPreferences.OnSharedP
             "pref_sleep_gesture" -> _doubleTapToSleep.value = prefs.getBoolean(key, true)
             "pref_desktop_show_labels" -> _desktopShowLabels.value = prefs.getBoolean(key, true)
             "pref_drawer_show_labels" -> _drawerShowLabels.value = prefs.getBoolean(key, true)
-            "pref_drawer_layout_mode" -> _drawerLayoutMode.value = prefs.getString(key, "smart") ?: "smart"
+            "pref_drawer_layout_mode" -> {
+                val mode = prefs.getString(key, "dynamic") ?: "dynamic"
+                _drawerLayoutMode.value = if (mode == "default") "dynamic" else mode
+            }
             "pref_workspace_icon_scale" -> _workspaceIconScale.value = prefs.getFloat(key, 1.0f)
             "pref_allapps_icon_scale" -> _allAppsIconScale.value = prefs.getFloat(key, 1.0f)
         }

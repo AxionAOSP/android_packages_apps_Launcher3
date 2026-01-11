@@ -118,7 +118,11 @@ fun AllAppsComposeContent(
     var dismissRequest by remember { mutableStateOf(false) }
     
     var drawerLayoutMode by remember { 
-        mutableStateOf(LauncherPrefs.DRAWER_LAYOUT_MODE.get(context))
+        mutableStateOf(
+            LauncherPrefs.DRAWER_LAYOUT_MODE.get(context).let {
+                if (it == "default") "dynamic" else it
+            }
+        )
     }
     
     val isDynamicMode = remember(drawerLayoutMode) { drawerLayoutMode == "dynamic" }
@@ -132,7 +136,8 @@ fun AllAppsComposeContent(
         )
         val listener = SharedPreferences.OnSharedPreferenceChangeListener { _, key ->
             if (key == "pref_drawer_layout_mode") {
-                drawerLayoutMode = LauncherPrefs.DRAWER_LAYOUT_MODE.get(context)
+                val mode = LauncherPrefs.DRAWER_LAYOUT_MODE.get(context)
+                drawerLayoutMode = if (mode == "default") "dynamic" else mode
             }
         }
         prefs.registerOnSharedPreferenceChangeListener(listener)
