@@ -26,6 +26,7 @@ import androidx.compose.foundation.pager.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -58,6 +59,7 @@ fun PulseSettingsScreen(
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
     val pagerState = rememberPagerState(initialPage = initialPage, pageCount = { 4 })
     val coroutineScope = rememberCoroutineScope()
+    var selectedPage by remember { mutableIntStateOf(initialPage) }
     
     val categories = listOf(
         stringResource(R.string.settings_category_home),
@@ -66,95 +68,237 @@ fun PulseSettingsScreen(
         "Search"
     )
 
-    Scaffold(
-        containerColor = MaterialTheme.colorScheme.surfaceContainer,
-        topBar = {
-            TopAppBar(
-                title = { Text(stringResource(R.string.pulse_settings_title)) },
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = stringResource(R.string.action_close)
-                        )
-                    }
-                },
-                scrollBehavior = scrollBehavior
-            )
+    LaunchedEffect(pagerState.currentPage) {
+        if (!pagerState.isScrollInProgress) {
+            selectedPage = pagerState.currentPage
         }
-    ) { innerPadding ->
-        Column(modifier = Modifier
-                .padding(innerPadding)
+    }
+
+    LaunchedEffect(selectedPage) {
+        if (selectedPage != pagerState.currentPage) {
+             pagerState.animateScrollToPage(selectedPage)
+        }
+    }
+
+    BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
+        val isWideScreen = maxWidth >= 600.dp
+
+        Scaffold(
+            containerColor = MaterialTheme.colorScheme.surfaceContainer,
+            topBar = {
+                if (!isWideScreen) {
+                    TopAppBar(
+                        title = { Text(stringResource(R.string.pulse_settings_title)) },
+                        navigationIcon = {
+                            IconButton(onClick = onBack) {
+                                Icon(
+                                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                                    contentDescription = stringResource(R.string.action_close)
+                                )
+                            }
+                        },
+                        scrollBehavior = scrollBehavior,
+                        colors = TopAppBarDefaults.topAppBarColors(
+                            containerColor = Color.Transparent
+                        )
+                    )
+                }
+            }
+        ) { innerPadding ->
+            Box(
+                modifier = Modifier.padding(innerPadding).fillMaxSize()
             ) {
-            
-            PulseHeader()
-            
-            LazyRow(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 12.dp),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                items(categories.size) { index ->
-                    val isSelected = pagerState.currentPage == index
-                    val accentColor = colorResource(android.R.color.system_accent1_600)
-                    val accentColorLight = colorResource(android.R.color.system_accent1_400)
-                    
-                    Box(
-                        modifier = Modifier
-                            .clip(RoundedCornerShape(24.dp))
-                            .background(
-                                if (isSelected) {
-                                    Brush.linearGradient(
-                                        colors = listOf(accentColor, accentColorLight)
+                if (isWideScreen) {
+                    Row(modifier = Modifier.fillMaxSize()) {
+                        Column(
+                            modifier = Modifier
+                                .width(280.dp)
+                                .fillMaxHeight()
+                                .verticalScroll(rememberScrollState())
+                        ) {
+                            PulseHeader()
+                            
+                            Column(
+                                modifier = Modifier.padding(16.dp),
+                                verticalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                categories.forEachIndexed { index, title ->
+                                    CategoryPill(
+                                        text = title,
+                                        isSelected = selectedPage == index,
+                                        onClick = { selectedPage = index },
+                                        modifier = Modifier.fillMaxWidth()
                                     )
-                                } else {
-                                    Brush.linearGradient(
-                                        colors = listOf(
-                                            MaterialTheme.colorScheme.surfaceBright,
-                                            MaterialTheme.colorScheme.surfaceBright
-                                        )
-                                    )
-                                }
-                            )
-                            .clickable {
-                                coroutineScope.launch {
-                                    pagerState.animateScrollToPage(index)
                                 }
                             }
-                            .padding(horizontal = 20.dp, vertical = 10.dp)
-                    ) {
-                        Text(
-                            text = categories[index],
-                            style = MaterialTheme.typography.labelLarge.copy(
-                                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium
-                            ),
-                            color = if (isSelected) Color.White else MaterialTheme.colorScheme.onSurface
+                        }
+                        
+                        Box(
+                            modifier = Modifier
+                                .width(1.dp)
+                                .fillMaxHeight()
+                                .background(MaterialTheme.colorScheme.outlineVariant)
+                        )
+                        
+                        Box(modifier = Modifier.weight(1f)) {
+                            SettingsPageContent(selectedPage, viewModel, context, PaddingValues(bottom = 24.dp))
+                        }
+                    }
+                } else {
+                    Box(modifier = Modifier.fillMaxSize()) {
+                         Column(modifier = Modifier.fillMaxSize()) {
+                            PulseHeader()
+                            
+                            HorizontalPager(
+                                state = pagerState,
+                                modifier = Modifier.fillMaxSize()
+                            ) { page ->
+                                SettingsPageContent(
+                                    page = page,
+                                    viewModel = viewModel,
+                                    context = context,
+                                    contentPadding = PaddingValues(bottom = 124.dp)
+                                )
+                            }
+                        }
+                        
+                        PulseBottomBar(
+                            categories = categories,
+                            selectedIndex = selectedPage,
+                            onCategorySelected = { index ->
+                                selectedPage = index
+                            },
+                            modifier = Modifier
+                                .align(Alignment.BottomCenter)
+                                .padding(bottom = 24.dp, start = 16.dp, end = 16.dp)
                         )
                     }
                 }
             }
-            
-            HorizontalPager(
-                state = pagerState,
-                modifier = Modifier.fillMaxSize()
-            ) { page ->
-                LazyColumn(
-                    modifier = Modifier.fillMaxSize(),
-                    contentPadding = PaddingValues(bottom = 24.dp)
+        }
+    }
+}
+
+@Composable
+fun PulseBottomBar(
+    categories: List<String>,
+    selectedIndex: Int,
+    onCategorySelected: (Int) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Surface(
+        modifier = modifier.height(64.dp),
+        shape = RoundedCornerShape(32.dp),
+        color = MaterialTheme.colorScheme.surfaceBright,
+        shadowElevation = 8.dp
+    ) {
+        Row(
+            modifier = Modifier.padding(horizontal = 8.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(4.dp)
+        ) {
+            categories.forEachIndexed { index, title ->
+                val isSelected = selectedIndex == index
+                val icon = when (index) {
+                    0 -> Icons.Default.Home
+                    1 -> Icons.Default.Apps
+                    2 -> Icons.Default.TouchApp
+                    3 -> Icons.Default.Search
+                    else -> Icons.Default.Settings
+                }
+                
+                Box(
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(24.dp))
+                        .background(
+                            if (isSelected) MaterialTheme.colorScheme.primaryContainer else Color.Transparent
+                        )
+                        .clickable { onCategorySelected(index) }
+                        .padding(horizontal = 16.dp, vertical = 8.dp),
+                    contentAlignment = Alignment.Center
                 ) {
-                    item {
-                        when (page) {
-                            0 -> HomeScreenSettings(viewModel, context)
-                            1 -> AppDrawerSettings(viewModel)
-                            2 -> BehaviorSettings(viewModel)
-                            3 -> SearchSettingsPage(context)
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Icon(
+                            imageVector = icon,
+                            contentDescription = title,
+                            tint = if (isSelected) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        if (isSelected) {
+                            Text(
+                                text = title,
+                                style = MaterialTheme.typography.labelLarge,
+                                color = MaterialTheme.colorScheme.onPrimaryContainer,
+                                fontWeight = FontWeight.Bold
+                            )
                         }
                     }
                 }
             }
+        }
+    }
+}
 
+@Composable
+fun CategoryPill(
+    text: String,
+    isSelected: Boolean,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val accentColor = MaterialTheme.colorScheme.primary
+    val accentColorLight = MaterialTheme.colorScheme.primaryContainer
+    
+    Box(
+        modifier = modifier
+            .clip(RoundedCornerShape(24.dp))
+            .background(
+                if (isSelected) {
+                    Brush.linearGradient(
+                        colors = listOf(accentColor, accentColorLight)
+                    )
+                } else {
+                    Brush.linearGradient(
+                        colors = listOf(
+                            MaterialTheme.colorScheme.surfaceBright,
+                            MaterialTheme.colorScheme.surfaceBright
+                        )
+                    )
+                }
+            )
+            .clickable(onClick = onClick)
+            .padding(horizontal = 20.dp, vertical = 10.dp)
+    ) {
+        Text(
+            text = text,
+            style = MaterialTheme.typography.labelLarge.copy(
+                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium
+            ),
+            color = if (isSelected) Color.White else MaterialTheme.colorScheme.onSurface
+        )
+    }
+}
 
+@Composable
+fun SettingsPageContent(
+    page: Int,
+    viewModel: SettingsState,
+    context: Context,
+    contentPadding: PaddingValues
+) {
+    LazyColumn(
+        modifier = Modifier.fillMaxSize(),
+        contentPadding = contentPadding
+    ) {
+        item {
+            when (page) {
+                0 -> HomeScreenSettings(viewModel, context)
+                1 -> AppDrawerSettings(viewModel)
+                2 -> BehaviorSettings(viewModel)
+                3 -> SearchSettingsPage(context)
+            }
         }
     }
 }
@@ -244,8 +388,8 @@ fun PulseHeader() {
         label = "gradient_offset"
     )
     
-    val accentColor = colorResource(android.R.color.system_accent1_600)
-    val accentColorLight = colorResource(android.R.color.system_accent1_400)
+    val accentColor = MaterialTheme.colorScheme.primary
+    val accentColorLight = MaterialTheme.colorScheme.primaryContainer
 
     Box(
         modifier = Modifier
@@ -322,14 +466,6 @@ fun PulseHeader() {
                     letterSpacing = 1.5.sp
                 ),
                 color = Color.White
-            )
-            Spacer(modifier = Modifier.height(2.dp))
-            Text(
-                text = stringResource(R.string.pulse_settings_brand_subtitle),
-                style = MaterialTheme.typography.bodyLarge.copy(
-                    fontWeight = FontWeight.Medium
-                ),
-                color = Color.White.copy(alpha = 0.85f)
             )
         }
     }

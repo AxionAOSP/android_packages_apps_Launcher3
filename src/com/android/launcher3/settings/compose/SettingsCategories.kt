@@ -26,7 +26,7 @@ import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.*
@@ -41,10 +41,14 @@ import com.android.axion.compose.preferences.*
 import com.android.launcher3.R
 import com.android.launcher3.InvariantDeviceProfile
 import com.android.launcher3.states.RotationHelper
+import com.android.launcher3.qsb.SearchWidgetHelper
+import com.android.launcher3.LauncherFiles
 import kotlin.math.roundToInt
 
 @Composable
 fun HomeScreenSettings(viewModel: SettingsState, context: Context) {
+    IconSizeSettings(viewModel, context)
+
     PreferenceGroup(
         title = stringResource(R.string.settings_category_home),
         modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp)
@@ -92,14 +96,14 @@ fun HomeScreenSettings(viewModel: SettingsState, context: Context) {
             )
         }
         item {
-            val searchWidgetHelper = remember { com.android.launcher3.qsb.SearchWidgetHelper.getAvailableSearchWidgets(context) }
+            val searchWidgetHelper = remember { SearchWidgetHelper.getAvailableSearchWidgets(context) }
             val searchWidgetOptions = remember(searchWidgetHelper) {
                 searchWidgetHelper
                     .filter { info -> !info.label.equals("Search", ignoreCase = true) }
                     .map { info -> info.provider.flattenToString() to info.label }
             }
             
-            val searchWidgetPrefs = context.getSharedPreferences(com.android.launcher3.LauncherFiles.SHARED_PREFERENCES_KEY, Context.MODE_PRIVATE)
+            val searchWidgetPrefs = context.getSharedPreferences(LauncherFiles.SHARED_PREFERENCES_KEY, Context.MODE_PRIVATE)
             var selectedSearchWidget by remember {
                 mutableStateOf(searchWidgetPrefs.getString("pref_qsb_search_provider", "") ?: "")
             }
@@ -118,8 +122,6 @@ fun HomeScreenSettings(viewModel: SettingsState, context: Context) {
             }
         }
     }
-
-    IconSizeSettings(viewModel, context)
 }
 
 @Composable
@@ -248,7 +250,7 @@ private fun LayoutModeCard(
             containerColor = if (isSelected)
                 MaterialTheme.colorScheme.primaryContainer
             else
-                MaterialTheme.colorScheme.surfaceVariant
+                MaterialTheme.colorScheme.surfaceBright
         )
     ) {
         Column(
@@ -273,7 +275,7 @@ private fun LayoutModeCard(
                 )
                 
                 badge?.let {
-                    androidx.compose.foundation.layout.Box(
+                    Box(
                         modifier = Modifier
                             .background(
                                 MaterialTheme.colorScheme.tertiary,

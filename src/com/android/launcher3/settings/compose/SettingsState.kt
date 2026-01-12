@@ -22,9 +22,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import com.android.launcher3.LauncherFiles
 import com.android.launcher3.states.RotationHelper
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
+import com.android.launcher3.util.DisplayController
+import kotlinx.coroutines.flow.*
 
 class SettingsState(context: Context) : ViewModel(), SharedPreferences.OnSharedPreferenceChangeListener {
 
@@ -45,7 +44,7 @@ class SettingsState(context: Context) : ViewModel(), SharedPreferences.OnSharedP
         prefs.getBoolean(
             RotationHelper.ALLOW_ROTATION_PREFERENCE_KEY,
             RotationHelper.getAllowRotationDefaultValue(
-                com.android.launcher3.util.DisplayController.INSTANCE.get(context).info
+                DisplayController.INSTANCE.get(context).info
             )
         )
     )
