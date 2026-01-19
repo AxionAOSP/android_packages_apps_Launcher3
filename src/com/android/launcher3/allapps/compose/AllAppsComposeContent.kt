@@ -22,6 +22,7 @@ import android.content.SharedPreferences
 import android.content.pm.ApplicationInfo
 import android.graphics.RectF
 import android.graphics.drawable.Drawable
+import android.os.UserHandle
 import android.view.HapticFeedbackConstants
 import android.view.LayoutInflater
 import android.view.ViewGroup
@@ -82,6 +83,7 @@ interface AllAppsComposeCallbacks {
     fun onFolderExpandedChanged(expanded: Boolean)
     fun setDismissFolderHandler(handler: (() -> Unit)?)
     fun startActivity(intent: Intent)
+    fun startShortcut(packageName: String, shortcutId: String, user: UserHandle)
     fun requestContactsPermission()
     fun requestSmsPermission()
     fun requestFilePermission()
@@ -162,10 +164,12 @@ fun AllAppsComposeContent(
 
     var isLaunching by remember { mutableStateOf(false) }
     
-    var isSearchActive by remember { mutableStateOf(false) }
+    val isImeVisible = WindowInsets.ime.getBottom(LocalDensity.current) > 0
+    var isSearchActiveState by remember { mutableStateOf(false) }
+    val isSearchActive = isSearchActiveState || isImeVisible
 
     LaunchedEffect(searchQuery) {
-        isSearchActive = searchQuery.isNotEmpty()
+        isSearchActiveState = searchQuery.isNotEmpty()
     }
     
     var isSearchSettingsOpen by remember { mutableStateOf(false) }
@@ -201,7 +205,7 @@ fun AllAppsComposeContent(
             if (!isLaunching) {
                 searchQuery = ""
                 callbacks.onSearchQueryChanged("")
-                isSearchActive = false
+                isSearchActiveState = false
                 searchManager.clear()
             } else {
                 isLaunching = false 
@@ -224,7 +228,7 @@ fun AllAppsComposeContent(
             quickAccessOriginStyle?.let {
                 selectedLayoutStyle = it
                 quickAccessOriginStyle = null
-                isSearchActive = false
+                isSearchActiveState = false
             }
             dismissRequest = false
         }
@@ -262,7 +266,7 @@ fun AllAppsComposeContent(
                         currentIsSearchActive -> {
                             searchQuery = ""
                             callbacks.onSearchQueryChanged("")
-                            isSearchActive = false
+                            isSearchActiveState = false
                         }
                     }
                 }
@@ -285,7 +289,7 @@ fun AllAppsComposeContent(
                     }
                 }
                 
-                if (isDynamicMode) {
+                if (isDynamicMode && !isSearchActive) {
                     AllAppsTabBar(
                         selectedLayout = selectedLayoutStyle,
                         onLayoutSelected = { layout -> selectedLayoutStyle = layout }
@@ -419,9 +423,18 @@ fun AllAppsComposeContent(
                                 }
                             }
                             ContentScreen.Search -> {
+                                    val onResultClick = remember(searchQuery) {
+                                        {
+                                            if (searchQuery.isNotEmpty()) {
+                                                searchManager.addToHistory(searchQuery)
+                                            }
+                                        }
+                                    }
+
                                     UniversalSearchResults(
                                         state = searchState,
                                         onAppClick = { iconInfo ->
+                                            onResultClick()
                                             isLaunching = true
                                             callbacks.onAppClicked(iconInfo)
                                         },
@@ -432,15 +445,18 @@ fun AllAppsComposeContent(
                                         iconSizePx = state.iconSizePx,
                                         cellHeightPx = state.cellHeightPx,
                                         onContactClick = { contact ->
+                                            onResultClick()
                                             isLaunching = true
                                             callbacks.startActivity(searchManager.getContactIntent(contact))
                                         },
                                         onMessageClick = { message ->
+                                            onResultClick()
                                             isLaunching = true
                                             callbacks.startActivity(searchManager.getMessageIntent(message))
                                         },
                                         onFileClick = { file ->
                                             try {
+                                                onResultClick()
                                                 isLaunching = true
                                                 callbacks.startActivity(searchManager.getFileIntent(file))
                                             } catch (e: Exception) {
@@ -448,6 +464,7 @@ fun AllAppsComposeContent(
                                         },
                                         onPhotoClick = { photo ->
                                             try {
+                                                onResultClick()
                                                 isLaunching = true
                                                 callbacks.startActivity(searchManager.getPhotoIntent(photo))
                                             } catch (e: Exception) {
@@ -457,9 +474,10 @@ fun AllAppsComposeContent(
                                             if (space.isLocked) {
                                                 callbacks.onPrivateSpaceClicked(true)
                                             } else {
+                                                onResultClick()
                                                 searchQuery = ""
                                                 callbacks.onSearchQueryChanged("")
-                                                isSearchActive = false
+                                                isSearchActiveState = false
                                                 keyboardController?.hide()
                                                 quickAccessOriginStyle = if (isDynamicMode) "dynamic" else "smart"
                                                 selectedLayoutStyle = "smart"
@@ -467,25 +485,34 @@ fun AllAppsComposeContent(
                                             }
                                         },
                                         onCalendarClick = { calendar ->
+                                            onResultClick()
                                             isLaunching = true
                                             callbacks.startActivity(searchManager.getCalendarIntent(calendar))
                                         },
                                         onSettingClick = { setting ->
+                                            onResultClick()
                                             isLaunching = true
                                             callbacks.startActivity(setting.intent)
                                         },
                                         onInAppSearchClick = { search ->
-                                            if (search.appInfo.componentName != null) {
-                                                val intent = Intent(Intent.ACTION_SEARCH).apply {
+                                            onResultClick()
+                                            val intent = if (search.appInfo?.componentName != null) {
+                                                Intent(Intent.ACTION_SEARCH).apply {
                                                     setPackage(search.appInfo.componentName!!.packageName)
                                                     putExtra("query", search.query)
                                                     putExtra(SearchManager.QUERY, search.query)
                                                 }
-                                                isLaunching = true
-                                                callbacks.startActivity(intent)
+                                            } else {
+                                                Intent(Intent.ACTION_SEARCH).apply {
+                                                    putExtra("query", search.query)
+                                                    putExtra(SearchManager.QUERY, search.query)
+                                                }
                                             }
+                                            isLaunching = true
+                                            callbacks.startActivity(intent)
                                         },
                                         onWebActionClick = { action ->
+                                            onResultClick()
                                             isLaunching = true
                                             when (action.type) {
                                                 WebActionType.GOOGLE -> callbacks.startActivity(searchManager.getGoogleSearchIntent(action.query))
@@ -498,11 +525,31 @@ fun AllAppsComposeContent(
                                                 }
                                             }
                                         },
+                                        onAppActionClick = { appActions, action ->
+                                            onResultClick()
+                                            isLaunching = true
+                                            val packageName = appActions.appInfo.componentName?.packageName
+                                            val shortcutId = action.shortcutId
+                                            if (packageName != null && shortcutId != null) {
+                                                callbacks.startShortcut(
+                                                    packageName,
+                                                    shortcutId,
+                                                    appActions.appInfo.user
+                                                )
+                                            }
+                                        },
                                         onScrollStateChanged = callbacks::onScrollStateChanged,
                                         onRequestContactsPermission = { callbacks.requestContactsPermission() },
                                         onRequestSmsPermission = { callbacks.requestSmsPermission() },
                                         onRequestFilePermission = { callbacks.requestFilePermission() },
                                         onRequestCalendarPermission = { callbacks.requestCalendarPermission() },
+                                        onHistoryClick = { keyword ->
+                                            searchQuery = keyword
+                                            callbacks.onSearchQueryChanged(keyword)
+                                        },
+                                        onHistoryDeleteClick = { keyword ->
+                                            searchManager.removeFromHistory(keyword)
+                                        },
                                         modifier = Modifier.fillMaxSize()
                                     )
                                 }
@@ -532,6 +579,10 @@ fun AllAppsComposeContent(
                     },
                     shouldAutoFocus = LauncherPrefs.DRAWER_OPEN_KEYBOARD.get(LocalContext.current),
                     focusTrigger = openCounter,
+                    onSearchSubmit = { query ->
+                        searchManager.addToHistory(query)
+                        keyboardController?.hide()
+                    },
                     modifier = Modifier.fillMaxWidth()
                 )
             }

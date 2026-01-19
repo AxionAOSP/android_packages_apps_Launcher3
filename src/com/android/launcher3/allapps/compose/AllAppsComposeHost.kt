@@ -166,6 +166,10 @@ fun <T> AllAppsComposeHost(
                 callbacks.startActivity(intent)
             }
             
+            override fun startShortcut(packageName: String, shortcutId: String, user: android.os.UserHandle) {
+                callbacks.startShortcut(packageName, shortcutId, user)
+            }
+            
             override fun requestContactsPermission() {
                 callbacks.requestContactsPermission()
             }

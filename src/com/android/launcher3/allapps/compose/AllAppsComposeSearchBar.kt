@@ -22,6 +22,8 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Search
@@ -33,6 +35,7 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -47,7 +50,8 @@ fun AllAppsComposeSearchBar(
     modifier: Modifier = Modifier,
     placeholder: String = "Search",
     shouldAutoFocus: Boolean = false,
-    focusTrigger: Int = 0
+    focusTrigger: Int = 0,
+    onSearchSubmit: (String) -> Unit = {}
 ) {
     val isImeVisible = WindowInsets.ime.getBottom(LocalDensity.current) > 0
     val horizontalPadding by animateDpAsState(if (isImeVisible) 8.dp else 16.dp)
@@ -102,6 +106,12 @@ fun AllAppsComposeSearchBar(
                     ),
                     cursorBrush = SolidColor(MaterialTheme.colorScheme.primary),
                     singleLine = true,
+                    keyboardOptions = KeyboardOptions(
+                        imeAction = ImeAction.Search
+                    ),
+                    keyboardActions = KeyboardActions(
+                        onSearch = { onSearchSubmit(query) }
+                    ),
                     modifier = Modifier
                         .fillMaxWidth()
                         .focusRequester(focusRequester)

@@ -1,11 +1,13 @@
 package com.android.launcher3.allapps.compose.search
 
 import android.Manifest
+import android.app.SearchManager
 import android.content.ComponentName
 import android.content.ContentUris
 import android.content.Context
 import android.content.Intent
 import android.content.SharedPreferences
+import android.content.pm.LauncherApps
 import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Environment
@@ -15,6 +17,9 @@ import android.provider.ContactsContract
 import android.util.Log
 import androidx.core.content.ContextCompat
 import com.android.launcher3.model.data.AppInfo
+import com.android.launcher3.shortcuts.ShortcutRequest
+import com.android.launcher3.util.PackageManagerHelper
+import com.android.launcher3.search.StringMatcherUtility
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
 
@@ -43,8 +48,43 @@ class UniversalSearchManager(private val context: Context) {
         }
     }
 
+    private val historyPrefs = context.getSharedPreferences("com.android.launcher3.search_history", Context.MODE_PRIVATE)
+    private var searchHistory: List<String> = loadHistory()
+
     init {
         prefs.registerOnSharedPreferenceChangeListener(preferenceChangeListener)
+        _searchState.value = _searchState.value.copy(history = searchHistory)
+    }
+
+    private fun loadHistory(): List<String> {
+        val historyString = historyPrefs.getString("pref_search_history", "") ?: ""
+        return if (historyString.isEmpty()) emptyList() else historyString.split("|")
+    }
+
+    private fun saveHistory() {
+        historyPrefs.edit().putString("pref_search_history", searchHistory.joinToString("|")).apply()
+        _searchState.value = _searchState.value.copy(history = searchHistory)
+    }
+
+    fun addToHistory(query: String) {
+        if (query.isBlank()) return
+        val currentHistory = searchHistory.toMutableList()
+        currentHistory.remove(query)
+        currentHistory.add(0, query)
+        searchHistory = currentHistory.take(10)
+        saveHistory()
+    }
+
+    fun removeFromHistory(query: String) {
+        val currentHistory = searchHistory.toMutableList()
+        currentHistory.remove(query)
+        searchHistory = currentHistory
+        saveHistory()
+    }
+
+    fun clearHistory() {
+        searchHistory = emptyList()
+        saveHistory()
     }
 
     private fun loadPreferences(): SearchPreferences {
@@ -129,18 +169,75 @@ class UniversalSearchManager(private val context: Context) {
         searchJob?.cancel()
         
         if (query.isBlank()) {
-            _searchState.value = UniversalSearchState()
+            _searchState.value = UniversalSearchState(history = searchHistory)
             return
         }
         
         searchJob = searchScope.launch {
             _searchState.value = _searchState.value.copy(isLoading = true)
             
-            delay(300)
+            delay(100)
             
-            val filteredApps = apps.filter { appInfo ->
-                appInfo.title?.toString()?.contains(query, ignoreCase = true) == true
-            }.take(10).map { UniversalSearchResult.App(it) }
+            val matcher = StringMatcherUtility.StringMatcher.getInstance()
+            val normalizedQuery = query.filter { it.isLetterOrDigit() }.lowercase()
+            val scoredApps = apps.asSequence()
+                .filter { appInfo ->
+                    PackageManagerHelper.isLauncherAppTarget(appInfo.intent)
+                }
+                .mapNotNull { appInfo ->
+                    val title = appInfo.title?.toString() ?: ""
+                    val normalizedTitle = title.filter { it.isLetterOrDigit() }.lowercase()
+                    
+                    val score = when {
+                        title.equals(query, ignoreCase = true) -> 100
+                        normalizedTitle == normalizedQuery && normalizedQuery.isNotEmpty() -> 95
+                        title.startsWith(query, ignoreCase = true) -> 80
+                        normalizedTitle.startsWith(normalizedQuery) && normalizedQuery.isNotEmpty() -> 75
+                        StringMatcherUtility.matches(query, title, matcher) -> 60
+                        title.contains(query, ignoreCase = true) -> 40
+                        normalizedTitle.contains(normalizedQuery) && normalizedQuery.isNotEmpty() -> 35
+                        else -> 0
+                    }
+                    if (score > 0) appInfo to score else null
+                }
+                .sortedWith { a, b ->
+                    if (a.second != b.second) b.second - a.second
+                    else (a.first.title?.toString() ?: "").compareTo(b.first.title?.toString() ?: "", ignoreCase = true)
+                }
+                .toList()
+
+            val filteredApps = scoredApps
+                .take(10)
+                .map { UniversalSearchResult.App(it.first) }
+                .toList()
+            
+            val appActionsResult = scoredApps.asSequence()
+                .map { it.first }
+                .distinctBy { it.componentName }
+                .take(5)
+                .mapNotNull { candidateApp ->
+                    val packageName = candidateApp.componentName?.packageName ?: return@mapNotNull null
+                    val request = ShortcutRequest(context, candidateApp.user)
+                    val shortcuts = request.forPackage(packageName).query(ShortcutRequest.PUBLISHED)
+                    if (shortcuts.isEmpty()) return@mapNotNull null
+
+                    val launcherApps = context.getSystemService(LauncherApps::class.java)
+                    val density = context.resources.displayMetrics.densityDpi
+                    val actions = shortcuts.take(4).map { shortcut ->
+                        val icon = try {
+                            launcherApps.getShortcutIconDrawable(shortcut, density)
+                        } catch (e: Exception) {
+                            null
+                        }
+                        UniversalSearchResult.AppActions.Action(
+                            label = shortcut.shortLabel?.toString() ?: "",
+                            icon = icon,
+                            shortcutId = shortcut.id
+                        )
+                    }
+                    UniversalSearchResult.AppActions(candidateApp, actions)
+                }
+                .firstOrNull()
             
             val privateSpaceResult = if (hasPrivateSpace && isPrivateSpaceKeyword(query)) {
                 UniversalSearchResult.PrivateSpace(
@@ -224,6 +321,7 @@ class UniversalSearchManager(private val context: Context) {
             
             _searchState.value = UniversalSearchState(
                 query = query,
+                history = searchHistory,
                 apps = filteredApps,
                 contacts = contacts,
                 messages = messages,
@@ -234,6 +332,7 @@ class UniversalSearchManager(private val context: Context) {
                 inAppSearches = inAppSearches,
                 webActions = webActions,
                 privateSpace = privateSpaceResult,
+                appActions = appActionsResult,
                 isLoading = false,
                 hasContactsPermission = hasContactsPermission(),
                 hasSmsPermission = hasSmsPermission(),
@@ -313,32 +412,63 @@ class UniversalSearchManager(private val context: Context) {
              }
         }
     }
-
     private fun getSearchableApps(query: String): List<UniversalSearchResult.InAppSearch> {
         val intent = Intent(Intent.ACTION_SEARCH)
         val activities = context.packageManager.queryIntentActivities(intent, 0)
+        val searchManager = context.getSystemService(SearchManager::class.java) ?: return emptyList()
+        val matcher = StringMatcherUtility.StringMatcher.getInstance()
         
-        return activities.mapNotNull { resolveInfo ->
-            val packageName = resolveInfo.activityInfo.packageName
-            if (packageName == "com.google.android.googlequicksearchbox" || 
-                packageName == "com.android.vending" || 
-                packageName == context.packageName) {
-                null
-            } else {
-                try {
-                    val componentName = ComponentName(packageName, resolveInfo.activityInfo.name)
-                    val title = resolveInfo.activityInfo.loadLabel(context.packageManager)
-                    val user = Process.myUserHandle()
-                    val intent = Intent(Intent.ACTION_SEARCH)
-                    intent.setComponent(componentName)
+        val appsList = mutableListOf<UniversalSearchResult.InAppSearch>()
+        appsList.add(UniversalSearchResult.InAppSearch(null, query)) // Generic "Search in Apps"
+        
+        val specificApps = activities.asSequence()
+            .mapNotNull { resolveInfo ->
+                val packageName = resolveInfo.activityInfo.packageName
+                val componentName = ComponentName(packageName, resolveInfo.activityInfo.name)
+                val searchableInfo = searchManager.getSearchableInfo(componentName)
+                
+                val isLauncherApp = context.packageManager.getLaunchIntentForPackage(packageName) != null
+                val isInternal = packageName == "com.google.android.googlequicksearchbox" || 
+                    packageName == "com.android.vending" || 
+                    packageName == context.packageName
                     
-                    val appInfo = AppInfo(componentName, title, user, intent)
-                    UniversalSearchResult.InAppSearch(appInfo, query)
-                } catch (e: Exception) {
+                if (isInternal || !isLauncherApp || searchableInfo == null) {
                     null
+                } else {
+                    try {
+                        val title = resolveInfo.activityInfo.loadLabel(context.packageManager).toString()
+                        val normalizedTitle = title.filter { it.isLetterOrDigit() }.lowercase()
+                        val normalizedQuery = query.filter { it.isLetterOrDigit() }.lowercase()
+                        
+                        val score = when {
+                            title.equals(query, ignoreCase = true) -> 100
+                            normalizedTitle == normalizedQuery && normalizedQuery.isNotEmpty() -> 95
+                            title.startsWith(query, ignoreCase = true) -> 80
+                            normalizedTitle.startsWith(normalizedQuery) && normalizedQuery.isNotEmpty() -> 75
+                            StringMatcherUtility.matches(query, title, matcher) -> 60
+                            title.contains(query, ignoreCase = true) -> 40
+                            normalizedTitle.contains(normalizedQuery) && normalizedQuery.isNotEmpty() -> 35
+                            else -> 10
+                        }
+                        val user = Process.myUserHandle()
+                        val searchIntent = Intent(Intent.ACTION_SEARCH)
+                        searchIntent.setComponent(componentName)
+                        
+                        val appInfo = AppInfo(componentName, title, user, searchIntent)
+                        Triple(appInfo, score, packageName)
+                    } catch (e: Exception) {
+                        null
+                    }
                 }
             }
-        }.take(5)
+            .sortedByDescending { it.second }
+            .distinctBy { it.third }
+            .take(4)
+            .map { UniversalSearchResult.InAppSearch(it.first, query) }
+            .toList()
+        
+        appsList.addAll(specificApps)
+        return appsList
     }
 
     private fun isPackageInstalled(packageName: String): Boolean {
@@ -352,7 +482,7 @@ class UniversalSearchManager(private val context: Context) {
     
     fun clear() {
         searchJob?.cancel()
-        _searchState.value = UniversalSearchState()
+        _searchState.value = UniversalSearchState(history = searchHistory)
     }
     
     fun cleanup() {

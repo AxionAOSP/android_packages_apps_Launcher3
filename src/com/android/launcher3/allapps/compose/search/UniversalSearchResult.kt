@@ -58,7 +58,7 @@ sealed interface UniversalSearchResult {
 
     @Immutable
     data class InAppSearch(
-        val appInfo: AppInfo,
+        val appInfo: AppInfo?,
         val query: String
     ) : UniversalSearchResult
     
@@ -85,6 +85,20 @@ sealed interface UniversalSearchResult {
         val isLocked: Boolean,
         val appCount: Int
     ) : UniversalSearchResult
+
+    @Immutable
+    data class AppActions(
+        val appInfo: AppInfo,
+        val actions: List<Action>
+    ) : UniversalSearchResult {
+        @Immutable
+        data class Action(
+            val label: String,
+            val icon: Drawable? = null,
+            val intent: Intent? = null,
+            val shortcutId: String? = null
+        )
+    }
 }
 
 enum class WebActionType {
@@ -97,6 +111,7 @@ enum class WebActionType {
 @Immutable
 data class UniversalSearchState(
     val query: String = "",
+    val history: List<String> = emptyList(),
     val apps: List<UniversalSearchResult.App> = emptyList(),
     val contacts: List<UniversalSearchResult.Contact> = emptyList(),
     val messages: List<UniversalSearchResult.Message> = emptyList(),
@@ -107,6 +122,7 @@ data class UniversalSearchState(
     val inAppSearches: List<UniversalSearchResult.InAppSearch> = emptyList(),
     val webActions: List<UniversalSearchResult.WebAction> = emptyList(),
     val privateSpace: UniversalSearchResult.PrivateSpace? = null,
+    val appActions: UniversalSearchResult.AppActions? = null,
     val isLoading: Boolean = false,
     val hasContactsPermission: Boolean = true,
     val hasSmsPermission: Boolean = true,

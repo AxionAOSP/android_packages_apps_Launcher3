@@ -36,6 +36,7 @@ import android.animation.ValueAnimator;
 import android.app.Activity;
 import android.content.Context;
 import android.content.ComponentName;
+import android.content.pm.LauncherApps;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Outline;
@@ -536,9 +537,26 @@ public class ActivityAllAppsContainerView<T extends Context & ActivityContext>
             @Override
             public void startActivity(android.content.Intent intent) {
                 try {
+                    if (mActivityContext instanceof Launcher launcher) {
+                        launcher.setSkipFloatingIconReturnAnimation(true);
+                    }
                     mActivityContext.startActivity(intent);
                 } catch (Exception e) {
                     Toast.makeText(getContext(), "Cannot open", Toast.LENGTH_SHORT).show();
+                }
+            }
+
+            @Override
+            public void startShortcut(@NonNull String packageName, @NonNull String shortcutId, 
+                    @NonNull UserHandle user) {
+                if (mActivityContext instanceof Launcher launcher) {
+                    launcher.setSkipFloatingIconReturnAnimation(true);
+                }
+                LauncherApps launcherApps = getContext().getSystemService(LauncherApps.class);
+                try {
+                    launcherApps.startShortcut(packageName, shortcutId, null, null, user);
+                } catch (Exception e) {
+                    Log.e(TAG, "Failed to start shortcut", e);
                 }
             }
             

@@ -64,11 +64,14 @@ fun UniversalSearchResults(
     onWebActionClick: (UniversalSearchResult.WebAction) -> Unit,
     onInAppSearchClick: (UniversalSearchResult.InAppSearch) -> Unit,
     onPrivateSpaceClick: (UniversalSearchResult.PrivateSpace) -> Unit,
+    onAppActionClick: (UniversalSearchResult.AppActions, UniversalSearchResult.AppActions.Action) -> Unit,
     onScrollStateChanged: (Boolean, Boolean) -> Unit,
     onRequestContactsPermission: () -> Unit,
     onRequestSmsPermission: () -> Unit,
     onRequestFilePermission: () -> Unit,
     onRequestCalendarPermission: () -> Unit,
+    onHistoryClick: (String) -> Unit,
+    onHistoryDeleteClick: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
@@ -80,12 +83,25 @@ fun UniversalSearchResults(
         onScrollStateChanged(canScrollUp, canScrollDown)
     }
 
+    LaunchedEffect(state.query) {
+        listState.scrollToItem(0)
+    }
+
+    val stateHistory = remember(state.query, state.history) {
+        if (state.query.isEmpty()) {
+            state.history
+        } else {
+            state.history.filter { it.contains(state.query, ignoreCase = true) }
+        }
+    }
+
     LazyColumn(
         state = listState,
         modifier = modifier.fillMaxSize(),
         contentPadding = PaddingValues(horizontal = 16.dp, vertical = 24.dp),
         verticalArrangement = Arrangement.spacedBy(24.dp)
     ) {
+
         if (state.privateSpace != null) {
             item(key = "private_space_section") {
                 AnimatedVisibility(
@@ -120,6 +136,41 @@ fun UniversalSearchResults(
                                 onDragStart = onAppDragStart,
                                 onDragMove = onAppDragMove,
                                 onDragEnd = onAppDragEnd
+                            )
+                        }
+                    }
+                }
+            }
+        }
+
+        if (state.appActions != null) {
+            item(key = "app_actions_section") {
+                AnimatedVisibility(
+                    visible = true,
+                    enter = fadeIn(animationSpec = tween(300, delayMillis = 40)) + slideInVertically(animationSpec = tween(300, delayMillis = 40)) { -it / 4 }
+                ) {
+                    AppActionsResultItem(
+                        appActions = state.appActions,
+                        onActionClick = { action -> onAppActionClick(state.appActions, action) }
+                    )
+                }
+            }
+        }
+
+
+        if (stateHistory.isNotEmpty()) {
+            item(key = "history_section") {
+                AnimatedVisibility(
+                    visible = true,
+                    enter = fadeIn(animationSpec = tween(300, delayMillis = 50)) + slideInVertically(animationSpec = tween(300, delayMillis = 50)) { -it / 4 }
+                ) {
+                    ResultGroupSection(title = "Recent") {
+                        stateHistory.forEachIndexed { index, keyword ->
+                            if (index > 0) HorizontalDivider(color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f))
+                            HistoryResultItem(
+                                keyword = keyword,
+                                onClick = { onHistoryClick(keyword) },
+                                onDelete = { onHistoryDeleteClick(keyword) }
                             )
                         }
                     }
@@ -393,8 +444,8 @@ fun InAppSearchResultItem(
         horizontalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         val context = LocalContext.current
-        val icon = remember(search.appInfo.componentName) {
-            val component = search.appInfo.componentName
+        val icon = remember(search.appInfo?.componentName) {
+            val component = search.appInfo?.componentName
             if (component != null) {
                 try {
                     context.packageManager.getActivityIcon(component).toBitmap().asImageBitmap()
@@ -412,17 +463,33 @@ fun InAppSearchResultItem(
                 contentDescription = null,
                 modifier = Modifier.size(32.dp)
             )
-        } else {
+        } else if (search.appInfo != null) {
             Image(
                 bitmap = search.appInfo.bitmap.icon.asImageBitmap(),
                 contentDescription = null,
                 modifier = Modifier.size(32.dp)
             )
+        } else {
+            Box(
+                modifier = Modifier
+                    .size(32.dp)
+                    .clip(CircleShape)
+                    .background(MaterialTheme.colorScheme.surfaceVariant),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Apps,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(20.dp)
+                )
+            }
         }
         
         Column(modifier = Modifier.weight(1f)) {
+            val title = search.appInfo?.title ?: "Apps"
             Text(
-                text = "Search in ${search.appInfo.title}",
+                text = "Search \"${search.query}\" in $title",
                 style = MaterialTheme.typography.bodyLarge,
                 color = MaterialTheme.colorScheme.onSurface,
                 maxLines = 1,
@@ -779,6 +846,51 @@ private fun WebActionItem(
 }
 
 @Composable
+fun HistoryResultItem(
+    keyword: String,
+    onClick: () -> Unit,
+    onDelete: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick)
+            .padding(horizontal = 16.dp, vertical = 12.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(16.dp)
+    ) {
+        Icon(
+            imageVector = Icons.Default.History,
+            contentDescription = null,
+            tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+            modifier = Modifier.size(24.dp)
+        )
+        
+        Text(
+            text = keyword,
+            style = MaterialTheme.typography.bodyLarge,
+            color = MaterialTheme.colorScheme.onSurface,
+            modifier = Modifier.weight(1f),
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis
+        )
+        
+        IconButton(
+            onClick = onDelete,
+            modifier = Modifier.size(24.dp)
+        ) {
+            Icon(
+                imageVector = Icons.Default.Close,
+                contentDescription = "Delete",
+                tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+                modifier = Modifier.size(18.dp)
+            )
+        }
+    }
+}
+
+@Composable
 private fun PermissionRequestItem(
     title: String,
     description: String,
@@ -1096,5 +1208,57 @@ private fun PrivateSpaceResultItem(
             contentDescription = null,
             tint = MaterialTheme.colorScheme.onSurface
         )
+    }
+}
+
+@Composable
+private fun AppActionsResultItem(
+    appActions: UniversalSearchResult.AppActions,
+    onActionClick: (UniversalSearchResult.AppActions.Action) -> Unit
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 4.dp)
+    ) {
+        Text(
+            text = appActions.appInfo.title.toString(),
+            style = MaterialTheme.typography.titleMedium,
+            color = MaterialTheme.colorScheme.onSurface,
+            modifier = Modifier.padding(bottom = 12.dp)
+        )
+        
+        Row(
+            modifier = Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            appActions.actions.forEach { action ->
+                Surface(
+                    onClick = { onActionClick(action) },
+                    shape = RoundedCornerShape(20.dp),
+                    color = MaterialTheme.colorScheme.surfaceBright.copy(alpha = 0.5f),
+                    modifier = Modifier.height(40.dp)
+                ) {
+                    Row(
+                        modifier = Modifier.padding(horizontal = 12.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        if (action.icon != null) {
+                            Image(
+                                bitmap = action.icon.toBitmap().asImageBitmap(),
+                                contentDescription = null,
+                                modifier = Modifier.size(20.dp)
+                            )
+                        }
+                        Text(
+                            text = action.label,
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                    }
+                }
+            }
+        }
     }
 }
