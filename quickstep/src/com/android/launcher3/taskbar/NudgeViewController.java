@@ -21,7 +21,6 @@ import static android.content.Context.RECEIVER_EXPORTED;
 import static com.android.launcher3.util.Executors.UI_HELPER_EXECUTOR;
 
 import android.content.Intent;
-import android.content.res.Resources;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 
@@ -56,14 +55,13 @@ public class NudgeViewController implements TaskbarControllers.LoggableTaskbarCo
             @Nullable NudgeView nudgeView) {
         mActivity = activity;
         mNudgeView = nudgeView;
-        final Resources resources = mActivity.getResources();
         if (Flags.nudgePill() && mNudgeView != null) {
             mNudgeReceiver = new SimpleBroadcastReceiver(
                     mActivity, UI_HELPER_EXECUTOR, this::shouldChangeNavBar);
             mNudgeReceiver.register(RECEIVER_EXPORTED, NAV_UPDATE_ACTION);
         }
-        mTranslateIcon = resources.getDrawable(R.drawable.ic_translate);
-        mGameIcon = resources.getDrawable(R.drawable.ic_game);
+        mTranslateIcon = mActivity.getDrawable(R.drawable.ic_translate);
+        mGameIcon = mActivity.getDrawable(R.drawable.ic_game);
     }
 
     private void shouldChangeNavBar(Intent i) {
