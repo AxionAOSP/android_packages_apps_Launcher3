@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="pulse_settings_title">Pulse</string>
+    <string name="pulse_settings_brand_subtitle">Configurações do Launcher</string>
+    <string name="settings_category_home">Tela inicial</string>
+    <string name="settings_category_drawer">Gaveta de apps</string>
+    <string name="settings_category_behavior">Comportamento</string>
+    <string name="settings_category_privacy">Privacidade</string>
+    
+    <string name="pref_themed_icons_global_title">Ativar ícones com tema</string>
+    <string name="pref_themed_icons_global_summary">Usar ícones monocromáticos com tema em todo o launcher</string>
+    <string name="pref_themed_icons_drawer_title">Ícones com tema na gaveta</string>
+    <string name="pref_themed_icons_drawer_summary">Aplicar ícones com tema na gaveta de apps quando ativado</string>
+</resources>
