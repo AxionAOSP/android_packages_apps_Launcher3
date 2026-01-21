@@ -278,6 +278,18 @@ public class ActivityAllAppsContainerView<T extends Context & ActivityContext>
         return new AllAppsSearchUiDelegate(this);
     }
 
+    @Override
+    protected void absorbSwipeUpVelocity(int velocity) {
+    }
+
+    @Override
+    protected void absorbPullDeltaDistance(float deltaDistance, float displacement) {
+    }
+
+    @Override
+    public void onRelease() {
+    }
+
     public AllAppsSearchUiDelegate getSearchUiDelegate() {
         return mSearchUiDelegate;
     }
