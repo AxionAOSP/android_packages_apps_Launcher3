@@ -16,12 +16,14 @@
 
 package com.android.launcher3.settings.compose
 
+import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.drawable.Drawable
+import android.provider.Settings
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -40,10 +42,23 @@ import androidx.compose.ui.unit.dp
 import com.android.axion.compose.preferences.*
 import com.android.launcher3.R
 import com.android.launcher3.InvariantDeviceProfile
+import com.android.launcher3.notification.NotificationListener
 import com.android.launcher3.states.RotationHelper
 import com.android.launcher3.qsb.SearchWidgetHelper
 import com.android.launcher3.LauncherFiles
 import kotlin.math.roundToInt
+
+private fun isNotificationServiceEnabled(context: Context): Boolean {
+    val enabledListeners = Settings.Secure.getString(
+        context.contentResolver,
+        "enabled_notification_listeners"
+    )
+    val myListener = ComponentName(context, NotificationListener::class.java)
+    return enabledListeners != null && (
+        enabledListeners.contains(myListener.flattenToString()) ||
+        enabledListeners.contains(myListener.flattenToShortString())
+    )
+}
 
 @Composable
 fun HomeScreenSettings(viewModel: SettingsState, context: Context) {
@@ -78,10 +93,22 @@ fun HomeScreenSettings(viewModel: SettingsState, context: Context) {
                 checked = notificationDots,
                 onCheckedChange = {
                     if (it) {
-                        val intent = Intent("android.settings.ACTION_NOTIFICATION_LISTENER_SETTINGS")
-                        context.startActivity(intent)
+                        if (isNotificationServiceEnabled(context)) {
+                            Settings.Secure.putInt(
+                                context.contentResolver,
+                                "notification_badging",
+                                1
+                            )
+                        } else {
+                            val intent = Intent("android.settings.ACTION_NOTIFICATION_LISTENER_SETTINGS")
+                            context.startActivity(intent)
+                        }
                     } else {
-                        viewModel.setBoolean("pref_icon_badging", false)
+                        Settings.Secure.putInt(
+                            context.contentResolver,
+                            "notification_badging",
+                            0
+                        )
                     }
                 }
             )

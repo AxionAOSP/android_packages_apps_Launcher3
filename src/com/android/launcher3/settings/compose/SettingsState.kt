@@ -18,6 +18,10 @@ package com.android.launcher3.settings.compose
 
 import android.content.Context
 import android.content.SharedPreferences
+import android.database.ContentObserver
+import android.os.Handler
+import android.os.Looper
+import android.provider.Settings
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import com.android.launcher3.LauncherFiles
@@ -25,7 +29,7 @@ import com.android.launcher3.states.RotationHelper
 import com.android.launcher3.util.DisplayController
 import kotlinx.coroutines.flow.*
 
-class SettingsState(context: Context) : ViewModel(), SharedPreferences.OnSharedPreferenceChangeListener {
+class SettingsState(private val context: Context) : ViewModel(), SharedPreferences.OnSharedPreferenceChangeListener {
 
     private val prefs: SharedPreferences = context.getSharedPreferences(
         LauncherFiles.SHARED_PREFERENCES_KEY, Context.MODE_PRIVATE
@@ -34,8 +38,20 @@ class SettingsState(context: Context) : ViewModel(), SharedPreferences.OnSharedP
     private val _workspaceLock = MutableStateFlow(prefs.getBoolean("pref_workspace_lock", false))
     val workspaceLock: StateFlow<Boolean> = _workspaceLock.asStateFlow()
 
-    private val _notificationDots = MutableStateFlow(prefs.getBoolean("pref_icon_badging", true))
+    private val _notificationDots = MutableStateFlow(
+        Settings.Secure.getInt(context.contentResolver, "notification_badging", 0) == 1
+    )
     val notificationDots: StateFlow<Boolean> = _notificationDots.asStateFlow()
+
+    private val notificationDotsObserver = object : ContentObserver(Handler(Looper.getMainLooper())) {
+        override fun onChange(selfChange: Boolean) {
+            _notificationDots.value = Settings.Secure.getInt(
+                context.contentResolver,
+                "notification_badging",
+                1
+            ) == 1
+        }
+    }
 
     private val _autoAddIcons = MutableStateFlow(prefs.getBoolean("pref_add_icon_to_home", true))
     val autoAddIcons: StateFlow<Boolean> = _autoAddIcons.asStateFlow()
@@ -86,12 +102,16 @@ class SettingsState(context: Context) : ViewModel(), SharedPreferences.OnSharedP
 
     init {
         prefs.registerOnSharedPreferenceChangeListener(this)
+        context.contentResolver.registerContentObserver(
+            Settings.Secure.getUriFor("notification_badging"),
+            false,
+            notificationDotsObserver
+        )
     }
 
     override fun onSharedPreferenceChanged(sharedPreferences: SharedPreferences?, key: String?) {
         when (key) {
             "pref_workspace_lock" -> _workspaceLock.value = prefs.getBoolean(key, false)
-            "pref_icon_badging" -> _notificationDots.value = prefs.getBoolean(key, true)
             "pref_add_icon_to_home" -> _autoAddIcons.value = prefs.getBoolean(key, true)
             RotationHelper.ALLOW_ROTATION_PREFERENCE_KEY -> _allowRotation.value = prefs.getBoolean(key, false)
             "pref_enable_minus_one" -> _showGoogleApp.value = prefs.getBoolean(key, true)
@@ -125,6 +145,7 @@ class SettingsState(context: Context) : ViewModel(), SharedPreferences.OnSharedP
     override fun onCleared() {
         super.onCleared()
         prefs.unregisterOnSharedPreferenceChangeListener(this)
+        context.contentResolver.unregisterContentObserver(notificationDotsObserver)
     }
 }
 
