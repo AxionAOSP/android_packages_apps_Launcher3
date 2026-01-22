@@ -701,8 +701,8 @@ public class ActivityAllAppsContainerView<T extends Context & ActivityContext>
         };
 
         if (Flags.allAppsBlur()) {
-            int layerFg = getContext().getColor(R.color.blur_shade_panel_fg);
-            int layerBg = getContext().getColor(R.color.blur_shade_panel_bg);
+            int layerFg = getContext().getColor(com.android.internal.R.color.shade_panel_fg);
+            int layerBg = getContext().getColor(com.android.internal.R.color.shade_panel_bg);
             mBottomSheetBackgroundColorOverBlur = ColorUtils.compositeColors(layerFg, layerBg);
             mBottomSheetBackgroundColorBlurFallback = getContext().getColor(
                     Utilities.isDarkTheme(getContext()) ? android.R.color.system_accent2_800
