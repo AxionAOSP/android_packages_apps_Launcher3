@@ -642,6 +642,8 @@ public class QuickstepLauncher extends Launcher implements RecentsViewContainer,
             recentsView.destroy();
         }
 
+        mDepthController.dispose();
+
         super.onDestroy();
         mHotseatPredictionController.destroy();
         if (mViewCapture != null) mViewCapture.close();

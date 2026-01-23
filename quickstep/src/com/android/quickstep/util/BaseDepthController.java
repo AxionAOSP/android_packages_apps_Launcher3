@@ -21,12 +21,15 @@ import static com.android.launcher3.Flags.enableOverviewBackgroundWallpaperBlur;
 import static com.android.launcher3.Flags.enableScalingRevealHomeAnimation;
 
 import android.app.WallpaperManager;
+import android.database.ContentObserver;
 import android.graphics.RenderEffect;
 import android.graphics.Shader;
 import android.gui.EarlyWakeupInfo;
 import android.os.Binder;
+import android.os.Handler;
 import android.os.IBinder;
 import android.os.Trace;
+import android.provider.Settings;
 import android.util.FloatProperty;
 import android.util.Log;
 import android.view.AttachedSurfaceControl;
@@ -87,7 +90,7 @@ public class BaseDepthController {
     /**
      * Blur radius when completely zoomed out, in pixels.
      */
-    protected final int mMaxBlurRadius;
+    protected int mMaxBlurRadius;
     protected final WallpaperManager mWallpaperManager;
     protected boolean mCrossWindowBlursEnabled;
 
@@ -126,17 +129,31 @@ public class BaseDepthController {
      */
     private EarlyWakeupInfo mEarlyWakeupInfo = new EarlyWakeupInfo();
 
+    private ContentObserver mBlurRadiusObserver;
+
+    private void updateMaxBlurRadius() {
+        mMaxBlurRadius = (int) Settings.Secure.getFloat(mLauncher.getContentResolver(),
+            "system_blur_radius", 34f);
+    }
+
     public BaseDepthController(QuickstepLauncher activity) {
         mLauncher = activity;
         if (Flags.allAppsBlur() || enableOverviewBackgroundWallpaperBlur()) {
             mCrossWindowBlursEnabled =
                     CrossWindowBlurListeners.getInstance().isCrossWindowBlurEnabled();
-            mMaxBlurRadius = activity.getResources().getDimensionPixelSize(
-                    R.dimen.max_depth_blur_radius_enhanced);
-        } else {
-            mMaxBlurRadius = activity.getResources().getInteger(R.integer.max_depth_blur_radius);
         }
         mWallpaperManager = activity.getSystemService(WallpaperManager.class);
+
+        mBlurRadiusObserver = new ContentObserver(new Handler(activity.getMainLooper())) {
+            @Override
+            public void onChange(boolean selfChange) {
+                updateMaxBlurRadius();
+            }
+        };
+
+        updateMaxBlurRadius();
+        activity.getContentResolver().registerContentObserver(
+            Settings.Secure.getUriFor("system_blur_radius"), false, mBlurRadiusObserver);
 
         MultiPropertyFactory<BaseDepthController> depthProperty =
                 new MultiPropertyFactory<>(this, DEPTH, DEPTH_INDEX_COUNT, Float::max);
@@ -144,6 +161,10 @@ public class BaseDepthController {
         widgetDepth = depthProperty.get(DEPTH_INDEX_WIDGET);
         mEarlyWakeupInfo.token = new Binder();
         mEarlyWakeupInfo.trace = BaseDepthController.class.getName();
+    }
+
+    public void destroy() {
+        mLauncher.getContentResolver().unregisterContentObserver(mBlurRadiusObserver);
     }
 
     /**

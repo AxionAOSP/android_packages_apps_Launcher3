@@ -116,6 +116,7 @@ public class DepthController extends BaseDepthController implements StateHandler
      * Cleans up after this controller so it can be garbage collected without leaving traces.
      */
     public void dispose() {
+        destroy();
         removeSecondaryListeners();
 
         if (mLauncher.getRootView() != null && mOnAttachListener != null) {
