@@ -114,6 +114,15 @@ fun HomeScreenSettings(viewModel: SettingsState, context: Context) {
             )
         }
         item {
+            val disableWallpaperZoom by viewModel.disableWallpaperZoom.collectAsState()
+            SwitchPreference(
+                title = "Disable Wallpaper Zoom",
+                summary = "Prevent wallpaper from zooming when opening apps or switching states",
+                checked = disableWallpaperZoom,
+                onCheckedChange = { viewModel.setBoolean("pref_disable_wallpaper_zoom", it) }
+            )
+        }
+        item {
             val autoAddIcons by viewModel.autoAddIcons.collectAsState()
             SwitchPreference(
                 title = stringResource(R.string.auto_add_shortcuts_label),

@@ -311,6 +311,9 @@ constructor(@ApplicationContext private val encryptedContext: Context) {
         val FIXED_LANDSCAPE_MODE = backedUpItem(SettingsActivity.FIXED_LANDSCAPE_MODE, false)
 
         @JvmField
+        val DISABLE_WALLPAPER_ZOOM = backedUpItem("pref_disable_wallpaper_zoom", false)
+
+        @JvmField
         val NON_FIXED_LANDSCAPE_GRID_NAME =
             ConstantItem(
                 NON_FIXED_LANDSCAPE_GRID_NAME_PREFS_KEY,

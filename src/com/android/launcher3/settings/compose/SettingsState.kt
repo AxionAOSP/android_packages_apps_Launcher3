@@ -104,6 +104,9 @@ class SettingsState(private val context: Context) : ViewModel(), SharedPreferenc
     private val _allAppsBgOpacity = MutableStateFlow(LauncherPrefs.get(context).get(LauncherPrefs.ALL_APPS_BG_OPACITY))
     val allAppsBgOpacity: StateFlow<Int> = _allAppsBgOpacity.asStateFlow()
 
+    private val _disableWallpaperZoom = MutableStateFlow(prefs.getBoolean("pref_disable_wallpaper_zoom", false))
+    val disableWallpaperZoom: StateFlow<Boolean> = _disableWallpaperZoom.asStateFlow()
+
     init {
         prefs.registerOnSharedPreferenceChangeListener(this)
         context.contentResolver.registerContentObserver(
@@ -132,6 +135,7 @@ class SettingsState(private val context: Context) : ViewModel(), SharedPreferenc
             "pref_workspace_icon_scale" -> _workspaceIconScale.value = prefs.getFloat(key, 1.0f)
             "pref_allapps_icon_scale" -> _allAppsIconScale.value = prefs.getFloat(key, 1.0f)
             "pref_all_apps_bg_opacity" -> _allAppsBgOpacity.value = LauncherPrefs.get(context).get(LauncherPrefs.ALL_APPS_BG_OPACITY)
+            "pref_disable_wallpaper_zoom" -> _disableWallpaperZoom.value = LauncherPrefs.get(context).get(LauncherPrefs.DISABLE_WALLPAPER_ZOOM)
         }
     }
 
