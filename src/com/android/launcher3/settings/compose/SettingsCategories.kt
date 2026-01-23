@@ -222,6 +222,87 @@ fun AppDrawerSettings(viewModel: SettingsState) {
             )
         }
     }
+    
+    PreferenceGroup(
+        title = "Appearance",
+        modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp)
+    ) {
+        item {
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(28.dp),
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.surfaceBright
+                )
+            ) {
+                Column(
+                    modifier = Modifier.padding(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    val alpha by viewModel.allAppsBgOpacity.collectAsState()
+                    val alphaFloat = alpha / 255f
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            Text(
+                                text = "All Apps Opacity",
+                                style = MaterialTheme.typography.bodyMedium
+                            )
+                            val isModified = alphaFloat != 0.5f
+                            Box(
+                                modifier = Modifier
+                                    .size(24.dp)
+                                    .clip(RoundedCornerShape(6.dp))
+                                    .then(
+                                        if (isModified) {
+                                            Modifier.combinedClickable(
+                                                onClick = {},
+                                                onLongClick = {
+                                                    viewModel.setAllAppsBgOpacity(128)
+                                                }
+                                            )
+                                        } else Modifier
+                                    ),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Refresh,
+                                    contentDescription = if (isModified) "Long press to reset" else null,
+                                    tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(
+                                        alpha = if (isModified) 1f else 0.3f
+                                    ),
+                                    modifier = Modifier.size(16.dp)
+                                )
+                            }
+                        }
+                        Text(
+                            text = "${(alphaFloat * 100).roundToInt()}%",
+                            style = MaterialTheme.typography.labelMedium,
+                            color = MaterialTheme.colorScheme.primary,
+                            fontWeight = FontWeight.SemiBold
+                        )
+                    }
+                    Slider(
+                        value = alphaFloat,
+                        onValueChange = { viewModel.setAllAppsBgOpacity((it * 255).toInt()) },
+                        valueRange = 0f..1f,
+                        steps = 9,
+                        colors = SliderDefaults.colors(
+                            thumbColor = MaterialTheme.colorScheme.primary,
+                            activeTrackColor = MaterialTheme.colorScheme.primary,
+                            inactiveTrackColor = MaterialTheme.colorScheme.surfaceContainerHighest
+                        )
+                    )
+                }
+            }
+        }
+    }
 }
 
 @Composable

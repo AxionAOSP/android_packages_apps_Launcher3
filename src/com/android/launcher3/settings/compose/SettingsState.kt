@@ -25,6 +25,7 @@ import android.provider.Settings
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import com.android.launcher3.LauncherFiles
+import com.android.launcher3.LauncherPrefs
 import com.android.launcher3.states.RotationHelper
 import com.android.launcher3.util.DisplayController
 import kotlinx.coroutines.flow.*
@@ -100,6 +101,9 @@ class SettingsState(private val context: Context) : ViewModel(), SharedPreferenc
     private val _allAppsIconScale = MutableStateFlow(prefs.getFloat("pref_allapps_icon_scale", 1.0f))
     val allAppsIconScale: StateFlow<Float> = _allAppsIconScale.asStateFlow()
 
+    private val _allAppsBgOpacity = MutableStateFlow(LauncherPrefs.get(context).get(LauncherPrefs.ALL_APPS_BG_OPACITY))
+    val allAppsBgOpacity: StateFlow<Int> = _allAppsBgOpacity.asStateFlow()
+
     init {
         prefs.registerOnSharedPreferenceChangeListener(this)
         context.contentResolver.registerContentObserver(
@@ -127,6 +131,7 @@ class SettingsState(private val context: Context) : ViewModel(), SharedPreferenc
             }
             "pref_workspace_icon_scale" -> _workspaceIconScale.value = prefs.getFloat(key, 1.0f)
             "pref_allapps_icon_scale" -> _allAppsIconScale.value = prefs.getFloat(key, 1.0f)
+            "pref_all_apps_bg_opacity" -> _allAppsBgOpacity.value = LauncherPrefs.get(context).get(LauncherPrefs.ALL_APPS_BG_OPACITY)
         }
     }
 
@@ -136,6 +141,14 @@ class SettingsState(private val context: Context) : ViewModel(), SharedPreferenc
 
     fun setFloat(key: String, value: Float) {
         prefs.edit().putFloat(key, value).apply()
+    }
+
+    fun setInt(key: String, value: Int) {
+        prefs.edit().putInt(key, value).apply()
+    }
+
+    fun setAllAppsBgOpacity(value: Int) {
+        LauncherPrefs.get(context).put(LauncherPrefs.ALL_APPS_BG_OPACITY, value)
     }
 
     fun setDrawerLayoutMode(mode: String) {

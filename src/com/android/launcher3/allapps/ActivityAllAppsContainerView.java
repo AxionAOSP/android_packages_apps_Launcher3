@@ -36,6 +36,7 @@ import android.animation.ValueAnimator;
 import android.app.Activity;
 import android.content.Context;
 import android.content.ComponentName;
+import android.content.SharedPreferences;
 import android.content.pm.LauncherApps;
 import android.graphics.Canvas;
 import android.graphics.Color;
@@ -88,6 +89,7 @@ import com.android.launcher3.Flags;
 import com.android.launcher3.Insettable;
 import com.android.launcher3.InsettableFrameLayout;
 import com.android.launcher3.Launcher;
+import com.android.launcher3.LauncherPrefs;
 import com.android.launcher3.R;
 import com.android.launcher3.Utilities;
 import com.android.launcher3.allapps.BaseAllAppsAdapter.AdapterItem;
@@ -222,6 +224,7 @@ public class ActivityAllAppsContainerView<T extends Context & ActivityContext>
     @Nullable private WeakReference<View> mLastLaunchedComposeIcon;
     @Nullable private ComponentName mLastLaunchedComponent;
     private float mTransitionProgress = 1f;
+    private SharedPreferences.OnSharedPreferenceChangeListener mPreferenceChangeListener;
 
     public ActivityAllAppsContainerView(Context context) {
         this(context, null);
@@ -681,6 +684,18 @@ public class ActivityAllAppsContainerView<T extends Context & ActivityContext>
         return List.of();
     }
 
+    private void updateBackgroundColors() {
+        if (Flags.allAppsBlur()) {
+            int layerFg = getContext().getColor(com.android.internal.R.color.shade_panel_fg);
+            int layerBg = getContext().getColor(com.android.internal.R.color.shade_panel_bg);
+            int alpha = LauncherPrefs.get(getContext()).get(LauncherPrefs.ALL_APPS_BG_OPACITY);
+            mBottomSheetBackgroundColorOverBlur = ColorUtils.setAlphaComponent(ColorUtils.compositeColors(layerFg, layerBg), alpha);
+            mBottomSheetBackgroundColorBlurFallback = ColorUtils.setAlphaComponent(getContext().getColor(
+                    Utilities.isDarkTheme(getContext()) ? android.R.color.system_accent2_800
+                            : android.R.color.system_accent2_200), alpha);
+        }
+    }
+
     @Override
     protected void onFinishInflate() {
         super.onFinishInflate();
@@ -700,14 +715,7 @@ public class ActivityAllAppsContainerView<T extends Context & ActivityContext>
                 0 // Bottom left
         };
 
-        if (Flags.allAppsBlur()) {
-            int layerFg = getContext().getColor(com.android.internal.R.color.shade_panel_fg);
-            int layerBg = getContext().getColor(com.android.internal.R.color.shade_panel_bg);
-            mBottomSheetBackgroundColorOverBlur = ColorUtils.compositeColors(layerFg, layerBg);
-            mBottomSheetBackgroundColorBlurFallback = getContext().getColor(
-                    Utilities.isDarkTheme(getContext()) ? android.R.color.system_accent2_800
-                            : android.R.color.system_accent2_200);
-        }
+        updateBackgroundColors();
 
         mBottomSheetBackgroundColorLegacy = getContext().getColor(R.color.materialColorSurfaceDim);
 
@@ -726,12 +734,25 @@ public class ActivityAllAppsContainerView<T extends Context & ActivityContext>
             mSearchUiDelegate.onInitializeSearchBar();
         }
         mActivityContext.addOnDeviceProfileChangeListener(this);
+
+        if (mPreferenceChangeListener == null) {
+            mPreferenceChangeListener = (sharedPreferences, key) -> {
+                if ("pref_all_apps_bg_opacity".equals(key)) {
+                    updateBackgroundColors();
+                    invalidate();
+                }
+            };
+        }
+        LauncherPrefs.getPrefs(getContext()).registerOnSharedPreferenceChangeListener(mPreferenceChangeListener);
     }
 
     @Override
     protected void onDetachedFromWindow() {
         super.onDetachedFromWindow();
         mActivityContext.removeOnDeviceProfileChangeListener(this);
+        if (mPreferenceChangeListener != null) {
+            LauncherPrefs.getPrefs(getContext()).unregisterOnSharedPreferenceChangeListener(mPreferenceChangeListener);
+        }
         if (mOnBackInvokedCallback != null) {
              OnBackInvokedDispatcher dispatcher = findOnBackInvokedDispatcher();
              if (dispatcher != null) {
