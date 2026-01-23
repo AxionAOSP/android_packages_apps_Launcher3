@@ -46,6 +46,9 @@ import com.android.launcher3.notification.NotificationListener
 import com.android.launcher3.states.RotationHelper
 import com.android.launcher3.qsb.SearchWidgetHelper
 import com.android.launcher3.LauncherFiles
+import com.android.launcher3.util.DisplayController
+import com.android.launcher3.settings.SettingsActivity
+import com.android.launcher3.Flags
 import kotlin.math.roundToInt
 
 private fun isNotificationServiceEnabled(context: Context): Boolean {
@@ -316,6 +319,27 @@ fun AppDrawerSettings(viewModel: SettingsState) {
 
 @Composable
 fun BehaviorSettings(viewModel: SettingsState) {
+    val context = LocalContext.current
+    val info = remember { DisplayController.INSTANCE.get(context).info }
+    
+    val showAllowRotation = remember(info) {
+        val isTablet = info.isTablet(info.realBounds)
+        val rotationAllowed = info.isRotationAllowed()
+        val oneGridSpecs = Flags.oneGridSpecs()
+        
+        !(oneGridSpecs && !rotationAllowed) && !isTablet
+    }
+
+    val showFixedLandscape = remember(info, context) {
+        val oneGridSpecs = Flags.oneGridSpecs()
+        val idp = InvariantDeviceProfile.INSTANCE.get(context)
+        val isMultiDisplay = idp.deviceType == InvariantDeviceProfile.TYPE_MULTI_DISPLAY
+        val isTablet = idp.deviceType == InvariantDeviceProfile.TYPE_TABLET
+        val rotationAllowed = info.isRotationAllowed()
+        
+        oneGridSpecs && !isMultiDisplay && !isTablet && !rotationAllowed
+    }
+
     PreferenceGroup(
         title = stringResource(R.string.settings_category_behavior),
         modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp)
@@ -329,15 +353,31 @@ fun BehaviorSettings(viewModel: SettingsState) {
                 onCheckedChange = { viewModel.setBoolean("pref_sleep_gesture", it) }
             )
         }
-        item {
-            val allowRotation by viewModel.allowRotation.collectAsState()
-            SwitchPreference(
-                title = stringResource(R.string.allow_rotation_title),
-                summary = stringResource(R.string.allow_rotation_desc),
-                checked = allowRotation,
-                onCheckedChange = { viewModel.setBoolean(RotationHelper.ALLOW_ROTATION_PREFERENCE_KEY, it) }
-            )
+
+        if (showAllowRotation) {
+            item {
+                val allowRotation by viewModel.allowRotation.collectAsState()
+                SwitchPreference(
+                    title = stringResource(R.string.allow_rotation_title),
+                    summary = stringResource(R.string.allow_rotation_desc),
+                    checked = allowRotation,
+                    onCheckedChange = { viewModel.setBoolean(RotationHelper.ALLOW_ROTATION_PREFERENCE_KEY, it) }
+                )
+            }
         }
+
+        if (showFixedLandscape) {
+            item {
+                val fixedLandscape by viewModel.fixedLandscape.collectAsState()
+                SwitchPreference(
+                    title = "Landscape mode",
+                    summary = "Always use landscape mode for home screen",
+                    checked = fixedLandscape,
+                    onCheckedChange = { viewModel.setBoolean(SettingsActivity.FIXED_LANDSCAPE_MODE, it) }
+                )
+            }
+        }
+
         item {
             val showGoogleApp by viewModel.showGoogleApp.collectAsState()
             SwitchPreference(

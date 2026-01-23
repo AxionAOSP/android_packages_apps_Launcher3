@@ -28,15 +28,16 @@ import com.android.launcher3.LauncherFiles
 import com.android.launcher3.LauncherPrefs
 import com.android.launcher3.states.RotationHelper
 import com.android.launcher3.util.DisplayController
+import com.android.launcher3.settings.SettingsActivity
 import kotlinx.coroutines.flow.*
 
-class SettingsState(private val context: Context) : ViewModel(), SharedPreferences.OnSharedPreferenceChangeListener {
+import com.android.launcher3.LauncherPrefChangeListener
 
-    private val prefs: SharedPreferences = context.getSharedPreferences(
-        LauncherFiles.SHARED_PREFERENCES_KEY, Context.MODE_PRIVATE
-    )
+class SettingsState(private val context: Context) : ViewModel(), LauncherPrefChangeListener {
 
-    private val _workspaceLock = MutableStateFlow(prefs.getBoolean("pref_workspace_lock", false))
+    private val launcherPrefs: LauncherPrefs = LauncherPrefs.get(context)
+
+    private val _workspaceLock = MutableStateFlow(launcherPrefs.get(LauncherPrefs.WORKSPACE_LOCK))
     val workspaceLock: StateFlow<Boolean> = _workspaceLock.asStateFlow()
 
     private val _notificationDots = MutableStateFlow(
@@ -54,61 +55,74 @@ class SettingsState(private val context: Context) : ViewModel(), SharedPreferenc
         }
     }
 
-    private val _autoAddIcons = MutableStateFlow(prefs.getBoolean("pref_add_icon_to_home", true))
+    private val _autoAddIcons = MutableStateFlow(launcherPrefs.get(LauncherPrefs.backedUpItem("pref_add_icon_to_home", true)))
     val autoAddIcons: StateFlow<Boolean> = _autoAddIcons.asStateFlow()
 
-    private val _allowRotation = MutableStateFlow(
-        prefs.getBoolean(
-            RotationHelper.ALLOW_ROTATION_PREFERENCE_KEY,
-            RotationHelper.getAllowRotationDefaultValue(
-                DisplayController.INSTANCE.get(context).info
-            )
-        )
-    )
+    private val _allowRotation = MutableStateFlow(launcherPrefs.get(LauncherPrefs.ALLOW_ROTATION))
     val allowRotation: StateFlow<Boolean> = _allowRotation.asStateFlow()
 
-    private val _showGoogleApp = MutableStateFlow(prefs.getBoolean("pref_enable_minus_one", true))
+    private val _fixedLandscape = MutableStateFlow(launcherPrefs.get(LauncherPrefs.FIXED_LANDSCAPE_MODE))
+    val fixedLandscape: StateFlow<Boolean> = _fixedLandscape.asStateFlow()
+
+    private val _showGoogleApp = MutableStateFlow(launcherPrefs.get(LauncherPrefs.backedUpItem("pref_enable_minus_one", true)))
     val showGoogleApp: StateFlow<Boolean> = _showGoogleApp.asStateFlow()
 
-    private val _swipeToSearch = MutableStateFlow(prefs.getBoolean("pref_drawer_open_keyboard", false))
+    private val _swipeToSearch = MutableStateFlow(launcherPrefs.get(LauncherPrefs.DRAWER_OPEN_KEYBOARD))
     val swipeToSearch: StateFlow<Boolean> = _swipeToSearch.asStateFlow()
 
-    private val _themedIconsEnabled = MutableStateFlow(prefs.getBoolean("themed_icons", false))
+    private val _themedIconsEnabled = MutableStateFlow(launcherPrefs.get(LauncherPrefs.backedUpItem("themed_icons", false)))
     val themedIconsEnabled: StateFlow<Boolean> = _themedIconsEnabled.asStateFlow()
 
-    private val _themedIcons = MutableStateFlow(prefs.getBoolean("pref_allapps_themed_icons", false))
+    private val _themedIcons = MutableStateFlow(launcherPrefs.get(LauncherPrefs.ALLAPPS_THEMED_ICONS))
     val themedIcons: StateFlow<Boolean> = _themedIcons.asStateFlow()
 
-    private val _doubleTapToSleep = MutableStateFlow(prefs.getBoolean("pref_sleep_gesture", true))
+    private val _doubleTapToSleep = MutableStateFlow(launcherPrefs.get(LauncherPrefs.backedUpItem("pref_sleep_gesture", true)))
     val doubleTapToSleep: StateFlow<Boolean> = _doubleTapToSleep.asStateFlow()
 
-    private val _desktopShowLabels = MutableStateFlow(prefs.getBoolean("pref_desktop_show_labels", true))
+    private val _desktopShowLabels = MutableStateFlow(launcherPrefs.get(LauncherPrefs.SHOW_DESKTOP_LABELS))
     val desktopShowLabels: StateFlow<Boolean> = _desktopShowLabels.asStateFlow()
 
-    private val _drawerShowLabels = MutableStateFlow(prefs.getBoolean("pref_drawer_show_labels", true))
+    private val _drawerShowLabels = MutableStateFlow(launcherPrefs.get(LauncherPrefs.SHOW_DRAWER_LABELS))
     val drawerShowLabels: StateFlow<Boolean> = _drawerShowLabels.asStateFlow()
 
     private val _drawerLayoutMode = MutableStateFlow(
-        (prefs.getString("pref_drawer_layout_mode", "dynamic") ?: "dynamic").let {
+        launcherPrefs.get(LauncherPrefs.DRAWER_LAYOUT_MODE).let {
             if (it == "default") "dynamic" else it
         }
     )
     val drawerLayoutMode: StateFlow<String> = _drawerLayoutMode.asStateFlow()
 
-    private val _workspaceIconScale = MutableStateFlow(prefs.getFloat("pref_workspace_icon_scale", 1.0f))
+    private val _workspaceIconScale = MutableStateFlow(launcherPrefs.get(LauncherPrefs.WORKSPACE_ICON_SCALE))
     val workspaceIconScale: StateFlow<Float> = _workspaceIconScale.asStateFlow()
 
-    private val _allAppsIconScale = MutableStateFlow(prefs.getFloat("pref_allapps_icon_scale", 1.0f))
+    private val _allAppsIconScale = MutableStateFlow(launcherPrefs.get(LauncherPrefs.ALLAPPS_ICON_SCALE))
     val allAppsIconScale: StateFlow<Float> = _allAppsIconScale.asStateFlow()
 
-    private val _allAppsBgOpacity = MutableStateFlow(LauncherPrefs.get(context).get(LauncherPrefs.ALL_APPS_BG_OPACITY))
+    private val _allAppsBgOpacity = MutableStateFlow(launcherPrefs.get(LauncherPrefs.ALL_APPS_BG_OPACITY))
     val allAppsBgOpacity: StateFlow<Int> = _allAppsBgOpacity.asStateFlow()
 
-    private val _disableWallpaperZoom = MutableStateFlow(prefs.getBoolean("pref_disable_wallpaper_zoom", false))
+    private val _disableWallpaperZoom = MutableStateFlow(launcherPrefs.get(LauncherPrefs.DISABLE_WALLPAPER_ZOOM))
     val disableWallpaperZoom: StateFlow<Boolean> = _disableWallpaperZoom.asStateFlow()
 
     init {
-        prefs.registerOnSharedPreferenceChangeListener(this)
+        launcherPrefs.addListener(this,
+            LauncherPrefs.WORKSPACE_LOCK,
+            LauncherPrefs.ALLOW_ROTATION,
+            LauncherPrefs.FIXED_LANDSCAPE_MODE,
+            LauncherPrefs.DRAWER_OPEN_KEYBOARD,
+            LauncherPrefs.ALLAPPS_THEMED_ICONS,
+            LauncherPrefs.SHOW_DESKTOP_LABELS,
+            LauncherPrefs.SHOW_DRAWER_LABELS,
+            LauncherPrefs.DRAWER_LAYOUT_MODE,
+            LauncherPrefs.WORKSPACE_ICON_SCALE,
+            LauncherPrefs.ALLAPPS_ICON_SCALE,
+            LauncherPrefs.ALL_APPS_BG_OPACITY,
+            LauncherPrefs.DISABLE_WALLPAPER_ZOOM,
+            LauncherPrefs.backedUpItem("pref_add_icon_to_home", true),
+            LauncherPrefs.backedUpItem("pref_enable_minus_one", true),
+            LauncherPrefs.backedUpItem("themed_icons", false),
+            LauncherPrefs.backedUpItem("pref_sleep_gesture", true)
+        )
         context.contentResolver.registerContentObserver(
             Settings.Secure.getUriFor("notification_badging"),
             false,
@@ -116,52 +130,70 @@ class SettingsState(private val context: Context) : ViewModel(), SharedPreferenc
         )
     }
 
-    override fun onSharedPreferenceChanged(sharedPreferences: SharedPreferences?, key: String?) {
+    override fun onPrefChanged(key: String?) {
         when (key) {
-            "pref_workspace_lock" -> _workspaceLock.value = prefs.getBoolean(key, false)
-            "pref_add_icon_to_home" -> _autoAddIcons.value = prefs.getBoolean(key, true)
-            RotationHelper.ALLOW_ROTATION_PREFERENCE_KEY -> _allowRotation.value = prefs.getBoolean(key, false)
-            "pref_enable_minus_one" -> _showGoogleApp.value = prefs.getBoolean(key, true)
-            "pref_drawer_open_keyboard" -> _swipeToSearch.value = prefs.getBoolean(key, false)
-            "themed_icons" -> _themedIconsEnabled.value = prefs.getBoolean(key, false)
-            "pref_allapps_themed_icons" -> _themedIcons.value = prefs.getBoolean(key, false)
-            "pref_sleep_gesture" -> _doubleTapToSleep.value = prefs.getBoolean(key, true)
-            "pref_desktop_show_labels" -> _desktopShowLabels.value = prefs.getBoolean(key, true)
-            "pref_drawer_show_labels" -> _drawerShowLabels.value = prefs.getBoolean(key, true)
-            "pref_drawer_layout_mode" -> {
-                val mode = prefs.getString(key, "dynamic") ?: "dynamic"
+            LauncherPrefs.WORKSPACE_LOCK.sharedPrefKey -> _workspaceLock.value = launcherPrefs.get(LauncherPrefs.WORKSPACE_LOCK)
+            RotationHelper.ALLOW_ROTATION_PREFERENCE_KEY -> _allowRotation.value = launcherPrefs.get(LauncherPrefs.ALLOW_ROTATION)
+            SettingsActivity.FIXED_LANDSCAPE_MODE -> _fixedLandscape.value = launcherPrefs.get(LauncherPrefs.FIXED_LANDSCAPE_MODE)
+            LauncherPrefs.DRAWER_OPEN_KEYBOARD.sharedPrefKey -> _swipeToSearch.value = launcherPrefs.get(LauncherPrefs.DRAWER_OPEN_KEYBOARD)
+            LauncherPrefs.ALLAPPS_THEMED_ICONS.sharedPrefKey -> _themedIcons.value = launcherPrefs.get(LauncherPrefs.ALLAPPS_THEMED_ICONS)
+            LauncherPrefs.SHOW_DESKTOP_LABELS.sharedPrefKey -> _desktopShowLabels.value = launcherPrefs.get(LauncherPrefs.SHOW_DESKTOP_LABELS)
+            LauncherPrefs.SHOW_DRAWER_LABELS.sharedPrefKey -> _drawerShowLabels.value = launcherPrefs.get(LauncherPrefs.SHOW_DRAWER_LABELS)
+            LauncherPrefs.DRAWER_LAYOUT_MODE.sharedPrefKey -> {
+                val mode = launcherPrefs.get(LauncherPrefs.DRAWER_LAYOUT_MODE)
                 _drawerLayoutMode.value = if (mode == "default") "dynamic" else mode
             }
-            "pref_workspace_icon_scale" -> _workspaceIconScale.value = prefs.getFloat(key, 1.0f)
-            "pref_allapps_icon_scale" -> _allAppsIconScale.value = prefs.getFloat(key, 1.0f)
-            "pref_all_apps_bg_opacity" -> _allAppsBgOpacity.value = LauncherPrefs.get(context).get(LauncherPrefs.ALL_APPS_BG_OPACITY)
-            "pref_disable_wallpaper_zoom" -> _disableWallpaperZoom.value = LauncherPrefs.get(context).get(LauncherPrefs.DISABLE_WALLPAPER_ZOOM)
+            LauncherPrefs.WORKSPACE_ICON_SCALE.sharedPrefKey -> _workspaceIconScale.value = launcherPrefs.get(LauncherPrefs.WORKSPACE_ICON_SCALE)
+            LauncherPrefs.ALLAPPS_ICON_SCALE.sharedPrefKey -> _allAppsIconScale.value = launcherPrefs.get(LauncherPrefs.ALLAPPS_ICON_SCALE)
+            LauncherPrefs.ALL_APPS_BG_OPACITY.sharedPrefKey -> _allAppsBgOpacity.value = launcherPrefs.get(LauncherPrefs.ALL_APPS_BG_OPACITY)
+            LauncherPrefs.DISABLE_WALLPAPER_ZOOM.sharedPrefKey -> _disableWallpaperZoom.value = launcherPrefs.get(LauncherPrefs.DISABLE_WALLPAPER_ZOOM)
+            "pref_add_icon_to_home" -> _autoAddIcons.value = launcherPrefs.get(LauncherPrefs.backedUpItem("pref_add_icon_to_home", true))
+            "pref_enable_minus_one" -> _showGoogleApp.value = launcherPrefs.get(LauncherPrefs.backedUpItem("pref_enable_minus_one", true))
+            "themed_icons" -> _themedIconsEnabled.value = launcherPrefs.get(LauncherPrefs.backedUpItem("themed_icons", false))
+            "pref_sleep_gesture" -> _doubleTapToSleep.value = launcherPrefs.get(LauncherPrefs.backedUpItem("pref_sleep_gesture", true))
         }
     }
 
     fun setBoolean(key: String, value: Boolean) {
-        prefs.edit().putBoolean(key, value).apply()
+        launcherPrefs.put(LauncherPrefs.backedUpItem(key, value), value)
     }
 
     fun setFloat(key: String, value: Float) {
-        prefs.edit().putFloat(key, value).apply()
+        launcherPrefs.put(LauncherPrefs.backedUpItem(key, value), value)
     }
 
     fun setInt(key: String, value: Int) {
-        prefs.edit().putInt(key, value).apply()
+        launcherPrefs.put(LauncherPrefs.backedUpItem(key, value), value)
     }
 
     fun setAllAppsBgOpacity(value: Int) {
-        LauncherPrefs.get(context).put(LauncherPrefs.ALL_APPS_BG_OPACITY, value)
+        launcherPrefs.put(LauncherPrefs.ALL_APPS_BG_OPACITY, value)
     }
 
     fun setDrawerLayoutMode(mode: String) {
-        prefs.edit().putString("pref_drawer_layout_mode", mode).apply()
+        launcherPrefs.put(LauncherPrefs.DRAWER_LAYOUT_MODE, mode)
     }
 
     override fun onCleared() {
         super.onCleared()
-        prefs.unregisterOnSharedPreferenceChangeListener(this)
+        launcherPrefs.removeListener(this,
+            LauncherPrefs.WORKSPACE_LOCK,
+            LauncherPrefs.ALLOW_ROTATION,
+            LauncherPrefs.FIXED_LANDSCAPE_MODE,
+            LauncherPrefs.DRAWER_OPEN_KEYBOARD,
+            LauncherPrefs.ALLAPPS_THEMED_ICONS,
+            LauncherPrefs.SHOW_DESKTOP_LABELS,
+            LauncherPrefs.SHOW_DRAWER_LABELS,
+            LauncherPrefs.DRAWER_LAYOUT_MODE,
+            LauncherPrefs.WORKSPACE_ICON_SCALE,
+            LauncherPrefs.ALLAPPS_ICON_SCALE,
+            LauncherPrefs.ALL_APPS_BG_OPACITY,
+            LauncherPrefs.DISABLE_WALLPAPER_ZOOM,
+            LauncherPrefs.backedUpItem("pref_add_icon_to_home", true),
+            LauncherPrefs.backedUpItem("pref_enable_minus_one", true),
+            LauncherPrefs.backedUpItem("themed_icons", false),
+            LauncherPrefs.backedUpItem("pref_sleep_gesture", true)
+        )
         context.contentResolver.unregisterContentObserver(notificationDotsObserver)
     }
 }
