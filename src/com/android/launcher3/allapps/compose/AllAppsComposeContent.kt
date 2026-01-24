@@ -113,7 +113,7 @@ private sealed interface ContentScreen {
 fun AllAppsComposeContent(
     state: AllAppsComposeState,
     callbacks: AllAppsComposeCallbacks,
-    transitionProgress: Float = 0f,
+    transitionProgressProvider: () -> Float = { 0f },
     allAppsExpanded: Boolean = false,
     openCounter: Int = 0,
     modifier: Modifier = Modifier
@@ -199,24 +199,34 @@ fun AllAppsComposeContent(
         onDispose { searchManager.cleanup() }
     }
     
-    LaunchedEffect(transitionProgress, allAppsExpanded) {
-        if (allAppsExpanded && transitionProgress == 0f) {
-            if (!isLaunching) {
-                searchQuery = ""
-                callbacks.onSearchQueryChanged("")
-                isSearchActiveState = false
-                searchManager.clear()
-            } else {
-                isLaunching = false 
+    var isBoosted by remember { mutableStateOf(false) }
+    
+    LaunchedEffect(Unit) {
+        snapshotFlow { transitionProgressProvider() }.collect { progress ->
+            val needsBoost = progress > 0f && progress < 1f
+            if (needsBoost && !isBoosted) {
+                callbacks.onAllAppsTransitionStart()
+                isBoosted = true
+            } else if (!needsBoost && isBoosted) {
+                callbacks.onAllAppsTransitionEnd()
+                isBoosted = false
             }
-            isSearchSettingsOpen = false
-            expandedCategory = null
-            delay(16)
-            callbacks.onAllAppsTransitionEnd()
-        } else if (!allAppsExpanded && transitionProgress == 1f) {
-            callbacks.onAllAppsTransitionStart()
-            delay(16)
-            isLaunching = false
+
+            if (allAppsExpanded && progress == 1f) {
+                if (!isLaunching) {
+                    searchQuery = ""
+                    callbacks.onSearchQueryChanged("")
+                    isSearchActiveState = false
+                    searchManager.clear()
+                } else {
+                    isLaunching = false 
+                }
+                isSearchSettingsOpen = false
+                expandedCategory = null
+                delay(16)
+            } else if (!allAppsExpanded && progress == 0f) {
+                isLaunching = false
+            }
         }
     }
 
@@ -279,7 +289,11 @@ fun AllAppsComposeContent(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .graphicsLayer { alpha = transitionProgress }
+                .graphicsLayer { 
+                    val progress = transitionProgressProvider()
+                    alpha = if (progress < 0.7f) 0f 
+                          else ((progress - 0.7f) / (0.3f)).coerceIn(0f, 1f)
+                }
         ) {
                 Spacer(modifier = Modifier.height(48.dp))
                 
@@ -357,7 +371,7 @@ fun AllAppsComposeContent(
                                             onPrivateSpaceClicked = callbacks::onPrivateSpaceClicked,
                                             onScrollStarted = callbacks::onScrollStarted,
                                             onScrollStopped = callbacks::onScrollStopped,
-                                            transitionProgress = transitionProgress,
+                                            transitionProgressProvider = transitionProgressProvider,
                                             dismissRequest = dismissRequest,
                                             onDismissRequestChange = { dismissRequest = it },
                                             modifier = Modifier.fillMaxSize()
@@ -372,6 +386,7 @@ fun AllAppsComposeContent(
                                                 sections = sections,
                                                 numColumns = state.numColumns,
                                                 iconSizePx = state.iconSizePx,
+                                                cellWidthPx = state.cellWidthPx,
                                                 cellHeightPx = state.cellHeightPx,
                                                 showLabels = state.showLabels,
                                                 onAppClick = onAppClick,
@@ -382,7 +397,7 @@ fun AllAppsComposeContent(
                                                 onScrollStateChanged = callbacks::onScrollStateChanged,
                                                 onScrollStarted = callbacks::onScrollStarted,
                                                 onScrollStopped = callbacks::onScrollStopped,
-                                                transitionProgress = transitionProgress,
+                                                transitionProgressProvider = transitionProgressProvider,
                                                 keyPrefix = gridKeyPrefix,
                                                 recompositionKey = openCounter,
                                                 modifier = Modifier.weight(1f),
@@ -619,7 +634,6 @@ private fun AllAppsTabBar(
             modifier = Modifier
                 .clip(RoundedCornerShape(28.dp))
                 .background(MaterialTheme.colorScheme.surfaceBright.copy(alpha = 0.5f))
-                .padding(4.dp)
         ) {
             var tabWidths by remember(tabs.size) { 
                 mutableStateOf(List(tabs.size) { 0 }) 
@@ -712,7 +726,7 @@ private fun AllAppsCategoriesView(
     onPrivateSpaceClicked: (Boolean) -> Unit,
     onScrollStarted: () -> Unit,
     onScrollStopped: () -> Unit,
-    transitionProgress: Float,
+    transitionProgressProvider: () -> Float,
     dismissRequest: Boolean,
     onDismissRequestChange: (Boolean) -> Unit,
     modifier: Modifier = Modifier
@@ -777,7 +791,7 @@ private fun AllAppsCategoriesView(
             onScrollStateChanged(canScrollUp, canScrollDown)
         }
     }
-    
+
     LaunchedEffect(dismissRequest) {
         if (dismissRequest && expandedCategory != null) {
             onExpandedCategoryChange(null)
@@ -798,7 +812,10 @@ private fun AllAppsCategoriesView(
                         slideOutVertically(animationSpec = tween(200)) { it / 6 })
             }
         },
-        modifier = modifier.fillMaxSize(),
+        modifier = modifier.fillMaxSize().graphicsLayer {
+            val progress = transitionProgressProvider()
+            alpha = if (progress < 0.7f) 0.0f else ((progress - 0.7f) / 0.3f).coerceIn(0f, 1f)
+        },
         label = "category_content"
     ) { category ->
         if (category != null) {

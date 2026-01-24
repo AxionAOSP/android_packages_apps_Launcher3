@@ -17,24 +17,18 @@
 package com.android.launcher3.allapps.compose
 
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.grid.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.*
 import androidx.compose.ui.geometry.Offset
-import kotlin.math.abs
-import androidx.compose.animation.core.*
-import androidx.compose.animation.core.Spring
-import androidx.compose.foundation.gestures.ScrollScope
-import androidx.compose.foundation.gestures.FlingBehavior
-import androidx.compose.ui.input.nestedscroll.*
-import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
+import androidx.compose.ui.unit.*
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.ui.draw.clip
 import com.android.launcher3.model.data.AppInfo
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.delay
 
 @Composable
 fun AllAppsComposeGrid(
@@ -42,6 +36,7 @@ fun AllAppsComposeGrid(
     sections: List<Pair<String, Int>>,
     numColumns: Int,
     iconSizePx: Int,
+    cellWidthPx: Int,
     cellHeightPx: Int,
     showLabels: Boolean,
     onAppClick: (ComposeIconInfo) -> Unit,
@@ -52,23 +47,22 @@ fun AllAppsComposeGrid(
     onScrollStateChanged: (canScrollUp: Boolean, canScrollDown: Boolean) -> Unit,
     onScrollStarted: () -> Unit,
     onScrollStopped: () -> Unit,
-    transitionProgress: Float = 1f,
+    transitionProgressProvider: () -> Float = { 1f },
     keyPrefix: String = "main",
     recompositionKey: Int = 0,
     modifier: Modifier = Modifier,
     contentPadding: PaddingValues = PaddingValues(horizontal = 16.dp, vertical = 8.dp)
 ) {
-    val gridState = rememberLazyGridState()
-    val scope = rememberCoroutineScope()
+    val scrollState = rememberScrollState()
     val effectiveColumns = if (numColumns > 0) numColumns else 4
-    
+
     var isScrollEnabled by remember { mutableStateOf(true) }
     var wasFullyClosed by remember { mutableStateOf(true) }
 
-    val canScrollUp by remember { derivedStateOf { gridState.canScrollBackward } }
-    val canScrollDown by remember { derivedStateOf { gridState.canScrollForward } }
+    val canScrollUp by remember { derivedStateOf { scrollState.value > 0 } }
+    val canScrollDown by remember { derivedStateOf { scrollState.value < scrollState.maxValue } }
 
-    val isScrollInProgress by remember { derivedStateOf { gridState.isScrollInProgress } }
+    val isScrollInProgress by remember { derivedStateOf { scrollState.isScrollInProgress } }
 
     LaunchedEffect(isScrollInProgress) {
         if (isScrollInProgress) {
@@ -81,155 +75,139 @@ fun AllAppsComposeGrid(
     LaunchedEffect(canScrollUp, canScrollDown) {
         onScrollStateChanged(canScrollUp, canScrollDown)
     }
-    
-    LaunchedEffect(transitionProgress) {
-        if (transitionProgress == 0f) {
-            wasFullyClosed = true
-        } else if (wasFullyClosed && transitionProgress > 0f) {
-            wasFullyClosed = false
-            gridState.scrollToItem(0)
+
+    LaunchedEffect(Unit) {
+        snapshotFlow { transitionProgressProvider() }.collect { progress ->
+            if (progress == 0f) {
+                wasFullyClosed = true
+            } else if (wasFullyClosed && progress > 0f) {
+                wasFullyClosed = false
+                scrollState.scrollTo(0)
+            }
         }
     }
 
+    val gridWidth = with(LocalDensity.current) { (effectiveColumns * cellWidthPx).toDp() }
+
     Box(
-        modifier = modifier
-            .fillMaxSize()
+        modifier = modifier.fillMaxSize()
     ) {
-        LazyVerticalGrid(
-            columns = GridCells.Fixed(effectiveColumns),
-            state = gridState,
-            contentPadding = contentPadding,
-            userScrollEnabled = isScrollEnabled,
-            flingBehavior = rememberSmoothFlingBehavior(),
-            modifier = Modifier.fillMaxSize()
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .verticalScroll(scrollState, enabled = isScrollEnabled)
+                .padding(contentPadding)
         ) {
-            
-            items(
-                count = items.size,
-                key = { index ->
-                    val base = when (val item = items[index]) {
-                        is AllAppsComposeItem.AppItem -> "${item.section}_app_${item.appInfo.componentName}"
-                        is AllAppsComposeItem.SectionHeader -> "section_${item.letter}"
-                        is AllAppsComposeItem.PrivateSpaceHeader -> "private_header"
-                        AllAppsComposeItem.PredictionsHeader -> "predictions_header"
-                        AllAppsComposeItem.PinnedAppsHeader -> "pinned_header"
-                        AllAppsComposeItem.AllAppsHeader -> "all_apps_header"
-                        AllAppsComposeItem.EmptySearchResult -> "empty_search"
-                    }
-                    "${keyPrefix}_${recompositionKey}_${showLabels}_$base"
-                },
-                span = { index ->
-                    when (items[index]) {
-                        is AllAppsComposeItem.SectionHeader,
-                        is AllAppsComposeItem.PrivateSpaceHeader,
-                        AllAppsComposeItem.PredictionsHeader,
-                        AllAppsComposeItem.PinnedAppsHeader,
-                        AllAppsComposeItem.AllAppsHeader,
-                        AllAppsComposeItem.EmptySearchResult -> GridItemSpan(effectiveColumns)
-                        is AllAppsComposeItem.AppItem -> GridItemSpan(1)
-                    }
-                },
-                contentType = { index ->
-                    when (items[index]) {
-                        is AllAppsComposeItem.AppItem -> 0
-                        is AllAppsComposeItem.SectionHeader -> 1
-                        is AllAppsComposeItem.PrivateSpaceHeader -> 2
-                        AllAppsComposeItem.PredictionsHeader -> 3
-                        AllAppsComposeItem.PinnedAppsHeader -> 4
-                        AllAppsComposeItem.AllAppsHeader -> 5
-                        AllAppsComposeItem.EmptySearchResult -> 6
+            val chunkedItems = remember(items, effectiveColumns) {
+                val result = mutableListOf<List<AllAppsComposeItem>>()
+                var currentGroup = mutableListOf<AllAppsComposeItem>()
+                
+                items.forEach { item ->
+                    if (item is AllAppsComposeItem.AppItem) {
+                        currentGroup.add(item)
+                        if (currentGroup.size == effectiveColumns) {
+                            result.add(currentGroup)
+                            currentGroup = mutableListOf()
+                        }
+                    } else {
+                        if (currentGroup.isNotEmpty()) {
+                            result.add(currentGroup)
+                            currentGroup = mutableListOf()
+                        }
+                        result.add(listOf(item))
                     }
                 }
-            ) { index ->
-                val item = items[index]
-                Box(
-                    modifier = Modifier
-                ) {
-                     when (item) {
-                        is AllAppsComposeItem.AppItem -> {
-                            AllAppsComposeAppIcon(
-                                appInfo = item.appInfo,
-                                showLabel = showLabels,
-                                iconSizePx = iconSizePx,
-                                cellHeightPx = cellHeightPx,
-                                onClick = onAppClick,
-                                onLongClick = onAppLongClick,
-                                onDragStart = onAppDragStart,
-                                onDragMove = onAppDragMove,
-                                onDragEnd = onAppDragEnd,
-                                isScrolling = isScrollInProgress,
-                                onLongPressStatusChanged = { isLongPressed ->
-                                    isScrollEnabled = !isLongPressed
-                                },
-                                modifier = Modifier.fillMaxWidth()
-                            )
-                        }
+                if (currentGroup.isNotEmpty()) {
+                    result.add(currentGroup)
+                }
+                result
+            }
+
+            chunkedItems.forEachIndexed { rowIndex, rowItems ->
+                if (rowItems.size == 1 && rowItems[0] !is AllAppsComposeItem.AppItem) {
+                    val item = rowItems[0]
+                    when (item) {
                         is AllAppsComposeItem.SectionHeader -> {
-                            SectionHeaderItem(letter = item.letter)
+                            if (rowIndex > 0) SectionHeaderItem(letter = item.letter, gridWidth = gridWidth)
                         }
                         AllAppsComposeItem.PredictionsHeader -> {
-                            GroupHeaderItem(title = "Suggested apps")
+                            if (rowIndex > 0) GroupHeaderItem(title = "Suggested apps", gridWidth = gridWidth)
                         }
                         AllAppsComposeItem.PinnedAppsHeader -> {
-                            GroupHeaderItem(title = "Pinned apps")
+                            if (rowIndex > 0) GroupHeaderItem(title = "Pinned apps", gridWidth = gridWidth)
                         }
                         AllAppsComposeItem.AllAppsHeader -> {
-                            GroupHeaderItem(title = "All apps")
+                            if (rowIndex > 0) GroupHeaderItem(title = "All apps", gridWidth = gridWidth)
                         }
-                        is AllAppsComposeItem.PrivateSpaceHeader -> {
+                        is AllAppsComposeItem.PrivateSpaceHeader -> PrivateSpaceHeaderItem(isExpanded = item.isExpanded)
+                        AllAppsComposeItem.EmptySearchResult -> EmptySearchResultItem()
+                        else -> {}
+                    }
+                } else {
+                    Row(modifier = Modifier.fillMaxWidth()) {
+                        rowItems.forEach { item ->
+                            if (item is AllAppsComposeItem.AppItem) {
+                                AllAppsComposeAppIcon(
+                                    appInfo = item.appInfo,
+                                    showLabel = showLabels,
+                                    iconSizePx = iconSizePx,
+                                    cellWidthPx = cellWidthPx,
+                                    cellHeightPx = cellHeightPx,
+                                    onClick = onAppClick,
+                                    onLongClick = onAppLongClick,
+                                    onDragStart = onAppDragStart,
+                                    onDragMove = onAppDragMove,
+                                    onDragEnd = onAppDragEnd,
+                                    isScrolling = isScrollInProgress,
+                                    onLongPressStatusChanged = { isLongPressed ->
+                                        isScrollEnabled = !isLongPressed
+                                    },
+                                    modifier = Modifier.weight(1f)
+                                )
+                            }
                         }
-                        AllAppsComposeItem.EmptySearchResult -> {
+                        if (rowItems.size < effectiveColumns) {
+                            repeat(effectiveColumns - rowItems.size) {
+                                Spacer(modifier = Modifier.weight(1f))
+                            }
                         }
                     }
                 }
             }
         }
-
-        if (sections.isNotEmpty()) {
-            AllAppsComposeFastScroller(
-                sections = sections,
-                gridState = gridState,
-                totalItems = items.size,
-                onSectionSelected = { index ->
-                    scope.launch {
-                        gridState.scrollToItem(index)
-                    }
-                },
-                modifier = Modifier
-                    .align(Alignment.CenterEnd)
-            )
-        }
     }
 }
 
 @Composable
-private fun GroupHeaderItem(title: String) {
+private fun GroupHeaderItem(title: String, gridWidth: Dp) {
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 12.dp)
+            .padding(vertical = 12.dp),
+        contentAlignment = Alignment.Center
     ) {
-        Text(
-            text = title,
-            style = MaterialTheme.typography.titleSmall,
-            fontSize = 14.sp,
-            color = MaterialTheme.colorScheme.primary
+        HorizontalDivider(
+            modifier = Modifier
+                .width(if (gridWidth > 0.dp) gridWidth - 16.dp else 300.dp)
+                .clip(CircleShape),
+            thickness = 2.dp
         )
     }
 }
 
 @Composable
-private fun SectionHeaderItem(letter: String) {
+private fun SectionHeaderItem(letter: String, gridWidth: Dp) {
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 8.dp)
+            .padding(vertical = 6.dp),
+        contentAlignment = Alignment.Center
     ) {
-        Text(
-            text = letter,
-            style = MaterialTheme.typography.titleSmall,
-            fontSize = 14.sp,
-            color = MaterialTheme.colorScheme.primary
+        HorizontalDivider(
+            modifier = Modifier
+                .width(if (gridWidth > 0.dp) gridWidth - 16.dp else 300.dp)
+                .clip(CircleShape),
+            thickness = 2.dp
         )
     }
 }
@@ -269,35 +247,5 @@ private fun EmptySearchResultItem() {
             style = MaterialTheme.typography.bodyLarge,
             color = MaterialTheme.colorScheme.onSurface
         )
-    }
-}
-
-@Composable
-private fun rememberSmoothFlingBehavior(): FlingBehavior {
-    val flingSpec = exponentialDecay<Float>(
-        frictionMultiplier = 0.8f
-    )
-    return remember(flingSpec) {
-        object : FlingBehavior {
-            override suspend fun ScrollScope.performFling(initialVelocity: Float): Float {
-                if (abs(initialVelocity) > 1f) {
-                    var velocityLeft = initialVelocity
-                    var lastValue = 0f
-                    AnimationState(
-                        initialValue = 0f,
-                        initialVelocity = initialVelocity,
-                    ).animateDecay(flingSpec) {
-                        val delta = value - lastValue
-                        val consumed = scrollBy(delta)
-                        lastValue = value
-                        velocityLeft = velocity
-                        if (abs(delta - consumed) > 0.5f) this.cancelAnimation()
-                    }
-                    return velocityLeft
-                } else {
-                    return initialVelocity
-                }
-            }
-        }
     }
 }

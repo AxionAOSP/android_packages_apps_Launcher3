@@ -101,14 +101,14 @@ fun <T> AllAppsComposeHost(
         }
     }
     
-    val transitionProgress by viewModel.transitionProgress.collectAsState()
+    val transitionProgressState = viewModel.transitionProgress.collectAsState()
     val allAppsExpanded by viewModel.allAppsExpanded.collectAsState()
     val openCounter by viewModel.openCounter.collectAsState()
     val searchQuery by viewModel.searchQuery.collectAsState()
 
     AllAppsComposeContent(
         state = state,
-        transitionProgress = transitionProgress,
+        transitionProgressProvider = { transitionProgressState.value },
         allAppsExpanded = allAppsExpanded,
         openCounter = openCounter,
         callbacks = object : AllAppsComposeCallbacks {

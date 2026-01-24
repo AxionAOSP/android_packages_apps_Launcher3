@@ -151,6 +151,7 @@ fun UniversalSearchResults(
                 ) {
                     AppActionsResultItem(
                         appActions = state.appActions,
+                        iconSizePx = iconSizePx,
                         onActionClick = { action -> onAppActionClick(state.appActions, action) }
                     )
                 }
@@ -364,7 +365,7 @@ fun UniversalSearchResults(
                     ResultGroupSection(title = "Web Search") {
                         state.webActions.forEachIndexed { index, action ->
                             if (index > 0) HorizontalDivider(color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f))
-                            WebActionItem(action, onClick = { onWebActionClick(action) })
+                            WebActionItem(action, iconSizePx = iconSizePx, onClick = { onWebActionClick(action) })
                         }
                     }
                 }
@@ -779,6 +780,7 @@ private fun SettingResultItem(
 @Composable
 private fun WebActionItem(
     action: UniversalSearchResult.WebAction,
+    iconSizePx: Int,
     onClick: () -> Unit
 ) {
     val (icon, title) = when (action.type) {
@@ -798,7 +800,7 @@ private fun WebActionItem(
         verticalAlignment = Alignment.CenterVertically
     ) {
         val context = LocalContext.current
-        val packageIcon = remember(action) {
+        val packageIcon = remember(action, iconSizePx) {
             val pkg = action.packageName ?: when (action.type) {
                 WebActionType.STORE -> "com.android.vending"
                 WebActionType.GOOGLE -> "com.google.android.googlequicksearchbox"
@@ -808,7 +810,10 @@ private fun WebActionItem(
 
             if (pkg != null) {
                 try {
-                    context.packageManager.getApplicationIcon(pkg).toBitmap().asImageBitmap()
+                    val drawable = context.packageManager.getApplicationIcon(pkg)
+                    val width = if (drawable.intrinsicWidth > 0) drawable.intrinsicWidth else iconSizePx
+                    val height = if (drawable.intrinsicHeight > 0) drawable.intrinsicHeight else iconSizePx
+                    drawable.toBitmap(width, height).asImageBitmap()
                 } catch (e: Exception) { null }
             } else null
         }
@@ -1214,6 +1219,7 @@ private fun PrivateSpaceResultItem(
 @Composable
 private fun AppActionsResultItem(
     appActions: UniversalSearchResult.AppActions,
+    iconSizePx: Int,
     onActionClick: (UniversalSearchResult.AppActions.Action) -> Unit
 ) {
     Column(
@@ -1245,11 +1251,23 @@ private fun AppActionsResultItem(
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         if (action.icon != null) {
-                            Image(
-                                bitmap = action.icon.toBitmap().asImageBitmap(),
-                                contentDescription = null,
-                                modifier = Modifier.size(20.dp)
-                            )
+                            val actionIcon = remember(action.icon, iconSizePx) {
+                                try {
+                                    val fallbackSize = (iconSizePx * 0.6f).toInt().coerceAtLeast(48)
+                                    val width = if (action.icon.intrinsicWidth > 0) action.icon.intrinsicWidth else fallbackSize
+                                    val height = if (action.icon.intrinsicHeight > 0) action.icon.intrinsicHeight else fallbackSize
+                                    action.icon.toBitmap(width, height).asImageBitmap()
+                                } catch (e: Exception) {
+                                    null
+                                }
+                            }
+                            if (actionIcon != null) {
+                                Image(
+                                    bitmap = actionIcon,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(20.dp)
+                                )
+                            }
                         }
                         Text(
                             text = action.label,

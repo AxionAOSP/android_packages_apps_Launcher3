@@ -501,4 +501,9 @@ public class FloatingHeaderView extends LinearLayout implements
         return Math.max(0,
                 getTabLayout().getBottom() - getPaddingTop() + getPaddingBottom() + mTranslationY);
     }
+
+    @Override
+    public void setVisibility(int visibility) {
+        super.setVisibility(View.GONE);
+    }
 }

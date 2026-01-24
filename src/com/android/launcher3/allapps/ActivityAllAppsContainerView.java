@@ -815,14 +815,15 @@ public class ActivityAllAppsContainerView<T extends Context & ActivityContext>
         if (mComposeController != null) {
             mComposeController.setTransitionProgress(progress);
         }
-        updateViewAlpha(mBottomSheetBackground, progress);
-        updateViewAlpha(mBottomSheetHandle, progress);
+        float alpha = (progress - 0.7f) / (1f - 0.7f);
+        updateViewAlpha(mBottomSheetBackground, alpha);
+        updateViewAlpha(mBottomSheetHandle, alpha);
     }
 
-    private void updateViewAlpha(View view, float progress) {
+    private void updateViewAlpha(View view, float alpha) {
         if (view == null) return;
-        view.setAlpha(progress);
-        if (progress > 0f && progress < 1f) {
+        view.setAlpha(alpha);
+        if (alpha > 0f && alpha < 1f) {
             if (view.getLayerType() != View.LAYER_TYPE_HARDWARE) {
                 view.setLayerType(View.LAYER_TYPE_HARDWARE, null);
             }
@@ -1939,6 +1940,7 @@ public class ActivityAllAppsContainerView<T extends Context & ActivityContext>
         animator.addListener(new AnimatorListenerAdapter() {
             @Override
             public void onAnimationStart(Animator animator) {
+                if (mUsingCompose) return;
                 float distance = (1 - progress) * getHeight(); // px
                 float settleVelocity = Math.min(0, distance
                         / (AllAppsTransitionController.INTERP_COEFF * animator.getDuration())
@@ -1966,6 +1968,7 @@ public class ActivityAllAppsContainerView<T extends Context & ActivityContext>
     @Override
     public void setTranslationY(float translationY) {
         super.setTranslationY(translationY);
+        if (mUsingCompose) return;
         invalidateHeader();
     }
 

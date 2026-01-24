@@ -65,6 +65,7 @@ fun AllAppsComposeAppIcon(
     appInfo: AppInfo,
     showLabel: Boolean,
     iconSizePx: Int,
+    cellWidthPx: Int = 0,
     cellHeightPx: Int = 0,
     onClick: (ComposeIconInfo) -> Unit = {},
     onLongClick: (ComposeIconInfo) -> Unit = {},
@@ -146,7 +147,9 @@ fun AllAppsComposeAppIcon(
     val dragThreshold = with(density) { 20.dp.toPx() }
 
     var composeAppIconView by remember { mutableStateOf<ComposeAppIconView?>(null) }
-    val cellWidth = with(density) { effectiveIconSizePx.toDp() }
+    val cellWidth = with(density) { 
+        if (cellWidthPx > 0) cellWidthPx.toDp() else effectiveIconSizePx.toDp() 
+    }
     
     Column(
         modifier = modifier
@@ -273,7 +276,7 @@ fun AllAppsComposeAppIcon(
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
                 modifier = Modifier
-                    .width(cellWidth)
+                    .width(iconSizeDp)
                     .padding(top = 4.dp),
                 color = MaterialTheme.colorScheme.onSurface
             )
