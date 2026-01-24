@@ -201,7 +201,6 @@ fun AllAppsComposeContent(
     
     LaunchedEffect(transitionProgress, allAppsExpanded) {
         if (allAppsExpanded && transitionProgress == 0f) {
-            callbacks.onAllAppsTransitionEnd()
             if (!isLaunching) {
                 searchQuery = ""
                 callbacks.onSearchQueryChanged("")
@@ -212,9 +211,11 @@ fun AllAppsComposeContent(
             }
             isSearchSettingsOpen = false
             expandedCategory = null
-        } else if (!allAppsExpanded && transitionProgress == 1f) {
             delay(16)
+            callbacks.onAllAppsTransitionEnd()
+        } else if (!allAppsExpanded && transitionProgress == 1f) {
             callbacks.onAllAppsTransitionStart()
+            delay(16)
             isLaunching = false
         }
     }

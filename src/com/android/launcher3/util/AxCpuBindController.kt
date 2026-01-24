@@ -84,6 +84,16 @@ class AxCpuBindController private constructor() {
     fun acquireTaskDismissBoost() = animationBoostOn(REQUEST_ANIMATION_BOOST_TYPE_TASK_DISMISS)
     fun releaseTaskDismissBoost() = animationBoostOff(REQUEST_ANIMATION_BOOST_TYPE_TASK_DISMISS)
 
+    fun acquireAppDrawerOpenBoost() {
+        animationBoostOn(REQUEST_ANIMATION_BOOST_TYPE_APP_DRAWER_OPEN)
+        BoostHelper.launcherItemsLoadingBoost(200L)
+    }
+
+    fun releaseAppDrawerOpenBoost() {
+        animationBoostOff(REQUEST_ANIMATION_BOOST_TYPE_APP_DRAWER_OPEN)
+        BoostHelper.launcherItemsLoadingBoost(200L)
+    }
+
     companion object {
         private const val STATUS_BIND_BIG_CORE = 0
         private const val STATUS_BIND_SMALL_CORE = 1
@@ -101,6 +111,7 @@ class AxCpuBindController private constructor() {
         const val REQUEST_ANIMATION_BOOST_TYPE_DRAG = 1 shl 5
         const val REQUEST_ANIMATION_BOOST_TYPE_STATE_DRAG = 1 shl 6
         const val REQUEST_ANIMATION_BOOST_TYPE_TASK_DISMISS = 1 shl 7
+        const val REQUEST_ANIMATION_BOOST_TYPE_APP_DRAWER_OPEN = 1 shl 8
 
         @Volatile
         private var instance: AxCpuBindController? = null

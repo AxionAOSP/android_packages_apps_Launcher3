@@ -92,6 +92,7 @@ import com.android.launcher3.Launcher;
 import com.android.launcher3.LauncherPrefs;
 import com.android.launcher3.R;
 import com.android.launcher3.Utilities;
+import com.android.launcher3.allapps.ActivityAllAppsContainerView.AdapterHolder;
 import com.android.launcher3.allapps.BaseAllAppsAdapter.AdapterItem;
 import com.android.launcher3.allapps.compose.AllAppsComposeCallbacks;
 import com.android.launcher3.allapps.compose.AllAppsComposeController;
@@ -664,12 +665,12 @@ public class ActivityAllAppsContainerView<T extends Context & ActivityContext>
 
             @Override
             public void onAllAppsTransitionStart() {
-                AxCpuBindController.get().acquireHomeTransitionBoost();
+                AxCpuBindController.get().acquireAppDrawerOpenBoost();
             }
 
             @Override
             public void onAllAppsTransitionEnd() {
-                AxCpuBindController.get().releaseHomeTransitionBoost();
+                AxCpuBindController.get().releaseAppDrawerOpenBoost();
             }
         };
     }
