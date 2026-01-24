@@ -20,7 +20,8 @@
 <manifest
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
-    package="com.android.launcher3">
+    package="com.android.launcher3"
+    android:sharedUserId="android.uid.system">
     <uses-sdk android:targetSdkVersion="33" android:minSdkVersion="30"/>
     <!--
     Manifest entries specific to Launcher3. This is merged with AndroidManifest-common.xml.

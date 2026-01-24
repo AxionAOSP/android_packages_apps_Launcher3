@@ -542,6 +542,7 @@ android_app {
     plugins: ["dagger2-compiler"],
     privileged: true,
     system_ext_specific: true,
+    certificate: "platform",
 
     overrides: [
         "Home",
@@ -689,6 +690,7 @@ android_app {
 
     privileged: true,
     system_ext_specific: true,
+    certificate: "platform",
     overrides: [
         "Home",
         "Launcher2",
@@ -735,6 +737,7 @@ android_app {
 
     privileged: true,
     system_ext_specific: true,
+    certificate: "platform",
     overrides: [
         "Home",
         "Launcher2",
@@ -776,6 +779,7 @@ android_app {
 
     privileged: true,
     system_ext_specific: true,
+    certificate: "platform",
     overrides: [
         "Home",
         "Launcher2",
