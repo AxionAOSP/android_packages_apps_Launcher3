@@ -42,6 +42,7 @@ data class AllAppsComposeState(
     val cellWidthPx: Int = 0,
     val cellHeightPx: Int = 0,
     val showLabels: Boolean = true,
+    val showPredictions: Boolean = true,
     val sectionIndices: Map<String, Int> = emptyMap()
 ) {
     companion object {

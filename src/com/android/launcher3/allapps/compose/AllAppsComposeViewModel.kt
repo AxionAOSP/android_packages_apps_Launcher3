@@ -22,7 +22,6 @@ import android.content.SharedPreferences
 import android.content.res.Configuration
 import android.os.Process
 import com.android.launcher3.LauncherFiles
-import com.android.launcher3.LauncherPrefs
 import com.android.launcher3.allapps.AllAppsStore
 import com.android.launcher3.allapps.AlphabeticalAppsList
 import com.android.launcher3.model.data.AppInfo
@@ -44,6 +43,7 @@ class AllAppsComposeViewModel<T>(
     )
     
     val pinnedAppsManager = PinnedAppsManager(context)
+    private val usagePredictionProvider = UsagePredictionProvider(context)
     
     private val viewModelScope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
     private var updateAppsJob: Job? = null
@@ -64,7 +64,6 @@ class AllAppsComposeViewModel<T>(
     val openCounter: StateFlow<Int> = _openCounter.asStateFlow()
 
     private val personalMatcher = ItemInfoMatcher.ofUser(Process.myUserHandle())
-    private var predictedKeys: List<ComponentKey> = emptyList()
 
     private val appsUpdateListener = AllAppsStore.OnUpdateListener {
         updateApps()
@@ -80,12 +79,20 @@ class AllAppsComposeViewModel<T>(
     private val preferenceChangeListener = SharedPreferences.OnSharedPreferenceChangeListener { _, key ->
         if (key == "pref_drawer_show_labels") {
             _state.update { it.copy(showLabels = prefs.getBoolean(key, true)) }
+        } else if (key == "pref_all_apps_predictions") {
+            _state.update { it.copy(showPredictions = prefs.getBoolean(key, true)) }
+            updateApps()
         }
     }
 
     fun reloadPreferences() {
         val showLabels = prefs.getBoolean("pref_drawer_show_labels", true)
-        _state.update { it.copy(showLabels = showLabels) }
+        val showPredictions = prefs.getBoolean("pref_all_apps_predictions", true)
+        _state.update { it.copy(
+            showLabels = showLabels, 
+            showPredictions = showPredictions
+        ) }
+        updateApps()
     }
 
     private fun observePreferences() {
@@ -115,15 +122,20 @@ class AllAppsComposeViewModel<T>(
                 processApps(allApps, pinnedComponents)
             }
             
-            val predictedApps = predictedKeys.mapNotNull { key ->
-                allAppsStore.getApp(key)
+            
+            val predictedApps = if (!_state.value.showPredictions) {
+                emptyList()
+            } else {
+                withContext(Dispatchers.Default) {
+                    usagePredictionProvider.getPredictions(allApps, _state.value.numColumns)
+                }
             }
 
             val currentIconSize = _state.value.iconSizePx
             if (currentIconSize > 0) {
                 val iconProvider = AllAppsIconProvider.getInstance(context)
                 iconProvider.clearCache()
-                val themed = LauncherPrefs.ALLAPPS_THEMED_ICONS.get(context)
+                val themed = prefs.getBoolean("pref_allapps_themed_icons", false)
                 val uiMode = context.resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK
                 iconProvider.preloadIcons(
                     allApps,
@@ -135,7 +147,9 @@ class AllAppsComposeViewModel<T>(
             }
             
             _state.update { currentState ->
-                val finalPredictedApps = if (currentState.currentTab == AllAppsComposeState.TAB_PERSONAL) {
+                val finalPredictedApps = if (!currentState.showPredictions) {
+                    emptyList()
+                } else if (currentState.currentTab == AllAppsComposeState.TAB_PERSONAL) {
                     predictedApps.filter {
                         personalMatcher.test(it) && it.componentName !in pinnedComponents
                     }
@@ -214,14 +228,8 @@ class AllAppsComposeViewModel<T>(
         )
     }
 
-
-
     fun updatePredictedApps(items: List<com.android.launcher3.model.data.ItemInfo>) {
-        predictedKeys = items.filterIsInstance<com.android.launcher3.model.data.WorkspaceItemInfo>()
-            .mapNotNull { wsItem ->
-                wsItem.targetComponent?.let { component -> ComponentKey(component, wsItem.user) }
-            }
-        updateApps()
+        // no-op :)
     }
 
     private fun filterAppsForCurrentTab(apps: List<AppInfo>): List<AppInfo> {

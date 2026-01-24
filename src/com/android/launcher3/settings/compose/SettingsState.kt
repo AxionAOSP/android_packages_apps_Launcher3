@@ -104,6 +104,9 @@ class SettingsState(private val context: Context) : ViewModel(), LauncherPrefCha
     private val _disableWallpaperZoom = MutableStateFlow(launcherPrefs.get(LauncherPrefs.DISABLE_WALLPAPER_ZOOM))
     val disableWallpaperZoom: StateFlow<Boolean> = _disableWallpaperZoom.asStateFlow()
 
+    private val _allAppsPredictions = MutableStateFlow(launcherPrefs.get(LauncherPrefs.SHOW_ALLAPPS_PREDICTIONS))
+    val allAppsPredictions: StateFlow<Boolean> = _allAppsPredictions.asStateFlow()
+
     init {
         launcherPrefs.addListener(this,
             LauncherPrefs.WORKSPACE_LOCK,
@@ -118,6 +121,7 @@ class SettingsState(private val context: Context) : ViewModel(), LauncherPrefCha
             LauncherPrefs.ALLAPPS_ICON_SCALE,
             LauncherPrefs.ALL_APPS_BG_OPACITY,
             LauncherPrefs.DISABLE_WALLPAPER_ZOOM,
+            LauncherPrefs.SHOW_ALLAPPS_PREDICTIONS,
             LauncherPrefs.backedUpItem("pref_add_icon_to_home", true),
             LauncherPrefs.backedUpItem("pref_enable_minus_one", true),
             LauncherPrefs.backedUpItem("themed_icons", false),
@@ -147,6 +151,7 @@ class SettingsState(private val context: Context) : ViewModel(), LauncherPrefCha
             LauncherPrefs.ALLAPPS_ICON_SCALE.sharedPrefKey -> _allAppsIconScale.value = launcherPrefs.get(LauncherPrefs.ALLAPPS_ICON_SCALE)
             LauncherPrefs.ALL_APPS_BG_OPACITY.sharedPrefKey -> _allAppsBgOpacity.value = launcherPrefs.get(LauncherPrefs.ALL_APPS_BG_OPACITY)
             LauncherPrefs.DISABLE_WALLPAPER_ZOOM.sharedPrefKey -> _disableWallpaperZoom.value = launcherPrefs.get(LauncherPrefs.DISABLE_WALLPAPER_ZOOM)
+            LauncherPrefs.SHOW_ALLAPPS_PREDICTIONS.sharedPrefKey -> _allAppsPredictions.value = launcherPrefs.get(LauncherPrefs.SHOW_ALLAPPS_PREDICTIONS)
             "pref_add_icon_to_home" -> _autoAddIcons.value = launcherPrefs.get(LauncherPrefs.backedUpItem("pref_add_icon_to_home", true))
             "pref_enable_minus_one" -> _showGoogleApp.value = launcherPrefs.get(LauncherPrefs.backedUpItem("pref_enable_minus_one", true))
             "themed_icons" -> _themedIconsEnabled.value = launcherPrefs.get(LauncherPrefs.backedUpItem("themed_icons", false))
@@ -189,6 +194,7 @@ class SettingsState(private val context: Context) : ViewModel(), LauncherPrefCha
             LauncherPrefs.ALLAPPS_ICON_SCALE,
             LauncherPrefs.ALL_APPS_BG_OPACITY,
             LauncherPrefs.DISABLE_WALLPAPER_ZOOM,
+            LauncherPrefs.SHOW_ALLAPPS_PREDICTIONS,
             LauncherPrefs.backedUpItem("pref_add_icon_to_home", true),
             LauncherPrefs.backedUpItem("pref_enable_minus_one", true),
             LauncherPrefs.backedUpItem("themed_icons", false),

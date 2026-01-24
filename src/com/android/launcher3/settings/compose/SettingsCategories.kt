@@ -233,6 +233,15 @@ fun AppDrawerSettings(viewModel: SettingsState) {
                 onCheckedChange = { viewModel.setBoolean("pref_drawer_open_keyboard", it) }
             )
         }
+        item {
+            val allAppsPredictions by viewModel.allAppsPredictions.collectAsState()
+            SwitchPreference(
+                title = stringResource(R.string.all_apps_suggestions_title),
+                summary = stringResource(R.string.all_apps_suggestions_summary),
+                checked = allAppsPredictions,
+                onCheckedChange = { viewModel.setBoolean("pref_all_apps_predictions", it) }
+            )
+        }
     }
     
     PreferenceGroup(
