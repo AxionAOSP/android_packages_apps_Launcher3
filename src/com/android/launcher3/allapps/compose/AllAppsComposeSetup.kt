@@ -21,6 +21,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.dynamicDarkColorScheme
 import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.key
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.ViewCompositionStrategy
@@ -40,34 +41,25 @@ object AllAppsComposeSetup {
         allAppsStore: AllAppsStore<T>,
         activityContext: T,
         callbacks: AllAppsComposeCallbacks,
-        controller: AllAppsComposeController? = null
+        controller: AllAppsComposeController? = null,
+        rebindKey: Int = 0
     ) where T : Context, T : ActivityContext {
-        composeView.repeatWhenAttached {
-            repeatOnLifecycle(Lifecycle.State.STARTED) {
-                composeView.setViewCompositionStrategy(
-                    ViewCompositionStrategy.DisposeOnDetachedFromWindowOrReleasedFromPool
-                )
-                composeView.setContent {
-                    AllAppsComposeTheme {
-                        val onBackPressedDispatcherOwner = activityContext as? OnBackPressedDispatcherOwner
-                        if (onBackPressedDispatcherOwner != null) {
-                            CompositionLocalProvider(
-                                LocalOnBackPressedDispatcherOwner provides onBackPressedDispatcherOwner
-                            ) {
-                                AllAppsComposeHost(
-                                    allAppsStore = allAppsStore,
-                                    activityContext = activityContext,
-                                    callbacks = callbacks,
-                                    controller = controller
-                                )
+        composeView.apply {
+            repeatWhenAttached {
+                repeatOnLifecycle(Lifecycle.State.STARTED) {
+                    setViewCompositionStrategy(
+                        ViewCompositionStrategy.DisposeOnDetachedFromWindowOrReleasedFromPool
+                    )
+                    setContent {
+                        key(rebindKey) {
+                            AllAppsComposeTheme {
+                                val host = @Composable {
+                                    AllAppsComposeHost(allAppsStore, activityContext, callbacks, controller)
+                                }
+                                (activityContext as? OnBackPressedDispatcherOwner)?.let {
+                                    CompositionLocalProvider(LocalOnBackPressedDispatcherOwner provides it, content = host)
+                                } ?: host()
                             }
-                        } else {
-                            AllAppsComposeHost(
-                                allAppsStore = allAppsStore,
-                                activityContext = activityContext,
-                                callbacks = callbacks,
-                                controller = controller
-                            )
                         }
                     }
                 }

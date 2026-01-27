@@ -220,6 +220,7 @@ public class ActivityAllAppsContainerView<T extends Context & ActivityContext>
     private boolean mComposeFolderExpanded;
     @Nullable private Runnable mDismissFolderHandler;
     @Nullable private androidx.compose.ui.platform.ComposeView mComposeView;
+    private int mComposeRebindCount = 0;
     private OnBackInvokedCallback mOnBackInvokedCallback;
     private AllAppsComposeController mComposeController;
     @Nullable private WeakReference<View> mLastLaunchedComposeIcon;
@@ -398,7 +399,8 @@ public class ActivityAllAppsContainerView<T extends Context & ActivityContext>
                     mAllAppsStore,
                     mActivityContext,
                     createComposeCallbacks(),
-                    mComposeController
+                    mComposeController,
+                    mComposeRebindCount
             );
         }
 
@@ -1049,14 +1051,17 @@ public class ActivityAllAppsContainerView<T extends Context & ActivityContext>
     protected void rebindAdapters(boolean force) {
         if (mUsingCompose && mComposeView != null) {
             Log.d(TAG, "AllAppsComposeSetup: rebindAdapters recomposing compose view!");
+            mComposeRebindCount++;
             AllAppsComposeSetup.setupComposeView(
                     mComposeView,
                     mAllAppsStore,
                     mActivityContext,
                     createComposeCallbacks(),
-                    mComposeController
+                    mComposeController,
+                    mComposeRebindCount
             );
         }
+
         Log.d(TAG, "rebindAdapters: force: " + force);
         if (mSearchTransitionController.isRunning()) {
             mRebindAdaptersAfterSearchAnimation = true;
@@ -1576,12 +1581,14 @@ public class ActivityAllAppsContainerView<T extends Context & ActivityContext>
         }
 
         if (mUsingCompose && mComposeView != null) {
+            mComposeRebindCount++;
             AllAppsComposeSetup.setupComposeView(
                     mComposeView,
                     mAllAppsStore,
                     mActivityContext,
                     createComposeCallbacks(),
-                    mComposeController
+                    mComposeController,
+                    mComposeRebindCount
             );
         }
     }
