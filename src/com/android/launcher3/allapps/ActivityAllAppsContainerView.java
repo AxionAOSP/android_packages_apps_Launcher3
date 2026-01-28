@@ -1049,7 +1049,7 @@ public class ActivityAllAppsContainerView<T extends Context & ActivityContext>
     }
 
     protected void rebindAdapters(boolean force) {
-        if (mUsingCompose && mComposeView != null) {
+        if (mUsingCompose && mComposeView != null && force) {
             Log.d(TAG, "AllAppsComposeSetup: rebindAdapters recomposing compose view!");
             mComposeRebindCount++;
             AllAppsComposeSetup.setupComposeView(
