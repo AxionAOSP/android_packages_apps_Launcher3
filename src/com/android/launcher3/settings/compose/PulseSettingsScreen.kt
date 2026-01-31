@@ -13,6 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+@file:OptIn(ExperimentalMaterial3ExpressiveApi::class)
+
 package com.android.launcher3.settings.compose
 
 import android.content.Context
@@ -193,7 +195,11 @@ fun PulseBottomBar(
         shadowElevation = 8.dp
     ) {
         Row(
-            modifier = Modifier.padding(horizontal = 8.dp),
+            modifier = Modifier
+                .padding(8.dp)
+                .animateContentSize(
+                    animationSpec = MaterialTheme.motionScheme.defaultSpatialSpec()
+                ),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(4.dp)
         ) {
@@ -218,6 +224,9 @@ fun PulseBottomBar(
                     contentAlignment = Alignment.Center
                 ) {
                     Row(
+                        modifier = Modifier.animateContentSize(
+                            animationSpec = MaterialTheme.motionScheme.defaultSpatialSpec()
+                        ),
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
