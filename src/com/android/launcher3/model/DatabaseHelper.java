@@ -70,7 +70,7 @@ public class DatabaseHelper extends NoLocaleSQLiteHelper implements
      * Represents the schema of the database. Changes in scheme need not be backwards compatible.
      * When increasing the scheme version, ensure that downgrade_schema.json is updated
      */
-    public static final int SCHEMA_VERSION = 33;
+    public static final int SCHEMA_VERSION = 34;
     private static final String TAG = "DatabaseHelper";
     private static final boolean LOGD = false;
 
@@ -270,11 +270,12 @@ public class DatabaseHelper extends NoLocaleSQLiteHelper implements
             case 31: {
                 LauncherDbUtils.migrateLegacyShortcuts(mContext, db);
             }
-            case 32: {
+            case 32:
+            case 33: {
                 addIntegerColumn(db, Favorites.FOLDER_STYLE, 0);
                 addTextColumn(db, Favorites.COVER_TEXT);
             }
-            case 33: {
+            case 34: {
                 return;
             }
         }

@@ -178,8 +178,8 @@ public class LoaderCursor extends CursorWrapper {
         mRankIndex = getColumnIndexOrThrow(Favorites.RANK);
         mOptionsIndex = getColumnIndexOrThrow(Favorites.OPTIONS);
         mAppWidgetSourceIndex = getColumnIndexOrThrow(Favorites.APPWIDGET_SOURCE);
-        mFolderStyleIndex = getColumnIndexOrThrow(Favorites.FOLDER_STYLE);
-        mCoverTextIndex = getColumnIndexOrThrow(Favorites.COVER_TEXT);
+        mFolderStyleIndex = getColumnIndex(Favorites.FOLDER_STYLE);
+        mCoverTextIndex = getColumnIndex(Favorites.COVER_TEXT);
     }
 
     @Override
@@ -308,11 +308,11 @@ public class LoaderCursor extends CursorWrapper {
     }
 
     public int getFolderStyle() {
-        return getInt(mFolderStyleIndex);
+        return mFolderStyleIndex != -1 ? getInt(mFolderStyleIndex) : Favorites.FOLDER_STYLE_QUADRANT;
     }
 
     public String getCoverText() {
-        return getString(mCoverTextIndex);
+        return mCoverTextIndex != -1 ? getString(mCoverTextIndex) : null;
     }
 
     /**
