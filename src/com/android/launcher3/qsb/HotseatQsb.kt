@@ -21,6 +21,8 @@ import android.appwidget.AppWidgetManager
 import android.appwidget.AppWidgetProviderInfo
 import android.content.Context
 import android.content.SharedPreferences
+import android.view.GestureDetector
+import android.view.MotionEvent
 import android.util.Log
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -36,6 +38,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import com.android.launcher3.Launcher
 import com.android.launcher3.LauncherAppState
+import com.android.launcher3.LauncherConstants
 import com.android.launcher3.LauncherPrefs
 import com.android.launcher3.R
 import com.android.launcher3.widget.util.WidgetSizes
@@ -50,13 +53,13 @@ fun HotseatQsb() {
     val prefs = remember { LauncherPrefs.getPrefs(context) }
     
     var searchProvider by remember {
-        mutableStateOf(prefs.getString(SearchWidgetHelper.KEY_SEARCH_PROVIDER, "") ?: "")
+        mutableStateOf(prefs.getString(SearchWidgetHelper.KEY_SEARCH_PROVIDER, "none") ?: "none")
     }
 
     DisposableEffect(Unit) {
         val listener = SharedPreferences.OnSharedPreferenceChangeListener { sharedPrefs, key ->
             if (key == SearchWidgetHelper.KEY_SEARCH_PROVIDER) {
-                val newValue = sharedPrefs.getString(key, "") ?: ""
+                val newValue = sharedPrefs.getString(key, "none") ?: "none"
                 Log.d(TAG, "Pref changed: $newValue")
                 searchProvider = newValue
             }
@@ -67,15 +70,32 @@ fun HotseatQsb() {
         }
     }
 
-    if (searchProvider == "none") {
-        Log.d(TAG, "Provider is 'none', skip")
+    val widgetInfo = remember(searchProvider) {
+        SearchWidgetHelper.getSearchWidgetProvider(context).also {
+            Log.d(TAG, "WidgetInfo: ${it?.provider?.shortClassName ?: "null"}")
+        }
+    }
+
+    if (searchProvider == "none" || searchProvider.isBlank() || widgetInfo == null) {
+        Log.d(TAG, "Provider is not available, skip")
         return
     }
 
     val widgetHost = remember { 
         Log.d(TAG, "Creating QsbWidgetHost, startListening")
         QsbContainerView.QsbWidgetHost(context, QSB_WIDGET_HOST_ID) { ctx ->
-            QsbWidgetHostView(ctx)
+            object : QsbWidgetHostView(ctx) {
+                private val gestureDetector = GestureDetector(context, object : GestureDetector.SimpleOnGestureListener() {
+                    override fun onLongPress(e: MotionEvent) {
+                        performLongClick()
+                    }
+                })
+
+                override fun onInterceptTouchEvent(ev: MotionEvent): Boolean {
+                    gestureDetector.onTouchEvent(ev)
+                    return super.onInterceptTouchEvent(ev)
+                }
+            }
         }.also { it.startListening() }
     }
     
@@ -86,18 +106,7 @@ fun HotseatQsb() {
         }
     }
 
-    val widgetInfo = remember(searchProvider) {
-        SearchWidgetHelper.getSearchWidgetProvider(context).also {
-            Log.d(TAG, "WidgetInfo: ${it?.provider?.shortClassName ?: "null"}")
-        }
-    }
-
-    if (widgetInfo != null) {
-        QsbWidget(context, widgetHost, widgetInfo, prefs, searchProvider)
-    } else {
-        Log.d(TAG, "No widgetInfo, showing default")
-        DefaultQsbView()
-    }
+    QsbWidget(context, widgetHost, widgetInfo, prefs, searchProvider)
 }
 
 @Composable
@@ -168,6 +177,21 @@ private fun QsbWidget(
                             android.widget.FrameLayout.LayoutParams.MATCH_PARENT,
                             qsbHeight
                         )
+
+                        setOnLongClickListener { view ->
+                          val launcher = Launcher.getLauncher(view.context)
+                          if (widgetInfo.configure != null) {
+                            launcher.appWidgetHolder.startConfigActivity(
+                              launcher,
+                              widgetId,
+                              LauncherConstants.ActivityCodes.REQUEST_RECONFIGURE_APPWIDGET
+                            )
+                            true
+                          } else {
+                            false
+                          }
+                        }
+
                         Log.d(TAG, "View created: w=${layoutParams.width}, h=${layoutParams.height}")
                     }
                 },
