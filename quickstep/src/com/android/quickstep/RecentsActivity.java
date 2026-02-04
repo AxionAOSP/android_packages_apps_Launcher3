@@ -35,12 +35,14 @@ import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
 import android.animation.AnimatorSet;
 import android.app.ActivityOptions;
+import android.content.ComponentName;
 import android.content.Intent;
 import android.content.res.Configuration;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.Trace;
+import android.provider.Settings;
 import android.view.Display;
 import android.view.RemoteAnimationAdapter;
 import android.view.RemoteAnimationTarget;
@@ -384,6 +386,22 @@ public final class RecentsActivity extends StatefulActivity<RecentsState> implem
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        
+        // Intercept for ax_pc_mode: redirect to AxPcMode's TasksOverviewActivity
+        try {
+            if (Settings.Secure.getInt(getContentResolver(), "ax_pc_mode", 0) == 1) {
+                Intent intent = new Intent();
+                intent.setComponent(new ComponentName("com.android.axion.axpcmode",
+                        "com.android.axion.axpcmode.activities.TasksOverviewActivity"));
+                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                startActivity(intent);
+                finish();
+                return;
+            }
+        } catch (Exception e) {
+            // Ignore and continue with normal recents
+        }
+        
         setWallpaperDependentTheme(this);
         mStateManager = new StateManager<>(this, RecentsState.BG_LAUNCHER);
 
@@ -465,6 +483,14 @@ public final class RecentsActivity extends StatefulActivity<RecentsState> implem
 
     @Override
     protected void onDestroy() {
+        try {
+            if (Settings.Secure.getInt(getContentResolver(), "ax_pc_mode", 0) == 1) {
+                super.onDestroy();
+                return;
+            }
+        } catch (Exception e) {
+        }
+        
         RecentsView recentsView = getOverviewPanel();
         if (recentsView != null) {
             recentsView.destroy();
