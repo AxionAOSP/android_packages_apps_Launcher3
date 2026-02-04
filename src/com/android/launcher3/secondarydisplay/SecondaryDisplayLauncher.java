@@ -20,13 +20,16 @@ import static com.android.launcher3.util.WallpaperThemeManager.setWallpaperDepen
 
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
+import android.app.ActivityOptions;
 import android.app.WallpaperColors;
 import android.app.WallpaperManager;
 import android.app.WallpaperManager.OnColorsChangedListener;
+import android.content.ComponentName;
 import android.content.Intent;
 import android.graphics.Rect;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
+
 import android.view.Display;
 import android.view.KeyEvent;
 import android.view.View;
@@ -104,6 +107,7 @@ public class SecondaryDisplayLauncher extends BaseActivity
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
         setWallpaperDependentTheme(this);
         mModel = LauncherAppState.getInstance(this).getModel();
         mDragController = new SecondaryDragController(this);
@@ -138,6 +142,34 @@ public class SecondaryDisplayLauncher extends BaseActivity
         );
 
         mSecondaryDisplayDelegate.onCreate();
+
+        launchAxPcModeIfNeeded();
+    }
+
+    private void launchAxPcModeIfNeeded() {
+        int displayId = getDisplayId();
+
+        try {
+            Intent pcIntent = new Intent(Intent.ACTION_MAIN);
+            pcIntent.setComponent(new ComponentName("com.android.axion.axpcmode",
+                    "com.android.axion.axpcmode.activities.SecondaryPcModeLauncherActivity"));
+            pcIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK
+                    | Intent.FLAG_ACTIVITY_CLEAR_TOP
+                    | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+            ActivityOptions opts = ActivityOptions.makeBasic();
+            opts.setLaunchDisplayId(displayId);
+            startActivity(pcIntent, opts.toBundle());
+
+            Intent mouseIntent = new Intent();
+            mouseIntent.setComponent(new ComponentName("com.android.axion.axpcmode",
+                    "com.android.axion.axpcmode.activities.MousePadActivity"));
+            mouseIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK
+                    | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+            ActivityOptions mouseOpts = ActivityOptions.makeBasic();
+            mouseOpts.setLaunchDisplayId(Display.DEFAULT_DISPLAY);
+            startActivity(mouseIntent, mouseOpts.toBundle());
+        } catch (Exception ignored) {
+        }
     }
 
     /** Set the status bar icon colours depending on wallpaper hint. */
@@ -160,6 +192,8 @@ public class SecondaryDisplayLauncher extends BaseActivity
     @Override
     public void onNewIntent(Intent intent) {
         super.onNewIntent(intent);
+
+        launchAxPcModeIfNeeded();
 
         if (Intent.ACTION_MAIN.equals(intent.getAction())) {
             // Hide keyboard.
@@ -207,9 +241,15 @@ public class SecondaryDisplayLauncher extends BaseActivity
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        mSecondaryDisplayDelegate.onDestroy();
-        mModel.removeCallbacks(this);
-        mWallpaperManager.removeOnColorsChangedListener(mWallpaperColorsListener);
+        if (mSecondaryDisplayDelegate != null) {
+            mSecondaryDisplayDelegate.onDestroy();
+        }
+        if (mModel != null) {
+            mModel.removeCallbacks(this);
+        }
+        if (mWallpaperManager != null) {
+            mWallpaperManager.removeOnColorsChangedListener(mWallpaperColorsListener);
+        }
     }
 
     public boolean isAppDrawerShown() {
