@@ -47,6 +47,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.android.launcher3.model.data.AppInfo
+import com.android.launcher3.BaseActivity
 import com.android.launcher3.Launcher
 import com.android.launcher3.views.ActivityContext
 import android.util.Log
@@ -262,7 +263,7 @@ fun AllAppsComposeAppIcon(
                     view.iconDrawable = iconDrawable
                     view.setIconBounds(Rect(0, 0, effectiveIconSizePx, effectiveIconSizePx))
                     view.setIconSizePx(effectiveIconSizePx)
-                    val dotInfo = ActivityContext.lookupContext<Launcher>(view.context).getDotInfoForItem(appInfo)
+                    val dotInfo = ActivityContext.lookupContext<BaseActivity>(view.context).getDotInfoForItem(appInfo)
                     view.applyDotState(dotInfo, false)
                 }
             )

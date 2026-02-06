@@ -138,15 +138,8 @@ public class SecondaryDragLayer extends BaseDragLayer<SecondaryDisplayLauncher> 
                 int verticalPadding =
                         grid.cellLayoutPaddingPx.top + grid.cellLayoutPaddingPx.bottom;
 
-                int maxWidth =
-                        grid.getAllAppsProfile().getCellWidthPx() * grid.numShownAllAppsColumns
-                                + horizontalPadding;
-                int appsWidth = Math.min(width - getPaddingLeft() - getPaddingRight(), maxWidth);
-
-                int maxHeight =
-                        grid.getAllAppsProfile().getCellHeightPx() * grid.numShownAllAppsColumns
-                                + verticalPadding;
-                int appsHeight = Math.min(height - getPaddingTop() - getPaddingBottom(), maxHeight);
+                int appsWidth = width - getPaddingLeft() - getPaddingRight();
+                int appsHeight = height - getPaddingTop() - getPaddingBottom();
 
                 mAppsView.measure(
                         makeMeasureSpec(appsWidth, EXACTLY), makeMeasureSpec(appsHeight, EXACTLY));
