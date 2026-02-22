@@ -1,5 +1,5 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<!-- 
+<?xml version="1.0" encoding="utf-8"?>
+<!--
 /*
 * Copyright (C) 2008 The Android Open Source Project
 *
@@ -15,215 +15,474 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
- -->
-
-<resources xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
-    <string name="app_name" msgid="649227358658669779">"Trình chạy 3"</string>
-    <string name="work_folder_name" msgid="3753320833950115786">"Work"</string>
-    <string name="activity_not_found" msgid="8071924732094499514">"Ứng dụng chưa được cài đặt."</string>
-    <string name="activity_not_available" msgid="7456344436509528827">"Ứng dụng không có sẵn"</string>
-    <string name="safemode_shortcut_error" msgid="9160126848219158407">"Ứng dụng đã tải xuống bị tắt ở chế độ An toàn"</string>
-    <string name="safemode_widget_error" msgid="4863470563535682004">"Tiện ích bị vô hiệu hóa ở chế độ an toàn"</string>
-    <string name="shortcut_not_available" msgid="2536503539825726397">"Lối tắt không khả dụng"</string>
-    <string name="home_screen" msgid="5629429142036709174">"Màn hình chính"</string>
-    <string name="set_default_home_app" msgid="5808906607627586381">"Đặt <xliff:g id="LAUNCHER_NAME">%1$s</xliff:g> làm trình chạy mặc định trong phần Cài đặt"</string>
-    <string name="recent_task_option_split_screen" msgid="6690461455618725183">"Chia đôi màn hình"</string>
-    <string name="recent_task_option_aspect_ratio" msgid="7008605516391096989">"Thay đổi tỷ lệ khung hình"</string>
-    <string name="split_app_info_accessibility" msgid="5475288491241414932">"Thông tin ứng dụng cho %1$s"</string>
-    <string name="split_app_usage_settings" msgid="7214375263347964093">"Chế độ cài đặt mức sử dụng %1$s"</string>
-    <string name="new_window_option_taskbar" msgid="6448780542727767211">"Cửa sổ mới"</string>
-    <string name="manage_windows_option_taskbar" msgid="2294109489960654212">"Quản lý cửa sổ"</string>
-    <string name="save_app_pair" msgid="5647523853662686243">"Lưu cặp ứng dụng"</string>
-    <string name="app_pair_default_title" msgid="4045241727446873529">"<xliff:g id="APP1">%1$s</xliff:g> | <xliff:g id="APP2">%2$s</xliff:g>"</string>
-    <string name="app_pair_unlaunchable_at_screen_size" msgid="3446551575502685376">"Cặp ứng dụng này không hoạt động được trên thiết bị này"</string>
-    <string name="app_pair_needs_unfold" msgid="4588897528143807002">"Hãy mở thiết bị để dùng cặp ứng dụng này"</string>
-    <string name="app_pair_not_available" msgid="3556767440808032031">"Hiện không có cặp ứng dụng này"</string>
-    <string name="long_press_widget_to_add" msgid="3587712543577675817">"Chạm và giữ để di chuyển một tiện ích."</string>
-    <string name="long_accessible_way_to_add" msgid="2733588281439571974">"Nhấn đúp và giữ để di chuyển một tiện ích hoặc sử dụng các thao tác tùy chỉnh."</string>
-    <string name="widget_picker_widget_options_button_description" msgid="4770099264476852363">"Lựa chọn khác"</string>
-    <string name="widget_picker_show_all_widgets_menu_item_title" msgid="9023638224586908119">"Hiện tất cả tiện ích"</string>
-    <string name="widget_dims_format" msgid="2370757736025621599">"%1$d × %2$d"</string>
-    <string name="widget_accessible_dims_format" msgid="3640149169885301790">"Rộng %1$d x cao %2$d"</string>
-    <string name="widget_preview_context_description" msgid="9045841361655787574">"Tiện ích <xliff:g id="WIDGET_NAME">%1$s</xliff:g>"</string>
-    <string name="widget_preview_name_and_dims_content_description" msgid="8489038126122831595">"Tiện ích <xliff:g id="WIDGET_NAME">%1$s</xliff:g>, rộng %2$d x cao %3$d"</string>
-    <string name="add_item_request_drag_hint" msgid="8730547755622776606">"Chạm và giữ tiện ích để di chuyển tiện ích đó xung quanh màn hình chính"</string>
-    <string name="add_to_home_screen" msgid="9168649446635919791">"Thêm vào màn hình chính"</string>
-    <string name="added_to_home_screen_accessibility_text" msgid="4451545765448884415">"Đã thêm tiện ích <xliff:g id="WIDGET_NAME">%1$s</xliff:g> vào màn hình chính"</string>
-    <string name="suggested_widgets_header_title" msgid="1844314680798145222">"Nội dung đề xuất"</string>
-    <string name="productivity_widget_recommendation_category_label" msgid="3811812719618323750">"Các tiện ích thiết yếu"</string>
-    <string name="news_widget_recommendation_category_label" msgid="6756167867113741310">"Tin tức và tạp chí"</string>
-    <string name="entertainment_widget_recommendation_category_label" msgid="3973107268630717874">"Giải trí"</string>
-    <string name="social_widget_recommendation_category_label" msgid="689147679536384717">"Mạng xã hội"</string>
-    <string name="others_widget_recommendation_category_label" msgid="5555987036267226245">"Đề xuất cho bạn"</string>
-    <string name="widget_picker_right_pane_accessibility_title" msgid="1673313931455067502">"Tiện ích <xliff:g id="SELECTED_HEADER">%1$s</xliff:g> ở bên phải, công cụ tìm kiếm và tuỳ chọn ở bên trái"</string>
-    <string name="widgets_count" msgid="6467746476364652096">"{count,plural, =1{# tiện ích}other{# tiện ích}}"</string>
-    <string name="shortcuts_count" msgid="8471715556199592381">"{count,plural, =1{# lối tắt}other{# lối tắt}}"</string>
-    <string name="widgets_and_shortcuts_count" msgid="7209136747878365116">"<xliff:g id="WIDGETS_COUNT">%1$s</xliff:g>, <xliff:g id="SHORTCUTS_COUNT">%2$s</xliff:g>"</string>
-    <string name="widget_button_text" msgid="2880537293434387943">"Tiện ích"</string>
-    <string name="widgets_full_sheet_search_bar_hint" msgid="8484659090860596457">"Tìm kiếm"</string>
-    <string name="widgets_full_sheet_cancel_button_description" msgid="5766167035728653605">"Xóa văn bản khỏi hộp tìm kiếm"</string>
-    <string name="no_widgets_available" msgid="4337693382501046170">"Không có tiện ích và lối tắt nào"</string>
-    <string name="no_search_results" msgid="3787956167293097509">"Không tìm thấy tiện ích hoặc lối tắt nào"</string>
-    <string name="widgets_full_sheet_personal_tab" msgid="2743540105607120182">"Cá nhân"</string>
-    <string name="widgets_full_sheet_work_tab" msgid="3767150027110633765">"Công việc"</string>
-    <string name="widget_category_conversations" msgid="8894438636213590446">"Cuộc trò chuyện"</string>
-    <string name="widget_category_note_taking" msgid="3469689394504266039">"Ghi chú"</string>
-    <string name="widget_cell_tap_to_show_add_button_label" msgid="4354194214317043581">"Hiện nút thêm"</string>
-    <string name="widget_cell_tap_to_hide_add_button_label" msgid="6117805205101555997">"Ẩn nút thêm"</string>
-    <string name="widget_add_button_label" msgid="2761267068711937179">"Thêm"</string>
-    <string name="widget_add_button_content_description" msgid="1810530016360039643">"Thêm tiện ích <xliff:g id="WIDGET_NAME">%1$s</xliff:g>"</string>
-    <string name="widgets_list_expand_button_label" msgid="7912016136574932622">"Hiện tất cả"</string>
-    <string name="widgets_list_expand_button_content_description" msgid="4600513860973450888">"Hiện tất cả tiện ích"</string>
-    <string name="widgets_list_expanded" msgid="7374857868788557730">"Đang hiện tất cả tiện ích"</string>
-    <string name="reconfigurable_widget_education_tip" msgid="6336962690888067057">"Nhấn để thay đổi chế độ cài đặt tiện ích"</string>
-    <string name="widget_reconfigure_button_content_description" msgid="8811472721881205250">"Thay đổi chế độ cài đặt tiện ích"</string>
-    <string name="all_apps_search_bar_hint" msgid="1390553134053255246">"Tìm kiếm ứng dụng"</string>
-    <string name="all_apps_loading_message" msgid="5813968043155271636">"Đang tải ứng dụng…"</string>
-    <string name="all_apps_no_search_results" msgid="3200346862396363786">"Không tìm thấy ứng dụng nào phù hợp với \"<xliff:g id="QUERY">%1$s</xliff:g>\""</string>
-    <string name="label_application" msgid="8531721983832654978">"Ứng dụng"</string>
-    <string name="all_apps_label" msgid="5015784846527570951">"Tất cả ứng dụng"</string>
-    <string name="all_apps_list_label" msgid="5106226764073070906">"Danh sách ứng dụng"</string>
-    <string name="notifications_header" msgid="1404149926117359025">"Thông báo"</string>
-    <string name="long_press_shortcut_to_add" msgid="5405328730817637737">"Chạm và giữ để di chuyển một lối tắt."</string>
-    <string name="long_accessible_way_to_add_shortcut" msgid="2199537273817090740">"Nhấn đúp và giữ để di chuyển một lối tắt hoặc sử dụng các thao tác tùy chỉnh."</string>
-    <string name="out_of_space" msgid="6455557115204099579">"Không còn khoảng trống trên màn hình chính này"</string>
-    <string name="hotseat_out_of_space" msgid="7448809638125333693">"Không còn chỗ trong khay Mục yêu thích"</string>
-    <string name="all_apps_button_label" msgid="8130441508702294465">"Danh sách ứng dụng"</string>
-    <string name="all_apps_search_results" msgid="5889367432531296759">"Kết quả tìm kiếm"</string>
-    <string name="all_apps_button_personal_label" msgid="1315764287305224468">"Danh sách ứng dụng cá nhân"</string>
-    <string name="all_apps_button_work_label" msgid="7270707118948892488">"Danh sách ứng dụng công việc"</string>
-    <string name="remove_drop_target_label" msgid="7812859488053230776">"Xóa"</string>
-    <string name="uninstall_drop_target_label" msgid="4722034217958379417">"Gỡ cài đặt"</string>
-    <string name="app_info_drop_target_label" msgid="692894985365717661">"Thông tin ứng dụng"</string>
-    <string name="install_private_system_shortcut_label" msgid="1616889277073184841">"Cài đặt ở chế độ riêng tư"</string>
-    <string name="uninstall_private_system_shortcut_label" msgid="8423460530441627982">"Gỡ cài đặt ứng dụng"</string>
-    <string name="install_drop_target_label" msgid="2539096853673231757">"Cài đặt"</string>
-    <string name="dismiss_prediction_label" msgid="3357562989568808658">"Không gợi ý ứng dụng"</string>
-    <string name="pin_prediction" msgid="4196423321649756498">"Ghim ứng dụng dự đoán"</string>
-    <string name="bubble" msgid="3072951361014076670">"Bong bóng"</string>
-    <string name="permlab_install_shortcut" msgid="5632423390354674437">"cài đặt lối tắt"</string>
-    <string name="permdesc_install_shortcut" msgid="923466509822011139">"Cho phép ứng dụng thêm lối tắt mà không cần sự can thiệp của người dùng."</string>
-    <string name="permlab_read_settings" msgid="5136500343007704955">"đọc lối tắt và các chế độ cài đặt trên màn hình chính"</string>
-    <string name="permdesc_read_settings" msgid="4208061150510996676">"Cho phép ứng dụng đọc các chế độ cài đặt và lối tắt trên màn hình chính."</string>
-    <string name="permlab_write_settings" msgid="4820028712156303762">"ghi lối tắt và các chế độ cài đặt trên màn hình chính"</string>
-    <string name="permdesc_write_settings" msgid="726859348127868466">"Cho phép ứng dụng thay đổi các chế độ cài đặt và lối tắt trên màn hình chính."</string>
-    <string name="gadget_error_text" msgid="740356548025791839">"Không thể tải tiện ích"</string>
-    <string name="gadget_setup_text" msgid="8348374825537681407">"Cài đặt tiện ích"</string>
-    <string name="gadget_complete_setup_text" msgid="309040266978007925">"Nhấn để hoàn tất thiết lập"</string>
-    <string name="uninstall_system_app_text" msgid="4172046090762920660">"Đây là ứng dụng hệ thống và không thể gỡ cài đặt."</string>
-    <string name="folder_hint_text" msgid="5174843001373488816">"Chỉnh sửa tên"</string>
-    <string name="paginate_left" msgid="7915437358451360433">"Chuyển trang sang trái"</string>
-    <string name="paginate_right" msgid="6701038155201975878">"Chuyển trang sang phải"</string>
-    <string name="disabled_app_label" msgid="6673129024321402780">"Đã vô hiệu hóa <xliff:g id="APP_NAME">%1$s</xliff:g>"</string>
-    <string name="dotted_app_label" msgid="1865617679843363410">"{count,plural, =1{{app_name} có # thông báo}other{{app_name} có # thông báo}}"</string>
-    <string name="default_scroll_format" msgid="7475544710230993317">"Trang %1$d / %2$d"</string>
-    <string name="workspace_scroll_format" msgid="8458889198184077399">"Màn hình chính %1$d / %2$d"</string>
-    <string name="workspace_new_page" msgid="257366611030256142">"Trang màn hình chính mới"</string>
-    <string name="app_running_state_description" msgid="5645053189564740904">"Đang hoạt động"</string>
-    <string name="app_minimized_state_description" msgid="710740620044902509">"Đã thu nhỏ"</string>
-    <string name="folder_opened" msgid="94695026776264709">"Đã mở thư mục, <xliff:g id="WIDTH">%1$d</xliff:g> x <xliff:g id="HEIGHT">%2$d</xliff:g>"</string>
-    <string name="folder_tap_to_close" msgid="4625795376335528256">"Nhấn để đóng thư mục"</string>
-    <string name="folder_tap_to_rename" msgid="4017685068016979677">"Nhấn để lưu đổi tên"</string>
-    <string name="folder_closed" msgid="4100806530910930934">"Đã đóng thư mục"</string>
-    <string name="folder_renamed" msgid="1794088362165669656">"Đã đổi tên thư mục thành <xliff:g id="NAME">%1$s</xliff:g>"</string>
-    <string name="folder_name_format_exact" msgid="8626242716117004803">"Thư mục: <xliff:g id="NAME">%1$s</xliff:g>, <xliff:g id="SIZE">%2$d</xliff:g> mục"</string>
-    <string name="folder_name_format_overflow" msgid="4270108890534995199">"Thư mục: <xliff:g id="NAME">%1$s</xliff:g>, <xliff:g id="SIZE">%2$d</xliff:g> mục trở lên"</string>
-    <string name="unnamed_folder" msgid="2420192029474044442">"Thư mục chưa đặt tên"</string>
-    <string name="app_pair_name_format" msgid="8134106404716224054">"Cặp ứng dụng: <xliff:g id="APP1">%1$s</xliff:g> và <xliff:g id="APP2">%2$s</xliff:g>"</string>
-    <string name="styles_wallpaper_button_text" msgid="8216961355289236794">"Hình nền và phong cách"</string>
-    <string name="edit_home_screen" msgid="8947858375782098427">"Chỉnh sửa Màn hình chính"</string>
-    <string name="settings_button_text" msgid="8873672322605444408">"Cài đặt màn hình chính"</string>
-    <string name="msg_disabled_by_admin" msgid="6898038085516271325">"Bị tắt bởi quản trị viên của bạn"</string>
-    <string name="allow_rotation_title" msgid="7222049633713050106">"Cho phép xoay màn hình chính"</string>
-    <string name="allow_rotation_desc" msgid="8662546029078692509">"Khi xoay điện thoại"</string>
-    <string name="landscape_mode_title" msgid="5138814555934843926">"Chế độ ngang"</string>
-    <string name="landscape_mode_desc" msgid="3085236452297838664">"Đặt màn hình chính thành chế độ ngang"</string>
-    <string name="notification_dots_title" msgid="9062440428204120317">"Dấu chấm thông báo"</string>
-    <string name="notification_dots_desc_on" msgid="1679848116452218908">"Đang bật"</string>
-    <string name="notification_dots_desc_off" msgid="1760796511504341095">"Tắt"</string>
-    <string name="title_missing_notification_access" msgid="7503287056163941064">"Cần quyền truy cập thông báo"</string>
-    <string name="msg_missing_notification_access" msgid="281113995110910548">"Để hiển thị Dấu chấm thông báo, hãy bật thông báo ứng dụng cho <xliff:g id="NAME">%1$s</xliff:g>"</string>
-    <string name="title_change_settings" msgid="1376365968844349552">"Thay đổi cài đặt"</string>
-    <string name="notification_dots_service_title" msgid="4284221181793592871">"Hiện dấu chấm thông báo"</string>
-    <string name="developer_options_title" msgid="700788437593726194">"Tuỳ chọn cho nhà phát triển"</string>
-    <string name="auto_add_shortcuts_label" msgid="4926805029653694105">"Thêm biểu tượng ứng dụng vào màn hình chính"</string>
-    <string name="auto_add_shortcuts_description" msgid="7117251166066978730">"Cho ứng dụng mới"</string>
-    <string name="package_state_unknown" msgid="7592128424511031410">"Không xác định"</string>
-    <string name="abandoned_clean_this" msgid="7610119707847920412">"Xóa"</string>
-    <string name="abandoned_search" msgid="891119232568284442">"Tìm kiếm"</string>
-    <string name="abandoned_promises_title" msgid="7096178467971716750">"Ứng dụng này chưa được cài đặt"</string>
-    <string name="abandoned_promise_explanation" msgid="3990027586878167529">"Ứng dụng cho biểu tượng này chưa được cài đặt. Bạn có thể xóa ứng dụng hoặc tìm kiếm và cài đặt ứng dụng theo cách thủ công."</string>
-    <string name="app_installing_title" msgid="5864044122733792085">"Đang cài đặt <xliff:g id="NAME">%1$s</xliff:g>, hoàn tất <xliff:g id="PROGRESS">%2$s</xliff:g>"</string>
-    <string name="app_downloading_title" msgid="8336702962104482644">"Đang tải xuống <xliff:g id="NAME">%1$s</xliff:g>, <xliff:g id="PROGRESS">%2$s</xliff:g> hoàn tất"</string>
-    <string name="app_waiting_download_title" msgid="7053938513995617849">"Đang chờ cài đặt <xliff:g id="NAME">%1$s</xliff:g>"</string>
-    <string name="app_archived_title" msgid="4548283110222420708">"<xliff:g id="NAME">%1$s</xliff:g> đã được lưu trữ."</string>
-    <string name="app_unarchiving_action" msgid="5736107006413929484">"tải xuống và khôi phục"</string>
-    <string name="dialog_update_title" msgid="114234265740994042">"Cần cập nhật ứng dụng"</string>
-    <string name="dialog_update_message" msgid="4176784553982226114">"Ứng dụng cho biểu tượng này chưa được cập nhật. Bạn có thể cập nhật theo cách thủ công để bật lại phím tắt này hoặc xóa biểu tượng."</string>
-    <string name="dialog_update" msgid="2178028071796141234">"Cập nhật"</string>
-    <string name="dialog_remove" msgid="6510806469849709407">"Xóa"</string>
-    <string name="widgets_list" msgid="796804551140113767">"Danh sách tiện ích"</string>
-    <string name="widgets_list_closed" msgid="6141506579418771922">"Đã đóng danh sách tiện ích"</string>
-    <string name="action_add_to_workspace" msgid="215894119683164916">"Thêm vào màn hình chính"</string>
-    <string name="action_move_here" msgid="2170188780612570250">"Di chuyển mục vào đây"</string>
-    <string name="item_removed" msgid="851119963877842327">"Đã xóa mục"</string>
-    <string name="undo" msgid="4151576204245173321">"Hủy"</string>
-    <string name="action_move" msgid="4339390619886385032">"Di chuyển mục"</string>
-    <string name="move_to_empty_cell_description" msgid="5254852678218206889">"Di chuyển đến hàng <xliff:g id="NUMBER_0">%1$s</xliff:g> cột <xliff:g id="NUMBER_1">%2$s</xliff:g> tại <xliff:g id="STRING">%3$s</xliff:g>"</string>
-    <string name="move_to_position" msgid="6750008980455459790">"Di chuyển tới vị trí <xliff:g id="NUMBER">%1$s</xliff:g>"</string>
-    <string name="move_to_hotseat_position" msgid="6295412897075147808">"Di chuyển tới vị trí mục yêu thích <xliff:g id="NUMBER">%1$s</xliff:g>"</string>
-    <string name="item_moved" msgid="4606538322571412879">"Đã di chuyển mục"</string>
-    <string name="add_to_folder" msgid="9040534766770853243">"Thêm vào thư mục: <xliff:g id="NAME">%1$s</xliff:g>"</string>
-    <string name="add_to_folder_with_app" msgid="4534929978967147231">"Thêm vào thư mục có <xliff:g id="NAME">%1$s</xliff:g>"</string>
-    <string name="added_to_folder" msgid="4793259502305558003">"Đã thêm mục vào thư mục"</string>
-    <string name="create_folder_with" msgid="4050141361160214248">"Tạo thư mục bằng: <xliff:g id="NAME">%1$s</xliff:g>"</string>
-    <string name="folder_created" msgid="6409794597405184510">"Đã tạo thư mục"</string>
-    <string name="action_move_to_workspace" msgid="39528912300293768">"Di chuyển đến màn hình chính"</string>
-    <string name="action_resize" msgid="1802976324781771067">"Đổi kích thước"</string>
-    <string name="action_increase_width" msgid="8773715375078513326">"Tăng chiều rộng"</string>
-    <string name="action_increase_height" msgid="459390020612501122">"Tăng chiều cao"</string>
-    <string name="action_decrease_width" msgid="1374549771083094654">"Giảm chiều rộng"</string>
-    <string name="action_decrease_height" msgid="282377193880900022">"Giảm chiều cao"</string>
-    <string name="widget_resized" msgid="9130327887929620">"Đã đổi kích thước tiện ích thành chiều rộng <xliff:g id="NUMBER_0">%1$s</xliff:g> chiều cao <xliff:g id="NUMBER_1">%2$s</xliff:g>"</string>
-    <string name="action_deep_shortcut" msgid="4766835855579976045">"Trình đơn lối tắt"</string>
-    <string name="widget_frame_name" msgid="8782828448471444270">"Khung đổi kích thước tiện ích của <xliff:g id="STRING">%1$s</xliff:g>"</string>
-    <string name="action_close" msgid="1077760267194136901">"Đóng"</string>
-    <string name="action_dismiss_notification" msgid="5909461085055959187">"Loại bỏ"</string>
-    <string name="accessibility_close" msgid="2277148124685870734">"Đóng"</string>
-    <string name="all_apps_personal_tab" msgid="4190252696685155002">"Cá nhân"</string>
-    <string name="all_apps_work_tab" msgid="4884822796154055118">"Công việc"</string>
-    <string name="all_apps_personal_tab_content_description" msgid="6286808898381807242">"Thẻ ứng dụng cá nhân"</string>
-    <string name="all_apps_work_tab_content_description" msgid="3835637212347968316">"Thẻ ứng dụng công việc"</string>
-    <string name="work_profile_toggle_label" msgid="3081029915775481146">"Hồ sơ công việc"</string>
-    <string name="work_profile_edu_work_apps" msgid="7895468576497746520">"Các ứng dụng công việc được gắn huy hiệu và quản trị viên CNTT có thể nhìn thấy"</string>
-    <string name="work_profile_edu_accept" msgid="6069788082535149071">"OK"</string>
-    <string name="work_apps_paused_title" msgid="3040901117349444598">"Đã tạm dừng các ứng dụng công việc"</string>
-    <string name="work_apps_paused_info_body" msgid="1687828929959237477">"Bạn sẽ không nhận được thông báo từ các ứng dụng công việc"</string>
-    <string name="work_apps_paused_body" msgid="261634750995824906">"Các ứng dụng công việc không thể gửi thông báo cho bạn, sử dụng pin hoặc truy cập thông tin vị trí của bạn"</string>
-    <string name="work_apps_paused_telephony_unavailable_body" msgid="8358872357502756790">"Bạn sẽ không nhận được tin nhắn văn bản, cuộc gọi điện thoại hoặc thông báo từ các ứng dụng công việc"</string>
-    <string name="work_apps_paused_edu_banner" msgid="8872412121608402058">"Các ứng dụng công việc được gắn huy hiệu và quản trị viên CNTT có thể nhìn thấy"</string>
-    <string name="work_apps_paused_edu_accept" msgid="6377476824357318532">"Tôi hiểu"</string>
-    <string name="work_apps_pause_btn_text" msgid="4669288269140620646">"Tạm dừng các ứng dụng công việc"</string>
-    <string name="work_apps_enable_btn_text" msgid="1736198302467317371">"Bỏ tạm dừng"</string>
-    <string name="work_scheduler_button_content_description" msgid="917340740986764967">"Lịch biểu cho ứng dụng công việc"</string>
-    <string name="developer_options_filter_hint" msgid="5896817443635989056">"Bộ lọc"</string>
-    <string name="remote_action_failed" msgid="1383965239183576790">"Không thực hiện được thao tác: <xliff:g id="WHAT">%1$s</xliff:g>"</string>
-    <string name="private_space_label" msgid="2359721649407947001">"Không gian riêng tư"</string>
-    <string name="private_space_secondary_label" msgid="9203933341714508907">"Nhấn để thiết lập hoặc mở"</string>
-    <string name="ps_container_title" msgid="4391796149519594205">"Riêng tư"</string>
-    <string name="ps_container_settings" msgid="6059734123353320479">"Cài đặt không gian riêng tư"</string>
-    <string name="ps_container_unlock_button_content_description" msgid="9181551784092204234">"Riêng tư, đã mở khoá."</string>
-    <string name="ps_container_lock_button_content_description" msgid="5961993384382649530">"Riêng tư, đã khoá."</string>
-    <string name="ps_container_lock_title" msgid="2640257399982364682">"Khoá"</string>
-    <string name="ps_container_transition" msgid="8667331812048014412">"Chuyển đổi sang không gian riêng tư"</string>
-    <string name="ps_add_button_label" msgid="8127988716897128773">"Cài đặt"</string>
-    <string name="ps_app_label_override" msgid="6876160706011676804">"Thêm"</string>
-    <string name="ps_add_button_content_description" msgid="3254274107740952556">"Cài đặt ứng dụng vào Không gian riêng tư"</string>
-    <string name="ps_app_content_description" msgid="1129133475892816226">"Thêm tệp và nội dung khác vào Không gian riêng tư"</string>
-    <string name="circle_shape_title" msgid="3582075061179674565">"Hình tròn"</string>
-    <string name="square_shape_title" msgid="3085320803149569308">"Hình vuông"</string>
-    <string name="four_sided_cookie_shape_title" msgid="3275212586290522151">"Bánh quy 4 cánh"</string>
-    <string name="seven_sided_cookie_shape_title" msgid="4862560582029671668">"Bánh quy 7 cánh"</string>
-    <string name="arch_shape_title" msgid="2213843822192871318">"Hình vòng cung"</string>
+-->
+<resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
+    <!-- General -->
+    <!-- Application name -->
+    <string name="app_name">Trình chạy 3</string>
+    <!-- Work folder name -->
+    <string name="work_folder_name">Work</string>
+    <!-- Displayed when user selects a shortcut for an app that was uninstalled [CHAR_LIMIT=none]-->
+    <string name="activity_not_found">Ứng dụng chưa được cài đặt.</string>
+    <!-- Displayed when user selects a shortcut for an app that is current not available [CHAR_LIMIT=none]-->
+    <string name="activity_not_available">Ứng dụng không có sẵn</string>
+    <!-- SafeMode shortcut error string -->
+    <string name="safemode_shortcut_error">Ứng dụng đã tải xuống bị tắt ở chế độ An toàn</string>
+    <!-- SafeMode widget error string -->
+    <string name="safemode_widget_error">Tiện ích bị vô hiệu hóa ở chế độ an toàn</string>
+    <!-- Message shown when a shortcut is not available. It could have been temporarily disabled and may start working again after some time. -->
+    <string name="shortcut_not_available">Lối tắt không khả dụng</string>
+    <!-- User visible name for the launcher/home screen. [CHAR_LIMIT=30] -->
+    <string name="home_screen">Màn hình chính</string>
+    <!-- Description for setting the current launcher as the default home app. [CHAR_LIMIT=none]-->
+    <string name="set_default_home_app">Set <xliff:g id="launcher_name" example="Launcher3">%1$s</xliff:g> as default home app in Settings</string>
+    <!-- Options for recent tasks -->
+    <!-- Title for an option to enter split screen mode for a given app -->
+    <string name="recent_task_option_split_screen">Chia đôi màn hình</string>
+    <string name="recent_task_option_aspect_ratio">Thay đổi tỷ lệ khung hình</string>
+    <string name="split_app_info_accessibility">Thông tin ứng dụng cho %1$s</string>
+    <string name="split_app_usage_settings">Chế độ cài đặt mức sử dụng %1$s</string>
+    <!-- Title for an option to open a new window for a given app   -->
+    <string name="new_window_option_taskbar">Cửa sổ mới</string>
+    <!-- Title for an option to manage open windows for a given app   -->
+    <string name="manage_windows_option_taskbar">Quản lý cửa sổ</string>
+    <!-- App pairs -->
+    <string name="save_app_pair">Lưu cặp ứng dụng</string>
+    <!-- App pair default title -->
+    <string name="app_pair_default_title"><xliff:g id="app1" example="Chrome">%1$s</xliff:g> | <xliff:g id="app2" example="YouTube">%2$s</xliff:g></string>
+    <!-- Displayed when an app pair can't launch at this screen size [CHAR_LIMIT=none] -->
+    <string name="app_pair_unlaunchable_at_screen_size">Cặp ứng dụng này không hoạt động được trên thiết bị này</string>
+    <!-- Displayed when an app pair can't launch at this screen size, but user can unfold device to restore functionality [CHAR_LIMIT=none] -->
+    <string name="app_pair_needs_unfold">Hãy mở thiết bị để dùng cặp ứng dụng này</string>
+    <!-- Displayed when user selects a shortcut for an app pair that is currently not available [CHAR_LIMIT=none]-->
+    <string name="app_pair_not_available">Hiện không có cặp ứng dụng này</string>
+    <!-- Widgets -->
+    <!-- Message to tell the user to press and hold on a widget to add it [CHAR_LIMIT=50] -->
+    <string name="long_press_widget_to_add">Chạm và giữ để di chuyển một tiện ích.</string>
+    <!-- Accessibility spoken hint message in widget picker, which allows user to add a widget. Custom action is the label for additional accessibility actions available in this mode [CHAR_LIMIT=100] -->
+    <string name="long_accessible_way_to_add">Nhấn đúp và giữ để di chuyển một tiện ích hoặc sử dụng các thao tác tùy chỉnh.</string>
+    <!-- Accessibility label for the icon button shown in the widget picker that opens a overflow
+         menu with widgets viewing options. [CHAR_LIMIT=25] -->
+    <string name="widget_picker_widget_options_button_description">Lựa chọn khác</string>
+    <!-- Label for the checkbox shown in the widget picker toggles whether to show all widgets or
+     the default set. [CHAR_LIMIT=25] -->
+    <string name="widget_picker_show_all_widgets_menu_item_title">Hiện tất cả tiện ích</string>
+    <!-- The format string for the dimensions of a widget in the drawer -->
+    <!-- There is a special version of this format string for Farsi -->
+    <string name="widget_dims_format">%1$d × %2$d</string>
+    <!-- Accessibility spoken message format for the dimensions of a widget in the drawer -->
+    <string name="widget_accessible_dims_format">Rộng %1$d x cao %2$d</string>
+    <!-- Spoken text for a screen reader. The placeholder text is the widget name.
+         [CHAR_LIMIT=none]-->
+    <string name="widget_preview_context_description"><xliff:g id="widget_name" example="Calendar month view">%1$s</xliff:g> widget</string>
+    <!-- Spoken text for a screen reader. The first placeholder text is the widget name, the
+         remaining placeholders are for the widget dimensions.
+         [CHAR_LIMIT=none]-->
+    <string name="widget_preview_name_and_dims_content_description">        <xliff:g id="widget_name" example="Calendar month view">%1$s</xliff:g> widget, %2$d wide by %3$d high
+    </string>
+    <!-- Message to tell the user to press and hold a widget/icon to add it to the home screen.
+         [CHAR LIMIT=NONE]  -->
+    <string name="add_item_request_drag_hint">Chạm và giữ tiện ích để di chuyển tiện ích đó xung quanh màn hình chính</string>
+    <!-- Button label to automatically add a widget to home screen [CHAR_LIMIT=50] -->
+    <string name="add_to_home_screen">Thêm vào màn hình chính</string>
+    <!-- Accessibility spoken message announced when a widget gets added to the home screen using a
+         button in a dialog. [CHAR_LIMIT=none] -->
+    <string name="added_to_home_screen_accessibility_text"><xliff:g id="widget_name" example="Calendar month view">%1$s</xliff:g> widget added to home screen</string>
+    <!-- Widget suggestions header title in the full widgets picker for large screen devices
+    in landscape mode. [CHAR_LIMIT=50] -->
+    <string name="suggested_widgets_header_title">Nội dung đề xuất</string>
+    <!-- Title for the widget suggestions category that displays widgets provided by
+    productivity apps for daily use [CHAR_LIMIT=50] -->
+    <string name="productivity_widget_recommendation_category_label">Các tiện ích thiết yếu</string>
+    <!-- Title for the widget suggestions category that displays widgets provided by
+    news and magazines related apps [CHAR_LIMIT=50] -->
+    <string name="news_widget_recommendation_category_label">Tin tức và tạp chí</string>
+    <!-- Title for the widget suggestions category that displays widgets provided by
+    entertainment apps [CHAR_LIMIT=50] -->
+    <string name="entertainment_widget_recommendation_category_label">Giải trí</string>
+    <!-- Title for the widget suggestions category that displays widgets provided by
+    social apps [CHAR_LIMIT=50] -->
+    <string name="social_widget_recommendation_category_label">Mạng xã hội</string>
+    <!-- Title for the widget suggestions category that displays general widget suggestions
+    [CHAR_LIMIT=50] -->
+    <string name="others_widget_recommendation_category_label">Đề xuất cho bạn</string>
+    <!-- accessibilityPaneTitle for the right pane when showing suggested widgets. -->
+    <string name="widget_picker_right_pane_accessibility_title"><xliff:g id="selected_header" example="Calendar">%1$s</xliff:g> widgets on right, search and options on left</string>
+    <!-- Label for showing the number of widgets an app has in the full widgets picker.
+         [CHAR_LIMIT=25][ICU SYNTAX] -->
+    <string name="widgets_count">{count,plural, =1{# tiện ích}other{# tiện ích}}</string>
+    <!-- Label for showing the number of shortcut an app has in the full widgets picker.
+         [CHAR_LIMIT=25][ICU SYNTAX] -->
+    <string name="shortcuts_count">{count,plural, =1{# lối tắt}other{# lối tắt}}</string>
+    <!-- Label for showing both the number of widgets and shortcuts an app has in the full widgets
+         picker. [CHAR_LIMIT=50] -->
+    <string name="widgets_and_shortcuts_count"><xliff:g id="widgets_count" example="5 widgets">%1$s</xliff:g>, <xliff:g id="shortcuts_count" example="1 shortcut">%2$s</xliff:g></string>
+    <!-- Text for both the tile of a popup view, which shows all available widgets installed on
+         the device, and the text of a button, which opens this popup view. [CHAR LIMIT=30]-->
+    <string name="widget_button_text">Tiện ích</string>
+    <!-- Search bar text shown in the popup view showing all available widgets installed on the
+         device. [CHAR_LIMIT=50] -->
+    <string name="widgets_full_sheet_search_bar_hint">Tìm kiếm</string>
+    <!-- Spoken text for screen readers. This text lets a user know that the button is used to clear
+         the text that the user entered in the search box. [CHAR_LIMIT=none] -->
+    <string name="widgets_full_sheet_cancel_button_description">Xóa văn bản khỏi hộp tìm kiếm</string>
+    <!-- Text shown when there are no widgets or shortcuts that can be added to the device.
+         [CHAR_LIMIT=none] -->
+    <string name="no_widgets_available">Không có tiện ích và lối tắt nào</string>
+    <!-- Text shown when there are no matching widget or shortcut search results for user's search
+         query. [CHAR_LIMIT=none] -->
+    <string name="no_search_results">Không tìm thấy tiện ích hoặc lối tắt nào</string>
+    <!-- Tab label. A user can tap this tab to access their personal widgets. [CHAR_LIMIT=25] -->
+    <string name="widgets_full_sheet_personal_tab">Cá nhân</string>
+    <!-- Tab label. A user can tap this tab to access their work widgets. [CHAR_LIMIT=25] -->
+    <string name="widgets_full_sheet_work_tab">Work</string>
+    <!-- A widget category label for grouping widgets related to conversations. [CHAR_LIMIT=30] -->
+    <string name="widget_category_conversations">Cuộc trò chuyện</string>
+    <!-- A widget category label for grouping widgets related to note taking. [CHAR_LIMIT=30] -->
+    <string name="widget_category_note_taking">Ghi chú</string>
+    <!-- Accessibility label on the widget preview that on click (if add button is hidden) shows the button to add widget to the home screen. [CHAR_LIMIT=none] -->
+    <string name="widget_cell_tap_to_show_add_button_label">Hiện nút thêm</string>
+    <!-- Accessibility label on the widget preview that on click (if add button is showing) hides the button to add widget to the home screen. [CHAR_LIMIT=none] -->
+    <string name="widget_cell_tap_to_hide_add_button_label">Ẩn nút thêm</string>
+    <!-- Text on the button that adds a widget to the home screen. [CHAR_LIMIT=15] -->
+    <string name="widget_add_button_label">Thêm</string>
+    <!-- Accessibility content description for the button that adds a widget to the home screen. The
+         placeholder text is the widget name. [CHAR_LIMIT=none] -->
+    <string name="widget_add_button_content_description">Add <xliff:g id="widget_name" example="Calendar month view">%1$s</xliff:g> widget</string>
+    <!-- Text on the button that enables users to expand the widgets list to see all widget apps besides the default ones displayed. [CHAR_LIMIT=15] -->
+    <string name="widgets_list_expand_button_label">Hiện tất cả</string>
+    <!-- Accessibility content description for the button that enables users to expand the widgets list to see all widget apps besides the default ones displayed. [CHAR_LIMIT=none]  -->
+    <string name="widgets_list_expand_button_content_description">Hiện tất cả tiện ích</string>
+    <!-- Accessibility announcement to indicate to the users that widgets list is now expanded -->
+    <string name="widgets_list_expanded">Đang hiện tất cả tiện ích</string>
+    <!-- Text on an educational tip on widget informing users that they can change widget settings.
+         [CHAR_LIMIT=NONE] -->
+    <string name="reconfigurable_widget_education_tip">Nhấn để thay đổi chế độ cài đặt tiện ích</string>
+    <!-- Spoken text for screen readers. This text is for an icon that lets the user change a
+         widget's settings. [CHAR_LIMIT=50] -->
+    <string name="widget_reconfigure_button_content_description">Thay đổi chế độ cài đặt tiện ích</string>
+    <!-- All Apps -->
+    <!-- Search bar text in the apps view. [CHAR_LIMIT=50] -->
+    <string name="all_apps_search_bar_hint">Tìm kiếm ứng dụng</string>
+    <!-- Loading apps text. [CHAR_LIMIT=50] -->
+    <string name="all_apps_loading_message">Đang tải ứng dụng…</string>
+    <!-- No-search-results text. [CHAR_LIMIT=50] -->
+    <string name="all_apps_no_search_results">No apps found matching \"<xliff:g id="query" example="Android">%1$s</xliff:g>\"</string>
+    <!-- Label for an icon representing any generic app. [CHAR_LIMIT=50] -->
+    <string name="label_application">Ứng dụng</string>
+    <!-- Label for the header text of the All Apps section in All Apps view, used to separate Predicted Apps and Actions section from All Apps section. [CHAR_LIMIT=50] -->
+    <string name="all_apps_label">Tất cả ứng dụng</string>
+    <string name="all_apps_list_label">Danh sách ứng dụng</string>
+    <!-- Popup items -->
+    <!-- Text to display as the header above notifications. [CHAR_LIMIT=30] -->
+    <string name="notifications_header">Thông báo</string>
+    <!-- Drag and drop -->
+    <!-- Message to tell the user to press and hold on a shortcut to add it [CHAR_LIMIT=50] -->
+    <string name="long_press_shortcut_to_add">Chạm và giữ để di chuyển một lối tắt.</string>
+    <!-- Accessibility spoken hint message in deep shortcut menu, which allows user to add a shortcut. Custom action is the label for additional accessibility actions available in this mode [CHAR_LIMIT=200] -->
+    <string name="long_accessible_way_to_add_shortcut">Nhấn đúp và giữ để di chuyển một lối tắt hoặc sử dụng các thao tác tùy chỉnh.</string>
+    <!-- Error message when a user can't add more apps, widgets, or shortcuts to a Home screen. -->
+    <string name="out_of_space">Không còn khoảng trống trên màn hình chính này</string>
+    <!-- Error message when user has filled the hotseat -->
+    <string name="hotseat_out_of_space">Không còn chỗ trong khay Mục yêu thích</string>
+    <!-- All applications label -->
+    <string name="all_apps_button_label">Danh sách ứng dụng</string>
+    <string name="all_apps_search_results">Kết quả tìm kiếm</string>
+    <string name="all_apps_button_personal_label">Danh sách ứng dụng cá nhân</string>
+    <string name="all_apps_button_work_label">Danh sách ứng dụng công việc</string>
+    <!-- System shortcuts -->
+    <!-- Label for remove drop target (from the homescreen only).
+         May appear next to uninstall_drop_target_label [CHAR_LIMIT=20] -->
+    <string name="remove_drop_target_label">Xóa</string>
+    <!-- Label for uninstall drop target (from the device).
+         May appear next to remove_drop_target_label [CHAR_LIMIT=20]-->
+    <string name="uninstall_drop_target_label">Gỡ cài đặt</string>
+    <!-- Label for app info drop target. [CHAR_LIMIT=20] -->
+    <string name="app_info_drop_target_label">Thông tin ứng dụng</string>
+    <!-- Label for install to private profile shortcut label. [CHAR_LIMIT=20] -->
+    <string name="install_private_system_shortcut_label">Cài đặt ở chế độ riêng tư</string>
+    <!-- Label for uninstall app private profile shortcut.-->
+    <string name="uninstall_private_system_shortcut_label">Gỡ cài đặt ứng dụng</string>
+    <!-- Label for install drop target. [CHAR_LIMIT=20] -->
+    <string name="install_drop_target_label">Cài đặt</string>
+    <!-- Label for dismiss prediction. -->
+    <string name="dismiss_prediction_label">Không gợi ý ứng dụng</string>
+    <!-- Label for pinning predicted app. -->
+    <string name="pin_prediction">Ghim ứng dụng dự đoán</string>
+    <!-- Label for bubbling a launcher item. [CHAR_LIMIT=20] -->
+    <string name="bubble">Bong bóng</string>
+    <string name="action_pin_to_top">Pin to top</string>
+    <string name="action_unpin">Unpin</string>
+    <string name="action_enlarge">Enlarge</string>
+    <string name="action_minimize">Minimize</string>
+    <string name="action_customize_folder">Customize</string>
+    <string name="folder_style_picker_title">Folder Style</string>
+    <string name="folder_style_quadrant">Quadrant</string>
+    <string name="folder_style_grid">Grid</string>
+    <string name="folder_style_circle">Circle</string>
+    <string name="folder_style_cover">Cover</string>
+    <string name="folder_cover_text_hint">Emoji</string>
+    <!-- Permissions: -->
+    <!-- Permission short label -->
+    <string name="permlab_install_shortcut">cài đặt lối tắt</string>
+    <!-- Permission description -->
+    <string name="permdesc_install_shortcut">Cho phép ứng dụng thêm lối tắt mà không cần sự can thiệp của người dùng.</string>
+    <!-- Permission short label -->
+    <string name="permlab_read_settings">đọc lối tắt và các chế độ cài đặt trên màn hình chính</string>
+    <!-- Permission description -->
+    <string name="permdesc_read_settings">Cho phép ứng dụng đọc các chế độ cài đặt và lối tắt trên màn hình chính.</string>
+    <!-- Permission short label -->
+    <string name="permlab_write_settings">ghi lối tắt và các chế độ cài đặt trên màn hình chính</string>
+    <!-- Permission description -->
+    <string name="permdesc_write_settings">Cho phép ứng dụng thay đổi các chế độ cài đặt và lối tắt trên màn hình chính.</string>
+    <!-- Widgets: -->
+    <!-- Error text that lets a user know that the widget can't load. -->
+    <string name="gadget_error_text">Không thể tải tiện ích</string>
+    <!-- Button text. This button lets a user change a widget's settings. -->
+    <string name="gadget_setup_text">Cài đặt tiện ích</string>
+    <!-- Instructional text to encourage a user to finish setting up the widget. -->
+    <string name="gadget_complete_setup_text">Nhấn để hoàn tất thiết lập</string>
+    <!-- Text to inform the user that they can't uninstall a system application -->
+    <string name="uninstall_system_app_text">Đây là ứng dụng hệ thống và không thể gỡ cài đặt.</string>
+    <!-- Default folder title -->
+    <string name="folder_hint_text">Chỉnh sửa tên</string>
+    <string name="paginate_left">Chuyển trang sang trái</string>
+    <string name="paginate_right">Chuyển trang sang phải</string>
+    <!-- Accessibility -->
+    <!-- The format string for when an app is temporarily disabled. -->
+    <string name="disabled_app_label">Disabled <xliff:g id="app_name" example="Messenger">%1$s</xliff:g></string>
+    <!-- The format string for when an app has a notification dot (meaning it has associated notifications). [ICU_FORMAT]-->
+    <string name="dotted_app_label">{count,plural, =1{{app_name} có # thông báo}other{{app_name} có # thông báo}}</string>
+    <!-- The format string for default page scroll text [CHAR_LIMIT=none] -->
+    <string name="default_scroll_format">Trang %1$d / %2$d</string>
+    <!-- The format string for Workspace page scroll text [CHAR_LIMIT=none] -->
+    <string name="workspace_scroll_format">Màn hình chính %1$d / %2$d</string>
+    <!-- Description for a new page on homescreen[CHAR_LIMIT=none] -->
+    <string name="workspace_new_page">Trang màn hình chính mới</string>
+    <string name="app_running_state_description">Đang hoạt động</string>
+    <string name="app_minimized_state_description">Đã thu nhỏ</string>
+    <!-- Folder accessibility -->
+    <!-- The format string for when a folder is opened, speaks the dimensions -->
+    <string name="folder_opened">Folder opened, <xliff:g id="width" example="5">%1$d</xliff:g> by <xliff:g id="height" example="3">%2$d</xliff:g></string>
+    <!-- Instruction that clicking outside will close folder -->
+    <string name="folder_tap_to_close">Nhấn để đóng thư mục</string>
+    <!-- Instruction that clicking outside will commit folder rename -->
+    <string name="folder_tap_to_rename">Nhấn để lưu đổi tên</string>
+    <!-- Indication that folder closed -->
+    <string name="folder_closed">Đã đóng thư mục</string>
+    <!-- Folder renamed format -->
+    <string name="folder_renamed">Folder renamed to <xliff:g id="name" example="Games">%1$s</xliff:g></string>
+    <!-- Folder name format when folder has less than 4 items -->
+    <string name="folder_name_format_exact">Folder: <xliff:g id="name" example="Games">%1$s</xliff:g>, <xliff:g id="size" example="2">%2$d</xliff:g> items</string>
+    <!-- Folder name format when folder has 4 or more items shown in preview-->
+    <string name="folder_name_format_overflow">Folder: <xliff:g id="name" example="Games">%1$s</xliff:g>, <xliff:g id="size" example="2">%2$d</xliff:g> or more items</string>
+    <!-- Accessibility announement for unnamed folders -->
+    <string name="unnamed_folder">Thư mục chưa đặt tên</string>
+    <!-- App pair accessibility -->
+    <!-- App pair name -->
+    <string name="app_pair_name_format">App pair: <xliff:g id="app1" example="Chrome">%1$s</xliff:g> and <xliff:g id="app2" example="YouTube">%2$s</xliff:g></string>
+    <!-- Strings for the customization mode -->
+    <!-- Text for wallpaper change button [CHAR LIMIT=30]-->
+    <string name="styles_wallpaper_button_text">Hình nền và phong cách</string>
+    <!-- Text for edit home screen button [CHAR LIMIT=30]-->
+    <string name="edit_home_screen">Chỉnh sửa Màn hình chính</string>
+    <!-- Text for settings button [CHAR LIMIT=20]-->
+    <string name="settings_button_text">Cài đặt màn hình chính</string>
+    <!-- Message shown when a feature is disabled by the administrator -->
+    <string name="msg_disabled_by_admin">Bị tắt bởi quản trị viên của bạn</string>
+    <!-- Strings for settings -->
+    <!-- Title for Allow Rotation setting. [CHAR LIMIT=50] -->
+    <string name="allow_rotation_title">Cho phép xoay màn hình chính</string>
+    <!-- Text explaining when the home screen will get rotated. [CHAR LIMIT=100] -->
+    <string name="allow_rotation_desc">Khi xoay điện thoại</string>
+    <!-- Title for Landscape Mode setting. [CHAR LIMIT=50] -->
+    <string name="landscape_mode_title">Chế độ ngang</string>
+    <!--  [CHAR LIMIT=100] -->
+    <string name="landscape_mode_desc">Đặt màn hình chính thành chế độ ngang</string>
+    <!-- Title for Notification dots setting. Tapping this will link to the system Notifications settings screen where the user can turn off notification dots globally. [CHAR LIMIT=50] -->
+    <string name="notification_dots_title">Dấu chấm thông báo</string>
+    <!-- Text to indicate that the system notification dots setting is on [CHAR LIMIT=100] -->
+    <string name="notification_dots_desc_on">Đang bật</string>
+    <!-- Text to indicate that the system notification dots setting is off [CHAR LIMIT=100] -->
+    <string name="notification_dots_desc_off">Tắt</string>
+    <!-- Title for the dialog shown when the app does not has notification access, explaining the requirement for notification access [CHAR LIMIT=50] -->
+    <string name="title_missing_notification_access">Cần quyền truy cập thông báo</string>
+    <!-- Message explaining to the user that the notification access is required by the app for showing 'Notification dots' [CHAR LIMIT=NONE] -->
+    <string name="msg_missing_notification_access">To show Notification Dots, turn on app notifications for <xliff:g id="name" example="My App">%1$s</xliff:g></string>
+    <!-- Button text in the confirmation dialog which would take the user to the system settings [CHAR LIMIT=50] -->
+    <string name="title_change_settings">Thay đổi cài đặt</string>
+    <!-- Summary for Notification dots setting. Tapping this will link enable/disable notification dots feature on the home screen. [CHAR LIMIT=50] -->
+    <string name="notification_dots_service_title">Hiện dấu chấm thông báo</string>
+    <!-- Title for Developer Options setting. [CHAR LIMIT=50] -->
+    <string name="developer_options_title">Tuỳ chọn cho nhà phát triển</string>
+    <!-- Label for the setting that allows the automatic placement of launcher shortcuts for applications and games installed on the device [CHAR LIMIT=60] -->
+    <string name="auto_add_shortcuts_label">Thêm biểu tượng ứng dụng vào màn hình chính</string>
+    <!-- Text description of the setting that allows the automatic placement of launcher shortcuts for applications and games installed on the device [CHAR LIMIT=NONE] -->
+    <string name="auto_add_shortcuts_description">Cho ứng dụng mới</string>
+    <!-- Label on an icon that references an uninstalled package, for which we have no information about when it might be installed. [CHAR_LIMIT=15] -->
+    <string name="package_state_unknown">Không xác định</string>
+    <!-- Button for abandoned promises dialog, to removes this abandoned promise icon. -->
+    <string name="abandoned_clean_this">Xóa</string>
+    <!-- Button for abandoned promise dialog, to search in the market for the missing package. -->
+    <string name="abandoned_search">Tìm kiếm</string>
+    <!-- Title for abandoned promise dialog. -->
+    <string name="abandoned_promises_title">Ứng dụng này chưa được cài đặt</string>
+    <!-- Explanation for abandoned promise dialog. "The first 'it' refers to the shortcut icon.
+    The second "it" refers to the app. -->
+    <string name="abandoned_promise_explanation">Ứng dụng cho biểu tượng này chưa được cài đặt. Bạn có thể xóa ứng dụng hoặc tìm kiếm và cài đặt ứng dụng theo cách thủ công.</string>
+    <!-- Title for an app which is being installed. -->
+    <string name="app_installing_title"><xliff:g id="name" example="Messenger">%1$s</xliff:g> installing, <xliff:g id="progress" example="30%">%2$s</xliff:g> complete</string>
+    <!-- Title for an app which is being downloaded. -->
+    <string name="app_downloading_title"><xliff:g id="name" example="Messenger">%1$s</xliff:g> downloading, <xliff:g id="progress" example="30%">%2$s</xliff:g> complete</string>
+    <!-- Title for an app whose download has been started. -->
+    <string name="app_waiting_download_title"><xliff:g id="name" example="Messenger">%1$s</xliff:g> waiting to install</string>
+    <!-- Title for an app which is archived. -->
+    <string name="app_archived_title"><xliff:g id="name" example="Messenger">%1$s</xliff:g> is archived.</string>
+    <!-- Accessibility Action for an app which is archived. -->
+    <string name="app_unarchiving_action">tải xuống và khôi phục</string>
+    <!-- Title shown on the alert dialog prompting the user to update the application in market
+     in order to re-enable the disabled shortcuts -->
+    <string name="dialog_update_title">Cần cập nhật ứng dụng</string>
+    <!-- Message shown on the alert dialog prompting the user to update the application -->
+    <string name="dialog_update_message">Ứng dụng cho biểu tượng này chưa được cập nhật. Bạn có thể cập nhật theo cách thủ công để bật lại phím tắt này hoặc xóa biểu tượng.</string>
+    <!-- Message for the update button in the alert dialog, will bring the user to market -->
+    <string name="dialog_update">Cập nhật</string>
+    <!-- Message for the remove button in the alert dialog -->
+    <string name="dialog_remove">Xóa</string>
+    <!-- Strings for widgets & more in the popup container/bottom sheet -->
+    <!-- Accessibility title for the popup containing a list of widgets. [CHAR_LIMIT=50] -->
+    <string name="widgets_list">Danh sách tiện ích</string>
+    <!-- Text announced by accessibility when the popup containing the list of widgets is closed. [CHAR_LIMIT=100] -->
+    <string name="widgets_list_closed">Đã đóng danh sách tiện ích</string>
+    <!-- Strings for accessibility actions -->
+    <!-- Accessibility action to add an app to workspace. [CHAR_LIMIT=30] -->
+    <string name="action_add_to_workspace">Thêm vào màn hình chính</string>
+    <!-- Accessibility action to move item to the current location. [CHAR_LIMIT=30] -->
+    <string name="action_move_here">Di chuyển mục vào đây</string>
+    <!-- Accessibility confirmation for item removed. [CHAR_LIMIT=50]-->
+    <string name="item_removed">Đã xóa mục</string>
+    <!-- Action shown in snackbar to undo item removal. [CHAR_LIMIT=20] -->
+    <string name="undo">Hủy</string>
+    <!-- Accessibility action to move an item on the workspace. [CHAR_LIMIT=30] -->
+    <string name="action_move">Di chuyển mục</string>
+    <!-- Accessibility description to move item to empty cell. -->
+    <string name="move_to_empty_cell_description">Move to row <xliff:g id="number" example="1">%1$s</xliff:g> column <xliff:g id="number" example="1">%2$s</xliff:g> in <xliff:g id="string" example="Home screen 2 of 4">%3$s</xliff:g></string>
+    <!-- Accessibility description to move item inside a folder. -->
+    <string name="move_to_position">Move to position <xliff:g id="number" example="1">%1$s</xliff:g></string>
+    <!-- Accessibility description to move item to the hotseat. -->
+    <string name="move_to_hotseat_position">Move to favorites position <xliff:g id="number" example="1">%1$s</xliff:g></string>
+    <!-- Accessibility confirmation for item move. -->
+    <string name="item_moved">Đã di chuyển mục</string>
+    <!-- Accessibility description to move item into an existing folder. -->
+    <string name="add_to_folder">Add to folder: <xliff:g id="name" example="Games">%1$s</xliff:g></string>
+    <!-- Accessibility description to move item into an existing folder containing an app. -->
+    <string name="add_to_folder_with_app">Add to folder with <xliff:g id="name" example="Messenger">%1$s</xliff:g></string>
+    <!-- Accessibility confirmation for item added to folder. -->
+    <string name="added_to_folder">Đã thêm mục vào thư mục</string>
+    <!-- Accessibility description to create folder with another item. -->
+    <string name="create_folder_with">Create folder with: <xliff:g id="name" example="Game">%1$s</xliff:g></string>
+    <!-- Accessibility confirmation for folder created. -->
+    <string name="folder_created">Đã tạo thư mục</string>
+    <!-- Accessibility action to move an item from folder to workspace. [CHAR_LIMIT=30] -->
+    <string name="action_move_to_workspace">Di chuyển đến màn hình chính</string>
+    <!-- Accessibility action to resize a widget. [CHAR_LIMIT=30] -->
+    <string name="action_resize">Đổi kích thước</string>
+    <!-- Accessibility action to increase width of a widget. [CHAR_LIMIT=30] -->
+    <string name="action_increase_width">Tăng chiều rộng</string>
+    <!-- Accessibility action to increase height of a widget. [CHAR_LIMIT=30] -->
+    <string name="action_increase_height">Tăng chiều cao</string>
+    <!-- Accessibility action to decrease width of a widget. [CHAR_LIMIT=30] -->
+    <string name="action_decrease_width">Giảm chiều rộng</string>
+    <!-- Accessibility action to decrease height of a widget. [CHAR_LIMIT=30] -->
+    <string name="action_decrease_height">Giảm chiều cao</string>
+    <!-- Accessibility confirmation for widget resize. -->
+    <string name="widget_resized">Widget resized to width <xliff:g id="number" example="2">%1$s</xliff:g> height <xliff:g id="number" example="1">%2$s</xliff:g></string>
+    <!-- Accessibility action to show quick actions menu for an icon. [CHAR_LIMIT=30] -->
+    <string name="action_deep_shortcut">Trình đơn lối tắt</string>
+    <!-- Accessibility name for the app widget resize frame. -->
+    <string name="widget_frame_name">Widget Resize Frame for <xliff:g id="string" example="Clock">%1$s</xliff:g></string>
+    <!-- Accessibility action to close the widget resize frame. [CHAR_LIMIT=30] -->
+    <string name="action_close">Đóng</string>
+    <!-- Accessibility action to dismiss a notification in the shortcuts menu for an icon. [CHAR_LIMIT=30] -->
+    <string name="action_dismiss_notification">Loại bỏ</string>
+    <!-- Content description for arrow tip close button. [CHAR LIMIT=NONE] -->
+    <string name="accessibility_close">Đóng</string>
+    <!-- Label of tab to indicate personal apps -->
+    <string name="all_apps_personal_tab">Cá nhân</string>
+    <!-- Label of tab to indicate work apps -->
+    <string name="all_apps_work_tab">Work</string>
+    <!-- Content description of personal tab to indicate personal apps -->
+    <string name="all_apps_personal_tab_content_description">Thẻ ứng dụng cá nhân</string>
+    <!-- Content description of work tab to indicate work apps -->
+    <string name="all_apps_work_tab_content_description">Thẻ ứng dụng công việc</string>
+    <!-- This string is in the work profile tab when a user has All Apps open on their phone. This is a label for a toggle to turn the work profile on and off. "Work profile" means a separate profile on a user's phone that's specifically for their work apps and managed by their company. "Work" is used as an adjective.-->
+    <string name="work_profile_toggle_label">Hồ sơ công việc</string>
+    <!--- User onboarding title for work profile apps -->
+    <string name="work_profile_edu_work_apps">Các ứng dụng công việc được gắn huy hiệu và quản trị viên CNTT có thể nhìn thấy</string>
+    <!-- Action label to finish work profile edu-->
+    <string name="work_profile_edu_accept">OK</string>
+    <!-- Info icon unicode for alpha scroller when work edu card is present -->
+    <!-- Intent for work profiler scheduler -->
+    <!--- heading shown when user opens work apps tab while work apps are paused -->
+    <string name="work_apps_paused_title">Đã tạm dừng các ứng dụng công việc</string>
+    <!--- body shown when user opens work apps tab while work apps are paused.-->
+    <string name="work_apps_paused_info_body">Bạn sẽ không nhận được thông báo từ các ứng dụng công việc</string>
+    <!--- body shown when user opens work apps tab while work apps are paused. -->
+    <string name="work_apps_paused_body">Các ứng dụng công việc không thể gửi thông báo cho bạn, sử dụng pin hoặc truy cập thông tin vị trí của bạn</string>
+    <!--- body shown when user opens work apps tab while work apps are paused and calls and texts are unavailable-->
+    <string name="work_apps_paused_telephony_unavailable_body">Bạn sẽ không nhận được tin nhắn văn bản, cuộc gọi điện thoại hoặc thông báo từ các ứng dụng công việc</string>
+    <!-- string shown in educational banner about work profile -->
+    <string name="work_apps_paused_edu_banner">Các ứng dụng công việc được gắn huy hiệu và quản trị viên CNTT có thể nhìn thấy</string>
+    <!-- button string shown to dismiss work tab education -->
+    <string name="work_apps_paused_edu_accept">OK</string>
+    <!-- button string shown pause work profile [CHAR LIMIT=28] -->
+    <string name="work_apps_pause_btn_text">Tạm dừng các ứng dụng công việc</string>
+    <!-- button string shown enable work profile -->
+    <string name="work_apps_enable_btn_text">Bỏ tạm dừng</string>
+    <!-- Label for the work profile scheduler button in the work profile screen. [CHAR_LIMIT=40] -->
+    <string name="work_scheduler_button_content_description">Lịch biểu cho ứng dụng công việc</string>
+    <!-- A hint shown in launcher settings develop options filter box -->
+    <string name="developer_options_filter_hint">Bộ lọc</string>
+    <!-- Failed action error message: e.g. Failed: Pause -->
+    <string name="remote_action_failed">Failed: <xliff:g id="what" example="Pause">%1$s</xliff:g></string>
+    <!-- Strings for Private Space -->
+    <!-- Private space tile label -->
+    <string name="private_space_label">Không gian riêng tư</string>
+    <!-- Private space tile secondary label -->
+    <string name="private_space_secondary_label">Nhấn để thiết lập hoặc mở</string>
+    <!-- Title for Private Space Container shown at the bottom of all apps drawer -->
+    <string name="ps_container_title">Riêng tư</string>
+    <!-- Description for Private Space Settings button -->
+    <string name="ps_container_settings">Cài đặt không gian riêng tư</string>
+    <!-- Description for Private Space Unlock button -->
+    <string name="ps_container_unlock_button_content_description">Riêng tư, đã mở khoá.</string>
+    <!-- Description for Private Space Lock button -->
+    <string name="ps_container_lock_button_content_description">Riêng tư, đã khoá.</string>
+    <string name="ps_container_lock_title">Khoá</string>
+    <!-- Description for Private Space Transition button -->
+    <string name="ps_container_transition">Chuyển đổi sang không gian riêng tư</string>
+    <!-- Title for Private Space install app icon -->
+    <string name="ps_add_button_label">Cài đặt</string>
+    <!-- Title for Private Space app icon to add files and more to Private Space -->
+    <string name="ps_app_label_override">Thêm</string>
+    <!-- Content description for install app icon -->
+    <string name="ps_add_button_content_description">Cài đặt ứng dụng vào Không gian riêng tư</string>
+    <string name="ps_app_content_description">Thêm tệp và nội dung khác vào Không gian riêng tư</string>
+    <!-- Strings for icon shapes -->
+    <!-- label for circle shape option in customization picker -->
+    <string name="circle_shape_title">Circle</string>
+    <!-- label for square shape option in customization picker -->
+    <string name="square_shape_title">Hình vuông</string>
+    <!-- label for 4-sided cookie option shape in customization picker -->
+    <string name="four_sided_cookie_shape_title">Bánh quy 4 cánh</string>
+    <!-- label for 7-sided cookie option shape in customization picker -->
+    <string name="seven_sided_cookie_shape_title">Bánh quy 7 cánh</string>
+    <!-- label for arch shape option in customization picker -->
+    <string name="arch_shape_title">Hình vòng cung</string>
+    <!-- DT2S -->
+    <string name="pref_sleep_gesture_title">Double tap to sleep</string>
+    <string name="pref_sleep_gesture_summary">Double tap on empty space for screen off</string>
+    <!-- All Apps Suggestions -->
+    <string name="all_apps_suggestions_title">Show suggestions</string>
+    <string name="all_apps_suggestions_summary">Display suggested apps at the top of the app drawer</string>
 </resources>
