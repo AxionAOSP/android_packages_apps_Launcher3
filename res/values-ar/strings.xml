@@ -218,7 +218,7 @@
     <string name="action_customize_folder">تخصيص</string>
     <string name="folder_style_picker_title">نمط المجلد</string>
     <string name="folder_style_quadrant">مربع</string>
-    <string name="folder_style_grid">Grid</string>
+    <string name="folder_style_grid">شبكة</string>
     <string name="folder_style_circle">دائرة</string>
     <string name="folder_style_cover">الغلاف</string>
     <string name="folder_cover_text_hint">رمز تعبيري</string>
@@ -480,9 +480,9 @@
     <!-- label for arch shape option in customization picker -->
     <string name="arch_shape_title">قوس</string>
     <!-- DT2S -->
-    <string name="pref_sleep_gesture_title">Double tap to sleep</string>
-    <string name="pref_sleep_gesture_summary">Double tap on empty space for screen off</string>
+    <string name="pref_sleep_gesture_title">انقر نقرا مزدوجا للدخول في وضع السكون</string>
+    <string name="pref_sleep_gesture_summary">انقر نقرا مزدوجا على مساحة فارغة لإطفاء الشاشة</string>
     <!-- All Apps Suggestions -->
-    <string name="all_apps_suggestions_title">Show suggestions</string>
-    <string name="all_apps_suggestions_summary">Display suggested apps at the top of the app drawer</string>
+    <string name="all_apps_suggestions_title">عرض الاقتراحات</string>
+    <string name="all_apps_suggestions_summary">عرض التطبيقات المقترحة في أعلى درج التطبيقات</string>
 </resources>
