@@ -19,7 +19,7 @@
 <resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
     <!-- General -->
     <!-- Application name -->
-    <string name="app_name">Launcher3</string>
+    <string name="app_name">مشغل التطبيقات</string>
     <!-- Work folder name -->
     <string name="work_folder_name">العمل</string>
     <!-- Displayed when user selects a shortcut for an app that was uninstalled [CHAR_LIMIT=none]-->
@@ -35,7 +35,7 @@
     <!-- User visible name for the launcher/home screen. [CHAR_LIMIT=30] -->
     <string name="home_screen">الشاشة الرئيسية</string>
     <!-- Description for setting the current launcher as the default home app. [CHAR_LIMIT=none]-->
-    <string name="set_default_home_app">Set <xliff:g id="launcher_name" example="Launcher3">%1$s</xliff:g> as default home app in Settings</string>
+    <string name="set_default_home_app">اضبط <xliff:g id="launcher_name" example="Launcher3">%1$s</xliff:g> كتطبيق المشغل الافتراضي</string>
     <!-- Options for recent tasks -->
     <!-- Title for an option to enter split screen mode for a given app -->
     <string name="recent_task_option_split_screen">تقسيم الشاشة</string>
@@ -211,17 +211,17 @@
     <string name="pin_prediction">تثبيت التطبيق المتوقّع</string>
     <!-- Label for bubbling a launcher item. [CHAR_LIMIT=20] -->
     <string name="bubble">فقاعة</string>
-    <string name="action_pin_to_top">Pin to top</string>
-    <string name="action_unpin">Unpin</string>
-    <string name="action_enlarge">Enlarge</string>
-    <string name="action_minimize">Minimize</string>
-    <string name="action_customize_folder">Customize</string>
-    <string name="folder_style_picker_title">Folder Style</string>
-    <string name="folder_style_quadrant">Quadrant</string>
+    <string name="action_pin_to_top">تثبيت في الأعلى</string>
+    <string name="action_unpin">إلغاء التثبيت</string>
+    <string name="action_enlarge">تكبير</string>
+    <string name="action_minimize">تصغير</string>
+    <string name="action_customize_folder">تخصيص</string>
+    <string name="folder_style_picker_title">نمط المجلد</string>
+    <string name="folder_style_quadrant">مربع</string>
     <string name="folder_style_grid">Grid</string>
-    <string name="folder_style_circle">Circle</string>
-    <string name="folder_style_cover">Cover</string>
-    <string name="folder_cover_text_hint">Emoji</string>
+    <string name="folder_style_circle">دائرة</string>
+    <string name="folder_style_cover">الغلاف</string>
+    <string name="folder_cover_text_hint">رمز تعبيري</string>
     <!-- Permissions: -->
     <!-- Permission short label -->
     <string name="permlab_install_shortcut">تثبيت اختصارات</string>
@@ -470,7 +470,7 @@
     <string name="ps_app_content_description">إضافة ملفات والمزيد إلى \"المساحة الخاصّة\"</string>
     <!-- Strings for icon shapes -->
     <!-- label for circle shape option in customization picker -->
-    <string name="circle_shape_title">Circle</string>
+    <string name="circle_shape_title">دائرة</string>
     <!-- label for square shape option in customization picker -->
     <string name="square_shape_title">مربّع</string>
     <!-- label for 4-sided cookie option shape in customization picker -->
