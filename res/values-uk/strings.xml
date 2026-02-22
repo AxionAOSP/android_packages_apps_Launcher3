@@ -19,7 +19,7 @@
 <resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
     <!-- General -->
     <!-- Application name -->
-    <string name="app_name">Launcher3</string>
+    <string name="app_name">Лаунчер</string>
     <!-- Work folder name -->
     <string name="work_folder_name">Робоча папка</string>
     <!-- Displayed when user selects a shortcut for an app that was uninstalled [CHAR_LIMIT=none]-->
@@ -35,7 +35,7 @@
     <!-- User visible name for the launcher/home screen. [CHAR_LIMIT=30] -->
     <string name="home_screen">Головний екран</string>
     <!-- Description for setting the current launcher as the default home app. [CHAR_LIMIT=none]-->
-    <string name="set_default_home_app">Set <xliff:g id="launcher_name" example="Launcher3">%1$s</xliff:g> as default home app in Settings</string>
+    <string name="set_default_home_app">Встановити <xliff:g id="launcher_name" example="Launcher3">%1$s</xliff:g> як типову програму в налаштуваннях</string>
     <!-- Options for recent tasks -->
     <!-- Title for an option to enter split screen mode for a given app -->
     <string name="recent_task_option_split_screen">Розділити екран</string>
@@ -74,7 +74,7 @@
     <string name="widget_accessible_dims_format">Ширина – %1$d, висота – %2$d</string>
     <!-- Spoken text for a screen reader. The placeholder text is the widget name.
          [CHAR_LIMIT=none]-->
-    <string name="widget_preview_context_description"><xliff:g id="widget_name" example="Calendar month view">%1$s</xliff:g> widget</string>
+    <string name="widget_preview_context_description"><xliff:g id="widget_name" example="Calendar month view">%1$s</xliff:g> віджет</string>
     <!-- Spoken text for a screen reader. The first placeholder text is the widget name, the
          remaining placeholders are for the widget dimensions.
          [CHAR_LIMIT=none]-->
