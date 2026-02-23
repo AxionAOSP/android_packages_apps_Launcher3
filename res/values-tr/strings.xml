@@ -40,7 +40,7 @@
     <!-- Title for an option to enter split screen mode for a given app -->
     <string name="recent_task_option_split_screen">Bölünmüş ekran</string>
     <string name="recent_task_option_aspect_ratio">En boy oranını değiştir</string>
-    <string name="split_app_info_accessibility">%1$s uygulama bilgileri</string>
+    <string name="split_app_info_accessibility">%1$s için uygulama bilgileri</string>
     <string name="split_app_usage_settings">%1$s ile ilgili kullanım ayarları</string>
     <!-- Title for an option to open a new window for a given app   -->
     <string name="new_window_option_taskbar">Yeni pencere</string>
