@@ -208,54 +208,54 @@
     <!-- Label for install drop target. [CHAR_LIMIT=20] -->
     <string name="install_drop_target_label">Pasang</string>
     <!-- Label for dismiss prediction. -->
-    <string name="dismiss_prediction_label">Don\'t suggest app</string>
+    <string name="dismiss_prediction_label">Jangan sarankan aplikasi</string>
     <!-- Label for pinning predicted app. -->
-    <string name="pin_prediction">Pin Prediction</string>
+    <string name="pin_prediction">Prediksi pin</string>
     <!-- Label for bubbling a launcher item. [CHAR_LIMIT=20] -->
-    <string name="bubble">Bubble</string>
-    <string name="action_pin_to_top">Pin to top</string>
-    <string name="action_unpin">Unpin</string>
-    <string name="action_enlarge">Enlarge</string>
-    <string name="action_minimize">Minimize</string>
-    <string name="action_customize_folder">Customize</string>
-    <string name="folder_style_picker_title">Folder Style</string>
-    <string name="folder_style_quadrant">Quadrant</string>
-    <string name="folder_style_grid">Grid</string>
-    <string name="folder_style_circle">Circle</string>
-    <string name="folder_style_cover">Cover</string>
+    <string name="bubble">Gelembung</string>
+    <string name="action_pin_to_top">Sematkan ke atas</string>
+    <string name="action_unpin">Lepas sematan</string>
+    <string name="action_enlarge">Memperbesar</string>
+    <string name="action_minimize">Memperkecil</string>
+    <string name="action_customize_folder">Sesuaikan</string>
+    <string name="folder_style_picker_title">Gaya Folder</string>
+    <string name="folder_style_quadrant">Kuadran</string>
+    <string name="folder_style_grid">Kisi</string>
+    <string name="folder_style_circle">Lingkaran</string>
+    <string name="folder_style_cover">Sampul</string>
     <string name="folder_cover_text_hint">Emoji</string>
     <!-- Permissions: -->
     <!-- Permission short label -->
-    <string name="permlab_install_shortcut">install shortcuts</string>
+    <string name="permlab_install_shortcut">Tambahkan pintasan</string>
     <!-- Permission description -->
-    <string name="permdesc_install_shortcut">Allows an app to add
-        shortcuts without user intervention.</string>
+    <string name="permdesc_install_shortcut">Memungkinkan aplikasi untuk menambahkan
+        pintasan tanpa persetujuan pengguna.</string>
     <!-- Permission short label -->
-    <string name="permlab_read_settings">read home settings and shortcuts</string>
+    <string name="permlab_read_settings">baca setelan beranda dan pintasan</string>
     <!-- Permission description -->
-    <string name="permdesc_read_settings">Allows the app to read the settings and
-        shortcuts in home.</string>
+    <string name="permdesc_read_settings">Memungkinkan aplikasi untuk membaca setelan dan
+        pintasan di beranda.</string>
     <!-- Permission short label -->
-    <string name="permlab_write_settings">write home settings and shortcuts</string>
+    <string name="permlab_write_settings">tulis setelan beranda dan pintasan</string>
     <!-- Permission description -->
-    <string name="permdesc_write_settings">Allows the app to change the settings and
-        shortcuts in home.</string>
+    <string name="permdesc_write_settings">Memungkinkan aplikasi untuk mengubah setelan dan
+        pintasan di beranda.</string>
     <!-- Widgets: -->
     <!-- Error text that lets a user know that the widget can't load. -->
-    <string name="gadget_error_text">Can\'t load widget</string>
+    <string name="gadget_error_text">Widget tidak dapat dimuat</string>
     <!-- Button text. This button lets a user change a widget's settings. -->
-    <string name="gadget_setup_text">Widget settings</string>
+    <string name="gadget_setup_text">Setelan widget</string>
     <!-- Instructional text to encourage a user to finish setting up the widget. -->
-    <string name="gadget_complete_setup_text">Tap to finish setup</string>
+    <string name="gadget_complete_setup_text">Ketuk untuk menyelesaikan penyiapan</string>
     <!-- Text to inform the user that they can't uninstall a system application -->
-    <string name="uninstall_system_app_text">This is a system app and can\'t be uninstalled.</string>
+    <string name="uninstall_system_app_text">Ini adalah aplikasi sistem dan tidak dapat dicopot.</string>
     <!-- Default folder title -->
-    <string name="folder_hint_text">Edit Name</string>
-    <string name="paginate_left">Paginate left</string>
-    <string name="paginate_right">Paginate right</string>
+    <string name="folder_hint_text">Edit Nama</string>
+    <string name="paginate_left">Halaman kiri</string>
+    <string name="paginate_right">Halaman kanan</string>
     <!-- Accessibility -->
     <!-- The format string for when an app is temporarily disabled. -->
-    <string name="disabled_app_label">Disabled <xliff:g id="app_name" example="Messenger">%1$s</xliff:g></string>
+    <string name="disabled_app_label"><xliff:g id="app_name" example="Messenger">%1$s</xliff:g> Dinonaktifkan</string>
     <!-- The format string for when an app has a notification dot (meaning it has associated notifications). [ICU_FORMAT]-->
     <string name="dotted_app_label">        {count, plural,
             =1      {{app_name} has # notification}
@@ -263,153 +263,152 @@
         }
     </string>
     <!-- The format string for default page scroll text [CHAR_LIMIT=none] -->
-    <string name="default_scroll_format">Page %1$d of %2$d</string>
+    <string name="default_scroll_format">Halaman %1$d dari %2$d</string>
     <!-- The format string for Workspace page scroll text [CHAR_LIMIT=none] -->
-    <string name="workspace_scroll_format">Home screen %1$d of %2$d</string>
+    <string name="workspace_scroll_format">Layar utama %1$d dari %2$d</string>
     <!-- Description for a new page on homescreen[CHAR_LIMIT=none] -->
-    <string name="workspace_new_page">New home screen page</string>
-    <string name="app_running_state_description">Active</string>
-    <string name="app_minimized_state_description">Minimized</string>
+    <string name="workspace_new_page">Halaman baru layar utama</string>
+    <string name="app_running_state_description">Aktif</string>
+    <string name="app_minimized_state_description">Diminimalkan</string>
     <!-- Folder accessibility -->
     <!-- The format string for when a folder is opened, speaks the dimensions -->
-    <string name="folder_opened">Folder opened, <xliff:g id="width" example="5">%1$d</xliff:g> by <xliff:g id="height" example="3">%2$d</xliff:g></string>
+    <string name="folder_opened">Folder dibuka, <xliff:g id="width" example="5">%1$d</xliff:g> oleh <xliff:g id="height" example="3">%2$d</xliff:g></string>
     <!-- Instruction that clicking outside will close folder -->
-    <string name="folder_tap_to_close">Tap to close folder</string>
+    <string name="folder_tap_to_close">Ketuk untuk menutup folder</string>
     <!-- Instruction that clicking outside will commit folder rename -->
-    <string name="folder_tap_to_rename">Tap to save rename</string>
+    <string name="folder_tap_to_rename">Ketuk untuk menyimpan perubahan nama</string>
     <!-- Indication that folder closed -->
-    <string name="folder_closed">Folder closed</string>
+    <string name="folder_closed">Folder ditutup</string>
     <!-- Folder renamed format -->
-    <string name="folder_renamed">Folder renamed to <xliff:g id="name" example="Games">%1$s</xliff:g></string>
+    <string name="folder_renamed">Nama folder diubah menjadi <xliff:g id="name" example="Games">%1$s</xliff:g></string>
     <!-- Folder name format when folder has less than 4 items -->
-    <string name="folder_name_format_exact">Folder: <xliff:g id="name" example="Games">%1$s</xliff:g>, <xliff:g id="size" example="2">%2$d</xliff:g> items</string>
+    <string name="folder_name_format_exact">Folder: <xliff:g id="name" example="Games">%1$s</xliff:g>, <xliff:g id="size" example="2">%2$d</xliff:g> item</string>
     <!-- Folder name format when folder has 4 or more items shown in preview-->
-    <string name="folder_name_format_overflow">Folder: <xliff:g id="name" example="Games">%1$s</xliff:g>, <xliff:g id="size" example="2">%2$d</xliff:g> or more items</string>
+    <string name="folder_name_format_overflow">Folder: <xliff:g id="name" example="Games">%1$s</xliff:g>, <xliff:g id="size" example="2">%2$d</xliff:g> item atau lebih</string>
     <!-- Accessibility announement for unnamed folders -->
-    <string name="unnamed_folder">Unnamed folder</string>
+    <string name="unnamed_folder">Folder tanpa nama</string>
     <!-- App pair accessibility -->
     <!-- App pair name -->
-    <string name="app_pair_name_format">App pair: <xliff:g id="app1" example="Chrome">%1$s</xliff:g> and <xliff:g id="app2" example="YouTube">%2$s</xliff:g></string>
+    <string name="app_pair_name_format">Gabungan aplikasi: <xliff:g id="app1" example="Chrome">%1$s</xliff:g> dan <xliff:g id="app2" example="YouTube">%2$s</xliff:g></string>
     <!-- Strings for the customization mode -->
     <!-- Text for wallpaper change button [CHAR LIMIT=30]-->
-    <string name="styles_wallpaper_button_text">Wallpaper &amp; style</string>
+    <string name="styles_wallpaper_button_text">Wallpaper &amp; gaya</string>
     <!-- Text for edit home screen button [CHAR LIMIT=30]-->
-    <string name="edit_home_screen">Edit Home Screen</string>
+    <string name="edit_home_screen">Ubah Layar Utama</string>
     <!-- Text for settings button [CHAR LIMIT=20]-->
-    <string name="settings_button_text">Home settings</string>
+    <string name="settings_button_text">Setelan Layar Utama</string>
     <!-- Message shown when a feature is disabled by the administrator -->
-    <string name="msg_disabled_by_admin">Disabled by your admin</string>
+    <string name="msg_disabled_by_admin">Dinonaktifkan oleh admin</string>
     <!-- Strings for settings -->
     <!-- Title for Allow Rotation setting. [CHAR LIMIT=50] -->
-    <string name="allow_rotation_title">Allow home screen rotation</string>
+    <string name="allow_rotation_title">Izinkan rotasi layar utama</string>
     <!-- Text explaining when the home screen will get rotated. [CHAR LIMIT=100] -->
-    <string name="allow_rotation_desc">When phone is rotated</string>
+    <string name="allow_rotation_desc">Saat ponsel diputar</string>
     <!-- Title for Landscape Mode setting. [CHAR LIMIT=50] -->
-    <string name="landscape_mode_title">Landscape mode</string>
+    <string name="landscape_mode_title">Mode lanskap</string>
     <!--  [CHAR LIMIT=100] -->
-    <string name="landscape_mode_desc">Set home screen into landscape mode</string>
+    <string name="landscape_mode_desc">Ubah layar utama ke mode lanskap</string>
     <!-- Title for Notification dots setting. Tapping this will link to the system Notifications settings screen where the user can turn off notification dots globally. [CHAR LIMIT=50] -->
-    <string name="notification_dots_title">Notification dots</string>
+    <string name="notification_dots_title">Titik notifikasi</string>
     <!-- Text to indicate that the system notification dots setting is on [CHAR LIMIT=100] -->
-    <string name="notification_dots_desc_on">On</string>
+    <string name="notification_dots_desc_on">Aktif</string>
     <!-- Text to indicate that the system notification dots setting is off [CHAR LIMIT=100] -->
-    <string name="notification_dots_desc_off">Off</string>
+    <string name="notification_dots_desc_off">Nonaktif</string>
     <!-- Title for the dialog shown when the app does not has notification access, explaining the requirement for notification access [CHAR LIMIT=50] -->
-    <string name="title_missing_notification_access">Notification access needed</string>
+    <string name="title_missing_notification_access">Di perlukan akses notifikasi</string>
     <!-- Message explaining to the user that the notification access is required by the app for showing 'Notification dots' [CHAR LIMIT=NONE] -->
-    <string name="msg_missing_notification_access">To show Notification Dots, turn on app notifications for <xliff:g id="name" example="My App">%1$s</xliff:g></string>
+    <string name="msg_missing_notification_access">Untuk menampilkan titik notifikasi, aktifkan notifikasi aplikasi untuk <xliff:g id="name" example="My App">%1$s</xliff:g></string>
     <!-- Button text in the confirmation dialog which would take the user to the system settings [CHAR LIMIT=50] -->
-    <string name="title_change_settings">Change settings</string>
+    <string name="title_change_settings">Ubah pengaturan</string>
     <!-- Summary for Notification dots setting. Tapping this will link enable/disable notification dots feature on the home screen. [CHAR LIMIT=50] -->
-    <string name="notification_dots_service_title">Show notification dots</string>
+    <string name="notification_dots_service_title">Tampilkan titik notifikasi</string>
     <!-- Title for Developer Options setting. [CHAR LIMIT=50] -->
-    <string name="developer_options_title">Developer Options</string>
+    <string name="developer_options_title">Pengembang Opsi</string>
     <!-- Label for the setting that allows the automatic placement of launcher shortcuts for applications and games installed on the device [CHAR LIMIT=60] -->
-    <string name="auto_add_shortcuts_label">Add app icons to home screen</string>
+    <string name="auto_add_shortcuts_label">Tambahkan ikon aplikasi ke layar beranda</string>
     <!-- Text description of the setting that allows the automatic placement of launcher shortcuts for applications and games installed on the device [CHAR LIMIT=NONE] -->
-    <string name="auto_add_shortcuts_description">For new apps</string>
+    <string name="auto_add_shortcuts_description">Untuk aplikasi baru</string>
     <!-- Label on an icon that references an uninstalled package, for which we have no information about when it might be installed. [CHAR_LIMIT=15] -->
-    <string name="package_state_unknown">Unknown</string>
+    <string name="package_state_unknown">Tidak dikenal</string>
     <!-- Button for abandoned promises dialog, to removes this abandoned promise icon. -->
     <string name="abandoned_clean_this">Hapus</string>
     <!-- Button for abandoned promise dialog, to search in the market for the missing package. -->
     <string name="abandoned_search">Pencarian</string>
     <!-- Title for abandoned promise dialog. -->
-    <string name="abandoned_promises_title">This app is not installed</string>
+    <string name="abandoned_promises_title">Aplikasi ini belum terpasang</string>
     <!-- Explanation for abandoned promise dialog. "The first 'it' refers to the shortcut icon.
     The second "it" refers to the app. -->
-    <string name="abandoned_promise_explanation">The app for this icon isn\'t installed.
-        You can remove it, or search for the app and install it manually.
-    </string>
+    <string name="abandoned_promise_explanation">Aplikasi untuk ikon ini belum terpasang.
+Anda dapat menghapusnya, atau mencari aplikasi tersebut dan memasangnya secara manual.</string>
     <!-- Title for an app which is being installed. -->
     <string name="app_installing_title"><xliff:g id="name" example="Messenger">%1$s</xliff:g> installing, <xliff:g id="progress" example="30%">%2$s</xliff:g> complete</string>
     <!-- Title for an app which is being downloaded. -->
-    <string name="app_downloading_title"><xliff:g id="name" example="Messenger">%1$s</xliff:g> downloading, <xliff:g id="progress" example="30%">%2$s</xliff:g> complete</string>
+    <string name="app_downloading_title"><xliff:g id="name" example="Messenger">%1$s</xliff:g> mengunduh, <xliff:g id="progress" example="30%">%2$s</xliff:g> selesai</string>
     <!-- Title for an app whose download has been started. -->
-    <string name="app_waiting_download_title"><xliff:g id="name" example="Messenger">%1$s</xliff:g> waiting to install</string>
+    <string name="app_waiting_download_title"><xliff:g id="name" example="Messenger">%1$s</xliff:g> menunggu untuk di install</string>
     <!-- Title for an app which is archived. -->
-    <string name="app_archived_title"><xliff:g id="name" example="Messenger">%1$s</xliff:g> is archived.</string>
+    <string name="app_archived_title"><xliff:g id="name" example="Messenger">%1$s</xliff:g> telah di arsipkan </string>
     <!-- Accessibility Action for an app which is archived. -->
-    <string name="app_unarchiving_action">download and restore</string>
+    <string name="app_unarchiving_action">Unduh dan pulihkan</string>
     <!-- Title shown on the alert dialog prompting the user to update the application in market
      in order to re-enable the disabled shortcuts -->
-    <string name="dialog_update_title">App update required</string>
+    <string name="dialog_update_title">Pembaruan aplikasi diperlukan</string>
     <!-- Message shown on the alert dialog prompting the user to update the application -->
-    <string name="dialog_update_message">The app for this icon isn\'t updated. You can update manually to re-enable this shortcut, or remove the icon.</string>
+    <string name="dialog_update_message">Aplikasi untuk ikon ini belum diperbarui. Anda dapat memperbarui secara manual untuk mengaktifkan kembali pintasan ini, atau menghapus ikon tersebut.</string>
     <!-- Message for the update button in the alert dialog, will bring the user to market -->
-    <string name="dialog_update">Update</string>
+    <string name="dialog_update">Memperbarui</string>
     <!-- Message for the remove button in the alert dialog -->
     <string name="dialog_remove">Hapus</string>
     <!-- Strings for widgets & more in the popup container/bottom sheet -->
     <!-- Accessibility title for the popup containing a list of widgets. [CHAR_LIMIT=50] -->
-    <string name="widgets_list">Widgets list</string>
+    <string name="widgets_list">Daftar widget</string>
     <!-- Text announced by accessibility when the popup containing the list of widgets is closed. [CHAR_LIMIT=100] -->
-    <string name="widgets_list_closed">Widgets list closed</string>
+    <string name="widgets_list_closed">Daftar widget ditutup</string>
     <!-- Strings for accessibility actions -->
     <!-- Accessibility action to add an app to workspace. [CHAR_LIMIT=30] -->
     <string name="action_add_to_workspace">Tambahkan ke layar utama</string>
     <!-- Accessibility action to move item to the current location. [CHAR_LIMIT=30] -->
-    <string name="action_move_here">Move item here</string>
+    <string name="action_move_here">Pindahkan item ke sini</string>
     <!-- Accessibility confirmation for item removed. [CHAR_LIMIT=50]-->
-    <string name="item_removed">Item removed</string>
+    <string name="item_removed">Item dihapus</string>
     <!-- Action shown in snackbar to undo item removal. [CHAR_LIMIT=20] -->
-    <string name="undo">Undo</string>
+    <string name="undo">Urungkan</string>
     <!-- Accessibility action to move an item on the workspace. [CHAR_LIMIT=30] -->
-    <string name="action_move">Move item</string>
+    <string name="action_move">Pindahkan item</string>
     <!-- Accessibility description to move item to empty cell. -->
-    <string name="move_to_empty_cell_description">Move to row <xliff:g id="number" example="1">%1$s</xliff:g> column <xliff:g id="number" example="1">%2$s</xliff:g> in <xliff:g id="string" example="Home screen 2 of 4">%3$s</xliff:g></string>
+    <string name="move_to_empty_cell_description">Pindahkan ke baris<xliff:g id="number" example="1">%1$s</xliff:g> kolom <xliff:g id="number" example="1">%2$s</xliff:g> in <xliff:g id="string" example="Home screen 2 of 4">%3$s</xliff:g></string>
     <!-- Accessibility description to move item inside a folder. -->
     <string name="move_to_position">Move to position <xliff:g id="number" example="1">%1$s</xliff:g></string>
     <!-- Accessibility description to move item to the hotseat. -->
     <string name="move_to_hotseat_position">Move to favorites position <xliff:g id="number" example="1">%1$s</xliff:g></string>
     <!-- Accessibility confirmation for item move. -->
-    <string name="item_moved">Item moved</string>
+    <string name="item_moved">Pindahkan item</string>
     <!-- Accessibility description to move item into an existing folder. -->
     <string name="add_to_folder">Add to folder: <xliff:g id="name" example="Games">%1$s</xliff:g></string>
     <!-- Accessibility description to move item into an existing folder containing an app. -->
     <string name="add_to_folder_with_app">Add to folder with <xliff:g id="name" example="Messenger">%1$s</xliff:g></string>
     <!-- Accessibility confirmation for item added to folder. -->
-    <string name="added_to_folder">Item added to folder</string>
+    <string name="added_to_folder">Item di tambahkan ke folder</string>
     <!-- Accessibility description to create folder with another item. -->
     <string name="create_folder_with">Create folder with: <xliff:g id="name" example="Game">%1$s</xliff:g></string>
     <!-- Accessibility confirmation for folder created. -->
-    <string name="folder_created">Folder created</string>
+    <string name="folder_created">Folder di buat</string>
     <!-- Accessibility action to move an item from folder to workspace. [CHAR_LIMIT=30] -->
-    <string name="action_move_to_workspace">Move to home screen</string>
+    <string name="action_move_to_workspace">Pindahkan ke layar utama</string>
     <!-- Accessibility action to resize a widget. [CHAR_LIMIT=30] -->
-    <string name="action_resize">Resize</string>
+    <string name="action_resize">Ubah ukuran</string>
     <!-- Accessibility action to increase width of a widget. [CHAR_LIMIT=30] -->
-    <string name="action_increase_width">Increase width</string>
+    <string name="action_increase_width">Perbesar lebar</string>
     <!-- Accessibility action to increase height of a widget. [CHAR_LIMIT=30] -->
-    <string name="action_increase_height">Increase height</string>
+    <string name="action_increase_height">Perbesar tinggi</string>
     <!-- Accessibility action to decrease width of a widget. [CHAR_LIMIT=30] -->
-    <string name="action_decrease_width">Decrease width</string>
+    <string name="action_decrease_width">Perkecil lebar</string>
     <!-- Accessibility action to decrease height of a widget. [CHAR_LIMIT=30] -->
-    <string name="action_decrease_height">Decrease height</string>
+    <string name="action_decrease_height">Perkecil tinggi</string>
     <!-- Accessibility confirmation for widget resize. -->
-    <string name="widget_resized">Widget resized to width <xliff:g id="number" example="2">%1$s</xliff:g> height <xliff:g id="number" example="1">%2$s</xliff:g></string>
+    <string name="widget_resized">Ukuran widget di ubah menjadi lebar<xliff:g id="number" example="2">%1$s</xliff:g> dan tinggi <xliff:g id="number" example="1">%2$s</xliff:g></string>
     <!-- Accessibility action to show quick actions menu for an icon. [CHAR_LIMIT=30] -->
-    <string name="action_deep_shortcut">Shortcut Menu</string>
+    <string name="action_deep_shortcut">Menu pintasan</string>
     <!-- Accessibility name for the app widget resize frame. -->
     <string name="widget_frame_name">Widget Resize Frame for <xliff:g id="string" example="Clock">%1$s</xliff:g></string>
     <!-- Accessibility action to close the widget resize frame. [CHAR_LIMIT=30] -->
@@ -451,49 +450,49 @@
     <!-- button string shown enable work profile -->
     <string name="work_apps_enable_btn_text">Unpause</string>
     <!-- Label for the work profile scheduler button in the work profile screen. [CHAR_LIMIT=40] -->
-    <string name="work_scheduler_button_content_description">Work apps schedule</string>
+    <string name="work_scheduler_button_content_description">Jadwal kerja aplikasi</string>
     <!-- A hint shown in launcher settings develop options filter box -->
     <string name="developer_options_filter_hint">Filter</string>
     <!-- Failed action error message: e.g. Failed: Pause -->
-    <string name="remote_action_failed">Failed: <xliff:g id="what" example="Pause">%1$s</xliff:g></string>
+    <string name="remote_action_failed">Gagal: <xliff:g id="what" example="Pause">%1$s</xliff:g></string>
     <!-- Strings for Private Space -->
     <!-- Private space tile label -->
-    <string name="private_space_label">Private space</string>
+    <string name="private_space_label">Ruang Privasi</string>
     <!-- Private space tile secondary label -->
-    <string name="private_space_secondary_label">Tap to set up or open</string>
+    <string name="private_space_secondary_label">Ketuk untuk menyiapkan atau membuka</string>
     <!-- Title for Private Space Container shown at the bottom of all apps drawer -->
-    <string name="ps_container_title">Private</string>
+    <string name="ps_container_title">Privasi</string>
     <!-- Description for Private Space Settings button -->
-    <string name="ps_container_settings">Private Space Settings</string>
+    <string name="ps_container_settings">Setelan Ruang Privasi</string>
     <!-- Description for Private Space Unlock button -->
-    <string name="ps_container_unlock_button_content_description">Private, unlocked.</string>
+    <string name="ps_container_unlock_button_content_description">Privasi, tidak terkunci.</string>
     <!-- Description for Private Space Lock button -->
-    <string name="ps_container_lock_button_content_description">Private, locked.</string>
-    <string name="ps_container_lock_title">Lock</string>
+    <string name="ps_container_lock_button_content_description">Privasi, terkunci.</string>
+    <string name="ps_container_lock_title">Kunci</string>
     <!-- Description for Private Space Transition button -->
-    <string name="ps_container_transition">Private Space Transitioning</string>
+    <string name="ps_container_transition">Transisi Ruang Privasi</string>
     <!-- Title for Private Space install app icon -->
     <string name="ps_add_button_label">Pasang</string>
     <!-- Title for Private Space app icon to add files and more to Private Space -->
     <string name="ps_app_label_override">Tambah</string>
     <!-- Content description for install app icon -->
-    <string name="ps_add_button_content_description">Install apps to Private Space</string>
-    <string name="ps_app_content_description">Add files and more to Private Space</string>
+    <string name="ps_add_button_content_description">Pasang aplikasi ke Ruang Privasi</string>
+    <string name="ps_app_content_description">Tambahkan berkas dan lainnya ke Ruang Privasi</string>
     <!-- Strings for icon shapes -->
     <!-- label for circle shape option in customization picker -->
-    <string name="circle_shape_title">Circle</string>
+    <string name="circle_shape_title">Lingkaran</string>
     <!-- label for square shape option in customization picker -->
-    <string name="square_shape_title">Square</string>
+    <string name="square_shape_title">Persegi</string>
     <!-- label for 4-sided cookie option shape in customization picker -->
-    <string name="four_sided_cookie_shape_title">4-sided cookie</string>
+    <string name="four_sided_cookie_shape_title">Kuki 4 sisi</string>
     <!-- label for 7-sided cookie option shape in customization picker -->
-    <string name="seven_sided_cookie_shape_title">7-sided cookie</string>
+    <string name="seven_sided_cookie_shape_title">Kuki 7 sisi</string>
     <!-- label for arch shape option in customization picker -->
-    <string name="arch_shape_title">Arch</string>
+    <string name="arch_shape_title">Lengkung</string>
     <!-- DT2S -->
-    <string name="pref_sleep_gesture_title">Double tap to sleep</string>
-    <string name="pref_sleep_gesture_summary">Double tap on empty space for screen off</string>
+    <string name="pref_sleep_gesture_title">Ketuk dua kali untuk tidur</string>
+    <string name="pref_sleep_gesture_summary">Ketuk dua kali pada ruang kosong untuk mematikan layar</string>
     <!-- All Apps Suggestions -->
-    <string name="all_apps_suggestions_title">Show suggestions</string>
-    <string name="all_apps_suggestions_summary">Display suggested apps at the top of the app drawer</string>
+    <string name="all_apps_suggestions_title">Tampilkan saran</string>
+    <string name="all_apps_suggestions_summary">Tampilkan aplikasi yang disarankan di bagian atas laci aplikasi</string>
 </resources>
