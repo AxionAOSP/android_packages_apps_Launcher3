@@ -21,44 +21,44 @@
     <!-- Application name -->
     <string name="app_name">Launcher3</string>
     <!-- Work folder name -->
-    <string name="work_folder_name">Work</string>
+    <string name="work_folder_name">Kerja</string>
     <!-- Displayed when user selects a shortcut for an app that was uninstalled [CHAR_LIMIT=none]-->
     <string name="activity_not_found">Aplikasi tidak terpasang.</string>
     <!-- Displayed when user selects a shortcut for an app that is current not available [CHAR_LIMIT=none]-->
     <string name="activity_not_available">Aplikasi tidak tersedia</string>
     <!-- SafeMode shortcut error string -->
-    <string name="safemode_shortcut_error">Downloaded app disabled in Safe mode</string>
+    <string name="safemode_shortcut_error">Aplikasi yang diunduh dinonaktifkan dalam mode aman</string>
     <!-- SafeMode widget error string -->
-    <string name="safemode_widget_error">Widgets disabled in Safe mode</string>
+    <string name="safemode_widget_error">Widget dinonaktifkan dalam Mode aman</string>
     <!-- Message shown when a shortcut is not available. It could have been temporarily disabled and may start working again after some time. -->
-    <string name="shortcut_not_available">Shortcut isn\'t available</string>
+    <string name="shortcut_not_available">Shortcut tidak tersedia</string>
     <!-- User visible name for the launcher/home screen. [CHAR_LIMIT=30] -->
-    <string name="home_screen">Home</string>
+    <string name="home_screen">Beranda</string>
     <!-- Description for setting the current launcher as the default home app. [CHAR_LIMIT=none]-->
-    <string name="set_default_home_app">Set <xliff:g id="launcher_name" example="Launcher3">%1$s</xliff:g> as default home app in Settings</string>
+    <string name="set_default_home_app">Atur <xliff:g id="launcher_name" example="Launcher3">%1$s</xliff:g> sebagai Aplikasi Layar utama default di Pengaturan</string>
     <!-- Options for recent tasks -->
     <!-- Title for an option to enter split screen mode for a given app -->
-    <string name="recent_task_option_split_screen">Split screen</string>
-    <string name="recent_task_option_aspect_ratio">Change aspect ratio</string>
-    <string name="split_app_info_accessibility">App info for %1$s</string>
-    <string name="split_app_usage_settings">Usage settings for %1$s</string>
+    <string name="recent_task_option_split_screen">Layar terpisah</string>
+    <string name="recent_task_option_aspect_ratio">Ubah aspek rasio</string>
+    <string name="split_app_info_accessibility">Aplikasi info untuk %1$s</string>
+    <string name="split_app_usage_settings">Pengaturan penggunaan untuk %1$s</string>
     <!-- Title for an option to open a new window for a given app   -->
-    <string name="new_window_option_taskbar">New Window</string>
+    <string name="new_window_option_taskbar">Jendela Baru</string>
     <!-- Title for an option to manage open windows for a given app   -->
-    <string name="manage_windows_option_taskbar">Manage Windows</string>
+    <string name="manage_windows_option_taskbar">Kelola jendela</string>
     <!-- App pairs -->
-    <string name="save_app_pair">Save app pair</string>
+    <string name="save_app_pair">Simpan pasangan aplikasi</string>
     <!-- App pair default title -->
     <string name="app_pair_default_title"><xliff:g id="app1" example="Chrome">%1$s</xliff:g> | <xliff:g id="app2" example="YouTube">%2$s</xliff:g></string>
     <!-- Displayed when an app pair can't launch at this screen size [CHAR_LIMIT=none] -->
     <string name="app_pair_unlaunchable_at_screen_size"></string>
     <!-- Displayed when an app pair can't launch at this screen size, but user can unfold device to restore functionality [CHAR_LIMIT=none] -->
-    <string name="app_pair_needs_unfold">Unfold device to use this app pair</string>
+    <string name="app_pair_needs_unfold">Buka perangkat untuk menggunakan pasangan aplikasi ini</string>
     <!-- Displayed when user selects a shortcut for an app pair that is currently not available [CHAR_LIMIT=none]-->
-    <string name="app_pair_not_available">App pair isn\'t available</string>
+    <string name="app_pair_not_available">Pasangan aplikasi tidak tersedia</string>
     <!-- Widgets -->
     <!-- Message to tell the user to press and hold on a widget to add it [CHAR_LIMIT=50] -->
-    <string name="long_press_widget_to_add">Touch &amp; hold to move a widget.</string>
+    <string name="long_press_widget_to_add">Tekan &amp; tahan untuk memindahkan widget.</string>
     <!-- Accessibility spoken hint message in widget picker, which allows user to add a widget. Custom action is the label for additional accessibility actions available in this mode [CHAR_LIMIT=100] -->
     <string name="long_accessible_way_to_add">Ketuk dua kali &amp; tahan untuk memindahkan widget atau gunakan tindakan khusus.</string>
     <!-- Accessibility label for the icon button shown in the widget picker that opens a overflow
@@ -137,7 +137,7 @@
     <!-- Tab label. A user can tap this tab to access their personal widgets. [CHAR_LIMIT=25] -->
     <string name="widgets_full_sheet_personal_tab">Personal</string>
     <!-- Tab label. A user can tap this tab to access their work widgets. [CHAR_LIMIT=25] -->
-    <string name="widgets_full_sheet_work_tab">Work</string>
+    <string name="widgets_full_sheet_work_tab">Kerja</string>
     <!-- A widget category label for grouping widgets related to conversations. [CHAR_LIMIT=30] -->
     <string name="widget_category_conversations">Conversations</string>
     <!-- A widget category label for grouping widgets related to note taking. [CHAR_LIMIT=30] -->
@@ -421,7 +421,7 @@
     <!-- Label of tab to indicate personal apps -->
     <string name="all_apps_personal_tab">Personal</string>
     <!-- Label of tab to indicate work apps -->
-    <string name="all_apps_work_tab">Work</string>
+    <string name="all_apps_work_tab">Kerja</string>
     <!-- Content description of personal tab to indicate personal apps -->
     <string name="all_apps_personal_tab_content_description">Personal apps tab</string>
     <!-- Content description of work tab to indicate work apps -->
