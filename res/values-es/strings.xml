@@ -35,7 +35,7 @@
     <!-- User visible name for the launcher/home screen. [CHAR_LIMIT=30] -->
     <string name="home_screen">Inicio</string>
     <!-- Description for setting the current launcher as the default home app. [CHAR_LIMIT=none]-->
-    <string name="set_default_home_app">Set <xliff:g id="launcher_name" example="Launcher3">%1$s</xliff:g> as default home app in Settings</string>
+    <string name="set_default_home_app">Establecer <xliff:g id="launcher_name" example="Launcher3">%1$s</xliff:g> por defecto de pantalla principal en Ajustes</string>
     <!-- Options for recent tasks -->
     <!-- Title for an option to enter split screen mode for a given app -->
     <string name="recent_task_option_split_screen">Pantalla dividida</string>
@@ -74,12 +74,11 @@
     <string name="widget_accessible_dims_format">%1$d de ancho por %2$d de alto</string>
     <!-- Spoken text for a screen reader. The placeholder text is the widget name.
          [CHAR_LIMIT=none]-->
-    <string name="widget_preview_context_description"><xliff:g id="widget_name" example="Calendar month view">%1$s</xliff:g> widget</string>
+    <string name="widget_preview_context_description"><xliff:g id="widget_name" example="Calendar month view">%1$s</xliff:g> Artilugio</string>
     <!-- Spoken text for a screen reader. The first placeholder text is the widget name, the
          remaining placeholders are for the widget dimensions.
          [CHAR_LIMIT=none]-->
-    <string name="widget_preview_name_and_dims_content_description">        <xliff:g id="widget_name" example="Calendar month view">%1$s</xliff:g> widget, %2$d wide by %3$d high
-    </string>
+    <string name="widget_preview_name_and_dims_content_description"><xliff:g id="widget_name" example="Calendar month view">%1$s</xliff:g> Artilugio %2$d ancho por %3$d alto    </string>
     <!-- Message to tell the user to press and hold a widget/icon to add it to the home screen.
          [CHAR LIMIT=NONE]  -->
     <string name="add_item_request_drag_hint">Mantén pulsado el widget para moverlo por la pantalla de inicio</string>
@@ -87,7 +86,7 @@
     <string name="add_to_home_screen">Añadir a pantalla de inicio</string>
     <!-- Accessibility spoken message announced when a widget gets added to the home screen using a
          button in a dialog. [CHAR_LIMIT=none] -->
-    <string name="added_to_home_screen_accessibility_text"><xliff:g id="widget_name" example="Calendar month view">%1$s</xliff:g> widget added to home screen</string>
+    <string name="added_to_home_screen_accessibility_text"><xliff:g id="widget_name" example="Calendar month view">%1$s</xliff:g> Añadido a la pantalla principal</string>
     <!-- Widget suggestions header title in the full widgets picker for large screen devices
     in landscape mode. [CHAR_LIMIT=50] -->
     <string name="suggested_widgets_header_title">Sugerencias</string>
@@ -380,7 +379,7 @@
     <!-- Accessibility confirmation for item added to folder. -->
     <string name="added_to_folder">Elemento añadido a carpeta</string>
     <!-- Accessibility description to create folder with another item. -->
-    <string name="create_folder_with">Create folder with: <xliff:g id="name" example="Game">%1$s</xliff:g></string>
+    <string name="create_folder_with">Crear carpeta: <xliff:g id="name" example="Game">%1$s</xliff:g></string>
     <!-- Accessibility confirmation for folder created. -->
     <string name="folder_created">Carpeta creada</string>
     <!-- Accessibility action to move an item from folder to workspace. [CHAR_LIMIT=30] -->
@@ -396,11 +395,11 @@
     <!-- Accessibility action to decrease height of a widget. [CHAR_LIMIT=30] -->
     <string name="action_decrease_height">Reducir altura</string>
     <!-- Accessibility confirmation for widget resize. -->
-    <string name="widget_resized">Widget resized to width <xliff:g id="number" example="2">%1$s</xliff:g> height <xliff:g id="number" example="1">%2$s</xliff:g></string>
+    <string name="widget_resized">Artilugio redimensionado a <xliff:g id="number" example="2">%1$s</xliff:g> de ancho, <xliff:g id="number" example="1">%2$s</xliff:g> de alto</string>
     <!-- Accessibility action to show quick actions menu for an icon. [CHAR_LIMIT=30] -->
     <string name="action_deep_shortcut">Menú de combinaciones de teclas</string>
     <!-- Accessibility name for the app widget resize frame. -->
-    <string name="widget_frame_name">Widget Resize Frame for <xliff:g id="string" example="Clock">%1$s</xliff:g></string>
+    <string name="widget_frame_name">Redimensionar marco del artilugio para <xliff:g id="string" example="Clock">%1$s</xliff:g></string>
     <!-- Accessibility action to close the widget resize frame. [CHAR_LIMIT=30] -->
     <string name="action_close">Cerrar</string>
     <!-- Accessibility action to dismiss a notification in the shortcuts menu for an icon. [CHAR_LIMIT=30] -->
@@ -444,7 +443,7 @@
     <!-- A hint shown in launcher settings develop options filter box -->
     <string name="developer_options_filter_hint">Filtro</string>
     <!-- Failed action error message: e.g. Failed: Pause -->
-    <string name="remote_action_failed">Failed: <xliff:g id="what" example="Pause">%1$s</xliff:g></string>
+    <string name="remote_action_failed">Fallido: <xliff:g id="what" example="Pause">%1$s</xliff:g></string>
     <!-- Strings for Private Space -->
     <!-- Private space tile label -->
     <string name="private_space_label">Espacio privado</string>
@@ -480,9 +479,9 @@
     <!-- label for arch shape option in customization picker -->
     <string name="arch_shape_title">Arco</string>
     <!-- DT2S -->
-    <string name="pref_sleep_gesture_title">Double tap to sleep</string>
-    <string name="pref_sleep_gesture_summary">Double tap on empty space for screen off</string>
+    <string name="pref_sleep_gesture_title">Doble toque para suspender</string>
+    <string name="pref_sleep_gesture_summary">Doble toque en espacio vacío para suspender</string>
     <!-- All Apps Suggestions -->
-    <string name="all_apps_suggestions_title">Show suggestions</string>
-    <string name="all_apps_suggestions_summary">Display suggested apps at the top of the app drawer</string>
+    <string name="all_apps_suggestions_title">Mostrar sugerencias</string>
+    <string name="all_apps_suggestions_summary">Mostrar aplicaciones sugeridas en el cajón de aplicaciones</string>
 </resources>
