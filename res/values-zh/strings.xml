@@ -120,29 +120,29 @@
     <string name="widgets_and_shortcuts_count"><xliff:g id="widgets_count" example="5 widgets">%1$s</xliff:g>, <xliff:g id="shortcuts_count" example="1 shortcut">%2$s</xliff:g></string>
     <!-- Text for both the tile of a popup view, which shows all available widgets installed on
          the device, and the text of a button, which opens this popup view. [CHAR LIMIT=30]-->
-    <string name="widget_button_text">Widgets</string>
+    <string name="widget_button_text">小组件</string>
     <!-- Search bar text shown in the popup view showing all available widgets installed on the
          device. [CHAR_LIMIT=50] -->
-    <string name="widgets_full_sheet_search_bar_hint">Search</string>
+    <string name="widgets_full_sheet_search_bar_hint">搜索</string>
     <!-- Spoken text for screen readers. This text lets a user know that the button is used to clear
          the text that the user entered in the search box. [CHAR_LIMIT=none] -->
-    <string name="widgets_full_sheet_cancel_button_description">Clear text from search box</string>
+    <string name="widgets_full_sheet_cancel_button_description">清空搜索框文本</string>
     <!-- Text shown when there are no widgets or shortcuts that can be added to the device.
          [CHAR_LIMIT=none] -->
-    <string name="no_widgets_available">Widgets and shortcuts aren\'t available</string>
+    <string name="no_widgets_available">小组件和快捷方式不可用</string>
     <!-- Text shown when there are no matching widget or shortcut search results for user's search
          query. [CHAR_LIMIT=none] -->
-    <string name="no_search_results">No widgets or shortcuts found</string>
+    <string name="no_search_results">未找到小组件或快捷方式</string>
     <!-- Tab label. A user can tap this tab to access their personal widgets. [CHAR_LIMIT=25] -->
-    <string name="widgets_full_sheet_personal_tab">Personal</string>
+    <string name="widgets_full_sheet_personal_tab">个人</string>
     <!-- Tab label. A user can tap this tab to access their work widgets. [CHAR_LIMIT=25] -->
     <string name="widgets_full_sheet_work_tab">Work</string>
     <!-- A widget category label for grouping widgets related to conversations. [CHAR_LIMIT=30] -->
-    <string name="widget_category_conversations">Conversations</string>
+    <string name="widget_category_conversations">会话</string>
     <!-- A widget category label for grouping widgets related to note taking. [CHAR_LIMIT=30] -->
-    <string name="widget_category_note_taking">Note-taking</string>
+    <string name="widget_category_note_taking">笔记</string>
     <!-- Accessibility label on the widget preview that on click (if add button is hidden) shows the button to add widget to the home screen. [CHAR_LIMIT=none] -->
-    <string name="widget_cell_tap_to_show_add_button_label">Show add button</string>
+    <string name="widget_cell_tap_to_show_add_button_label">显示添加按钮</string>
     <!-- Accessibility label on the widget preview that on click (if add button is showing) hides the button to add widget to the home screen. [CHAR_LIMIT=none] -->
     <string name="widget_cell_tap_to_hide_add_button_label">Hide add button</string>
     <!-- Text on the button that adds a widget to the home screen. [CHAR_LIMIT=15] -->
@@ -332,7 +332,7 @@
     <!-- Button for abandoned promises dialog, to removes this abandoned promise icon. -->
     <string name="abandoned_clean_this">Remove</string>
     <!-- Button for abandoned promise dialog, to search in the market for the missing package. -->
-    <string name="abandoned_search">Search</string>
+    <string name="abandoned_search">搜索</string>
     <!-- Title for abandoned promise dialog. -->
     <string name="abandoned_promises_title">This app is not installed</string>
     <!-- Explanation for abandoned promise dialog. "The first 'it' refers to the shortcut icon.
@@ -418,7 +418,7 @@
     <!-- Content description for arrow tip close button. [CHAR LIMIT=NONE] -->
     <string name="accessibility_close">Close</string>
     <!-- Label of tab to indicate personal apps -->
-    <string name="all_apps_personal_tab">Personal</string>
+    <string name="all_apps_personal_tab">个人</string>
     <!-- Label of tab to indicate work apps -->
     <string name="all_apps_work_tab">Work</string>
     <!-- Content description of personal tab to indicate personal apps -->
