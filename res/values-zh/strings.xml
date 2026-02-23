@@ -23,91 +23,90 @@
     <!-- Work folder name -->
     <string name="work_folder_name">Work</string>
     <!-- Displayed when user selects a shortcut for an app that was uninstalled [CHAR_LIMIT=none]-->
-    <string name="activity_not_found">App isn\'t installed.</string>
+    <string name="activity_not_found">未安装应用。</string>
     <!-- Displayed when user selects a shortcut for an app that is current not available [CHAR_LIMIT=none]-->
-    <string name="activity_not_available">App isn\'t available</string>
+    <string name="activity_not_available">应用不可用</string>
     <!-- SafeMode shortcut error string -->
-    <string name="safemode_shortcut_error">Downloaded app disabled in Safe mode</string>
+    <string name="safemode_shortcut_error">安全模式下已下载应用被禁用</string>
     <!-- SafeMode widget error string -->
-    <string name="safemode_widget_error">Widgets disabled in Safe mode</string>
+    <string name="safemode_widget_error">安全模式下小组件已禁用</string>
     <!-- Message shown when a shortcut is not available. It could have been temporarily disabled and may start working again after some time. -->
-    <string name="shortcut_not_available">Shortcut isn\'t available</string>
+    <string name="shortcut_not_available">快捷方式不可用</string>
     <!-- User visible name for the launcher/home screen. [CHAR_LIMIT=30] -->
-    <string name="home_screen">Home</string>
+    <string name="home_screen">主屏幕</string>
     <!-- Description for setting the current launcher as the default home app. [CHAR_LIMIT=none]-->
-    <string name="set_default_home_app">Set <xliff:g id="launcher_name" example="Launcher3">%1$s</xliff:g> as default home app in Settings</string>
+    <string name="set_default_home_app">在设置中将 <xliff:g id="launcher_name" example="Launcher3">%1$s</xliff:g> 设为默认主屏幕应用</string>
     <!-- Options for recent tasks -->
     <!-- Title for an option to enter split screen mode for a given app -->
-    <string name="recent_task_option_split_screen">Split screen</string>
-    <string name="recent_task_option_aspect_ratio">Change aspect ratio</string>
-    <string name="split_app_info_accessibility">App info for %1$s</string>
-    <string name="split_app_usage_settings">Usage settings for %1$s</string>
+    <string name="recent_task_option_split_screen">分屏</string>
+    <string name="recent_task_option_aspect_ratio">调整显示比例</string>
+    <string name="split_app_info_accessibility">%1$s 的应用信息</string>
+    <string name="split_app_usage_settings">%1$s 的使用设置</string>
     <!-- Title for an option to open a new window for a given app   -->
-    <string name="new_window_option_taskbar">New Window</string>
+    <string name="new_window_option_taskbar">窗口</string>
     <!-- Title for an option to manage open windows for a given app   -->
-    <string name="manage_windows_option_taskbar">Manage Windows</string>
+    <string name="manage_windows_option_taskbar">管理窗口</string>
     <!-- App pairs -->
-    <string name="save_app_pair">Save app pair</string>
+    <string name="save_app_pair">保存应用配对</string>
     <!-- App pair default title -->
     <string name="app_pair_default_title"><xliff:g id="app1" example="Chrome">%1$s</xliff:g> | <xliff:g id="app2" example="YouTube">%2$s</xliff:g></string>
     <!-- Displayed when an app pair can't launch at this screen size [CHAR_LIMIT=none] -->
-    <string name="app_pair_unlaunchable_at_screen_size">This app pair isn\'t supported on this device</string>
+    <string name="app_pair_unlaunchable_at_screen_size">此设备不支持该应用配对</string>
     <!-- Displayed when an app pair can't launch at this screen size, but user can unfold device to restore functionality [CHAR_LIMIT=none] -->
-    <string name="app_pair_needs_unfold">Unfold device to use this app pair</string>
+    <string name="app_pair_needs_unfold">请展开设备以使用该应用配对</string>
     <!-- Displayed when user selects a shortcut for an app pair that is currently not available [CHAR_LIMIT=none]-->
-    <string name="app_pair_not_available">App pair isn\'t available</string>
+    <string name="app_pair_not_available">应用配对不可用</string>
     <!-- Widgets -->
     <!-- Message to tell the user to press and hold on a widget to add it [CHAR_LIMIT=50] -->
-    <string name="long_press_widget_to_add">Touch &amp; hold to move a widget.</string>
+    <string name="long_press_widget_to_add">长按 &amp; 以移动小组件。</string>
     <!-- Accessibility spoken hint message in widget picker, which allows user to add a widget. Custom action is the label for additional accessibility actions available in this mode [CHAR_LIMIT=100] -->
-    <string name="long_accessible_way_to_add">Double-tap &amp; hold to move a widget or use custom actions.</string>
+    <string name="long_accessible_way_to_add">双击并长按 &amp; 可移动小组件或执行自定义操作。</string>
     <!-- Accessibility label for the icon button shown in the widget picker that opens a overflow
          menu with widgets viewing options. [CHAR_LIMIT=25] -->
-    <string name="widget_picker_widget_options_button_description">More options</string>
+    <string name="widget_picker_widget_options_button_description">更多选项</string>
     <!-- Label for the checkbox shown in the widget picker toggles whether to show all widgets or
      the default set. [CHAR_LIMIT=25] -->
-    <string name="widget_picker_show_all_widgets_menu_item_title">Show all widgets</string>
+    <string name="widget_picker_show_all_widgets_menu_item_title">显示所有小组件</string>
     <!-- The format string for the dimensions of a widget in the drawer -->
     <!-- There is a special version of this format string for Farsi -->
     <string name="widget_dims_format">%1$d \u00d7 %2$d</string>
     <!-- Accessibility spoken message format for the dimensions of a widget in the drawer -->
-    <string name="widget_accessible_dims_format">%1$d wide by %2$d high</string>
+    <string name="widget_accessible_dims_format">宽：%1$d 高：%2$d</string>
     <!-- Spoken text for a screen reader. The placeholder text is the widget name.
          [CHAR_LIMIT=none]-->
-    <string name="widget_preview_context_description"><xliff:g id="widget_name" example="Calendar month view">%1$s</xliff:g> widget</string>
+    <string name="widget_preview_context_description"><xliff:g id="widget_name" example="Calendar month view">%1$s</xliff:g> 小组件</string>
     <!-- Spoken text for a screen reader. The first placeholder text is the widget name, the
          remaining placeholders are for the widget dimensions.
          [CHAR_LIMIT=none]-->
-    <string name="widget_preview_name_and_dims_content_description">        <xliff:g id="widget_name" example="Calendar month view">%1$s</xliff:g> widget, %2$d wide by %3$d high
-    </string>
+    <string name="widget_preview_name_and_dims_content_description"><xliff:g id="widget_name" example="Calendar month view">%1$s</xliff:g> 小组件，宽：%2$d 高：%3$d    </string>
     <!-- Message to tell the user to press and hold a widget/icon to add it to the home screen.
          [CHAR LIMIT=NONE]  -->
-    <string name="add_item_request_drag_hint">Touch &amp; hold the widget to move it around the home screen</string>
+    <string name="add_item_request_drag_hint">长按 &amp; 小组件可在主屏幕上移动</string>
     <!-- Button label to automatically add a widget to home screen [CHAR_LIMIT=50] -->
-    <string name="add_to_home_screen">Add to home screen</string>
+    <string name="add_to_home_screen">添加至主屏幕</string>
     <!-- Accessibility spoken message announced when a widget gets added to the home screen using a
          button in a dialog. [CHAR_LIMIT=none] -->
-    <string name="added_to_home_screen_accessibility_text"><xliff:g id="widget_name" example="Calendar month view">%1$s</xliff:g> widget added to home screen</string>
+    <string name="added_to_home_screen_accessibility_text">已将 <xliff:g id="widget_name" example="Calendar month view">%1$s</xliff:g> 小组件添加至主屏幕</string>
     <!-- Widget suggestions header title in the full widgets picker for large screen devices
     in landscape mode. [CHAR_LIMIT=50] -->
-    <string name="suggested_widgets_header_title">Suggestions</string>
+    <string name="suggested_widgets_header_title">建议</string>
     <!-- Title for the widget suggestions category that displays widgets provided by
     productivity apps for daily use [CHAR_LIMIT=50] -->
-    <string name="productivity_widget_recommendation_category_label">Essentials</string>
+    <string name="productivity_widget_recommendation_category_label">常用功能</string>
     <!-- Title for the widget suggestions category that displays widgets provided by
     news and magazines related apps [CHAR_LIMIT=50] -->
-    <string name="news_widget_recommendation_category_label">News &amp; magazines</string>
+    <string name="news_widget_recommendation_category_label">资讯 &amp; 杂志</string>
     <!-- Title for the widget suggestions category that displays widgets provided by
     entertainment apps [CHAR_LIMIT=50] -->
-    <string name="entertainment_widget_recommendation_category_label">Entertainment</string>
+    <string name="entertainment_widget_recommendation_category_label">娱乐</string>
     <!-- Title for the widget suggestions category that displays widgets provided by
     social apps [CHAR_LIMIT=50] -->
-    <string name="social_widget_recommendation_category_label">Social</string>
+    <string name="social_widget_recommendation_category_label">社交</string>
     <!-- Title for the widget suggestions category that displays general widget suggestions
     [CHAR_LIMIT=50] -->
-    <string name="others_widget_recommendation_category_label">Suggested for you</string>
+    <string name="others_widget_recommendation_category_label">为你推荐</string>
     <!-- accessibilityPaneTitle for the right pane when showing suggested widgets. -->
-    <string name="widget_picker_right_pane_accessibility_title"><xliff:g id="selected_header" example="Calendar">%1$s</xliff:g> widgets on right, search and options on left</string>
+    <string name="widget_picker_right_pane_accessibility_title">右侧为 <xliff:g id="selected_header" example="Calendar">%1$s</xliff:g> 小组件，左侧为搜索与选项</string>
     <!-- Label for showing the number of widgets an app has in the full widgets picker.
          [CHAR_LIMIT=25][ICU SYNTAX] -->
     <string name="widgets_count">        {count, plural, =1{# widget} other{# widgets}}
@@ -154,7 +153,7 @@
     <!-- Text on the button that enables users to expand the widgets list to see all widget apps besides the default ones displayed. [CHAR_LIMIT=15] -->
     <string name="widgets_list_expand_button_label">Show all</string>
     <!-- Accessibility content description for the button that enables users to expand the widgets list to see all widget apps besides the default ones displayed. [CHAR_LIMIT=none]  -->
-    <string name="widgets_list_expand_button_content_description">Show all widgets</string>
+    <string name="widgets_list_expand_button_content_description">显示所有小组件</string>
     <!-- Accessibility announcement to indicate to the users that widgets list is now expanded -->
     <string name="widgets_list_expanded">Showing all widgets</string>
     <!-- Text on an educational tip on widget informing users that they can change widget settings.
@@ -367,7 +366,7 @@
     <string name="widgets_list_closed">Widgets list closed</string>
     <!-- Strings for accessibility actions -->
     <!-- Accessibility action to add an app to workspace. [CHAR_LIMIT=30] -->
-    <string name="action_add_to_workspace">Add to home screen</string>
+    <string name="action_add_to_workspace">添加至主屏幕</string>
     <!-- Accessibility action to move item to the current location. [CHAR_LIMIT=30] -->
     <string name="action_move_here">Move item here</string>
     <!-- Accessibility confirmation for item removed. [CHAR_LIMIT=50]-->
