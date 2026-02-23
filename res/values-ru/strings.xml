@@ -51,9 +51,9 @@
     <!-- App pair default title -->
     <string name="app_pair_default_title"><xliff:g id="app1" example="Chrome">%1$s</xliff:g> | <xliff:g id="app2" example="YouTube">%2$s</xliff:g></string>
     <!-- Displayed when an app pair can't launch at this screen size [CHAR_LIMIT=none] -->
-    <string name="app_pair_unlaunchable_at_screen_size">Одновременно использовать эти два приложения на устройстве нельзя.</string>
+    <string name="app_pair_unlaunchable_at_screen_size">Эта пара приложений не поддерживается на этом устройстве</string>
     <!-- Displayed when an app pair can't launch at this screen size, but user can unfold device to restore functionality [CHAR_LIMIT=none] -->
-    <string name="app_pair_needs_unfold">Чтобы одновременно использовать эти два приложения, разложите устройство.</string>
+    <string name="app_pair_needs_unfold">Разверните устройство, чтобы использовать эту пару приложений</string>
     <!-- Displayed when user selects a shortcut for an app pair that is currently not available [CHAR_LIMIT=none]-->
     <string name="app_pair_not_available">Одновременное использование двух приложений недоступно</string>
     <!-- Widgets -->
@@ -213,15 +213,15 @@
     <string name="bubble">Подсказка</string>
     <string name="action_pin_to_top">Закрепить вверху</string>
     <string name="action_unpin">Открепить</string>
-    <string name="action_enlarge">Enlarge</string>
-    <string name="action_minimize">Minimize</string>
-    <string name="action_customize_folder">Customize</string>
-    <string name="folder_style_picker_title">Folder Style</string>
+    <string name="action_enlarge">Развернуть</string>
+    <string name="action_minimize">Свернуть</string>
+    <string name="action_customize_folder">Настроить</string>
+    <string name="folder_style_picker_title">Стиль папки</string>
     <string name="folder_style_quadrant">Quadrant</string>
-    <string name="folder_style_grid">Grid</string>
-    <string name="folder_style_circle">Circle</string>
-    <string name="folder_style_cover">Cover</string>
-    <string name="folder_cover_text_hint">Emoji</string>
+    <string name="folder_style_grid">Сетка</string>
+    <string name="folder_style_circle">Круг</string>
+    <string name="folder_style_cover">Обложка</string>
+    <string name="folder_cover_text_hint">Эмодзи</string>
     <!-- Permissions: -->
     <!-- Permission short label -->
     <string name="permlab_install_shortcut">Создание ярлыков</string>
@@ -470,7 +470,7 @@
     <string name="ps_app_content_description">Добавляйте в частное пространство файлы и многое другое</string>
     <!-- Strings for icon shapes -->
     <!-- label for circle shape option in customization picker -->
-    <string name="circle_shape_title">Circle</string>
+    <string name="circle_shape_title">Круг</string>
     <!-- label for square shape option in customization picker -->
     <string name="square_shape_title">Квадрат</string>
     <!-- label for 4-sided cookie option shape in customization picker -->
