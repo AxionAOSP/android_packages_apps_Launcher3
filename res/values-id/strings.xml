@@ -341,7 +341,7 @@
     <string name="abandoned_promise_explanation">Aplikasi untuk ikon ini belum terpasang.
 Anda dapat menghapusnya, atau mencari aplikasi tersebut dan memasangnya secara manual.</string>
     <!-- Title for an app which is being installed. -->
-    <string name="app_installing_title"><xliff:g id="name" example="Messenger">%1$s</xliff:g> installing, <xliff:g id="progress" example="30%">%2$s</xliff:g> complete</string>
+    <string name="app_installing_title"><xliff:g id="name" example="Messenger">%1$s</xliff:g> memasang, <xliff:g id="progress" example="30%">%2$s</xliff:g> selesai</string>
     <!-- Title for an app which is being downloaded. -->
     <string name="app_downloading_title"><xliff:g id="name" example="Messenger">%1$s</xliff:g> mengunduh, <xliff:g id="progress" example="30%">%2$s</xliff:g> selesai</string>
     <!-- Title for an app whose download has been started. -->
@@ -378,19 +378,19 @@ Anda dapat menghapusnya, atau mencari aplikasi tersebut dan memasangnya secara m
     <!-- Accessibility description to move item to empty cell. -->
     <string name="move_to_empty_cell_description">Pindahkan ke baris<xliff:g id="number" example="1">%1$s</xliff:g> kolom <xliff:g id="number" example="1">%2$s</xliff:g> in <xliff:g id="string" example="Home screen 2 of 4">%3$s</xliff:g></string>
     <!-- Accessibility description to move item inside a folder. -->
-    <string name="move_to_position">Move to position <xliff:g id="number" example="1">%1$s</xliff:g></string>
+    <string name="move_to_position">Pindahkan ke posisi <xliff:g id="number" example="1">%1$s</xliff:g></string>
     <!-- Accessibility description to move item to the hotseat. -->
-    <string name="move_to_hotseat_position">Move to favorites position <xliff:g id="number" example="1">%1$s</xliff:g></string>
+    <string name="move_to_hotseat_position">Pindahkan ke posisi favorit <xliff:g id="number" example="1">%1$s</xliff:g></string>
     <!-- Accessibility confirmation for item move. -->
     <string name="item_moved">Pindahkan item</string>
     <!-- Accessibility description to move item into an existing folder. -->
-    <string name="add_to_folder">Add to folder: <xliff:g id="name" example="Games">%1$s</xliff:g></string>
+    <string name="add_to_folder">Tambahkan ke folder: <xliff:g id="name" example="Games">%1$s</xliff:g></string>
     <!-- Accessibility description to move item into an existing folder containing an app. -->
-    <string name="add_to_folder_with_app">Add to folder with <xliff:g id="name" example="Messenger">%1$s</xliff:g></string>
+    <string name="add_to_folder_with_app">Tambahkan folder dengan <xliff:g id="name" example="Messenger">%1$s</xliff:g></string>
     <!-- Accessibility confirmation for item added to folder. -->
     <string name="added_to_folder">Item di tambahkan ke folder</string>
     <!-- Accessibility description to create folder with another item. -->
-    <string name="create_folder_with">Create folder with: <xliff:g id="name" example="Game">%1$s</xliff:g></string>
+    <string name="create_folder_with">Buat folder dengan: <xliff:g id="name" example="Game">%1$s</xliff:g></string>
     <!-- Accessibility confirmation for folder created. -->
     <string name="folder_created">Folder di buat</string>
     <!-- Accessibility action to move an item from folder to workspace. [CHAR_LIMIT=30] -->
@@ -410,45 +410,45 @@ Anda dapat menghapusnya, atau mencari aplikasi tersebut dan memasangnya secara m
     <!-- Accessibility action to show quick actions menu for an icon. [CHAR_LIMIT=30] -->
     <string name="action_deep_shortcut">Menu pintasan</string>
     <!-- Accessibility name for the app widget resize frame. -->
-    <string name="widget_frame_name">Widget Resize Frame for <xliff:g id="string" example="Clock">%1$s</xliff:g></string>
+    <string name="widget_frame_name">Ubah ukuran bingkai widget untuk <xliff:g id="string" example="Clock">%1$s</xliff:g></string>
     <!-- Accessibility action to close the widget resize frame. [CHAR_LIMIT=30] -->
-    <string name="action_close">Close</string>
+    <string name="action_close">Tutup</string>
     <!-- Accessibility action to dismiss a notification in the shortcuts menu for an icon. [CHAR_LIMIT=30] -->
-    <string name="action_dismiss_notification">Dismiss</string>
+    <string name="action_dismiss_notification">Abaikan</string>
     <!-- Content description for arrow tip close button. [CHAR LIMIT=NONE] -->
-    <string name="accessibility_close">Close</string>
+    <string name="accessibility_close">Tutup</string>
     <!-- Label of tab to indicate personal apps -->
     <string name="all_apps_personal_tab">Pribadi</string>
     <!-- Label of tab to indicate work apps -->
     <string name="all_apps_work_tab">Kerja</string>
     <!-- Content description of personal tab to indicate personal apps -->
-    <string name="all_apps_personal_tab_content_description">Personal apps tab</string>
+    <string name="all_apps_personal_tab_content_description">Tab aplikasi pribadi</string>
     <!-- Content description of work tab to indicate work apps -->
-    <string name="all_apps_work_tab_content_description">Work apps tab</string>
+    <string name="all_apps_work_tab_content_description">Tab aplikasi kerja</string>
     <!-- This string is in the work profile tab when a user has All Apps open on their phone. This is a label for a toggle to turn the work profile on and off. "Work profile" means a separate profile on a user's phone that's specifically for their work apps and managed by their company. "Work" is used as an adjective.-->
-    <string name="work_profile_toggle_label">Work profile</string>
+    <string name="work_profile_toggle_label">Profil kerja</string>
     <!--- User onboarding title for work profile apps -->
-    <string name="work_profile_edu_work_apps">Work apps are badged and visible to your IT admin</string>
+    <string name="work_profile_edu_work_apps">Aplikasi kerja memiliki lencana dan terlihat oleh admin IT Anda</string>
     <!-- Action label to finish work profile edu-->
-    <string name="work_profile_edu_accept">Got it</string>
+    <string name="work_profile_edu_accept">Mengerti</string>
     <!-- Info icon unicode for alpha scroller when work edu card is present -->
     <!-- Intent for work profiler scheduler -->
     <!--- heading shown when user opens work apps tab while work apps are paused -->
-    <string name="work_apps_paused_title">Work apps are paused</string>
+    <string name="work_apps_paused_title">Aplikasi kerja di jeda</string>
     <!--- body shown when user opens work apps tab while work apps are paused.-->
-    <string name="work_apps_paused_info_body">You won’t receive notifications from your work apps</string>
+    <string name="work_apps_paused_info_body">Anda tidak akan menerima notifikasi dari aplikasi kerja</string>
     <!--- body shown when user opens work apps tab while work apps are paused. -->
-    <string name="work_apps_paused_body">Your work apps can’t send you notifications, use your battery, or access your location</string>
+    <string name="work_apps_paused_body">Aplikasi kerja tidak dapat mengirim notifikasi, menggunakan baterai, atau mengakses lokasi Anda</string>
     <!--- body shown when user opens work apps tab while work apps are paused and calls and texts are unavailable-->
-    <string name="work_apps_paused_telephony_unavailable_body">You won’t receive phone calls, text messages, or notifications from your work apps</string>
+    <string name="work_apps_paused_telephony_unavailable_body">Anda tidak akan menerima panggilan telepon, pesan teks, atau notifikasi dari aplikasi kerja</string>
     <!-- string shown in educational banner about work profile -->
-    <string name="work_apps_paused_edu_banner">Work apps are badged and visible to your IT admin</string>
+    <string name="work_apps_paused_edu_banner">Aplikasi kerja memiliki lencana dan terlihat oleh admin IT Anda</string>
     <!-- button string shown to dismiss work tab education -->
-    <string name="work_apps_paused_edu_accept">Got it</string>
+    <string name="work_apps_paused_edu_accept">Mengerti</string>
     <!-- button string shown pause work profile [CHAR LIMIT=28] -->
-    <string name="work_apps_pause_btn_text">Pause work apps</string>
+    <string name="work_apps_pause_btn_text">Jeda aplikasi kerja</string>
     <!-- button string shown enable work profile -->
-    <string name="work_apps_enable_btn_text">Unpause</string>
+    <string name="work_apps_enable_btn_text">Lanjutkan</string>
     <!-- Label for the work profile scheduler button in the work profile screen. [CHAR_LIMIT=40] -->
     <string name="work_scheduler_button_content_description">Jadwal kerja aplikasi</string>
     <!-- A hint shown in launcher settings develop options filter box -->
