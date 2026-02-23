@@ -107,7 +107,7 @@
     [CHAR_LIMIT=50] -->
     <string name="others_widget_recommendation_category_label">Пропозиції для вас</string>
     <!-- accessibilityPaneTitle for the right pane when showing suggested widgets. -->
-    <string name="widget_picker_right_pane_accessibility_title"><xliff:g id="selected_header" example="Calendar">%1$s</xliff:g> widgets on right, search and options on left</string>
+    <string name="widget_picker_right_pane_accessibility_title"><xliff:g id="selected_header" example="Calendar">%1$s</xliff:g> віджети праворуч - пошук та налаштування зліва</string>
     <!-- Label for showing the number of widgets an app has in the full widgets picker.
          [CHAR_LIMIT=25][ICU SYNTAX] -->
     <string name="widgets_count">{count,plural, =1{# віджет}one{# віджет}few{# віджети}many{# віджетів}other{# віджета}}</string>
