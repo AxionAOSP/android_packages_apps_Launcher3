@@ -341,13 +341,13 @@
     <string name="abandoned_promise_explanation">Aplikasi untuk ikon ini belum terpasang.
 Anda dapat menghapusnya, atau mencari aplikasi tersebut dan memasangnya secara manual.</string>
     <!-- Title for an app which is being installed. -->
-    <string name="app_installing_title"><xliff:g id="name" example="Messenger">%1$s</xliff:g> memasang, <xliff:g id="progress" example="30%">%2$s</xliff:g> selesai</string>
+    <string name="app_installing_title"><xliff:g id="name" example="Messenger">%1$s</xliff:g> dipasang, <xliff:g id="progress" example="30%">%2$s</xliff:g> selesai</string>
     <!-- Title for an app which is being downloaded. -->
-    <string name="app_downloading_title"><xliff:g id="name" example="Messenger">%1$s</xliff:g> mengunduh, <xliff:g id="progress" example="30%">%2$s</xliff:g> selesai</string>
+    <string name="app_downloading_title"><xliff:g id="name" example="Messenger">%1$s</xliff:g> diunduh, <xliff:g id="progress" example="30%">%2$s</xliff:g> selesai</string>
     <!-- Title for an app whose download has been started. -->
-    <string name="app_waiting_download_title"><xliff:g id="name" example="Messenger">%1$s</xliff:g> menunggu untuk di install</string>
+    <string name="app_waiting_download_title"><xliff:g id="name" example="Messenger">%1$s</xliff:g> menunggu untuk dipasang</string>
     <!-- Title for an app which is archived. -->
-    <string name="app_archived_title"><xliff:g id="name" example="Messenger">%1$s</xliff:g> telah di arsipkan </string>
+    <string name="app_archived_title"><xliff:g id="name" example="Messenger">%1$s</xliff:g> telah di arsipkan.</string>
     <!-- Accessibility Action for an app which is archived. -->
     <string name="app_unarchiving_action">Unduh dan pulihkan</string>
     <!-- Title shown on the alert dialog prompting the user to update the application in market
@@ -406,7 +406,7 @@ Anda dapat menghapusnya, atau mencari aplikasi tersebut dan memasangnya secara m
     <!-- Accessibility action to decrease height of a widget. [CHAR_LIMIT=30] -->
     <string name="action_decrease_height">Perkecil tinggi</string>
     <!-- Accessibility confirmation for widget resize. -->
-    <string name="widget_resized">Ukuran widget di ubah menjadi lebar<xliff:g id="number" example="2">%1$s</xliff:g> dan tinggi <xliff:g id="number" example="1">%2$s</xliff:g></string>
+    <string name="widget_resized">Ukuran widget di ubah menjadi lebar<xliff:g id="number" example="2">%1$s</xliff:g> tinggi <xliff:g id="number" example="1">%2$s</xliff:g></string>
     <!-- Accessibility action to show quick actions menu for an icon. [CHAR_LIMIT=30] -->
     <string name="action_deep_shortcut">Menu pintasan</string>
     <!-- Accessibility name for the app widget resize frame. -->
