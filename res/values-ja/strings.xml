@@ -211,17 +211,17 @@
     <string name="pin_prediction">アプリの候補を固定</string>
     <!-- Label for bubbling a launcher item. [CHAR_LIMIT=20] -->
     <string name="bubble">ふきだし</string>
-    <string name="action_pin_to_top">Pin to top</string>
-    <string name="action_unpin">Unpin</string>
+    <string name="action_pin_to_top">上部に固定</string>
+    <string name="action_unpin">固定を解除</string>
     <string name="action_enlarge">Enlarge</string>
-    <string name="action_minimize">Minimize</string>
-    <string name="action_customize_folder">Customize</string>
-    <string name="folder_style_picker_title">Folder Style</string>
+    <string name="action_minimize">最小化</string>
+    <string name="action_customize_folder">カスタマイズ</string>
+    <string name="folder_style_picker_title">フォルダのスタイル</string>
     <string name="folder_style_quadrant">Quadrant</string>
-    <string name="folder_style_grid">Grid</string>
-    <string name="folder_style_circle">Circle</string>
-    <string name="folder_style_cover">Cover</string>
-    <string name="folder_cover_text_hint">Emoji</string>
+    <string name="folder_style_grid">グリッド</string>
+    <string name="folder_style_circle">サークル</string>
+    <string name="folder_style_cover">クローバー</string>
+    <string name="folder_cover_text_hint">絵文字</string>
     <!-- Permissions: -->
     <!-- Permission short label -->
     <string name="permlab_install_shortcut">ショートカットのインストール</string>
@@ -470,7 +470,7 @@
     <string name="ps_app_content_description">プライベート スペースにファイルなどを追加する</string>
     <!-- Strings for icon shapes -->
     <!-- label for circle shape option in customization picker -->
-    <string name="circle_shape_title">Circle</string>
+    <string name="circle_shape_title">サークル</string>
     <!-- label for square shape option in customization picker -->
     <string name="square_shape_title">正方形</string>
     <!-- label for 4-sided cookie option shape in customization picker -->
@@ -480,7 +480,7 @@
     <!-- label for arch shape option in customization picker -->
     <string name="arch_shape_title">アーチ</string>
     <!-- DT2S -->
-    <string name="pref_sleep_gesture_title">Double tap to sleep</string>
+    <string name="pref_sleep_gesture_title">ダブルタップでスリープ</string>
     <string name="pref_sleep_gesture_summary">Double tap on empty space for screen off</string>
     <!-- All Apps Suggestions -->
     <string name="all_apps_suggestions_title">Show suggestions</string>
