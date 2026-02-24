@@ -60,7 +60,7 @@
     <!-- Message to tell the user to press and hold on a widget to add it [CHAR_LIMIT=50] -->
     <string name="long_press_widget_to_add">&amp; را مالش دهید برای جابه‌جایی افزونه نگه دارید.</string>
     <!-- Accessibility spoken hint message in widget picker, which allows user to add a widget. Custom action is the label for additional accessibility actions available in this mode [CHAR_LIMIT=100] -->
-    <string name="long_accessible_way_to_add">دوبار روی &amp; بزنید برای جابه‌جایی افزونه نگه دارید یا از کنش های دستکاری بکار گیرید.</string>
+    <string name="long_accessible_way_to_add">دوبار روی &amp; بزنید برای جابه‌جایی افزونه نگه دارید یا از کنش های دستکار بکار بگیرید.</string>
     <!-- Accessibility label for the icon button shown in the widget picker that opens a overflow
          menu with widgets viewing options. [CHAR_LIMIT=25] -->
     <string name="widget_picker_widget_options_button_description">انتخاب های بیشتر</string>
@@ -134,7 +134,7 @@
          query. [CHAR_LIMIT=none] -->
     <string name="no_search_results">هیچ افزونه‌ یا میانبری پیدا نشد</string>
     <!-- Tab label. A user can tap this tab to access their personal widgets. [CHAR_LIMIT=25] -->
-    <string name="widgets_full_sheet_personal_tab">فردی</string>
+    <string name="widgets_full_sheet_personal_tab">خودی</string>
     <!-- Tab label. A user can tap this tab to access their work widgets. [CHAR_LIMIT=25] -->
     <string name="widgets_full_sheet_work_tab">کار</string>
     <!-- A widget category label for grouping widgets related to conversations. [CHAR_LIMIT=30] -->
@@ -181,80 +181,77 @@
     <!-- Message to tell the user to press and hold on a shortcut to add it [CHAR_LIMIT=50] -->
     <string name="long_press_shortcut_to_add">&amp; مالش نگه دارید تا میانبر را جا‌به‌جا کنید.</string>
     <!-- Accessibility spoken hint message in deep shortcut menu, which allows user to add a shortcut. Custom action is the label for additional accessibility actions available in this mode [CHAR_LIMIT=200] -->
-    <string name="long_accessible_way_to_add_shortcut">&amp; را دوبار بزنید نگه دارید تا میانبر را جابه‌جا کنید یا کنش های فردی را بکار بگیرید.</string>
+    <string name="long_accessible_way_to_add_shortcut">&amp; را دوبار بزنید نگه دارید تا میانبر را جابه‌جا کنید یا کنش های دستکار را بکار بگیرید.</string>
     <!-- Error message when a user can't add more apps, widgets, or shortcuts to a Home screen. -->
-    <string name="out_of_space">No room on this home screen</string>
+    <string name="out_of_space">در این نمایشگر خانه جایی نیست</string>
     <!-- Error message when user has filled the hotseat -->
-    <string name="hotseat_out_of_space">No more room in the Favorites tray</string>
+    <string name="hotseat_out_of_space">در بخش دوست‌داشتنی جایی نیست</string>
     <!-- All applications label -->
     <string name="all_apps_button_label">لیست برنامه ها</string>
-    <string name="all_apps_search_results">Search results</string>
-    <string name="all_apps_button_personal_label">Personal apps list</string>
-    <string name="all_apps_button_work_label">Work apps list</string>
+    <string name="all_apps_search_results">پیامد‌های جستجو</string>
+    <string name="all_apps_button_personal_label">فهرست برنامه‌های فردی</string>
+    <string name="all_apps_button_work_label">فهرست برنامه‌های کار</string>
     <!-- System shortcuts -->
     <!-- Label for remove drop target (from the homescreen only).
          May appear next to uninstall_drop_target_label [CHAR_LIMIT=20] -->
-    <string name="remove_drop_target_label">Remove</string>
+    <string name="remove_drop_target_label">جداکردن</string>
     <!-- Label for uninstall drop target (from the device).
          May appear next to remove_drop_target_label [CHAR_LIMIT=20]-->
-    <string name="uninstall_drop_target_label">Uninstall</string>
+    <string name="uninstall_drop_target_label">پاک‌کردن</string>
     <!-- Label for app info drop target. [CHAR_LIMIT=20] -->
-    <string name="app_info_drop_target_label">App info</string>
+    <string name="app_info_drop_target_label">داده برنامه</string>
     <!-- Label for install to private profile shortcut label. [CHAR_LIMIT=20] -->
-    <string name="install_private_system_shortcut_label">Install in private</string>
+    <string name="install_private_system_shortcut_label">راه‌اندازی در خودی</string>
     <!-- Label for uninstall app private profile shortcut.-->
-    <string name="uninstall_private_system_shortcut_label">Uninstall app</string>
+    <string name="uninstall_private_system_shortcut_label">پاک‌کردن برنامه</string>
     <!-- Label for install drop target. [CHAR_LIMIT=20] -->
-    <string name="install_drop_target_label">Install</string>
+    <string name="install_drop_target_label">راه‌اندازی</string>
     <!-- Label for dismiss prediction. -->
-    <string name="dismiss_prediction_label">Don\'t suggest app</string>
+    <string name="dismiss_prediction_label">برنامه پیشنهاد نده</string>
     <!-- Label for pinning predicted app. -->
-    <string name="pin_prediction">Pin Prediction</string>
+    <string name="pin_prediction">سنجاق پیشبینی</string>
     <!-- Label for bubbling a launcher item. [CHAR_LIMIT=20] -->
-    <string name="bubble">Bubble</string>
-    <string name="action_pin_to_top">Pin to top</string>
-    <string name="action_unpin">Unpin</string>
-    <string name="action_enlarge">Enlarge</string>
-    <string name="action_minimize">Minimize</string>
-    <string name="action_customize_folder">Customize</string>
-    <string name="folder_style_picker_title">Folder Style</string>
-    <string name="folder_style_quadrant">Quadrant</string>
-    <string name="folder_style_grid">Grid</string>
-    <string name="folder_style_circle">Circle</string>
-    <string name="folder_style_cover">Cover</string>
-    <string name="folder_cover_text_hint">Emoji</string>
+    <string name="bubble">آب سوار</string>
+    <string name="action_pin_to_top">سنجاق به بالا</string>
+    <string name="action_unpin">سنجاق برداشتن</string>
+    <string name="action_enlarge">بزرگ‌کردن</string>
+    <string name="action_minimize">کوچک‌کردن</string>
+    <string name="action_customize_folder">خودی‌سازی</string>
+    <string name="folder_style_picker_title">نمایه پوشه</string>
+    <string name="folder_style_quadrant">چهار‌گوش</string>
+    <string name="folder_style_grid">توری</string>
+    <string name="folder_style_circle">گردی</string>
+    <string name="folder_style_cover">روپوش</string>
+    <string name="folder_cover_text_hint">شکلک</string>
     <!-- Permissions: -->
     <!-- Permission short label -->
-    <string name="permlab_install_shortcut">install shortcuts</string>
+    <string name="permlab_install_shortcut">راه‌اندازی میانبر</string>
     <!-- Permission description -->
-    <string name="permdesc_install_shortcut">Allows an app to add
-        shortcuts without user intervention.</string>
+    <string name="permdesc_install_shortcut">به برنامه دسترسی دهید تا بدون کاربر میانبر بیفزاید.</string>
     <!-- Permission short label -->
-    <string name="permlab_read_settings">read home settings and shortcuts</string>
+    <string name="permlab_read_settings">خواندن گزینه‌های خانه و میانبر‌ها</string>
     <!-- Permission description -->
-    <string name="permdesc_read_settings">Allows the app to read the settings and
-        shortcuts in home.</string>
+    <string name="permdesc_read_settings">به برنامه دسترسی خواندن گزینه‌ها و میانبر ها در خانه را می دهد.</string>
     <!-- Permission short label -->
-    <string name="permlab_write_settings">write home settings and shortcuts</string>
+    <string name="permlab_write_settings">نوشتن گزینه‌های خانه و میانبر‌ها</string>
     <!-- Permission description -->
-    <string name="permdesc_write_settings">Allows the app to change the settings and
-        shortcuts in home.</string>
+    <string name="permdesc_write_settings">به برنامه دسترسی میدهد تا گزینه‌ها و میانبر های خانه را دگرگون کند.</string>
     <!-- Widgets: -->
     <!-- Error text that lets a user know that the widget can't load. -->
-    <string name="gadget_error_text">Can\'t load widget</string>
+    <string name="gadget_error_text">نمیتوان افزونه را بارگزاری کرد</string>
     <!-- Button text. This button lets a user change a widget's settings. -->
-    <string name="gadget_setup_text">Widget settings</string>
+    <string name="gadget_setup_text">گزینه‌های افزونه</string>
     <!-- Instructional text to encourage a user to finish setting up the widget. -->
-    <string name="gadget_complete_setup_text">Tap to finish setup</string>
+    <string name="gadget_complete_setup_text">برای پایان راه‌اندازی بزنید</string>
     <!-- Text to inform the user that they can't uninstall a system application -->
-    <string name="uninstall_system_app_text">This is a system app and can\'t be uninstalled.</string>
+    <string name="uninstall_system_app_text">این یک برنامه دستگاهی هست و نمیتوان آن را پاک کرد.</string>
     <!-- Default folder title -->
-    <string name="folder_hint_text">Edit Name</string>
-    <string name="paginate_left">Paginate left</string>
-    <string name="paginate_right">Paginate right</string>
+    <string name="folder_hint_text">ویرایش نام</string>
+    <string name="paginate_left">نمایش‌گذاری چپ</string>
+    <string name="paginate_right">نمایش‌گذاری راست</string>
     <!-- Accessibility -->
     <!-- The format string for when an app is temporarily disabled. -->
-    <string name="disabled_app_label">Disabled <xliff:g id="app_name" example="Messenger">%1$s</xliff:g></string>
+    <string name="disabled_app_label"><xliff:g id="app_name" example="Messenger">%1$s</xliff:g> خاموش شد</string>
     <!-- The format string for when an app has a notification dot (meaning it has associated notifications). [ICU_FORMAT]-->
     <string name="dotted_app_label">        {count, plural,
             =1      {{app_name} has # notification}
@@ -262,16 +259,16 @@
         }
     </string>
     <!-- The format string for default page scroll text [CHAR_LIMIT=none] -->
-    <string name="default_scroll_format">Page %1$d of %2$d</string>
+    <string name="default_scroll_format">نمایش %1$d از %2$d</string>
     <!-- The format string for Workspace page scroll text [CHAR_LIMIT=none] -->
-    <string name="workspace_scroll_format">Home screen %1$d of %2$d</string>
+    <string name="workspace_scroll_format">نمایش خانه %1$d از %2$d</string>
     <!-- Description for a new page on homescreen[CHAR_LIMIT=none] -->
-    <string name="workspace_new_page">New home screen page</string>
-    <string name="app_running_state_description">Active</string>
-    <string name="app_minimized_state_description">Minimized</string>
+    <string name="workspace_new_page">نمایش خانه نو</string>
+    <string name="app_running_state_description">روشن</string>
+    <string name="app_minimized_state_description">کوچک‌شده</string>
     <!-- Folder accessibility -->
     <!-- The format string for when a folder is opened, speaks the dimensions -->
-    <string name="folder_opened">Folder opened, <xliff:g id="width" example="5">%1$d</xliff:g> by <xliff:g id="height" example="3">%2$d</xliff:g></string>
+    <string name="folder_opened">پوشه باز شده , <xliff:g id="width" example="5">%1$d</xliff:g> بدست <xliff:g id="height" example="3">%2$d</xliff:g></string>
     <!-- Instruction that clicking outside will close folder -->
     <string name="folder_tap_to_close">Tap to close folder</string>
     <!-- Instruction that clicking outside will commit folder rename -->
@@ -330,7 +327,7 @@
     <!-- Label on an icon that references an uninstalled package, for which we have no information about when it might be installed. [CHAR_LIMIT=15] -->
     <string name="package_state_unknown">Unknown</string>
     <!-- Button for abandoned promises dialog, to removes this abandoned promise icon. -->
-    <string name="abandoned_clean_this">Remove</string>
+    <string name="abandoned_clean_this">جداکردن</string>
     <!-- Button for abandoned promise dialog, to search in the market for the missing package. -->
     <string name="abandoned_search">جستجو</string>
     <!-- Title for abandoned promise dialog. -->
@@ -358,7 +355,7 @@
     <!-- Message for the update button in the alert dialog, will bring the user to market -->
     <string name="dialog_update">Update</string>
     <!-- Message for the remove button in the alert dialog -->
-    <string name="dialog_remove">Remove</string>
+    <string name="dialog_remove">جداکردن</string>
     <!-- Strings for widgets & more in the popup container/bottom sheet -->
     <!-- Accessibility title for the popup containing a list of widgets. [CHAR_LIMIT=50] -->
     <string name="widgets_list">Widgets list</string>
@@ -418,7 +415,7 @@
     <!-- Content description for arrow tip close button. [CHAR LIMIT=NONE] -->
     <string name="accessibility_close">Close</string>
     <!-- Label of tab to indicate personal apps -->
-    <string name="all_apps_personal_tab">فردی</string>
+    <string name="all_apps_personal_tab">خودی</string>
     <!-- Label of tab to indicate work apps -->
     <string name="all_apps_work_tab">کار</string>
     <!-- Content description of personal tab to indicate personal apps -->
@@ -472,7 +469,7 @@
     <!-- Description for Private Space Transition button -->
     <string name="ps_container_transition">Private Space Transitioning</string>
     <!-- Title for Private Space install app icon -->
-    <string name="ps_add_button_label">Install</string>
+    <string name="ps_add_button_label">راه‌اندازی</string>
     <!-- Title for Private Space app icon to add files and more to Private Space -->
     <string name="ps_app_label_override">افزودن</string>
     <!-- Content description for install app icon -->
@@ -480,7 +477,7 @@
     <string name="ps_app_content_description">Add files and more to Private Space</string>
     <!-- Strings for icon shapes -->
     <!-- label for circle shape option in customization picker -->
-    <string name="circle_shape_title">Circle</string>
+    <string name="circle_shape_title">گردی</string>
     <!-- label for square shape option in customization picker -->
     <string name="square_shape_title">Square</string>
     <!-- label for 4-sided cookie option shape in customization picker -->
@@ -494,5 +491,5 @@
     <string name="pref_sleep_gesture_summary">Double tap on empty space for screen off</string>
     <!-- All Apps Suggestions -->
     <string name="all_apps_suggestions_title">Show suggestions</string>
-    <string name="all_apps_suggestions_summary">Display suggested apps at the top of the app drawer</string>
+    <string name="all_apps_suggestions_summary">نمایش برنامه‌های پیشنهادی در بالای کشوی برنامه‌ها</string>
 </resources>
