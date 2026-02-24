@@ -148,7 +148,7 @@
     <string name="widget_add_button_label">Добавить</string>
     <!-- Accessibility content description for the button that adds a widget to the home screen. The
          placeholder text is the widget name. [CHAR_LIMIT=none] -->
-    <string name="widget_add_button_content_description">Add <xliff:g id="widget_name" example="Calendar month view">%1$s</xliff:g> widget</string>
+    <string name="widget_add_button_content_description">Добавить виджет <xliff:g id="widget_name" example="Calendar month view">%1$s</xliff:g></string>
     <!-- Text on the button that enables users to expand the widgets list to see all widget apps besides the default ones displayed. [CHAR_LIMIT=15] -->
     <string name="widgets_list_expand_button_label">Показать все</string>
     <!-- Accessibility content description for the button that enables users to expand the widgets list to see all widget apps besides the default ones displayed. [CHAR_LIMIT=none]  -->
@@ -167,7 +167,7 @@
     <!-- Loading apps text. [CHAR_LIMIT=50] -->
     <string name="all_apps_loading_message">Загрузка приложений…</string>
     <!-- No-search-results text. [CHAR_LIMIT=50] -->
-    <string name="all_apps_no_search_results">No apps found matching \"<xliff:g id="query" example="Android">%1$s</xliff:g>\"</string>
+    <string name="all_apps_no_search_results">По запросу \"<xliff:g id="query" example="Android">%1$s</xliff:g>\" ничего не найдено</string>
     <!-- Label for an icon representing any generic app. [CHAR_LIMIT=50] -->
     <string name="label_application">Приложение</string>
     <!-- Label for the header text of the All Apps section in All Apps view, used to separate Predicted Apps and Actions section from All Apps section. [CHAR_LIMIT=50] -->
@@ -217,7 +217,7 @@
     <string name="action_minimize">Свернуть</string>
     <string name="action_customize_folder">Настроить</string>
     <string name="folder_style_picker_title">Стиль папки</string>
-    <string name="folder_style_quadrant">Quadrant</string>
+    <string name="folder_style_quadrant">Квадрат</string>
     <string name="folder_style_grid">Сетка</string>
     <string name="folder_style_circle">Круг</string>
     <string name="folder_style_cover">Обложка</string>
@@ -250,7 +250,7 @@
     <string name="paginate_right">Перейти на следующую страницу</string>
     <!-- Accessibility -->
     <!-- The format string for when an app is temporarily disabled. -->
-    <string name="disabled_app_label">Disabled <xliff:g id="app_name" example="Messenger">%1$s</xliff:g></string>
+    <string name="disabled_app_label">Приложение <xliff:g id="app_name" example="Messenger">%1$s</xliff:g> отключено</string>
     <!-- The format string for when an app has a notification dot (meaning it has associated notifications). [ICU_FORMAT]-->
     <string name="dotted_app_label">{count,plural, =1{В приложении \"{app_name}\" # уведомление}one{В приложении \"{app_name}\" # уведомление}few{В приложении \"{app_name}\" # уведомления}many{В приложении \"{app_name}\" # уведомлений}other{В приложении \"{app_name}\" # уведомления}}</string>
     <!-- The format string for default page scroll text [CHAR_LIMIT=none] -->
@@ -271,11 +271,11 @@
     <!-- Indication that folder closed -->
     <string name="folder_closed">Папка закрыта</string>
     <!-- Folder renamed format -->
-    <string name="folder_renamed">Folder renamed to <xliff:g id="name" example="Games">%1$s</xliff:g></string>
+    <string name="folder_renamed">Папка переименована в <xliff:g id="name" example="Games">%1$s</xliff:g></string>
     <!-- Folder name format when folder has less than 4 items -->
-    <string name="folder_name_format_exact">Folder: <xliff:g id="name" example="Games">%1$s</xliff:g>, <xliff:g id="size" example="2">%2$d</xliff:g> items</string>
+    <string name="folder_name_format_exact">Папка \"<xliff:g id="name" example="Games">%1$s</xliff:g>\" (объектов: <xliff:g id="size" example="2">%2$d</xliff:g>)</string>
     <!-- Folder name format when folder has 4 or more items shown in preview-->
-    <string name="folder_name_format_overflow">Folder: <xliff:g id="name" example="Games">%1$s</xliff:g>, <xliff:g id="size" example="2">%2$d</xliff:g> or more items</string>
+    <string name="folder_name_format_overflow">Папка \"<xliff:g id="name" example="Games">%1$s</xliff:g>\" (объектов: <xliff:g id="size" example="2">%2$d</xliff:g> или больше)</string>
     <!-- Accessibility announement for unnamed folders -->
     <string name="unnamed_folder">Папка без названия</string>
     <!-- App pair accessibility -->
@@ -308,7 +308,7 @@
     <!-- Title for the dialog shown when the app does not has notification access, explaining the requirement for notification access [CHAR LIMIT=50] -->
     <string name="title_missing_notification_access">Нужен доступ к уведомлениям</string>
     <!-- Message explaining to the user that the notification access is required by the app for showing 'Notification dots' [CHAR LIMIT=NONE] -->
-    <string name="msg_missing_notification_access">To show Notification Dots, turn on app notifications for <xliff:g id="name" example="My App">%1$s</xliff:g></string>
+    <string name="msg_missing_notification_access">Для показа точки уведомлений, включите уведомления у <xliff:g id="name" example="My App">%1$s</xliff:g></string>
     <!-- Button text in the confirmation dialog which would take the user to the system settings [CHAR LIMIT=50] -->
     <string name="title_change_settings">Изменить настройки</string>
     <!-- Summary for Notification dots setting. Tapping this will link enable/disable notification dots feature on the home screen. [CHAR LIMIT=50] -->
@@ -331,13 +331,13 @@
     The second "it" refers to the app. -->
     <string name="abandoned_promise_explanation">Приложение не установлено. Вы можете удалить значок или найти приложение и установить его вручную.</string>
     <!-- Title for an app which is being installed. -->
-    <string name="app_installing_title"><xliff:g id="name" example="Messenger">%1$s</xliff:g> installing, <xliff:g id="progress" example="30%">%2$s</xliff:g> complete</string>
+    <string name="app_installing_title">Установка \"<xliff:g id="name" example="Messenger">%1$s</xliff:g>\" (выполнено <xliff:g id="progress" example="30%">%2$s</xliff:g>)</string>
     <!-- Title for an app which is being downloaded. -->
-    <string name="app_downloading_title"><xliff:g id="name" example="Messenger">%1$s</xliff:g> downloading, <xliff:g id="progress" example="30%">%2$s</xliff:g> complete</string>
+    <string name="app_downloading_title">Скачивается \"<xliff:g id="name" example="Messenger">%1$s</xliff:g>\" (<xliff:g id="progress" example="30%">%2$s</xliff:g>)</string>
     <!-- Title for an app whose download has been started. -->
-    <string name="app_waiting_download_title"><xliff:g id="name" example="Messenger">%1$s</xliff:g> waiting to install</string>
+    <string name="app_waiting_download_title">Ожидание установки \"<xliff:g id="name" example="Messenger">%1$s</xliff:g>\"</string>
     <!-- Title for an app which is archived. -->
-    <string name="app_archived_title"><xliff:g id="name" example="Messenger">%1$s</xliff:g> is archived.</string>
+    <string name="app_archived_title"><xliff:g id="name" example="Messenger">%1$s</xliff:g> заархивирован.</string>
     <!-- Accessibility Action for an app which is archived. -->
     <string name="app_unarchiving_action">скачать и восстановить</string>
     <!-- Title shown on the alert dialog prompting the user to update the application in market
@@ -374,9 +374,9 @@
     <!-- Accessibility confirmation for item move. -->
     <string name="item_moved">Элемент перемещен.</string>
     <!-- Accessibility description to move item into an existing folder. -->
-    <string name="add_to_folder">Add to folder: <xliff:g id="name" example="Games">%1$s</xliff:g></string>
+    <string name="add_to_folder">Добавить в папку: <xliff:g id="name" example="Games">%1$s</xliff:g></string>
     <!-- Accessibility description to move item into an existing folder containing an app. -->
-    <string name="add_to_folder_with_app">Add to folder with <xliff:g id="name" example="Messenger">%1$s</xliff:g></string>
+    <string name="add_to_folder_with_app">Добавить в папку с приложением \"<xliff:g id="name" example="Messenger">%1$s</xliff:g>\"</string>
     <!-- Accessibility confirmation for item added to folder. -->
     <string name="added_to_folder">Элемент добавлен в папку.</string>
     <!-- Accessibility description to create folder with another item. -->
