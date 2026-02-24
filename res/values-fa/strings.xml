@@ -270,182 +270,181 @@
     <!-- The format string for when a folder is opened, speaks the dimensions -->
     <string name="folder_opened">پوشه باز شده , <xliff:g id="width" example="5">%1$d</xliff:g> بدست <xliff:g id="height" example="3">%2$d</xliff:g></string>
     <!-- Instruction that clicking outside will close folder -->
-    <string name="folder_tap_to_close">Tap to close folder</string>
+    <string name="folder_tap_to_close">برای بستن پوشه بزنید</string>
     <!-- Instruction that clicking outside will commit folder rename -->
-    <string name="folder_tap_to_rename">Tap to save rename</string>
+    <string name="folder_tap_to_rename">برای بیادسپاری نام بزنید</string>
     <!-- Indication that folder closed -->
-    <string name="folder_closed">Folder closed</string>
+    <string name="folder_closed">پوشه بسته شد</string>
     <!-- Folder renamed format -->
-    <string name="folder_renamed">Folder renamed to <xliff:g id="name" example="Games">%1$s</xliff:g></string>
+    <string name="folder_renamed">نام تازه پوشه <xliff:g id="name" example="Games">%1$s</xliff:g> شد</string>
     <!-- Folder name format when folder has less than 4 items -->
-    <string name="folder_name_format_exact">Folder: <xliff:g id="name" example="Games">%1$s</xliff:g>, <xliff:g id="size" example="2">%2$d</xliff:g> items</string>
+    <string name="folder_name_format_exact">پوشه: <xliff:g id="name" example="Games">%1$s</xliff:g>, <xliff:g id="size" example="2">%2$d</xliff:g> بخش‌ها</string>
     <!-- Folder name format when folder has 4 or more items shown in preview-->
-    <string name="folder_name_format_overflow">Folder: <xliff:g id="name" example="Games">%1$s</xliff:g>, <xliff:g id="size" example="2">%2$d</xliff:g> or more items</string>
+    <string name="folder_name_format_overflow">پوشه: <xliff:g id="name" example="Games">%1$s</xliff:g>, <xliff:g id="size" example="2">%2$d</xliff:g> یا بخش‌های دیگر</string>
     <!-- Accessibility announement for unnamed folders -->
-    <string name="unnamed_folder">Unnamed folder</string>
+    <string name="unnamed_folder">پوشه بی‌نام</string>
     <!-- App pair accessibility -->
     <!-- App pair name -->
-    <string name="app_pair_name_format">App pair: <xliff:g id="app1" example="Chrome">%1$s</xliff:g> and <xliff:g id="app2" example="YouTube">%2$s</xliff:g></string>
+    <string name="app_pair_name_format">جفت برنامه: <xliff:g id="app1" example="Chrome">%1$s</xliff:g> و <xliff:g id="app2" example="YouTube">%2$s</xliff:g></string>
     <!-- Strings for the customization mode -->
     <!-- Text for wallpaper change button [CHAR LIMIT=30]-->
-    <string name="styles_wallpaper_button_text">Wallpaper &amp; style</string>
+    <string name="styles_wallpaper_button_text">پس‌زمینه &amp; نما</string>
     <!-- Text for edit home screen button [CHAR LIMIT=30]-->
-    <string name="edit_home_screen">Edit Home Screen</string>
+    <string name="edit_home_screen">ویرایش نمایشگر خانه</string>
     <!-- Text for settings button [CHAR LIMIT=20]-->
-    <string name="settings_button_text">Home settings</string>
+    <string name="settings_button_text">گزینه‌های خانه</string>
     <!-- Message shown when a feature is disabled by the administrator -->
-    <string name="msg_disabled_by_admin">Disabled by your admin</string>
+    <string name="msg_disabled_by_admin">خاموش شده بدست سرپرست</string>
     <!-- Strings for settings -->
     <!-- Title for Allow Rotation setting. [CHAR LIMIT=50] -->
-    <string name="allow_rotation_title">Allow home screen rotation</string>
+    <string name="allow_rotation_title">دسترسی چرخش نمایشگر خانه</string>
     <!-- Text explaining when the home screen will get rotated. [CHAR LIMIT=100] -->
-    <string name="allow_rotation_desc">When phone is rotated</string>
+    <string name="allow_rotation_desc">هنگامی که دستگاه چرخیده</string>
     <!-- Title for Landscape Mode setting. [CHAR LIMIT=50] -->
-    <string name="landscape_mode_title">Landscape mode</string>
+    <string name="landscape_mode_title">گونه‌ی چشم انداز</string>
     <!--  [CHAR LIMIT=100] -->
-    <string name="landscape_mode_desc">Set home screen into landscape mode</string>
+    <string name="landscape_mode_desc">گذاشتن نمایشگر خانه در گونه‌ی چشم انداز</string>
     <!-- Title for Notification dots setting. Tapping this will link to the system Notifications settings screen where the user can turn off notification dots globally. [CHAR LIMIT=50] -->
-    <string name="notification_dots_title">Notification dots</string>
+    <string name="notification_dots_title">خال‌های مژدگانی</string>
     <!-- Text to indicate that the system notification dots setting is on [CHAR LIMIT=100] -->
-    <string name="notification_dots_desc_on">On</string>
+    <string name="notification_dots_desc_on">روشن</string>
     <!-- Text to indicate that the system notification dots setting is off [CHAR LIMIT=100] -->
-    <string name="notification_dots_desc_off">Off</string>
+    <string name="notification_dots_desc_off">خاموش</string>
     <!-- Title for the dialog shown when the app does not has notification access, explaining the requirement for notification access [CHAR LIMIT=50] -->
-    <string name="title_missing_notification_access">Notification access needed</string>
+    <string name="title_missing_notification_access">دسترسی مژدگانی بایسته است</string>
     <!-- Message explaining to the user that the notification access is required by the app for showing 'Notification dots' [CHAR LIMIT=NONE] -->
-    <string name="msg_missing_notification_access">To show Notification Dots, turn on app notifications for <xliff:g id="name" example="My App">%1$s</xliff:g></string>
+    <string name="msg_missing_notification_access">برای نشان دادن خال‌های مژدگانی، مژدگانی برنامه <xliff:g id="name" example="My App">%1$s</xliff:g> را روشن کنید</string>
     <!-- Button text in the confirmation dialog which would take the user to the system settings [CHAR LIMIT=50] -->
-    <string name="title_change_settings">Change settings</string>
+    <string name="title_change_settings">دگرگونی گزینه‌ها</string>
     <!-- Summary for Notification dots setting. Tapping this will link enable/disable notification dots feature on the home screen. [CHAR LIMIT=50] -->
-    <string name="notification_dots_service_title">Show notification dots</string>
+    <string name="notification_dots_service_title">نشان دادن خال‌های مژدگانی</string>
     <!-- Title for Developer Options setting. [CHAR LIMIT=50] -->
-    <string name="developer_options_title">Developer Options</string>
+    <string name="developer_options_title">گزینه‌های برنامه‌نویس</string>
     <!-- Label for the setting that allows the automatic placement of launcher shortcuts for applications and games installed on the device [CHAR LIMIT=60] -->
-    <string name="auto_add_shortcuts_label">Add app icons to home screen</string>
+    <string name="auto_add_shortcuts_label">افزودن نمادک برنامه به نمایشگر خانه</string>
     <!-- Text description of the setting that allows the automatic placement of launcher shortcuts for applications and games installed on the device [CHAR LIMIT=NONE] -->
-    <string name="auto_add_shortcuts_description">For new apps</string>
+    <string name="auto_add_shortcuts_description">برای برنامه های نو</string>
     <!-- Label on an icon that references an uninstalled package, for which we have no information about when it might be installed. [CHAR_LIMIT=15] -->
-    <string name="package_state_unknown">Unknown</string>
+    <string name="package_state_unknown">ناشناس</string>
     <!-- Button for abandoned promises dialog, to removes this abandoned promise icon. -->
     <string name="abandoned_clean_this">جداکردن</string>
     <!-- Button for abandoned promise dialog, to search in the market for the missing package. -->
     <string name="abandoned_search">جستجو</string>
     <!-- Title for abandoned promise dialog. -->
-    <string name="abandoned_promises_title">This app is not installed</string>
+    <string name="abandoned_promises_title">این برنامه راه‌اندازی نشده</string>
     <!-- Explanation for abandoned promise dialog. "The first 'it' refers to the shortcut icon.
     The second "it" refers to the app. -->
-    <string name="abandoned_promise_explanation">The app for this icon isn\'t installed.
-        You can remove it, or search for the app and install it manually.
-    </string>
+    <string name="abandoned_promise_explanation">برنامه این نمادک راه‌اندازی نشده.
+شما میتوانید آن را پاک یا برنامه را جستجو و راه‌اندازی کنید    </string>
     <!-- Title for an app which is being installed. -->
-    <string name="app_installing_title"><xliff:g id="name" example="Messenger">%1$s</xliff:g> installing, <xliff:g id="progress" example="30%">%2$s</xliff:g> complete</string>
+    <string name="app_installing_title"><xliff:g id="name" example="Messenger">%1$s</xliff:g> رو به راه‌اندازی, <xliff:g id="progress" example="30%">%2$s</xliff:g> پایان</string>
     <!-- Title for an app which is being downloaded. -->
-    <string name="app_downloading_title"><xliff:g id="name" example="Messenger">%1$s</xliff:g> downloading, <xliff:g id="progress" example="30%">%2$s</xliff:g> complete</string>
+    <string name="app_downloading_title"><xliff:g id="name" example="Messenger">%1$s</xliff:g> رو به بارگیری, <xliff:g id="progress" example="30%">%2$s</xliff:g> پایان</string>
     <!-- Title for an app whose download has been started. -->
-    <string name="app_waiting_download_title"><xliff:g id="name" example="Messenger">%1$s</xliff:g> waiting to install</string>
+    <string name="app_waiting_download_title"><xliff:g id="name" example="Messenger">%1$s</xliff:g> چشم به راه راه‌اندازی</string>
     <!-- Title for an app which is archived. -->
-    <string name="app_archived_title"><xliff:g id="name" example="Messenger">%1$s</xliff:g> is archived.</string>
+    <string name="app_archived_title"><xliff:g id="name" example="Messenger">%1$s</xliff:g> بایگانی شده.</string>
     <!-- Accessibility Action for an app which is archived. -->
-    <string name="app_unarchiving_action">download and restore</string>
+    <string name="app_unarchiving_action">بارگیری و بازنشانی</string>
     <!-- Title shown on the alert dialog prompting the user to update the application in market
      in order to re-enable the disabled shortcuts -->
-    <string name="dialog_update_title">App update required</string>
+    <string name="dialog_update_title">برنامه باید بروز شود</string>
     <!-- Message shown on the alert dialog prompting the user to update the application -->
-    <string name="dialog_update_message">The app for this icon isn\'t updated. You can update manually to re-enable this shortcut, or remove the icon.</string>
+    <string name="dialog_update_message">برنامه این نمادک بروز نیست. شما میتوانید آن را بروز کنید تا این میانبر روشن شود یا نمادک را پاک کنید.</string>
     <!-- Message for the update button in the alert dialog, will bring the user to market -->
-    <string name="dialog_update">Update</string>
+    <string name="dialog_update">بروزرسانی</string>
     <!-- Message for the remove button in the alert dialog -->
     <string name="dialog_remove">جداکردن</string>
     <!-- Strings for widgets & more in the popup container/bottom sheet -->
     <!-- Accessibility title for the popup containing a list of widgets. [CHAR_LIMIT=50] -->
-    <string name="widgets_list">Widgets list</string>
+    <string name="widgets_list">فهرست افزونه‌ها</string>
     <!-- Text announced by accessibility when the popup containing the list of widgets is closed. [CHAR_LIMIT=100] -->
-    <string name="widgets_list_closed">Widgets list closed</string>
+    <string name="widgets_list_closed">فهرست افزونه‌ها بسته شده</string>
     <!-- Strings for accessibility actions -->
     <!-- Accessibility action to add an app to workspace. [CHAR_LIMIT=30] -->
     <string name="action_add_to_workspace">افزودن به نمایشگر خانه</string>
     <!-- Accessibility action to move item to the current location. [CHAR_LIMIT=30] -->
-    <string name="action_move_here">Move item here</string>
+    <string name="action_move_here">بخش را اینجا بگذارید</string>
     <!-- Accessibility confirmation for item removed. [CHAR_LIMIT=50]-->
-    <string name="item_removed">Item removed</string>
+    <string name="item_removed">بخش پاک شد</string>
     <!-- Action shown in snackbar to undo item removal. [CHAR_LIMIT=20] -->
-    <string name="undo">Undo</string>
+    <string name="undo">بازنشانی</string>
     <!-- Accessibility action to move an item on the workspace. [CHAR_LIMIT=30] -->
-    <string name="action_move">Move item</string>
+    <string name="action_move">جابه‌جایی بخش</string>
     <!-- Accessibility description to move item to empty cell. -->
-    <string name="move_to_empty_cell_description">Move to row <xliff:g id="number" example="1">%1$s</xliff:g> column <xliff:g id="number" example="1">%2$s</xliff:g> in <xliff:g id="string" example="Home screen 2 of 4">%3$s</xliff:g></string>
+    <string name="move_to_empty_cell_description">جابه جایی به رده <xliff:g id="number" example="1">%1$s</xliff:g> پایه <xliff:g id="number" example="1">%2$s</xliff:g> در <xliff:g id="string" example="Home screen 2 of 4">%3$s</xliff:g></string>
     <!-- Accessibility description to move item inside a folder. -->
-    <string name="move_to_position">Move to position <xliff:g id="number" example="1">%1$s</xliff:g></string>
+    <string name="move_to_position">جابه‌جایی به جایگاه <xliff:g id="number" example="1">%1$s</xliff:g></string>
     <!-- Accessibility description to move item to the hotseat. -->
-    <string name="move_to_hotseat_position">Move to favorites position <xliff:g id="number" example="1">%1$s</xliff:g></string>
+    <string name="move_to_hotseat_position"><xliff:g id="number" example="1">%1$s</xliff:g> جابه‌جایی به جایگاه دوست‌داشتنی‌ها</string>
     <!-- Accessibility confirmation for item move. -->
-    <string name="item_moved">Item moved</string>
+    <string name="item_moved">بخش جابه‌جا شد</string>
     <!-- Accessibility description to move item into an existing folder. -->
-    <string name="add_to_folder">Add to folder: <xliff:g id="name" example="Games">%1$s</xliff:g></string>
+    <string name="add_to_folder">افزودن به پوشه: <xliff:g id="name" example="Games">%1$s</xliff:g></string>
     <!-- Accessibility description to move item into an existing folder containing an app. -->
-    <string name="add_to_folder_with_app">Add to folder with <xliff:g id="name" example="Messenger">%1$s</xliff:g></string>
+    <string name="add_to_folder_with_app">افزودن به پوشه با <xliff:g id="name" example="Messenger">%1$s</xliff:g></string>
     <!-- Accessibility confirmation for item added to folder. -->
-    <string name="added_to_folder">Item added to folder</string>
+    <string name="added_to_folder">بخش به پوشه افزوده شد</string>
     <!-- Accessibility description to create folder with another item. -->
-    <string name="create_folder_with">Create folder with: <xliff:g id="name" example="Game">%1$s</xliff:g></string>
+    <string name="create_folder_with">ساخت پوشه با: <xliff:g id="name" example="Game">%1$s</xliff:g></string>
     <!-- Accessibility confirmation for folder created. -->
-    <string name="folder_created">Folder created</string>
+    <string name="folder_created">پوشه ساخته شد</string>
     <!-- Accessibility action to move an item from folder to workspace. [CHAR_LIMIT=30] -->
-    <string name="action_move_to_workspace">Move to home screen</string>
+    <string name="action_move_to_workspace">جابه‌جایی به نمایشگر خانه</string>
     <!-- Accessibility action to resize a widget. [CHAR_LIMIT=30] -->
-    <string name="action_resize">Resize</string>
+    <string name="action_resize">دوباره اندازه دادن</string>
     <!-- Accessibility action to increase width of a widget. [CHAR_LIMIT=30] -->
-    <string name="action_increase_width">Increase width</string>
+    <string name="action_increase_width">افزایش پهنا</string>
     <!-- Accessibility action to increase height of a widget. [CHAR_LIMIT=30] -->
-    <string name="action_increase_height">Increase height</string>
+    <string name="action_increase_height">افزایش درازا</string>
     <!-- Accessibility action to decrease width of a widget. [CHAR_LIMIT=30] -->
-    <string name="action_decrease_width">Decrease width</string>
+    <string name="action_decrease_width">کاهش پهنا</string>
     <!-- Accessibility action to decrease height of a widget. [CHAR_LIMIT=30] -->
-    <string name="action_decrease_height">Decrease height</string>
+    <string name="action_decrease_height">کاهش درازا</string>
     <!-- Accessibility confirmation for widget resize. -->
-    <string name="widget_resized">Widget resized to width <xliff:g id="number" example="2">%1$s</xliff:g> height <xliff:g id="number" example="1">%2$s</xliff:g></string>
+    <string name="widget_resized">افزونه دوباره اندازه داده شد به پهنا <xliff:g id="number" example="2">%1$s</xliff:g> درازا <xliff:g id="number" example="1">%2$s</xliff:g></string>
     <!-- Accessibility action to show quick actions menu for an icon. [CHAR_LIMIT=30] -->
-    <string name="action_deep_shortcut">Shortcut Menu</string>
+    <string name="action_deep_shortcut">میانبر فهرست</string>
     <!-- Accessibility name for the app widget resize frame. -->
-    <string name="widget_frame_name">Widget Resize Frame for <xliff:g id="string" example="Clock">%1$s</xliff:g></string>
+    <string name="widget_frame_name">دوباره اندازه‌گیری چهارچوب افزونه برای <xliff:g id="string" example="Clock">%1$s</xliff:g></string>
     <!-- Accessibility action to close the widget resize frame. [CHAR_LIMIT=30] -->
-    <string name="action_close">Close</string>
+    <string name="action_close">بستن</string>
     <!-- Accessibility action to dismiss a notification in the shortcuts menu for an icon. [CHAR_LIMIT=30] -->
-    <string name="action_dismiss_notification">Dismiss</string>
+    <string name="action_dismiss_notification">فراموش</string>
     <!-- Content description for arrow tip close button. [CHAR LIMIT=NONE] -->
-    <string name="accessibility_close">Close</string>
+    <string name="accessibility_close">بستن</string>
     <!-- Label of tab to indicate personal apps -->
     <string name="all_apps_personal_tab">خودی</string>
     <!-- Label of tab to indicate work apps -->
     <string name="all_apps_work_tab">کار</string>
     <!-- Content description of personal tab to indicate personal apps -->
-    <string name="all_apps_personal_tab_content_description">Personal apps tab</string>
+    <string name="all_apps_personal_tab_content_description">سردر برنامه‌‌های خودی</string>
     <!-- Content description of work tab to indicate work apps -->
-    <string name="all_apps_work_tab_content_description">Work apps tab</string>
+    <string name="all_apps_work_tab_content_description">سردر برنامه‌های کار</string>
     <!-- This string is in the work profile tab when a user has All Apps open on their phone. This is a label for a toggle to turn the work profile on and off. "Work profile" means a separate profile on a user's phone that's specifically for their work apps and managed by their company. "Work" is used as an adjective.-->
-    <string name="work_profile_toggle_label">Work profile</string>
+    <string name="work_profile_toggle_label">نمایه کار</string>
     <!--- User onboarding title for work profile apps -->
-    <string name="work_profile_edu_work_apps">Work apps are badged and visible to your IT admin</string>
+    <string name="work_profile_edu_work_apps">برنامه‌های کار برای سرپرست رایانه شما نشان‌گذاری و نمایان هستند</string>
     <!-- Action label to finish work profile edu-->
-    <string name="work_profile_edu_accept">Got it</string>
+    <string name="work_profile_edu_accept">دریافتم</string>
     <!-- Info icon unicode for alpha scroller when work edu card is present -->
     <!-- Intent for work profiler scheduler -->
     <!--- heading shown when user opens work apps tab while work apps are paused -->
-    <string name="work_apps_paused_title">Work apps are paused</string>
+    <string name="work_apps_paused_title">برنامه‌های کار ایستادند</string>
     <!--- body shown when user opens work apps tab while work apps are paused.-->
-    <string name="work_apps_paused_info_body">You won’t receive notifications from your work apps</string>
+    <string name="work_apps_paused_info_body">شما مژدگانی از برنامه‌های کار خود دریافت نخواهید کرد</string>
     <!--- body shown when user opens work apps tab while work apps are paused. -->
-    <string name="work_apps_paused_body">Your work apps can’t send you notifications, use your battery, or access your location</string>
+    <string name="work_apps_paused_body">برنامه های کار شما نمیتوانند برای شما مژدگانی بفرستند، از باتری بهره‌گیری یا به جایگاه شما دسترسی پیدا کنند</string>
     <!--- body shown when user opens work apps tab while work apps are paused and calls and texts are unavailable-->
-    <string name="work_apps_paused_telephony_unavailable_body">You won’t receive phone calls, text messages, or notifications from your work apps</string>
+    <string name="work_apps_paused_telephony_unavailable_body">شما پیوند تلفنی، نوشته پیام یا مژدگانی از برنامه‌های کار دریافت نخواهید کرد</string>
     <!-- string shown in educational banner about work profile -->
-    <string name="work_apps_paused_edu_banner">Work apps are badged and visible to your IT admin</string>
+    <string name="work_apps_paused_edu_banner">برنامه‌های کار برای سرپرست رایانه شما نشان‌گذاری و نمایان هستند</string>
     <!-- button string shown to dismiss work tab education -->
-    <string name="work_apps_paused_edu_accept">Got it</string>
+    <string name="work_apps_paused_edu_accept">دریافتم</string>
     <!-- button string shown pause work profile [CHAR LIMIT=28] -->
-    <string name="work_apps_pause_btn_text">Pause work apps</string>
+    <string name="work_apps_pause_btn_text">ایستادن برنامه‌های کار</string>
     <!-- button string shown enable work profile -->
-    <string name="work_apps_enable_btn_text">Unpause</string>
+    <string name="work_apps_enable_btn_text">ادامه</string>
     <!-- Label for the work profile scheduler button in the work profile screen. [CHAR_LIMIT=40] -->
     <string name="work_scheduler_button_content_description">Work apps schedule</string>
     <!-- A hint shown in launcher settings develop options filter box -->
