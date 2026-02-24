@@ -55,12 +55,12 @@
     <!-- Displayed when an app pair can't launch at this screen size, but user can unfold device to restore functionality [CHAR_LIMIT=none] -->
     <string name="app_pair_needs_unfold">افتح الجهاز لاستخدام هذين التطبيقَين في الوقت نفسه</string>
     <!-- Displayed when user selects a shortcut for an app pair that is currently not available [CHAR_LIMIT=none]-->
-    <string name="app_pair_not_available">ميزة \"استخدام تطبيقين في الوقت نفسه\" غير متوفّرة</string>
+    <string name="app_pair_not_available">استخدام تطبيقين في الوقت نفسه غير متوفّرة</string>
     <!-- Widgets -->
     <!-- Message to tell the user to press and hold on a widget to add it [CHAR_LIMIT=50] -->
-    <string name="long_press_widget_to_add">انقر مع الاستمرار لنقل تطبيق مصغَّر.</string>
+    <string name="long_press_widget_to_add">انقر &amp; مع الاستمرار لنقل تطبيق مصغَّر.</string>
     <!-- Accessibility spoken hint message in widget picker, which allows user to add a widget. Custom action is the label for additional accessibility actions available in this mode [CHAR_LIMIT=100] -->
-    <string name="long_accessible_way_to_add">انقر مرتين مع تثبيت إصبعك لنقل تطبيق مصغَّر أو استخدام الإجراءات المخصّصة.</string>
+    <string name="long_accessible_way_to_add">انقر مرتين &amp; مع تثبيت إصبعك لنقل تطبيق مصغَّر أو استخدام الإجراءات المخصّصة.</string>
     <!-- Accessibility label for the icon button shown in the widget picker that opens a overflow
          menu with widgets viewing options. [CHAR_LIMIT=25] -->
     <string name="widget_picker_widget_options_button_description">خيارات إضافية</string>
@@ -78,13 +78,12 @@
     <!-- Spoken text for a screen reader. The first placeholder text is the widget name, the
          remaining placeholders are for the widget dimensions.
          [CHAR_LIMIT=none]-->
-    <string name="widget_preview_name_and_dims_content_description">        <xliff:g id="widget_name" example="Calendar month view">%1$s</xliff:g> widget, %2$d wide by %3$d high
-    </string>
+    <string name="widget_preview_name_and_dims_content_description"><xliff:g id="widget_name" example="Calendar month view">%1$s</xliff:g>ويدج، بعرض %2$d وبارتفاع %3$d    </string>
     <!-- Message to tell the user to press and hold a widget/icon to add it to the home screen.
          [CHAR LIMIT=NONE]  -->
-    <string name="add_item_request_drag_hint">يُرجى النقر مع الاستمرار على التطبيق المصغّر لنقله إلى الشاشة الرئيسية</string>
+    <string name="add_item_request_drag_hint">يُرجى النقر &amp; مع الاستمرار على التطبيق المصغّر لنقله إلى الشاشة الرئيسي</string>
     <!-- Button label to automatically add a widget to home screen [CHAR_LIMIT=50] -->
-    <string name="add_to_home_screen">إضافة إلى الشاشة الرئيسية</string>
+    <string name="add_to_home_screen">إضافة إلى الشاشة الرئيسي</string>
     <!-- Accessibility spoken message announced when a widget gets added to the home screen using a
          button in a dialog. [CHAR_LIMIT=none] -->
     <string name="added_to_home_screen_accessibility_text"><xliff:g id="widget_name" example="Calendar month view">%1$s</xliff:g> widget added to home screen</string>
@@ -96,7 +95,7 @@
     <string name="productivity_widget_recommendation_category_label">الأساسيات</string>
     <!-- Title for the widget suggestions category that displays widgets provided by
     news and magazines related apps [CHAR_LIMIT=50] -->
-    <string name="news_widget_recommendation_category_label">الأخبار والمجلات</string>
+    <string name="news_widget_recommendation_category_label">أخبار &amp; والمجلات</string>
     <!-- Title for the widget suggestions category that displays widgets provided by
     entertainment apps [CHAR_LIMIT=50] -->
     <string name="entertainment_widget_recommendation_category_label">الترفيه</string>
@@ -110,10 +109,10 @@
     <string name="widget_picker_right_pane_accessibility_title"><xliff:g id="selected_header" example="Calendar">%1$s</xliff:g> widgets on right, search and options on left</string>
     <!-- Label for showing the number of widgets an app has in the full widgets picker.
          [CHAR_LIMIT=25][ICU SYNTAX] -->
-    <string name="widgets_count">{count,plural, =1{تطبيق مصغّر واحد}zero{# تطبيق مصغّر}two{تطبيقان مصغّران}few{# تطبيقات مصغّرة}many{# تطبيقًا مصغّرًا}other{# تطبيق مصغّر}}</string>
+    <string name="widgets_count">{count,plural, =1{تطبيق مصغّر واحد}zero{# تطبيق مصغّر}two{تطبيقان مصغّران}few{# تطبيقات مصغّرة}many{# تطبيقًا مصغّرًا}other{# تطبيق مصغّر}}    </string>
     <!-- Label for showing the number of shortcut an app has in the full widgets picker.
          [CHAR_LIMIT=25][ICU SYNTAX] -->
-    <string name="shortcuts_count">{count,plural, =1{اختصار واحد}zero{# اختصار}two{اختصاران}few{# اختصارات}many{# اختصارًا}other{# اختصار}}</string>
+    <string name="shortcuts_count">{count,plural, =1{اختصار واحد}zero{# اختصار}two{اختصاران}few{# اختصارات}many{# اختصارًا}other{# اختصار}}        </string>
     <!-- Label for showing both the number of widgets and shortcuts an app has in the full widgets
          picker. [CHAR_LIMIT=50] -->
     <string name="widgets_and_shortcuts_count"><xliff:g id="widgets_count" example="5 widgets">%1$s</xliff:g>, <xliff:g id="shortcuts_count" example="1 shortcut">%2$s</xliff:g></string>
@@ -128,10 +127,10 @@
     <string name="widgets_full_sheet_cancel_button_description">محو النص من مربّع البحث</string>
     <!-- Text shown when there are no widgets or shortcuts that can be added to the device.
          [CHAR_LIMIT=none] -->
-    <string name="no_widgets_available">التطبيقات المصغَّرة والاختصارات غير متاحة.</string>
+    <string name="no_widgets_available">التطبيقات المصغَّرة والاختصارات غير متاحة</string>
     <!-- Text shown when there are no matching widget or shortcut search results for user's search
          query. [CHAR_LIMIT=none] -->
-    <string name="no_search_results">لم يتم العثور على تطبيقات مصغّرة أو اختصارات.</string>
+    <string name="no_search_results">لم يتم العثور على تطبيقات مصغّرة أو اختصارات</string>
     <!-- Tab label. A user can tap this tab to access their personal widgets. [CHAR_LIMIT=25] -->
     <string name="widgets_full_sheet_personal_tab">التطبيقات الشخصية</string>
     <!-- Tab label. A user can tap this tab to access their work widgets. [CHAR_LIMIT=25] -->
@@ -165,7 +164,7 @@
     <!-- Search bar text in the apps view. [CHAR_LIMIT=50] -->
     <string name="all_apps_search_bar_hint">بحث في التطبيقات</string>
     <!-- Loading apps text. [CHAR_LIMIT=50] -->
-    <string name="all_apps_loading_message">جارٍ تحميل التطبيقات…</string>
+    <string name="all_apps_loading_message">جارٍ تحميل التطبيقات&amp;#8230؛</string>
     <!-- No-search-results text. [CHAR_LIMIT=50] -->
     <string name="all_apps_no_search_results">No apps found matching \"<xliff:g id="query" example="Android">%1$s</xliff:g>\"</string>
     <!-- Label for an icon representing any generic app. [CHAR_LIMIT=50] -->
@@ -178,13 +177,13 @@
     <string name="notifications_header">الإشعارات</string>
     <!-- Drag and drop -->
     <!-- Message to tell the user to press and hold on a shortcut to add it [CHAR_LIMIT=50] -->
-    <string name="long_press_shortcut_to_add">انقر مع الاستمرار لنقل اختصار</string>
+    <string name="long_press_shortcut_to_add">انقر &amp; مع الاستمرار لنقل اختصار.</string>
     <!-- Accessibility spoken hint message in deep shortcut menu, which allows user to add a shortcut. Custom action is the label for additional accessibility actions available in this mode [CHAR_LIMIT=200] -->
     <string name="long_accessible_way_to_add_shortcut">انقر مرتين مع تثبيت إصبعك لنقل اختصار أو استخدام الإجراءات المخصّصة.</string>
     <!-- Error message when a user can't add more apps, widgets, or shortcuts to a Home screen. -->
-    <string name="out_of_space">لا تتوفَّر مساحة على هذه الشاشة الرئيسية.</string>
+    <string name="out_of_space">لا تتوفَّر مساحة على هذه الشاشة الرئيسي</string>
     <!-- Error message when user has filled the hotseat -->
-    <string name="hotseat_out_of_space">لا يوجد المزيد من الحقول في علبة المفضلة</string>
+    <string name="hotseat_out_of_space">لا يوجد المزيد من الحقول في مساحة المفضلة</string>
     <!-- All applications label -->
     <string name="all_apps_button_label">قائمة التطبيقات</string>
     <string name="all_apps_search_results">نتائج البحث</string>
@@ -226,15 +225,15 @@
     <!-- Permission short label -->
     <string name="permlab_install_shortcut">تثبيت اختصارات</string>
     <!-- Permission description -->
-    <string name="permdesc_install_shortcut">للسماح لتطبيق ما بإضافة اختصارات بدون تدخل المستخدم.</string>
+    <string name="permdesc_install_shortcut">للسماح لتطبيق ما بإضافة اختصارات دون تدخل المستخدم.</string>
     <!-- Permission short label -->
-    <string name="permlab_read_settings">الاطلاع على الإعدادات والاختصارات على الشاشة الرئيسية</string>
+    <string name="permlab_read_settings">الاطلاع على الإعدادات والاختصارات على الشاشة الرئيسي</string>
     <!-- Permission description -->
-    <string name="permdesc_read_settings">يسمح هذا الإذن للتطبيق بالاطلاع على الإعدادات والاختصارات على الشاشة الرئيسية.</string>
+    <string name="permdesc_read_settings">يسمح هذا الإذن للتطبيق بالاطلاع على الإعدادات والاختصارات على الشاشة الرئيسي.</string>
     <!-- Permission short label -->
-    <string name="permlab_write_settings">تعديل الإعدادات والاختصارات على الشاشة الرئيسية</string>
+    <string name="permlab_write_settings">تعديل الإعدادات والاختصارات على الشاشة الرئيسي</string>
     <!-- Permission description -->
-    <string name="permdesc_write_settings">يسمح هذا الإذن للتطبيق بتغيير الإعدادات والاختصارات على الشاشة الرئيسية.</string>
+    <string name="permdesc_write_settings">يسمح هذا الإذن للتطبيق بتغيير الإعدادات والاختصارات على الشاشة الرئيسي.</string>
     <!-- Widgets: -->
     <!-- Error text that lets a user know that the widget can't load. -->
     <string name="gadget_error_text">يتعذّر تحميل التطبيق المصغَّر.</string>
@@ -256,7 +255,7 @@
     <!-- The format string for default page scroll text [CHAR_LIMIT=none] -->
     <string name="default_scroll_format">‏الصفحة %1$d من %2$d</string>
     <!-- The format string for Workspace page scroll text [CHAR_LIMIT=none] -->
-    <string name="workspace_scroll_format">‏الشاشة الرئيسية %1$d من %2$d</string>
+    <string name="workspace_scroll_format">‏الشاشة الرئيسي %1$d من %2$d</string>
     <!-- Description for a new page on homescreen[CHAR_LIMIT=none] -->
     <string name="workspace_new_page">صفحة الشاشة الرئيسية الجديدة</string>
     <string name="app_running_state_description">نشط</string>
@@ -356,7 +355,7 @@
     <string name="widgets_list_closed">تم إغلاق قائمة التطبيقات المصغَّرة.</string>
     <!-- Strings for accessibility actions -->
     <!-- Accessibility action to add an app to workspace. [CHAR_LIMIT=30] -->
-    <string name="action_add_to_workspace">إضافة إلى الشاشة الرئيسية</string>
+    <string name="action_add_to_workspace">إضافة إلى الشاشة الرئيسي</string>
     <!-- Accessibility action to move item to the current location. [CHAR_LIMIT=30] -->
     <string name="action_move_here">نقل العنصر إلى هنا</string>
     <!-- Accessibility confirmation for item removed. [CHAR_LIMIT=50]-->
