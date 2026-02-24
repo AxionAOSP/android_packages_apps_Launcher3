@@ -23,7 +23,7 @@
     <!-- Work folder name -->
     <string name="work_folder_name">Kerja</string>
     <!-- Displayed when user selects a shortcut for an app that was uninstalled [CHAR_LIMIT=none]-->
-    <string name="activity_not_found">Aplikasi tidak terpasang.</string>
+    <string name="activity_not_found">Aplikasi tidak terinstall.</string>
     <!-- Displayed when user selects a shortcut for an app that is current not available [CHAR_LIMIT=none]-->
     <string name="activity_not_available">Aplikasi tidak tersedia</string>
     <!-- SafeMode shortcut error string -->
@@ -38,7 +38,7 @@
     <string name="set_default_home_app">Atur <xliff:g id="launcher_name" example="Launcher3">%1$s</xliff:g> sebagai default aplikasi layar utama di Setelan</string>
     <!-- Options for recent tasks -->
     <!-- Title for an option to enter split screen mode for a given app -->
-    <string name="recent_task_option_split_screen">Layar terpisah</string>
+    <string name="recent_task_option_split_screen">Pisah layar</string>
     <string name="recent_task_option_aspect_ratio">Ubah aspek rasio</string>
     <string name="split_app_info_accessibility">Aplikasi info untuk %1$s</string>
     <string name="split_app_usage_settings">Setelan penggunaan untuk %1$s</string>
