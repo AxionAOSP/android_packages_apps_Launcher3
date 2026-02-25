@@ -35,7 +35,7 @@
     <!-- User visible name for the launcher/home screen. [CHAR_LIMIT=30] -->
     <string name="home_screen">Início</string>
     <!-- Description for setting the current launcher as the default home app. [CHAR_LIMIT=none]-->
-    <string name="set_default_home_app">Set <xliff:g id="launcher_name" example="Launcher3">%1$s</xliff:g> as default home app in Settings</string>
+    <string name="set_default_home_app">Definir <xliff:g id="launcher_name" example="Launcher3">%1$s</xliff:g> como app de início padrão nas Configurações</string>
     <!-- Options for recent tasks -->
     <!-- Title for an option to enter split screen mode for a given app -->
     <string name="recent_task_option_split_screen">Tela dividida</string>
@@ -49,7 +49,7 @@
     <!-- App pairs -->
     <string name="save_app_pair">Salvar par de apps</string>
     <!-- App pair default title -->
-    <string name="app_pair_default_title"><xliff:g id="app1" example="Chrome">%1$s</xliff:g> | <xliff:g id="app2" example="YouTube">%2$s</xliff:g></string>
+    <string name="app_pair_default_title"><xliff:g id="app1" example="Chrome">%1$s</xliff:g> ├ <xliff:g id="app2" example="YouTube">%2$s</xliff:g></string>
     <!-- Displayed when an app pair can't launch at this screen size [CHAR_LIMIT=none] -->
     <string name="app_pair_unlaunchable_at_screen_size">Este Par de apps não está disponível no dispositivo</string>
     <!-- Displayed when an app pair can't launch at this screen size, but user can unfold device to restore functionality [CHAR_LIMIT=none] -->
@@ -102,7 +102,7 @@
     <string name="entertainment_widget_recommendation_category_label">Entretenimento</string>
     <!-- Title for the widget suggestions category that displays widgets provided by
     social apps [CHAR_LIMIT=50] -->
-    <string name="social_widget_recommendation_category_label">Social</string>
+    <string name="social_widget_recommendation_category_label">Mídias sociais</string>
     <!-- Title for the widget suggestions category that displays general widget suggestions
     [CHAR_LIMIT=50] -->
     <string name="others_widget_recommendation_category_label">Sugestões para você</string>
