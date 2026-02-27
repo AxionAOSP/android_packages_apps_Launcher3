@@ -78,8 +78,7 @@
     <!-- Spoken text for a screen reader. The first placeholder text is the widget name, the
          remaining placeholders are for the widget dimensions.
          [CHAR_LIMIT=none]-->
-    <string name="widget_preview_name_and_dims_content_description">         
-         <xliff:g id="widget_name" example="Calendar month view">%1$s</xliff:g> Artilugio %2$d ancho por %3$d alto    </string>
+    <string name="widget_preview_name_and_dims_content_description">         <xliff:g id="widget_name" example="Calendar month view">%1$s</xliff:g> Artilugio %2$d ancho por %3$d alto    </string>
     <!-- Message to tell the user to press and hold a widget/icon to add it to the home screen.
          [CHAR LIMIT=NONE]  -->
     <string name="add_item_request_drag_hint">Mantén pulsado &amp; para moverlo por la pantalla de inicio</string>
@@ -96,7 +95,7 @@
     <string name="productivity_widget_recommendation_category_label">Imprescindibles</string>
     <!-- Title for the widget suggestions category that displays widgets provided by
     news and magazines related apps [CHAR_LIMIT=50] -->
-    <string name="news_widget_recommendation_category_label">Noticias y revistas</string>
+    <string name="news_widget_recommendation_category_label">Noticias &amp; Revistas</string>
     <!-- Title for the widget suggestions category that displays widgets provided by
     entertainment apps [CHAR_LIMIT=50] -->
     <string name="entertainment_widget_recommendation_category_label">Entretenimiento</string>
@@ -107,13 +106,13 @@
     [CHAR_LIMIT=50] -->
     <string name="others_widget_recommendation_category_label">Sugerencias para ti</string>
     <!-- accessibilityPaneTitle for the right pane when showing suggested widgets. -->
-    <string name="widget_picker_right_pane_accessibility_title"><xliff:g id="selected_header" example="Calendar">%1$s</xliff:g> widgets on right, search and options on left</string>
+    <string name="widget_picker_right_pane_accessibility_title"><xliff:g id="selected_header" example="Calendar">%1$s</xliff:g> widgets a la derecha, búsqueda y opciones a la izquierda</string>
     <!-- Label for showing the number of widgets an app has in the full widgets picker.
          [CHAR_LIMIT=25][ICU SYNTAX] -->
-    <string name="widgets_count">{count,plural, =1{# widget}other{# widgets}}</string>
+    <string name="widgets_count">    {count,plural, =1{# widget}other{# widgets}}</string>
     <!-- Label for showing the number of shortcut an app has in the full widgets picker.
          [CHAR_LIMIT=25][ICU SYNTAX] -->
-    <string name="shortcuts_count">{count,plural, =1{# acceso directo}other{# accesos directos}}</string>
+    <string name="shortcuts_count">    {count,plural, =1{# acceso directo}other{# accesos directos}}</string>
     <!-- Label for showing both the number of widgets and shortcuts an app has in the full widgets
          picker. [CHAR_LIMIT=50] -->
     <string name="widgets_and_shortcuts_count"><xliff:g id="widgets_count" example="5 widgets">%1$s</xliff:g>, <xliff:g id="shortcuts_count" example="1 shortcut">%2$s</xliff:g></string>
@@ -212,16 +211,16 @@
     <!-- Label for bubbling a launcher item. [CHAR_LIMIT=20] -->
     <string name="bubble">Burbuja</string>
     <string name="action_pin_to_top">Fijar arriba</string>
-    <string name="action_unpin">Unpin</string>
-    <string name="action_enlarge">Enlarge</string>
+    <string name="action_unpin">Dejar de fijar</string>
+    <string name="action_enlarge">Ampliar</string>
     <string name="action_minimize">Minimizar</string>
     <string name="action_customize_folder">Personalizar</string>
     <string name="folder_style_picker_title">Estilo de pestaña</string>
     <string name="folder_style_quadrant">Cuadrante</string>
     <string name="folder_style_grid">Cuadrícula</string>
     <string name="folder_style_circle">Círculo</string>
-    <string name="folder_style_cover">Cover</string>
-    <string name="folder_cover_text_hint">Emoji</string>
+    <string name="folder_style_cover">Portada</string>
+    <string name="folder_cover_text_hint">Emojis</string>
     <!-- Permissions: -->
     <!-- Permission short label -->
     <string name="permlab_install_shortcut">instalar accesos directos</string>
@@ -280,7 +279,7 @@
     <string name="unnamed_folder">Carpeta sin nombre</string>
     <!-- App pair accessibility -->
     <!-- App pair name -->
-    <string name="app_pair_name_format">App pair: <xliff:g id="app1" example="Chrome">%1$s</xliff:g> and <xliff:g id="app2" example="YouTube">%2$s</xliff:g></string>
+    <string name="app_pair_name_format">Par de aplicaciones: <xliff:g id="app1" example="Chrome">%1$s</xliff:g> y <xliff:g id="app2" example="YouTube">%2$s</xliff:g></string>
     <!-- Strings for the customization mode -->
     <!-- Text for wallpaper change button [CHAR LIMIT=30]-->
     <string name="styles_wallpaper_button_text">Fondo de pantalla y estilo</string>
