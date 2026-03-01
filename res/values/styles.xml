@@ -189,6 +189,13 @@
     <!-- Theme overrides in All Apps when blur is available but currently disabled. -->
     <style name="AllAppsBlurFallbackStyle" />
 
+    <style name="FolderBlurStyle">
+        <item name="folderBackgroundColor">@*android:color/surface_effect_0</item>
+    </style>
+    <style name="FolderBlurFallbackStyle">
+        <item name="folderBackgroundColor">@color/materialColorSurfaceContainer</item>
+    </style>
+
     <style name="HomeSettings.Theme" parent="@android:style/Theme.DeviceDefault.Settings">
         <item name="android:colorBackground">@color/materialColorSurfaceContainer</item>
         <item name="android:windowBackground">@color/materialColorSurfaceContainer</item>

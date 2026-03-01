@@ -25,6 +25,7 @@ import static com.android.app.animation.Interpolators.EMPHASIZED;
 import static com.android.internal.jank.Cuj.CUJ_LAUNCHER_LAUNCH_APP_PAIR_FROM_WORKSPACE;
 import static com.android.launcher3.Flags.enableExpressiveDismissTaskMotion;
 import static com.android.launcher3.Flags.enableOverviewBackgroundWallpaperBlur;
+import static com.android.launcher3.Flags.blurOnMoreSurfaces;
 import static com.android.launcher3.Flags.enableUnfoldStateAnimation;
 import static com.android.launcher3.Flags.refactorTaskbarUiState;
 import static com.android.launcher3.LauncherConstants.SavedInstanceKeys.PENDING_SPLIT_SELECT_INFO;
@@ -311,6 +312,7 @@ public class QuickstepLauncher extends Launcher implements RecentsViewContainer,
     private final OverviewChangeListener mOverviewChangeListener = this::onOverviewTargetChanged;
 
     private boolean mOverviewBlurEnabled;
+    private boolean mFolderBlurEnabled;
 
     private final TaskViewRecentsTouchContext mTaskViewRecentsTouchContext =
             new TaskViewRecentsTouchContext() {
@@ -341,7 +343,12 @@ public class QuickstepLauncher extends Launcher implements RecentsViewContainer,
         getAppWidgetHolder().setOnViewCreationCallback(new QuickstepInteractionHandler(this));
         mDepthController = new DepthController(this);
         mOverviewBlurEnabled = isOverviewBackgroundBlurEnabled();
+        mFolderBlurEnabled = mDepthController.isCrossWindowBlursEnabled();
         getTheme().applyStyle(getOverviewBlurStyleResId(), true);
+        if (blurOnMoreSurfaces()) {
+            getTheme().applyStyle(mFolderBlurEnabled ? R.style.FolderBlurStyle
+                    : R.style.FolderBlurFallbackStyle, true);
+        }
         super.setupViews();
         mDepthController.setSurfaceTransactionApplier(getRootView());
 
@@ -521,12 +528,19 @@ public class QuickstepLauncher extends Launcher implements RecentsViewContainer,
                 && enableOverviewBackgroundWallpaperBlur();
     }
 
+    @Override
+    public boolean isCrossWindowBlurEnabled() {
+        return mDepthController != null && mDepthController.isCrossWindowBlursEnabled();
+    }
+
     /** Apply the blur or blur fallback style to the current theme. */
     public void updateBlurStyle() {
-        if (enableOverviewBackgroundWallpaperBlur()) {
-            if (isOverviewBackgroundBlurEnabled() != mOverviewBlurEnabled) {
-                mWallpaperThemeManager.recreateToUpdateTheme();
-            }
+        boolean shouldRecreate = enableOverviewBackgroundWallpaperBlur()
+                && isOverviewBackgroundBlurEnabled() != mOverviewBlurEnabled;
+        shouldRecreate |= blurOnMoreSurfaces()
+                && isCrossWindowBlurEnabled() != mFolderBlurEnabled;
+        if (shouldRecreate) {
+            mWallpaperThemeManager.recreateToUpdateTheme();
         } else if (Flags.allAppsBlur()) {
             // For all apps, we only need to update the scrim, which draws the panel. But if the
             // activity was recreated above, this is unnecessary.

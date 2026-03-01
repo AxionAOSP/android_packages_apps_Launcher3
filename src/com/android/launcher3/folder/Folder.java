@@ -18,6 +18,7 @@ package com.android.launcher3.folder;
 
 import static android.text.TextUtils.isEmpty;
 
+import static com.android.launcher3.Flags.blurOnMoreSurfaces;
 import static com.android.launcher3.Flags.enableLauncherVisualRefresh;
 import static com.android.launcher3.LauncherAnimUtils.SPRING_LOADED_EXIT_DELAY;
 import static com.android.launcher3.LauncherState.EDIT_MODE;
@@ -267,6 +268,7 @@ public class Folder extends AbstractFloatingView implements ClipPathView, DragSo
     private KeyboardInsetAnimationCallback mKeyboardInsetAnimationCallback;
 
     private final @NonNull GradientDrawable mBackground;
+    private final FolderBlurBackgroundHelper mFolderBlurBackgroundHelper;
 
     /**
      * Used to inflate the Workspace from XML.
@@ -292,6 +294,8 @@ public class Folder extends AbstractFloatingView implements ClipPathView, DragSo
                 ResourcesCompat.getDrawable(getResources(),
                         R.drawable.round_rect_folder, getContext().getTheme()));
         mBackground.setCallback(this);
+        mFolderBlurBackgroundHelper =
+                mActivityContext.getActivityComponent().getFolderBlurBackgroundHelper();
     }
 
     @Override
@@ -748,6 +752,10 @@ public class Folder extends AbstractFloatingView implements ClipPathView, DragSo
         Folder openFolder = getOpen(mActivityContext);
         closeOpenFolder(openFolder);
 
+        if (blurOnMoreSurfaces()) {
+            mFolderBlurBackgroundHelper.prepareToOpen(this);
+        }
+
         mContent.bindItems(items);
         mContent.setCanAnnouncePageDescriptionForFolder(true);
         centerAboutIcon();
@@ -998,6 +1006,7 @@ public class Folder extends AbstractFloatingView implements ClipPathView, DragSo
     }
 
     private void closeComplete(boolean wasAnimated) {
+        mFolderBlurBackgroundHelper.folderCloseComplete();
         // TODO: Clear all active animations.
         BaseDragLayer parent = (BaseDragLayer) getParent();
         if (parent != null) {
@@ -1874,10 +1883,17 @@ public class Folder extends AbstractFloatingView implements ClipPathView, DragSo
         if (mClipPath != null) {
             int count = canvas.save();
             canvas.clipPath(mClipPath.getPath());
+            mFolderBlurBackgroundHelper.drawBlur(canvas, mClipPath, this);
             mBackground.draw(canvas);
+            if (!mIsAnimatingClosed) {
+                super.dispatchDraw(canvas);
+            }
             canvas.restoreToCount(count);
-            super.dispatchDraw(canvas);
+            if (mIsAnimatingClosed) {
+                super.dispatchDraw(canvas);
+            }
         } else {
+            mFolderBlurBackgroundHelper.drawBlur(canvas, null, this);
             mBackground.draw(canvas);
             super.dispatchDraw(canvas);
         }
