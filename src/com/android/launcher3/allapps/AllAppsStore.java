@@ -27,6 +27,8 @@ import android.view.ViewGroup;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
+import com.android.launcher3.allapps.compose.ui.view.ComposeAppIconView;
+import com.android.launcher3.views.ActivityContext;
 import com.android.launcher3.BubbleTextView;
 import com.android.launcher3.dagger.ActivityContextSingleton;
 import com.android.launcher3.icons.FastBitmapDrawable;
@@ -73,7 +75,6 @@ public class AllAppsStore {
     private int mModelFlags;
     private int mDeferUpdatesFlags = 0;
     private boolean mUpdatePending = false;
-
 
     public AppInfo[] getApps() {
         return mApps;
@@ -193,10 +194,14 @@ public class AllAppsStore {
 
     public void updateNotificationDots(Predicate<PackageUserKey> updatedDots) {
         updateAllIcons((child) -> {
-            if (child.getTag() instanceof ItemInfo) {
-                ItemInfo info = (ItemInfo) child.getTag();
+            if (child.getTag() instanceof ItemInfo info) {
                 if (mTempKey.updateFromItemInfo(info) && updatedDots.test(mTempKey)) {
-                    child.applyDotState(info, true /* animate */);
+                    if (child instanceof BubbleTextView btv) {
+                        btv.applyDotState(info, true /* animate */);
+                    } else if (child instanceof ComposeAppIconView cav) {
+                        ActivityContext ac = ActivityContext.lookupContext(cav.getContext());
+                        cav.applyDotState(ac.getDotInfoForItem(info), true /* animate */);
+                    }
                 }
             }
         });
@@ -213,22 +218,51 @@ public class AllAppsStore {
      */
     public void updateProgressBar(AppInfo app) {
         updateAllIcons((child) -> {
-            if (child.getTag() == app) {
-                child.applyFromApplicationInfo(app);
+            if (child.getTag() == app && child instanceof BubbleTextView btv) {
+                btv.applyFromApplicationInfo(app);
             }
         });
     }
 
-    private void updateAllIcons(Consumer<BubbleTextView> action) {
+    private void updateAllIcons(Consumer<View> action) {
         for (int i = mIconContainers.size() - 1; i >= 0; i--) {
-            ViewGroup parent = mIconContainers.get(i);
-            int childCount = parent.getChildCount();
+            updateAllIcons(mIconContainers.get(i), action);
+        }
+    }
 
-            for (int j = 0; j < childCount; j++) {
-                View child = parent.getChildAt(j);
-                if (child instanceof BubbleTextView) {
-                    action.accept((BubbleTextView) child);
-                }
+    @Nullable
+    public View findIconView(Predicate<View> condition) {
+        for (int i = mIconContainers.size() - 1; i >= 0; i--) {
+            View view = findIconView(mIconContainers.get(i), condition);
+            if (view != null) {
+                Log.d(TAG, "findIconView: found view " + view + " in container " + mIconContainers.get(i));
+                return view;
+            }
+        }
+        Log.d(TAG, "findIconView: no view found matching condition");
+        return null;
+    }
+    private View findIconView(ViewGroup parent, Predicate<View> condition) {
+        int childCount = parent.getChildCount();
+        for (int j = 0; j < childCount; j++) {
+            View child = parent.getChildAt(j);
+            if (condition.test(child)) {
+                return child;
+            } else if (child instanceof ViewGroup vg) {
+                View view = findIconView(vg, condition);
+                if (view != null) return view;
+            }
+        }
+        return null;
+    }
+    private void updateAllIcons(ViewGroup parent, Consumer<View> action) {
+        int childCount = parent.getChildCount();
+        for (int j = 0; j < childCount; j++) {
+            View child = parent.getChildAt(j);
+            if (child instanceof BubbleTextView || child instanceof ComposeAppIconView) {
+                action.accept(child);
+            } else if (child instanceof ViewGroup vg) {
+                updateAllIcons(vg, action);
             }
         }
     }
@@ -241,7 +275,8 @@ public class AllAppsStore {
     public void dump(String prefix, PrintWriter writer) {
         writer.println(prefix + "\tAllAppsStore Apps[] size: " + mApps.length);
         writer.println(prefix + "\tAll registered icons");
-        updateAllIcons(btv -> {
+        updateAllIcons(child -> {
+            if (!(child instanceof BubbleTextView btv)) return;
             FastBitmapDrawable icon = btv.getIcon();
             ItemInfoWithIcon info = btv.getTag() instanceof ItemInfoWithIcon iiwi ? iiwi : null;
             ComponentName cn = info != null ? info.getTargetComponent() : null;

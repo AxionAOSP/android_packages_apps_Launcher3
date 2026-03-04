@@ -272,7 +272,7 @@ public class FloatingHeaderView extends LinearLayout implements
     }
 
     /** Update tab visibility to the given state, only if tabs are active (work profile exists). */
-    void maybeSetTabVisibility(int visibility) {
+    protected void maybeSetTabVisibility(int visibility) {
         mTabLayout.setVisibility(mTabsHidden ? GONE : visibility);
     }
 
@@ -419,7 +419,7 @@ public class FloatingHeaderView extends LinearLayout implements
     }
 
     /** Gets the combined height of any floating rows (e.g. predicted apps, app divider). */
-    int getFloatingRowsHeight() {
+    protected int getFloatingRowsHeight() {
         return mFloatingRowsHeight;
     }
 
@@ -500,5 +500,9 @@ public class FloatingHeaderView extends LinearLayout implements
         }
         return Math.max(0,
                 getTabLayout().getBottom() - getPaddingTop() + getPaddingBottom() + mTranslationY);
+    }
+    @Override
+    public void setVisibility(int visibility) {
+        super.setVisibility(View.GONE);
     }
 }

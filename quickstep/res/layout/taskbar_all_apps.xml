@@ -14,11 +14,11 @@
      See the License for the specific language governing permissions and
      limitations under the License.
 -->
-<com.android.launcher3.taskbar.allapps.TaskbarAllAppsContainerView
+<com.android.launcher3.taskbar.allapps.TaskbarComposeAllAppsContainerView
     xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:clipChildren="true"
+    android:clipChildren="false"
     android:clipToPadding="false"
     android:focusable="false"
     android:saveEnabled="false" />

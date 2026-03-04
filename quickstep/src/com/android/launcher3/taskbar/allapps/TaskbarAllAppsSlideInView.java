@@ -36,6 +36,7 @@ import android.util.Log;
 import android.view.CrossWindowBlurListeners;
 import android.view.MotionEvent;
 import android.view.View;
+import android.view.ViewGroup;
 import android.view.ViewRootImpl;
 import android.view.animation.Interpolator;
 import android.window.OnBackInvokedDispatcher;
@@ -229,8 +230,11 @@ public class TaskbarAllAppsSlideInView extends AbstractSlideInView<TaskbarOverla
     protected void onAttachedToWindow() {
         super.onAttachedToWindow();
         mActivityContext.addOnDeviceProfileChangeListener(this);
-        mAppsView.getAppsRecyclerViewContainer().setOutlineProvider(mViewOutlineProvider);
-        mAppsView.getAppsRecyclerViewContainer().setClipToOutline(true);
+        View container = mAppsView.getAppsRecyclerViewContainer();
+        if (container != null) {
+            container.setOutlineProvider(mViewOutlineProvider);
+            container.setClipToOutline(true);
+        }
         OnBackInvokedDispatcher dispatcher = findOnBackInvokedDispatcher();
         if (dispatcher != null) {
             dispatcher.registerOnBackInvokedCallback(
@@ -243,8 +247,11 @@ public class TaskbarAllAppsSlideInView extends AbstractSlideInView<TaskbarOverla
     protected void onDetachedFromWindow() {
         super.onDetachedFromWindow();
         mActivityContext.removeOnDeviceProfileChangeListener(this);
-        mAppsView.getAppsRecyclerViewContainer().setOutlineProvider(null);
-        mAppsView.getAppsRecyclerViewContainer().setClipToOutline(false);
+        View container = mAppsView.getAppsRecyclerViewContainer();
+        if (container != null) {
+            container.setOutlineProvider(null);
+            container.setClipToOutline(false);
+        }
         OnBackInvokedDispatcher dispatcher = findOnBackInvokedDispatcher();
         if (dispatcher != null) {
             dispatcher.unregisterOnBackInvokedCallback(this);
@@ -332,7 +339,10 @@ public class TaskbarAllAppsSlideInView extends AbstractSlideInView<TaskbarOverla
     protected void onUserSwipeToDismissProgressChanged() {
         super.onUserSwipeToDismissProgressChanged();
         mAppsView.setClipChildren(!mIsDismissInProgress);
-        mAppsView.getAppsRecyclerViewContainer().setClipChildren(!mIsDismissInProgress);
+        ViewGroup container = mAppsView.getAppsRecyclerViewContainer();
+        if (container != null) {
+            container.setClipChildren(!mIsDismissInProgress);
+        }
     }
 
     @Override

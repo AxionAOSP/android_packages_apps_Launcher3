@@ -17,6 +17,7 @@
 package com.android.launcher3.dagger
 
 import com.android.launcher3.allapps.AllAppsStore
+import com.android.launcher3.allapps.AllAppsComposeController
 import com.android.launcher3.popup.PopupDataProvider
 import com.android.launcher3.qsb.OseWidgetOptionsProvider
 import com.android.launcher3.recyclerview.AllAppsRecyclerViewPool
@@ -36,6 +37,7 @@ interface BaseActivityContextComponent {
     val appsStore: AllAppsStore
     val popupDataProvider: PopupDataProvider
     val sharedAppsPool: AllAppsRecyclerViewPool
+    val allAppsComposeController: AllAppsComposeController
 
     /** Builder for BaseActivityContextComponent. */
     interface Builder {

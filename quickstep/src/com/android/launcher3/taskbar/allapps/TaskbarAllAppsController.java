@@ -28,7 +28,6 @@ import androidx.annotation.VisibleForTesting;
 
 import com.android.launcher3.DeviceProfile;
 import com.android.launcher3.R;
-import com.android.launcher3.appprediction.PredictionRowView;
 import com.android.launcher3.dragndrop.DragOptions.PreDragCondition;
 import com.android.launcher3.model.data.AppInfo;
 import com.android.launcher3.model.data.ItemInfo;
@@ -120,9 +119,7 @@ public final class TaskbarAllAppsController {
     public void setPredictedApps(List<ItemInfo> predictedApps) {
         mPredictedApps = predictedApps;
         if (mAppsView != null) {
-            mAppsView.getFloatingHeaderView()
-                    .findFixedRowByType(PredictionRowView.class)
-                    .setPredictedApps(mPredictedApps);
+            mAppsView.onPredictionsUpdated(mPredictedApps);
         }
         if (mSearchSessionController != null) {
             mSearchSessionController.setZeroStatePredictedItems(predictedApps);
@@ -216,9 +213,7 @@ public final class TaskbarAllAppsController {
         viewController.show(animate);
         mAppsView = mOverlayContext.getAppsView();
         mAppsView.getAppsStore().setApps(mApps, mAppsModelFlags, mPackageUserKeytoUidMap);
-        mAppsView.getFloatingHeaderView()
-                .findFixedRowByType(PredictionRowView.class)
-                .setPredictedApps(mPredictedApps);
+        mAppsView.onPredictionsUpdated(mPredictedApps);
         // 1 alternative that would be more work:
         // Create a shared drag layer between taskbar and taskbarAllApps so that when dragging
         // starts and taskbarAllApps can close, but the drag layer that the view is being dragged in
@@ -257,13 +252,13 @@ public final class TaskbarAllAppsController {
 
     @VisibleForTesting
     public int getTaskbarAllAppsTopPadding() {
-        // Allow null-pointer since this should only be null if the apps view is not showing.
+        if (mAppsView == null || mAppsView.getActiveRecyclerView() == null) return 0;
         return mAppsView.getActiveRecyclerView().getClipBounds().top;
     }
 
     @VisibleForTesting
     public int getTaskbarAllAppsScroll() {
-        // Allow null-pointer since this should only be null if the apps view is not showing.
+        if (mAppsView == null || mAppsView.getActiveRecyclerView() == null) return 0;
         return mAppsView.getActiveRecyclerView().computeVerticalScrollOffset();
     }
 

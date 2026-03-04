@@ -229,9 +229,11 @@ public class PrivateProfileManager extends UserProfileManager {
      */
     public void reset() {
         Trace.beginSection("PrivateProfileManager#reset");
-        // Ensure the state of the header view is what it should be before animating.
         updateView();
-        getMainRecyclerView().setChildAttachedConsumer(null);
+        boolean isCompose = mAllApps.isUsingCompose();
+        if (!isCompose) {
+            getMainRecyclerView().setChildAttachedConsumer(null);
+        }
         int previousState = getCurrentState();
         boolean isEnabled = !mAllApps.getAppsStore()
                 .hasModelFlag(FLAG_PRIVATE_PROFILE_QUIET_MODE_ENABLED);
@@ -240,14 +242,15 @@ public class PrivateProfileManager extends UserProfileManager {
         if (Flags.privateSpaceAddFloatingMaskView()) {
             mFloatingMaskView = null;
         }
-        // It's possible that previousState is 0 when reset is first called.
         mIsStateTransitioning = previousState != STATE_UNKNOWN && previousState != updatedState;
         if (previousState == STATE_DISABLED && updatedState == STATE_ENABLED) {
             postUnlock();
         } else if (previousState == STATE_ENABLED && updatedState == STATE_DISABLED){
             executeLock();
         }
-        addPrivateSpaceDecorator();
+        if (!isCompose) {
+            addPrivateSpaceDecorator();
+        }
         Trace.endSection();
     }
 
@@ -646,7 +649,8 @@ public class PrivateProfileManager extends UserProfileManager {
      * here.
      */
     private void updatePrivateStateAnimator(boolean expand) {
-        if (!Flags.enablePrivateSpace() || !Flags.privateSpaceAnimation()) {
+        if (!Flags.enablePrivateSpace() || !Flags.privateSpaceAnimation()
+                || mAllApps.isUsingCompose()) {
             return;
         }
         if (mPSHeader == null) {
@@ -828,8 +832,9 @@ public class PrivateProfileManager extends UserProfileManager {
     }
 
     void expandPrivateSpace() {
-        // If we are on main adapter view, we apply the PS Container expansion animation and
-        // scroll down to load the entire container, making animation visible.
+        if (mAllApps.isUsingCompose()) {
+            return;
+        }
         ActivityAllAppsContainerView<?>.AdapterHolder mainAdapterHolder = mAllApps.mAH.get(MAIN);
         List<BaseAllAppsAdapter.AdapterItem> adapterItems =
                 mainAdapterHolder.mAppsList.getAdapterItems();

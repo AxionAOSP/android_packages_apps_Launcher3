@@ -95,6 +95,7 @@ import static com.android.launcher3.model.ItemInstallQueue.FLAG_DRAG_AND_DROP;
 import static com.android.launcher3.model.data.ItemInfoWithIcon.FLAG_NOT_PINNABLE;
 import static com.android.launcher3.pageindicators.PaginationArrow.DISABLED_ARROW_OPACITY;
 import static com.android.launcher3.pageindicators.PaginationArrow.FULLY_OPAQUE;
+import static com.android.launcher3.popup.SystemShortcut.ADD_TO_FOLDER;
 import static com.android.launcher3.popup.SystemShortcut.ADD_TO_HOME_SCREEN;
 import static com.android.launcher3.popup.SystemShortcut.APP_INFO;
 import static com.android.launcher3.popup.SystemShortcut.INSTALL;
@@ -154,6 +155,8 @@ import android.window.BackEvent;
 import android.window.OnBackAnimationCallback;
 
 import androidx.annotation.CallSuper;
+import androidx.lifecycle.Lifecycle;
+import androidx.lifecycle.LifecycleRegistry;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
@@ -429,6 +432,15 @@ public class Launcher extends StatefulActivity<LauncherState>
 
     private boolean mIsTopResumedActivity;
 
+    private boolean mSkipFloatingIconReturnAnimation = false;
+    public void setSkipFloatingIconReturnAnimation(boolean skip) {
+        mSkipFloatingIconReturnAnimation = skip;
+    }
+    public boolean shouldSkipFloatingIconReturnAnimation() {
+        boolean result = mSkipFloatingIconReturnAnimation;
+        mSkipFloatingIconReturnAnimation = false;
+        return result;
+    }
     public static Launcher getLauncher(Context context) {
         return fromContext(context);
     }
@@ -689,8 +701,15 @@ public class Launcher extends StatefulActivity<LauncherState>
             mDragLayer.recreateControllers();
 
             // Calling onSaveInstanceState ensures that static cache used by listWidgets is
-            // initialized properly.
+            // initialized properly. Save and restore lifecycle state because
+            // onSaveInstanceState triggers LifecycleHelper which drops lifecycle to CREATED,
+            // pausing the Compose Recomposer frame clock.
+            Lifecycle lifecycle = getLifecycle();
+            Lifecycle.State prevState = lifecycle.getCurrentState();
             onSaveInstanceState(new Bundle());
+            if (lifecycle instanceof LifecycleRegistry) {
+                ((LifecycleRegistry) lifecycle).setCurrentState(prevState);
+            }
             mModel.rebindCallbacks();
             updateDisallowBack();
         } finally {
@@ -1571,7 +1590,6 @@ public class Launcher extends StatefulActivity<LauncherState>
                 }
                 AbstractFloatingView.closeAllOpenViewsExcept(this, isStarted(), excludedViews);
 
-
                 if (!isInState(NORMAL)) {
                     // Only change state, if not already the same. This prevents cancelling any
                     // animations running as part of resume
@@ -2331,7 +2349,6 @@ public class Launcher extends StatefulActivity<LauncherState>
 
         mStartupLatencyLogger = mStartupLatencyLogger.finishLogs(workspaceItemCount, isBindSync);
 
-
     }
 
     /**
@@ -2971,9 +2988,9 @@ public class Launcher extends StatefulActivity<LauncherState>
             boolean isPinnable = itemInfo instanceof ItemInfoWithIcon info
                     && (info.runtimeStatusFlags & FLAG_NOT_PINNABLE) == 0;
             if (isPinnable) {
-                return Stream.of(APP_INFO, WIDGETS, INSTALL, ADD_TO_HOME_SCREEN);
+                return Stream.of(APP_INFO, WIDGETS, INSTALL, ADD_TO_HOME_SCREEN, ADD_TO_FOLDER);
             } else {
-                return Stream.of(APP_INFO, WIDGETS, INSTALL);
+                return Stream.of(APP_INFO, WIDGETS, INSTALL, ADD_TO_FOLDER);
             }
         }
         return Stream.of(APP_INFO, WIDGETS, INSTALL);
@@ -3078,7 +3095,6 @@ public class Launcher extends StatefulActivity<LauncherState>
         mIsTopResumedActivity = isResumed;
         mLauncherUiState.setIsTopResumedActivity(isResumed);
     }
-
 
     // End of Getters and Setters
 }

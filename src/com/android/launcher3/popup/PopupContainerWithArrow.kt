@@ -20,6 +20,7 @@ import android.animation.LayoutTransition
 import android.content.Context
 import android.graphics.PointF
 import android.graphics.Rect
+import android.graphics.RectF
 import android.graphics.Typeface
 import android.os.Handler
 import android.os.Looper
@@ -80,7 +81,7 @@ private constructor(
     private var deepShortcutContainer: ViewGroup? = null
     private var currentHeight = 0f
 
-    val originalIcon = originalView as BubbleTextView
+    val originalIcon = originalView as? BubbleTextView
 
     var itemDragHandler: PopupItemDragHandler? = null
         private set
@@ -160,7 +161,7 @@ private constructor(
     /** Animates and loads shortcuts on background thread for this popup container */
     private fun loadAppShortcuts(originalItemInfo: ItemInfo) {
         accessibilityPaneTitle = context.getString(R.string.action_deep_shortcut)
-        originalIcon.forceHideDot = true
+        originalIcon?.forceHideDot = true
         // All views are added. Animate layout from now on.
         layoutTransition = LayoutTransition()
         // Load the shortcuts on a background thread and update the container as it animates.
@@ -320,7 +321,7 @@ private constructor(
 
     override fun getTargetObjectLocation(outPos: Rect) {
         super.getTargetObjectLocation(outPos)
-        outPos.bottom = outPos.top + (originalIcon.icon?.bounds?.height() ?: originalView.height)
+        outPos.bottom = outPos.top + (originalIcon?.icon?.bounds?.height() ?: originalView.height)
     }
 
     private fun updateHiddenShortcuts() {
@@ -393,11 +394,11 @@ private constructor(
                 }
                 if (mIsAboveIcon) {
                     // Hide only the icon, keep the text visible.
-                    originalIcon.setIconVisible(false)
-                    originalIcon.visibility = VISIBLE
+                    originalIcon?.setIconVisible(false)
+                    originalIcon?.visibility = VISIBLE
                 } else {
                     // Hide both the icon and text.
-                    originalIcon.visibility = INVISIBLE
+                    originalIcon?.visibility = INVISIBLE
                 }
             }
 
@@ -405,18 +406,18 @@ private constructor(
                 if (!updateIconUi) {
                     return
                 }
-                originalIcon.setIconVisible(true)
+                originalIcon?.setIconVisible(true)
                 if (dragStarted) {
                     // Make sure we keep the original icon hidden while it is being dragged.
-                    originalIcon.visibility = INVISIBLE
+                    originalIcon?.visibility = INVISIBLE
                 } else {
                     // TODO: add WW logging if want to add logging for long press on popup
                     //  container.
                     //  mLauncher.getUserEventDispatcher().logDeepShortcutsOpen(mOriginalIcon);
                     if (!mIsAboveIcon) {
                         // Show the icon but keep the text hidden.
-                        originalIcon.visibility = VISIBLE
-                        originalIcon.setTextVisibility(false)
+                        originalIcon?.visibility = VISIBLE
+                        originalIcon?.setTextVisibility(false)
                     }
                 }
             }
@@ -425,15 +426,15 @@ private constructor(
 
     override fun onCreateCloseAnimation(anim: AnimatorSet) {
         // Animate original icon's text back in.
-        anim.play(originalIcon.createTextAlphaAnimator(true /* fadeIn */))
-        originalIcon.forceHideDot = false
+        originalIcon?.let { anim.play(it.createTextAlphaAnimator(true /* fadeIn */)) }
+        originalIcon?.forceHideDot = false
     }
 
     override fun closeComplete() {
         super.closeComplete()
         mActivityContext?.getDragController<DragController<*>>()?.removeDragListener(this)
         val openPopup = getOpen<T>(mActivityContext)
-        if (openPopup == null || openPopup.originalView !== originalIcon) {
+        if (originalIcon != null && (openPopup == null || openPopup.originalView !== originalIcon)) {
             originalIcon.setTextVisibility(originalIcon.shouldTextBeVisible())
             originalIcon.forceHideDot = false
         }
@@ -526,6 +527,37 @@ private constructor(
          * @param updateIconUi Whether to update the icon UI during drag and drop.
          * @return A new instance of [PopupContainerWithArrow].
          */
+        @JvmStatic
+        fun showForCompose(
+            launcher: Launcher,
+            composeView: View,
+            iconBoundsOnScreen: RectF,
+            item: ItemInfo
+        ): PopupContainerWithArrow<Launcher>? {
+            val openView = getOpen(launcher)
+            if (openView != null) {
+                openView.close(false)
+            }
+            if (!ShortcutUtil.supportsShortcuts(item)) {
+                return null
+            }
+            val popupDataProvider = launcher.activityComponent.popupDataProvider
+            val deepShortcutCount = popupDataProvider.getShortcutCountForItem(item)
+            val systemShortcuts = launcher.getSupportedShortcuts(item)
+                .map { s -> s.getShortcut(launcher, item, composeView) }
+                .filter { it != null }
+                .collect(java.util.stream.Collectors.toList())
+            val container = create<Launcher>(
+                context = composeView.context,
+                originalView = composeView,
+                itemInfo = item
+            )
+            container.populateAndShowRows(deepShortcutCount, systemShortcuts)
+            launcher.refreshAndBindWidgetsForPackageUser(
+                com.android.launcher3.util.PackageUserKey.fromItemInfo(item))
+            container.requestFocus()
+            return container
+        }
         @JvmStatic
         fun <T> create(
             context: Context,

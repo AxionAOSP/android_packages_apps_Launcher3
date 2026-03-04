@@ -60,4 +60,8 @@ public class SearchRecyclerView extends AllAppsRecyclerView {
     public RecyclerViewFastScroller getScrollbar() {
         return null;
     }
+    @Override
+    public void setVisibility(int visibility) {
+        super.setVisibility(View.GONE);
+    }
 }
