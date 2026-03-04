@@ -139,7 +139,7 @@
         The settings activity. To extend point settings_fragment_name to appropriate fragment class
         -->
         <activity
-            android:name="com.android.launcher3.settings.SettingsActivity"
+            android:name="com.android.launcher3.settings.PulseSettingsActivity"
             android:label="@string/settings_button_text"
             android:theme="@style/HomeSettings.Theme"
             android:exported="true"
