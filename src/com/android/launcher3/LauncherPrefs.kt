@@ -256,6 +256,11 @@ constructor(@ApplicationContext private val encryptedContext: Context) {
         @JvmField val SLEEP_GESTURE = backedUpItem("pref_sleep_gesture", false)
         @JvmField
         val PROMISE_ICON_IDS = nonRestorableItem(InstallSessionHelper.PROMISE_ICON_IDS, "")
+        @JvmField val WORKSPACE_ICON_SCALE = backedUpItem("pref_workspace_icon_scale", 1.0f)
+        @JvmField val ALLAPPS_ICON_SCALE = backedUpItem("pref_allapps_icon_scale", 1.0f)
+        @JvmField val DRAWER_LAYOUT_MODE = backedUpItem("pref_drawer_layout_mode", "dynamic")
+        @JvmField val ALL_APPS_BG_OPACITY = backedUpItem("pref_all_apps_bg_opacity", 255)
+        @JvmField val SHOW_ALLAPPS_PREDICTIONS = backedUpItem("pref_all_apps_predictions", true)
         @JvmField val WORK_EDU_STEP = backedUpItem("showed_work_profile_edu", 0)
         @JvmField
         val WORKSPACE_SIZE =
@@ -317,6 +322,10 @@ constructor(@ApplicationContext private val encryptedContext: Context) {
         val FIXED_LANDSCAPE_MODE = backedUpItem(SettingsActivity.FIXED_LANDSCAPE_MODE, false)
 
         @JvmField
+        val DISABLE_WALLPAPER_ZOOM = backedUpItem("pref_disable_wallpaper_zoom", false)
+        @JvmField val SEARCH_SHOW_WEB_ACTIONS = backedUpItem("pref_search_show_web_actions", true)
+        @JvmField val SEARCH_SHOW_IN_APP_SEARCH = backedUpItem("pref_search_show_in_app_search", true)
+        @JvmField
         val NON_FIXED_LANDSCAPE_GRID_NAME =
             ConstantItem(
                 NON_FIXED_LANDSCAPE_GRID_NAME_PREFS_KEY,
@@ -365,6 +374,9 @@ constructor(@ApplicationContext private val encryptedContext: Context) {
         @Deprecated("Don't use shared preferences directly. Use other LauncherPref methods.")
         @JvmStatic
         fun getPrefs(context: Context) = INSTANCE[context].backedUpPrefs
+        @Deprecated("Don't use shared preferences directly. Use other LauncherPref methods.")
+        @JvmStatic
+        fun getDevicePrefs(context: Context) = INSTANCE[context].devicePrefs
     }
 }
 
