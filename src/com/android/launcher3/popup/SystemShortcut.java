@@ -48,6 +48,8 @@ import com.android.launcher3.util.ComponentKey;
 import com.android.launcher3.util.InstantAppResolver;
 import com.android.launcher3.util.PackageManagerHelper;
 import com.android.launcher3.util.PackageUserKey;
+import com.android.launcher3.allapps.compose.data.AppCategoryManager;
+import com.android.launcher3.allapps.compose.data.PinnedAppsManager;
 import com.android.launcher3.views.ActivityContext;
 import com.android.launcher3.views.Snackbar;
 import com.android.launcher3.widget.WidgetsBottomSheet;
@@ -276,7 +278,6 @@ public abstract class SystemShortcut<T extends ActivityContext> extends ItemInfo
         }
     }
 
-
     public static final Factory<ActivityContext> ADD_TO_HOME_SCREEN =
             (activity, itemInfo, originalView) -> {
                 if (itemInfo.container != CONTAINER_ALL_APPS
@@ -496,6 +497,83 @@ public abstract class SystemShortcut<T extends ActivityContext> extends ItemInfo
                 AbstractFloatingView.TYPE_ALL & ~AbstractFloatingView.TYPE_REBIND_SAFE);
     }
 
+    public static final Factory<ActivityContext> PIN_TO_TOP =
+            (context, itemInfo, originalView) -> {
+                if (originalView == null) {
+                    return null;
+                }
+                if (!(itemInfo instanceof com.android.launcher3.model.data.AppInfo)
+                        || itemInfo.container != LauncherSettings.Favorites.CONTAINER_ALL_APPS) {
+                    return null;
+                }
+                return new PinToTop<>(context, itemInfo, originalView);
+            };
+    public static class PinToTop<T extends ActivityContext> extends SystemShortcut<T> {
+        private final PinnedAppsManager mManager;
+        public PinToTop(T target, ItemInfo itemInfo, @NonNull View originalView) {
+            super(R.drawable.ic_pin,
+                    isPinnedApp(originalView.getContext(), itemInfo)
+                        ? R.string.action_unpin
+                        : R.string.action_pin_to_top,
+                    target, itemInfo, originalView, false);
+            mManager = new PinnedAppsManager(originalView.getContext());
+        }
+        private static boolean isPinnedApp(Context context, ItemInfo itemInfo) {
+            if (itemInfo.getTargetComponent() == null) return false;
+            PinnedAppsManager manager = new PinnedAppsManager(context);
+            return manager.isPinned(itemInfo.getTargetComponent().flattenToString());
+        }
+        @Override
+        public void onClick(View view) {
+            if (mItemInfo.getTargetComponent() == null) return;
+            String componentName = mItemInfo.getTargetComponent().flattenToString();
+            mManager.togglePin(componentName);
+            AbstractFloatingView.closeAllOpenViews(mTarget);
+        }
+    }
+    public static final Factory<ActivityContext> ADD_TO_FOLDER =
+            (context, itemInfo, originalView) -> {
+                if (originalView == null) return null;
+                if (!(itemInfo instanceof com.android.launcher3.model.data.AppInfo)
+                        || itemInfo.container != LauncherSettings.Favorites.CONTAINER_ALL_APPS) {
+                    return null;
+                }
+                return new AddToFolder<>(context, itemInfo, originalView);
+            };
+    public static class AddToFolder<T extends ActivityContext> extends SystemShortcut<T> {
+        private final boolean mIsInFolder;
+        private final AppCategoryManager mCategoryManager;
+        public AddToFolder(T target, ItemInfo itemInfo, @NonNull View originalView) {
+            super(R.drawable.ic_folder_add,
+                    isInCustomFolder(originalView.getContext(), itemInfo)
+                        ? R.string.action_remove_from_folder
+                        : R.string.action_add_to_folder,
+                    target, itemInfo, originalView, false);
+            mCategoryManager = new AppCategoryManager(originalView.getContext());
+            mIsInFolder = isInCustomFolder(originalView.getContext(), itemInfo);
+        }
+        private static boolean isInCustomFolder(Context context, ItemInfo itemInfo) {
+            if (itemInfo.getTargetComponent() == null) return false;
+            AppCategoryManager manager = new AppCategoryManager(context);
+            String component = itemInfo.getTargetComponent().flattenToString();
+            Integer override = manager.getOverride(component);
+            return override != null && override >= AppCategoryManager.CUSTOM_ID_START;
+        }
+        @Override
+        public void onClick(View view) {
+            if (mItemInfo.getTargetComponent() == null) return;
+            String componentName = mItemInfo.getTargetComponent().flattenToString();
+            if (mIsInFolder) {
+                mCategoryManager.removeOverride(componentName);
+                AbstractFloatingView.closeAllOpenViews(mTarget);
+            } else {
+                AbstractFloatingView.closeAllOpenViews(mTarget);
+                if (mTarget instanceof com.android.launcher3.Launcher launcher) {
+                    launcher.getAppsView().showFolderPickerForApp(componentName);
+                }
+            }
+        }
+    }
     public static final Factory<ActivityContext> BUBBLE_SHORTCUT =
             (activity, itemInfo, originalView) -> {
                 if ((itemInfo.itemType != LauncherSettings.Favorites.ITEM_TYPE_DEEP_SHORTCUT)

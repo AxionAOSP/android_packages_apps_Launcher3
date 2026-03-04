@@ -1577,6 +1577,12 @@ public class QuickstepTransitionManager implements OnDeviceProfileChangeListener
                             ? null
                             : mLauncher.getTaskbarInteractor().findMatchingAsyncView(launcherView),
                     true /* hideOriginal */, targetRect, false /* isOpening */);
+            if (targetRect.left == 0 && targetRect.top == 0
+                    && targetRect.width() <= 0 && targetRect.height() <= 0) {
+                floatingIconView.fastFinish();
+                floatingIconView = null;
+                targetRect.set(getDefaultWindowTargetRect());
+            }
         } else {
             targetRect.set(getDefaultWindowTargetRect());
         }

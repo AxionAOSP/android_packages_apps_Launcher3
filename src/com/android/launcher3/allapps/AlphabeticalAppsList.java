@@ -259,7 +259,7 @@ public class AlphabeticalAppsList implements AllAppsStore.OnUpdateListener {
 
         // As a special case for some languages (currently only Simplified Chinese), we may need to
         // coalesce sections
-        Locale curLocale = mActivityContext.getResources().getConfiguration().locale;
+        Locale curLocale = mActivityContext.asContext().getResources().getConfiguration().locale;
         Locale normalizedLocale = new Locale.Builder()
                 .setLanguage(curLocale.getLanguage())
                 .setRegion(curLocale.getCountry())

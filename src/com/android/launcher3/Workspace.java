@@ -61,6 +61,7 @@ import android.graphics.Bitmap;
 import android.graphics.Point;
 import android.graphics.PointF;
 import android.graphics.Rect;
+import android.graphics.RectF;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Bundle;
@@ -97,6 +98,8 @@ import com.android.launcher3.celllayout.CellPosMapper.CellPos;
 import com.android.launcher3.config.FeatureFlags;
 import com.android.launcher3.debug.TestEventEmitter;
 import com.android.launcher3.debug.TestEventEmitter.TestEvent;
+import com.android.launcher3.allapps.compose.ui.view.ComposeAppIconView;
+import com.android.launcher3.allapps.compose.ui.ComposeDragPreviewProvider;
 import com.android.launcher3.dragndrop.DragController;
 import com.android.launcher3.dragndrop.DragLayer;
 import com.android.launcher3.dragndrop.DragOptions;
@@ -782,7 +785,6 @@ public class Workspace<T extends View & PageIndicator> extends PagedView<T>
             }
         });
     }
-
 
     /**
      * Returns if the given screenId is already in the Workspace
@@ -1738,6 +1740,14 @@ public class Workspace<T extends View & PageIndicator> extends PagedView<T>
      * Core functionality for beginning a drag operation for an item that will be dropped within
      * the workspace
      */
+    public DragView beginDragFromCompose(ItemInfo info, ComposeAppIconView cav,
+            RectF iconBounds, DragSource source, DragOptions options) {
+        Rect bounds = new Rect();
+        iconBounds.round(bounds);
+        ComposeDragPreviewProvider previewProvider =
+                new ComposeDragPreviewProvider(cav, cav.getIcon(), cav.getIconSizePx(), bounds);
+        return beginDragShared(cav, cav, source, info, previewProvider, options);
+    }
     public DragView beginDragShared(View child, DraggableView draggableView, DragSource source,
             ItemInfo dragObject, DragPreviewProvider previewProvider, DragOptions dragOptions) {
 
@@ -1782,7 +1792,6 @@ public class Workspace<T extends View & PageIndicator> extends PagedView<T>
             draggableView.getSourceVisualDragBounds(dragRect);
             dragLayerY += dragRect.top;
         }
-
 
         if (child.getParent() instanceof ShortcutAndWidgetContainer) {
             mDragSourceInternal = (ShortcutAndWidgetContainer) child.getParent();

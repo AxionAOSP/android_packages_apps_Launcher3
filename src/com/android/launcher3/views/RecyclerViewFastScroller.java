@@ -537,4 +537,8 @@ public class RecyclerViewFastScroller extends View {
         // alpha is so low, it does not matter.
         return false;
     }
+    @Override
+    public void setVisibility(int visibility) {
+        super.setVisibility(View.GONE);
+    }
 }

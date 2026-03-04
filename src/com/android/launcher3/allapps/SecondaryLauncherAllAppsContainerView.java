@@ -41,6 +41,13 @@ public class SecondaryLauncherAllAppsContainerView extends
     }
 
     @Override
+    protected void onAttachedToWindow() {
+        super.onAttachedToWindow();
+        onDeviceProfileChanged(mActivityContext.getDeviceProfile());
+        onAllAppsTransitionProgress(1f);
+    }
+
+    @Override
     protected void updateBackgroundVisibility(DeviceProfile deviceProfile) {}
 
     @Override

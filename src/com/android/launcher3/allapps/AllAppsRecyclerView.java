@@ -413,4 +413,8 @@ public class AllAppsRecyclerView extends FastScrollRecyclerView {
                 ? LAUNCHER_ALLAPPS_PERSONAL_SCROLLED_DOWN
                 : LAUNCHER_ALLAPPS_PERSONAL_SCROLLED_UP);
     }
+    @Override
+    public void setVisibility(int visibility) {
+        super.setVisibility(View.GONE);
+    }
 }

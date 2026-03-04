@@ -30,7 +30,9 @@ import static com.android.launcher3.anim.PropertySetter.NO_ANIM_PROPERTY_SETTER;
 import static com.android.launcher3.states.StateAnimationConfig.ANIM_ALL_APPS_FADE;
 import static com.android.launcher3.states.StateAnimationConfig.ANIM_VERTICAL_PROGRESS;
 import static com.android.launcher3.util.SystemUiController.FLAG_DARK_NAV;
+import static com.android.launcher3.util.SystemUiController.FLAG_DARK_STATUS;
 import static com.android.launcher3.util.SystemUiController.FLAG_LIGHT_NAV;
+import static com.android.launcher3.util.SystemUiController.FLAG_LIGHT_STATUS;
 import static com.android.launcher3.util.SystemUiController.UI_STATE_ALL_APPS;
 
 import android.animation.Animator;
@@ -44,6 +46,7 @@ import android.view.animation.Interpolator;
 
 import androidx.annotation.FloatRange;
 import androidx.annotation.Nullable;
+import androidx.core.graphics.ColorUtils;
 
 import com.android.launcher3.DeviceProfile;
 import com.android.launcher3.DeviceProfile.OnDeviceProfileChangeListener;
@@ -110,7 +113,9 @@ public class AllAppsTransitionController
                 @Override
                 public Float get(AllAppsTransitionController controller) {
                     if (controller.mShouldShowAllAppsOnSheet) {
-                        return controller.mAppsView.getActiveRecyclerView().getTranslationY();
+                        View rv = controller.getActiveOrContentView();
+                        return rv != null ? rv.getTranslationY()
+                                : ALL_APPS_PULL_BACK_TRANSLATION_DEFAULT;
                     } else {
                         return controller.getAppsViewPullbackTranslationY().getValue();
                     }
@@ -119,13 +124,16 @@ public class AllAppsTransitionController
                 @Override
                 public void setValue(AllAppsTransitionController controller, float translation) {
                     if (controller.mShouldShowAllAppsOnSheet) {
-                        controller.mAppsView.getActiveRecyclerView().setTranslationY(translation);
+                        View rv = controller.getActiveOrContentView();
+                        if (rv != null) rv.setTranslationY(translation);
                         controller.getAppsViewPullbackTranslationY().setValue(
                                 ALL_APPS_PULL_BACK_TRANSLATION_DEFAULT);
                     } else {
                         controller.getAppsViewPullbackTranslationY().setValue(translation);
-                        controller.mAppsView.getActiveRecyclerView().setTranslationY(
-                                ALL_APPS_PULL_BACK_TRANSLATION_DEFAULT);
+                        View rv = controller.getActiveOrContentView();
+                        if (rv != null) {
+                            rv.setTranslationY(ALL_APPS_PULL_BACK_TRANSLATION_DEFAULT);
+                        }
                     }
                 }
             };
@@ -138,7 +146,8 @@ public class AllAppsTransitionController
                 @Override
                 public Float get(AllAppsTransitionController controller) {
                     if (controller.mShouldShowAllAppsOnSheet) {
-                        return controller.mAppsView.getActiveRecyclerView().getAlpha();
+                        View rv = controller.getActiveOrContentView();
+                        return rv != null ? rv.getAlpha() : ALL_APPS_PULL_BACK_ALPHA_DEFAULT;
                     } else {
                         return controller.getAppsViewPullbackAlpha().getValue();
                     }
@@ -147,13 +156,16 @@ public class AllAppsTransitionController
                 @Override
                 public void setValue(AllAppsTransitionController controller, float alpha) {
                     if (controller.mShouldShowAllAppsOnSheet) {
-                        controller.mAppsView.getActiveRecyclerView().setAlpha(alpha);
+                        View rv = controller.getActiveOrContentView();
+                        if (rv != null) rv.setAlpha(alpha);
                         controller.getAppsViewPullbackAlpha().setValue(
                                 ALL_APPS_PULL_BACK_ALPHA_DEFAULT);
                     } else {
                         controller.getAppsViewPullbackAlpha().setValue(alpha);
-                        controller.mAppsView.getActiveRecyclerView().setAlpha(
-                                ALL_APPS_PULL_BACK_ALPHA_DEFAULT);
+                        View rv = controller.getActiveOrContentView();
+                        if (rv != null) {
+                            rv.setAlpha(ALL_APPS_PULL_BACK_ALPHA_DEFAULT);
+                        }
                     }
                 }
             };
@@ -221,7 +233,10 @@ public class AllAppsTransitionController
             mLauncher.getWorkspace().getPageIndicator().setTranslationY(0);
         }
 
+        boolean wasSheet = mShouldShowAllAppsOnSheet;
         mShouldShowAllAppsOnSheet = dp.shouldShowAllAppsOnSheet();
+        View appsView = mAppsView;
+        View rv = getActiveOrContentView();
     }
 
     /**
@@ -240,11 +255,17 @@ public class AllAppsTransitionController
         float shiftRange = fromBackground ? mLauncher.getDeviceProfile().getDeviceProperties().getHeightPx() : mShiftRange;
         getAppsViewProgressTranslationY().setValue(mProgress * shiftRange);
         mLauncher.onAllAppsTransition(1 - progress);
+        mLauncher.getAppsView().onAllAppsTransitionProgress(1 - progress);
 
         boolean hasScrim = progress < NAV_BAR_COLOR_FORCE_UPDATE_THRESHOLD
                 && mLauncher.getAppsView().getNavBarScrimHeight() > 0;
-        mLauncher.getSystemUiController().updateUiState(
-                UI_STATE_ALL_APPS, hasScrim ? mNavScrimFlag : 0);
+        int flags = hasScrim ? mNavScrimFlag : 0;
+        if (mLauncher.getAppsView().isUsingCompose() && progress < NAV_BAR_COLOR_FORCE_UPDATE_THRESHOLD) {
+            int surfaceColor = mLauncher.getColor(R.color.materialColorSurfaceContainer);
+            boolean isLight = ColorUtils.calculateLuminance(surfaceColor) >= 0.5;
+            flags |= isLight ? FLAG_LIGHT_STATUS : FLAG_DARK_STATUS;
+        }
+        mLauncher.getSystemUiController().updateUiState(UI_STATE_ALL_APPS, flags);
     }
 
     public float getProgress() {
@@ -267,13 +288,19 @@ public class AllAppsTransitionController
         return mAppsViewAlpha.get(INDEX_APPS_VIEW_PULLBACK);
     }
 
+    private View getActiveOrContentView() {
+        AllAppsRecyclerView rv = mAppsView.getActiveRecyclerView();
+        return rv != null ? rv : mAppsView.getContentView();
+    }
+
     /**
      * Sets the vertical transition progress to {@param state} and updates all the dependent UI
      * accordingly.
      */
     @Override
     public void setState(LauncherState state) {
-        setProgress(state.getVerticalProgress(mLauncher));
+        float vp = state.getVerticalProgress(mLauncher);
+        setProgress(vp);
         setAlphas(state, new StateAnimationConfig(), NO_ANIM_PROPERTY_SETTER);
     }
 
@@ -304,20 +331,19 @@ public class AllAppsTransitionController
             mLauncher.getScrimView().setScrimHeaderScale(scaleProgress);
         }
 
-        AllAppsRecyclerView rv = mLauncher.getAppsView().getActiveRecyclerView();
+        View rv = getActiveOrContentView();
 
-        // Disable view clipping from all apps' RecyclerView up to all apps view during scale
-        // animation, and vice versa. The goal is to display extra roll(s) app icons (rendered in
-        // {@link AppsGridLayoutManager#calculateExtraLayoutSpace}) during scale animation.
         boolean hasScaleEffect = scaleProgress < 1f;
         if (hasScaleEffect != mHasScaleEffect) {
             mHasScaleEffect = hasScaleEffect;
-            if (mHasScaleEffect) {
-                modifyAttributesOnViewTree(rv, mLauncher.getAppsView(),
-                        CLIP_CHILDREN_FALSE_MODIFIER);
-            } else {
-                restoreAttributesOnViewTree(rv, mLauncher.getAppsView(),
-                        CLIP_CHILDREN_FALSE_MODIFIER);
+            if (rv != null) {
+                if (mHasScaleEffect) {
+                    modifyAttributesOnViewTree(rv, mLauncher.getAppsView(),
+                            CLIP_CHILDREN_FALSE_MODIFIER);
+                } else {
+                    restoreAttributesOnViewTree(rv, mLauncher.getAppsView(),
+                            CLIP_CHILDREN_FALSE_MODIFIER);
+                }
             }
         }
     }
@@ -401,19 +427,6 @@ public class AllAppsTransitionController
         builder.add(anim);
 
         setAlphas(toState, config, builder);
-        // This controls both haptics for tapping on QSB and going to all apps.
-        if (ALL_APPS.equals(toState) && mLauncher.isInState(NORMAL)) {
-            if (Flags.msdlFeedback()) {
-                if (config.isUserControlled()) {
-                    mMSDLPlayerWrapper.playToken(MSDLToken.SWIPE_THRESHOLD_INDICATOR);
-                } else {
-                    mMSDLPlayerWrapper.playToken(MSDLToken.TAP_HIGH_EMPHASIS);
-                }
-            } else {
-                mLauncher.getAppsView().performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY,
-                        HapticFeedbackConstants.FLAG_IGNORE_VIEW_SETTING);
-            }
-        }
     }
 
     public Animator createSpringAnimation(float... progressValues) {
