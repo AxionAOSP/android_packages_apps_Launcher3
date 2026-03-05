@@ -42,6 +42,7 @@ import androidx.annotation.VisibleForTesting;
 import com.android.app.animation.Interpolators;
 import com.android.launcher3.Flags;
 import com.android.launcher3.Launcher;
+import com.android.launcher3.LauncherPrefs;
 import com.android.launcher3.LauncherState;
 import com.android.launcher3.R;
 import com.android.launcher3.Utilities;
@@ -219,7 +220,11 @@ public class BaseDepthController {
         float depth = mDepth;
         IBinder windowToken = mLauncher.getRootView().getWindowToken();
         if (windowToken != null) {
-            mWallpaperManager.setWallpaperZoomOut(windowToken, depth);
+            if (LauncherPrefs.get(mLauncher).get(LauncherPrefs.DISABLE_WALLPAPER_ZOOM)) {
+                mWallpaperManager.setWallpaperZoomOut(windowToken, 0f);
+            } else {
+                mWallpaperManager.setWallpaperZoomOut(windowToken, depth);
+            }
         }
 
         if (!BlurUtils.supportsBlursOnWindows()) {
