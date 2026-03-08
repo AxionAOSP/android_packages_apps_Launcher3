@@ -263,7 +263,7 @@
     <string name="app_minimized_state_description">Simge durumuna küçültülmüş</string>
     <!-- Folder accessibility -->
     <!-- The format string for when a folder is opened, speaks the dimensions -->
-    <string name="folder_opened">Folder opened, <xliff:g id="width" example="5">%1$d</xliff:g> by <xliff:g id="height" example="3">%2$d</xliff:g></string>
+    <string name="folder_opened">Klasör açıldı, boyut: <xliff:g id="width" example="5">%1$d</xliff:g> x <xliff:g id="height" example="3">%2$d</xliff:g></string>
     <!-- Instruction that clicking outside will close folder -->
     <string name="folder_tap_to_close">Klasörü kapatmak için dokunun</string>
     <!-- Instruction that clicking outside will commit folder rename -->
@@ -271,16 +271,16 @@
     <!-- Indication that folder closed -->
     <string name="folder_closed">Klasör kapatıldı</string>
     <!-- Folder renamed format -->
-    <string name="folder_renamed">Folder renamed to <xliff:g id="name" example="Games">%1$s</xliff:g></string>
+    <string name="folder_renamed">Klasör adı <xliff:g id="name" example="Games">%1$s</xliff:g> olarak değiştirildi</string>
     <!-- Folder name format when folder has less than 4 items -->
-    <string name="folder_name_format_exact">Folder: <xliff:g id="name" example="Games">%1$s</xliff:g>, <xliff:g id="size" example="2">%2$d</xliff:g> items</string>
+    <string name="folder_name_format_exact">Klasör: <xliff:g id="name" example="Games">%1$s</xliff:g>, <xliff:g id="size" example="2">%2$d</xliff:g> öğe</string>
     <!-- Folder name format when folder has 4 or more items shown in preview-->
-    <string name="folder_name_format_overflow">Folder: <xliff:g id="name" example="Games">%1$s</xliff:g>, <xliff:g id="size" example="2">%2$d</xliff:g> or more items</string>
+    <string name="folder_name_format_overflow">Klasör: <xliff:g id="name" example="Games">%1$s</xliff:g>, <xliff:g id="size" example="2">%2$d</xliff:g> veya daha fazla öğe</string>
     <!-- Accessibility announement for unnamed folders -->
     <string name="unnamed_folder">Adsız klasör</string>
     <!-- App pair accessibility -->
     <!-- App pair name -->
-    <string name="app_pair_name_format">App pair: <xliff:g id="app1" example="Chrome">%1$s</xliff:g> and <xliff:g id="app2" example="YouTube">%2$s</xliff:g></string>
+    <string name="app_pair_name_format">Uygulama çifti: <xliff:g id="app1" example="Chrome">%1$s</xliff:g> ve <xliff:g id="app2" example="YouTube">%2$s</xliff:g></string>
     <!-- Strings for the customization mode -->
     <!-- Text for wallpaper change button [CHAR LIMIT=30]-->
     <string name="styles_wallpaper_button_text">Duvar kağıdı ve stil</string>
@@ -308,7 +308,7 @@
     <!-- Title for the dialog shown when the app does not has notification access, explaining the requirement for notification access [CHAR LIMIT=50] -->
     <string name="title_missing_notification_access">Bildirim erişimi gerekli</string>
     <!-- Message explaining to the user that the notification access is required by the app for showing 'Notification dots' [CHAR LIMIT=NONE] -->
-    <string name="msg_missing_notification_access">To show Notification Dots, turn on app notifications for <xliff:g id="name" example="My App">%1$s</xliff:g></string>
+    <string name="msg_missing_notification_access">Bildirim noktalarını göstermek için, <xliff:g id="name" example="My App">%1$s</xliff:g> uygulamasının bildirimlerini aç</string>
     <!-- Button text in the confirmation dialog which would take the user to the system settings [CHAR LIMIT=50] -->
     <string name="title_change_settings">Ayarları değiştir</string>
     <!-- Summary for Notification dots setting. Tapping this will link enable/disable notification dots feature on the home screen. [CHAR LIMIT=50] -->
@@ -331,9 +331,9 @@
     The second "it" refers to the app. -->
     <string name="abandoned_promise_explanation">Bu simgenin uygulaması yüklü değil. Uygulamayı kaldırabilir veya arayıp manuel olarak yükleyebilirsiniz.</string>
     <!-- Title for an app which is being installed. -->
-    <string name="app_installing_title"><xliff:g id="name" example="Messenger">%1$s</xliff:g> installing, <xliff:g id="progress" example="30%">%2$s</xliff:g> complete</string>
+    <string name="app_installing_title"><xliff:g id="name" example="Messenger">%1$s</xliff:g> yükleniyor, <xliff:g id="progress" example="30%">%2$s</xliff:g> tamamlandı</string>
     <!-- Title for an app which is being downloaded. -->
-    <string name="app_downloading_title"><xliff:g id="name" example="Messenger">%1$s</xliff:g> downloading, <xliff:g id="progress" example="30%">%2$s</xliff:g> complete</string>
+    <string name="app_downloading_title"><xliff:g id="name" example="Messenger">%1$s</xliff:g> indiriliyor, <xliff:g id="progress" example="30%">%2$s</xliff:g> tamamlandı</string>
     <!-- Title for an app whose download has been started. -->
     <string name="app_waiting_download_title"><xliff:g id="name" example="Messenger">%1$s</xliff:g> waiting to install</string>
     <!-- Title for an app which is archived. -->
@@ -396,11 +396,11 @@
     <!-- Accessibility action to decrease height of a widget. [CHAR_LIMIT=30] -->
     <string name="action_decrease_height">Yüksekliği azalt</string>
     <!-- Accessibility confirmation for widget resize. -->
-    <string name="widget_resized">Widget resized to width <xliff:g id="number" example="2">%1$s</xliff:g> height <xliff:g id="number" example="1">%2$s</xliff:g></string>
+    <string name="widget_resized">Pencere öğesi <xliff:g id="number" example="2">%1$s</xliff:g> genişliğinde, <xliff:g id="number" example="1">%2$s</xliff:g> yüksekliğinde yeniden boyutlandırıldı</string>
     <!-- Accessibility action to show quick actions menu for an icon. [CHAR_LIMIT=30] -->
     <string name="action_deep_shortcut">Kısayol Menüsü</string>
     <!-- Accessibility name for the app widget resize frame. -->
-    <string name="widget_frame_name">Widget Resize Frame for <xliff:g id="string" example="Clock">%1$s</xliff:g></string>
+    <string name="widget_frame_name"><xliff:g id="string" example="Clock">%1$s</xliff:g> boyutlandırma çerçevesi</string>
     <!-- Accessibility action to close the widget resize frame. [CHAR_LIMIT=30] -->
     <string name="action_close">Kapat</string>
     <!-- Accessibility action to dismiss a notification in the shortcuts menu for an icon. [CHAR_LIMIT=30] -->
