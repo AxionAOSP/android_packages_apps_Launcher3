@@ -64,6 +64,15 @@ constructor(
             )
             lifecycleTracker.addCloseable(receiver)
         }
+
+        val themeReceiver =
+            SimpleBroadcastReceiver(context = context, executor = executor) {
+                if (ACTION_THEME_CHANGED == it.action) {
+                    dispatchFullIconReload()
+                }
+            }
+        themeReceiver.register(actionsFilter(ACTION_THEME_CHANGED))
+        lifecycleTracker.addCloseable(themeReceiver)
     }
 
     private fun handleIntent(intent: Intent) {
@@ -83,12 +92,20 @@ constructor(
             userCache.userProfiles.forEach { notifyIconChanged(calendar.packageName, it) }
     }
 
+    private fun dispatchFullIconReload() {
+        userCache.userProfiles.forEach {
+            _changes.dispatchValue(PackageUserKey("", it))
+        }
+    }
+
     /** Notifies icon change event for [packageName] corresponding to [user] */
     fun notifyIconChanged(packageName: String, user: UserHandle) {
         _changes.dispatchValue(PackageUserKey(packageName, user))
     }
 
     companion object {
+        private const val ACTION_THEME_CHANGED = "android.intent.action.THEME_ENGINE_CHANGED"
+
         private fun Context.parseComponentOrNull(resId: Int): ComponentName? {
             val cn = getString(resId)
             return if (TextUtils.isEmpty(cn)) null else ComponentName.unflattenFromString(cn)

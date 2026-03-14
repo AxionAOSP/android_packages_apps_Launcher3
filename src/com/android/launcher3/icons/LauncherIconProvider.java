@@ -15,9 +15,15 @@
  */
 package com.android.launcher3.icons;
 
+import android.content.ComponentName;
 import android.content.Context;
+import android.content.pm.ActivityInfo;
+import android.content.pm.ComponentInfo;
 import android.content.res.Resources;
+import android.content.res.ThemeEngine;
 import android.content.res.XmlResourceParser;
+import android.graphics.drawable.BitmapDrawable;
+import android.graphics.drawable.Drawable;
 import android.text.TextUtils;
 import android.util.ArrayMap;
 import android.util.Log;
@@ -72,6 +78,29 @@ public class LauncherIconProvider extends IconProvider {
         mSystemState += "," + mThemeManager.getIconState().toUniqueId();
     }
 
+    @Override
+    public Drawable getIcon(ComponentInfo info, int iconDpi) {
+        try {
+            if (info instanceof ActivityInfo) {
+                ActivityInfo activityInfo = (ActivityInfo) info;
+                ThemeEngine engine = ThemeEngine.getInstance(mContext);
+                if (engine != null) {
+                    Drawable themed = engine.getIconPackDrawable(
+                        new ComponentName(activityInfo.packageName, activityInfo.name), iconDpi);
+                    if (themed instanceof BitmapDrawable) {
+                        return new FullBleedBitmapDrawable(
+                                mContext.getResources(),
+                                ((BitmapDrawable) themed).getBitmap());
+                    } else if (themed != null) {
+                        return themed;
+                    }
+                }
+            }
+        } catch (Throwable t) {
+        }
+        return super.getIcon(info, iconDpi);
+    }
+
     private Map<String, ThemeData> getThemedIconMap() {
         if (mThemedIconMap != null) {
             return mThemedIconMap;
@@ -93,7 +122,7 @@ public class LauncherIconProvider extends IconProvider {
                     String pkg = parser.getAttributeValue(null, ATTR_PACKAGE);
                     int iconId = parser.getAttributeResourceValue(null, ATTR_DRAWABLE, 0);
                     if (iconId != 0 && !TextUtils.isEmpty(pkg)) {
-                        map.put(pkg, new ThemeData(res, iconId));
+                        map.put(pkg, new ThemeData(res, iconId, mContext));
                     }
                 }
             }

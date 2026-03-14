@@ -32,9 +32,11 @@ import android.graphics.Canvas;
 import android.graphics.Path;
 import android.graphics.Rect;
 import android.graphics.RectF;
+import android.content.res.ThemeEngine;
 import android.graphics.drawable.AdaptiveIconDrawable;
 import android.graphics.drawable.Drawable;
 import android.os.CancellationSignal;
+import android.provider.Settings;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.util.Pair;
@@ -371,8 +373,30 @@ public class FloatingIconView extends FrameLayout implements
         final InsettableFrameLayout.LayoutParams lp =
                 (InsettableFrameLayout.LayoutParams) getLayoutParams();
         mBadge = badge;
-        mClipIconView.setIcon(drawable, iconOffset, lp, mIsOpening, usingCustomShape, dp);
-        if (drawable instanceof AdaptiveIconDrawable) {
+
+        boolean hasIconPack = false;
+        boolean isAxIconsStyle = false;
+        try {
+            ThemeEngine engine = ThemeEngine.getInstance(mLauncher);
+            hasIconPack = engine != null && engine.hasActiveIconPack();
+            if (!hasIconPack) {
+                String style = Settings.Secure.getString(
+                        mLauncher.getContentResolver(), "themed_icon_style");
+                isAxIconsStyle = !"aosp".equals(style);
+            }
+        } catch (Throwable t) {
+        }
+        boolean useSimpleRendering = hasIconPack || isAxIconsStyle;
+
+        if (useSimpleRendering && drawable != null && !(drawable instanceof AdaptiveIconDrawable)) {
+            mClipIconView.setIcon(drawable, iconOffset, lp, mIsOpening, usingCustomShape, dp);
+        } else if (useSimpleRendering) {
+            Drawable simpleIcon = btvIcon != null ? btvIcon.get() : drawable;
+            mClipIconView.setIcon(simpleIcon, 0, lp, mIsOpening, usingCustomShape, dp);
+        } else {
+            mClipIconView.setIcon(drawable, iconOffset, lp, mIsOpening, usingCustomShape, dp);
+        }
+        if (!useSimpleRendering && drawable instanceof AdaptiveIconDrawable) {
             final int originalHeight = lp.height;
             final int originalWidth = lp.width;
 
