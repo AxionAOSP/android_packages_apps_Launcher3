@@ -18,6 +18,9 @@ package com.android.launcher3.graphics
 
 import android.content.Context
 import android.content.res.Resources
+import android.database.ContentObserver
+import android.net.Uri
+import android.provider.Settings
 import com.android.launcher3.LauncherPrefChangeListener
 import com.android.launcher3.LauncherPrefs
 import com.android.launcher3.LauncherPrefs.Companion.backedUpItem
@@ -96,12 +99,21 @@ constructor(
         lifecycle.addCloseable(receiver)
 
         val prefListener = LauncherPrefChangeListener {
-            if (it == PREF_ICON_SHAPE.sharedPrefKey) verifyIconState()
+            if (it == PREF_ICON_SHAPE.sharedPrefKey
+                || it == THEMED_ICON_STYLE.sharedPrefKey) {
+                verifyIconState()
+            }
         }
-        prefs.addListener(prefListener, PREF_ICON_SHAPE)
+        prefs.addListener(prefListener, PREF_ICON_SHAPE, THEMED_ICON_STYLE)
+
+        val settingsObserver = SettingsObserver()
+        settingsObserver.register()
+        syncSettingsToPrefs()
+
         lifecycle.addCloseable(themePreference.forEach(mainExecutor) { verifyIconState() })
         lifecycle.addCloseable {
-            prefs.removeListener(prefListener, PREF_ICON_SHAPE)
+            prefs.removeListener(prefListener, PREF_ICON_SHAPE, THEMED_ICON_STYLE)
+            settingsObserver.close()
             iconState.closeController()
         }
     }
@@ -171,6 +183,8 @@ constructor(
                 themeKey?.run { iconThemeFactories[factoryId]?.createController(themeId) }
             }
 
+        val themedIconStyle = prefs.get(THEMED_ICON_STYLE)
+
         return IconState(
             iconMask = iconMask,
             folderRadius = folderRadius,
@@ -179,6 +193,7 @@ constructor(
             folderShape = folderShape,
             shapeRadius = shapeModel?.shapeRadius ?: DEFAULT_ICON_RADIUS,
             themeCode = themeCode,
+            themedIconStyle = themedIconStyle,
         )
     }
 
@@ -192,8 +207,9 @@ constructor(
         val isCircle: Boolean = iconShape is ShapeDelegate.Circle,
         val folderShape: ShapeDelegate,
         val shapeRadius: Float,
+        val themedIconStyle: String = "axion",
     ) {
-        fun toUniqueId() = "$themeCode,$isCircle"
+        fun toUniqueId() = "$themeCode,$isCircle,$themedIconStyle"
 
         val iconShapeInfo = IconShapeInfo.fromPath(iconShape.getPath(), DEFAULT_PATH_SIZE_INT)
         val folderShapeInfo = IconShapeInfo.fromPath(folderShape.getPath(), DEFAULT_PATH_SIZE_INT)
@@ -202,6 +218,38 @@ constructor(
     private fun IconState.closeController() {
         if (themeController is SafeCloseable) {
             themeController.close()
+        }
+    }
+
+    private fun syncSettingsToPrefs() {
+        val contentResolver = context.contentResolver
+        val themedIconStyle = Settings.Secure.getString(
+            contentResolver, KEY_THEMED_ICON_STYLE) ?: "axion"
+        if (prefs.get(THEMED_ICON_STYLE) != themedIconStyle) {
+            prefs.put(THEMED_ICON_STYLE, themedIconStyle)
+        }
+
+        val enabled = Settings.Secure.getInt(contentResolver, KEY_THEMED_ICONS, 0) == 1
+        if (enabled != isMonoThemeEnabled) {
+            isMonoThemeEnabled = enabled
+        }
+    }
+
+    private inner class SettingsObserver : ContentObserver(uiExecutor.handler), AutoCloseable {
+        fun register() {
+            context.contentResolver.registerContentObserver(
+                Settings.Secure.getUriFor(KEY_THEMED_ICON_STYLE), false, this)
+            context.contentResolver.registerContentObserver(
+                Settings.Secure.getUriFor(KEY_THEMED_ICONS), false, this)
+        }
+
+        override fun onChange(selfChange: Boolean, uri: Uri?) {
+            super.onChange(selfChange, uri)
+            syncSettingsToPrefs()
+        }
+
+        override fun close() {
+            context.contentResolver.unregisterContentObserver(this)
         }
     }
 
@@ -214,10 +262,13 @@ constructor(
 
         @JvmField val INSTANCE = DaggerSingletonObject(LauncherAppComponent::getThemeManager)
         @JvmField val PREF_ICON_SHAPE = backedUpItem("icon_shape_model", "")
+        @JvmField val THEMED_ICON_STYLE = backedUpItem(KEY_THEMED_ICON_STYLE, "axion")
 
         @JvmField val DEFAULT_SHAPE_DELEGATE = pickBestShape(shapeStr = "")
 
         private const val ACTION_OVERLAY_CHANGED = "android.intent.action.OVERLAY_CHANGED"
+        private const val KEY_THEMED_ICONS = "themed_icons"
+        private const val KEY_THEMED_ICON_STYLE = "themed_icon_style"
         private val CONFIG_ICON_MASK_RES_ID: Int =
             Resources.getSystem().getIdentifier("config_icon_mask", "string", "android")
 
