@@ -481,7 +481,7 @@
     <string name="arch_shape_title">Kemer</string>
     <!-- DT2S -->
     <string name="pref_sleep_gesture_title">Çift dokunarak uyut</string>
-    <string name="pref_sleep_gesture_summary">Ekranı kapatmak için boş alana çift dokun</string>
+    <string name="pref_sleep_gesture_summary">Ekranı kapatmak için boş alana çift dokunun</string>
     <!-- All Apps Suggestions -->
     <string name="all_apps_suggestions_title">Önerileri göster</string>
     <string name="all_apps_suggestions_summary">Önerilen uygulamaları çekmecenin üstünde göster</string>
