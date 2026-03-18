@@ -43,9 +43,9 @@
     <string name="split_app_info_accessibility">%1$s için uygulama bilgileri</string>
     <string name="split_app_usage_settings">%1$s ile ilgili kullanım ayarları</string>
     <!-- Title for an option to open a new window for a given app   -->
-    <string name="new_window_option_taskbar">Yeni pencere</string>
+    <string name="new_window_option_taskbar">Yeni Pencere</string>
     <!-- Title for an option to manage open windows for a given app   -->
-    <string name="manage_windows_option_taskbar">Pencereleri yönet</string>
+    <string name="manage_windows_option_taskbar">Pencereleri Yönet</string>
     <!-- App pairs -->
     <string name="save_app_pair">Uygulama çiftini kaydedin</string>
     <!-- App pair default title -->
