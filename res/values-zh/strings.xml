@@ -248,127 +248,126 @@
     <string name="uninstall_system_app_text">无法卸载系统应用。</string>
     <!-- Default folder title -->
     <string name="folder_hint_text">编辑名称</string>
-    <string name="paginate_left">Paginate left</string>
-    <string name="paginate_right">Paginate right</string>
+    <string name="paginate_left">左分页</string>
+    <string name="paginate_right">右分页</string>
     <!-- Accessibility -->
     <!-- The format string for when an app is temporarily disabled. -->
-    <string name="disabled_app_label">Disabled <xliff:g id="app_name" example="Messenger">%1$s</xliff:g></string>
+    <string name="disabled_app_label">已禁用 <xliff:g id="app_name" example="Messenger">%1$s</xliff:g></string>
     <!-- The format string for when an app has a notification dot (meaning it has associated notifications). [ICU_FORMAT]-->
     <string name="dotted_app_label">        {count, plural,
-            =1      {{app_name} has # notification}
-            other   {{app_name} has # notifications}
+            =1      {{app_name} 有 # 条通知}
+            other   {{app_name} 有 # 条通知}
         }
     </string>
     <!-- The format string for default page scroll text [CHAR_LIMIT=none] -->
-    <string name="default_scroll_format">Page %1$d of %2$d</string>
+    <string name="default_scroll_format">页面 %1$d/%2$d</string>
     <!-- The format string for Workspace page scroll text [CHAR_LIMIT=none] -->
-    <string name="workspace_scroll_format">Home screen %1$d of %2$d</string>
+    <string name="workspace_scroll_format">主屏幕 %1$d / %2$d</string>
     <!-- Description for a new page on homescreen[CHAR_LIMIT=none] -->
-    <string name="workspace_new_page">New home screen page</string>
-    <string name="app_running_state_description">Active</string>
-    <string name="app_minimized_state_description">Minimized</string>
+    <string name="workspace_new_page">新页面</string>
+    <string name="app_running_state_description">启用</string>
+    <string name="app_minimized_state_description">最小化</string>
     <!-- Folder accessibility -->
     <!-- The format string for when a folder is opened, speaks the dimensions -->
-    <string name="folder_opened">Folder opened, <xliff:g id="width" example="5">%1$d</xliff:g> by <xliff:g id="height" example="3">%2$d</xliff:g></string>
+    <string name="folder_opened">文件夹已打开，<xliff:g id="width" example="5">%1$d</xliff:g> x <xliff:g id="height" example="3">%2$d</xliff:g></string>
     <!-- Instruction that clicking outside will close folder -->
-    <string name="folder_tap_to_close">Tap to close folder</string>
+    <string name="folder_tap_to_close">点击关闭文件夹</string>
     <!-- Instruction that clicking outside will commit folder rename -->
-    <string name="folder_tap_to_rename">Tap to save rename</string>
+    <string name="folder_tap_to_rename">点击以重命名</string>
     <!-- Indication that folder closed -->
-    <string name="folder_closed">Folder closed</string>
+    <string name="folder_closed">文件夹已关闭</string>
     <!-- Folder renamed format -->
-    <string name="folder_renamed">Folder renamed to <xliff:g id="name" example="Games">%1$s</xliff:g></string>
+    <string name="folder_renamed">文件夹重命名为 <xliff:g id="name" example="Games">%1$s</xliff:g></string>
     <!-- Folder name format when folder has less than 4 items -->
-    <string name="folder_name_format_exact">Folder: <xliff:g id="name" example="Games">%1$s</xliff:g>, <xliff:g id="size" example="2">%2$d</xliff:g> items</string>
+    <string name="folder_name_format_exact">文件夹：<xliff:g id="name" example="Games">%1$s</xliff:g>,<xliff:g id="size" example="2">%2$d</xliff:g> 个项目</string>
     <!-- Folder name format when folder has 4 or more items shown in preview-->
-    <string name="folder_name_format_overflow">Folder: <xliff:g id="name" example="Games">%1$s</xliff:g>, <xliff:g id="size" example="2">%2$d</xliff:g> or more items</string>
+    <string name="folder_name_format_overflow">文件夹：<xliff:g id="name" example="Games">%1$s</xliff:g>,<xliff:g id="size" example="2">%2$d</xliff:g> 个或更多项目</string>
     <!-- Accessibility announement for unnamed folders -->
-    <string name="unnamed_folder">Unnamed folder</string>
+    <string name="unnamed_folder">未命名文件夹</string>
     <!-- App pair accessibility -->
     <!-- App pair name -->
-    <string name="app_pair_name_format">App pair: <xliff:g id="app1" example="Chrome">%1$s</xliff:g> and <xliff:g id="app2" example="YouTube">%2$s</xliff:g></string>
+    <string name="app_pair_name_format">应用配对： <xliff:g id="app1" example="Chrome">%1$s</xliff:g> 和 <xliff:g id="app2" example="YouTube">%2$s</xliff:g></string>
     <!-- Strings for the customization mode -->
     <!-- Text for wallpaper change button [CHAR LIMIT=30]-->
-    <string name="styles_wallpaper_button_text">Wallpaper &amp; style</string>
+    <string name="styles_wallpaper_button_text">壁纸 &amp; 样式</string>
     <!-- Text for edit home screen button [CHAR LIMIT=30]-->
-    <string name="edit_home_screen">Edit Home Screen</string>
+    <string name="edit_home_screen">编辑主屏幕</string>
     <!-- Text for settings button [CHAR LIMIT=20]-->
-    <string name="settings_button_text">Home settings</string>
+    <string name="settings_button_text">主屏幕设置</string>
     <!-- Message shown when a feature is disabled by the administrator -->
-    <string name="msg_disabled_by_admin">Disabled by your admin</string>
+    <string name="msg_disabled_by_admin">已被您的管理员禁用</string>
     <!-- Strings for settings -->
     <!-- Title for Allow Rotation setting. [CHAR LIMIT=50] -->
-    <string name="allow_rotation_title">Allow home screen rotation</string>
+    <string name="allow_rotation_title">允许旋转主屏幕</string>
     <!-- Text explaining when the home screen will get rotated. [CHAR LIMIT=100] -->
-    <string name="allow_rotation_desc">When phone is rotated</string>
+    <string name="allow_rotation_desc">当手机旋转时</string>
     <!-- Title for Landscape Mode setting. [CHAR LIMIT=50] -->
-    <string name="landscape_mode_title">Landscape mode</string>
+    <string name="landscape_mode_title">横向模式</string>
     <!--  [CHAR LIMIT=100] -->
-    <string name="landscape_mode_desc">Set home screen into landscape mode</string>
+    <string name="landscape_mode_desc">设置主屏幕到横屏模式</string>
     <!-- Title for Notification dots setting. Tapping this will link to the system Notifications settings screen where the user can turn off notification dots globally. [CHAR LIMIT=50] -->
-    <string name="notification_dots_title">Notification dots</string>
+    <string name="notification_dots_title">通知圆点</string>
     <!-- Text to indicate that the system notification dots setting is on [CHAR LIMIT=100] -->
-    <string name="notification_dots_desc_on">On</string>
+    <string name="notification_dots_desc_on">开启</string>
     <!-- Text to indicate that the system notification dots setting is off [CHAR LIMIT=100] -->
-    <string name="notification_dots_desc_off">Off</string>
+    <string name="notification_dots_desc_off">关闭</string>
     <!-- Title for the dialog shown when the app does not has notification access, explaining the requirement for notification access [CHAR LIMIT=50] -->
-    <string name="title_missing_notification_access">Notification access needed</string>
+    <string name="title_missing_notification_access">需要通知权限</string>
     <!-- Message explaining to the user that the notification access is required by the app for showing 'Notification dots' [CHAR LIMIT=NONE] -->
-    <string name="msg_missing_notification_access">To show Notification Dots, turn on app notifications for <xliff:g id="name" example="My App">%1$s</xliff:g></string>
+    <string name="msg_missing_notification_access">要显示通知圆点，请开启<xliff:g id="name" example="My App">%1$s</xliff:g>的应用通知功能</string>
     <!-- Button text in the confirmation dialog which would take the user to the system settings [CHAR LIMIT=50] -->
-    <string name="title_change_settings">Change settings</string>
+    <string name="title_change_settings">更改设置</string>
     <!-- Summary for Notification dots setting. Tapping this will link enable/disable notification dots feature on the home screen. [CHAR LIMIT=50] -->
-    <string name="notification_dots_service_title">Show notification dots</string>
+    <string name="notification_dots_service_title">显示通知圆点</string>
     <!-- Title for Developer Options setting. [CHAR LIMIT=50] -->
-    <string name="developer_options_title">Developer Options</string>
+    <string name="developer_options_title">开发者选项</string>
     <!-- Label for the setting that allows the automatic placement of launcher shortcuts for applications and games installed on the device [CHAR LIMIT=60] -->
-    <string name="auto_add_shortcuts_label">Add app icons to home screen</string>
+    <string name="auto_add_shortcuts_label">将应用图标添加到主屏幕</string>
     <!-- Text description of the setting that allows the automatic placement of launcher shortcuts for applications and games installed on the device [CHAR LIMIT=NONE] -->
-    <string name="auto_add_shortcuts_description">For new apps</string>
+    <string name="auto_add_shortcuts_description">用于新应用</string>
     <!-- Label on an icon that references an uninstalled package, for which we have no information about when it might be installed. [CHAR_LIMIT=15] -->
-    <string name="package_state_unknown">Unknown</string>
+    <string name="package_state_unknown">未知</string>
     <!-- Button for abandoned promises dialog, to removes this abandoned promise icon. -->
     <string name="abandoned_clean_this">移除</string>
     <!-- Button for abandoned promise dialog, to search in the market for the missing package. -->
     <string name="abandoned_search">搜索</string>
     <!-- Title for abandoned promise dialog. -->
-    <string name="abandoned_promises_title">This app is not installed</string>
+    <string name="abandoned_promises_title">未安装此应用</string>
     <!-- Explanation for abandoned promise dialog. "The first 'it' refers to the shortcut icon.
     The second "it" refers to the app. -->
-    <string name="abandoned_promise_explanation">The app for this icon isn\'t installed.
-        You can remove it, or search for the app and install it manually.
-    </string>
+    <string name="abandoned_promise_explanation">该图标的应用程序未安装。
+        您可以将其删除，或搜索应用程序并手动安装。    </string>
     <!-- Title for an app which is being installed. -->
-    <string name="app_installing_title"><xliff:g id="name" example="Messenger">%1$s</xliff:g> installing, <xliff:g id="progress" example="30%">%2$s</xliff:g> complete</string>
+    <string name="app_installing_title">正在安装 <xliff:g id="name" example="Messenger">%1$s</xliff:g>，已完成 <xliff:g id="progress" example="30%">%2$s</xliff:g></string>
     <!-- Title for an app which is being downloaded. -->
-    <string name="app_downloading_title"><xliff:g id="name" example="Messenger">%1$s</xliff:g> downloading, <xliff:g id="progress" example="30%">%2$s</xliff:g> complete</string>
+    <string name="app_downloading_title">正在下载 <xliff:g id="name" example="Messenger">%1$s</xliff:g>，已完成 <xliff:g id="progress" example="30%">%2$s</xliff:g></string>
     <!-- Title for an app whose download has been started. -->
-    <string name="app_waiting_download_title"><xliff:g id="name" example="Messenger">%1$s</xliff:g> waiting to install</string>
+    <string name="app_waiting_download_title"><xliff:g id="name" example="Messenger">%1$s</xliff:g> 正在等待安装</string>
     <!-- Title for an app which is archived. -->
-    <string name="app_archived_title"><xliff:g id="name" example="Messenger">%1$s</xliff:g> is archived.</string>
+    <string name="app_archived_title"><xliff:g id="name" example="Messenger">%1$s</xliff:g> 已归档。</string>
     <!-- Accessibility Action for an app which is archived. -->
-    <string name="app_unarchiving_action">download and restore</string>
+    <string name="app_unarchiving_action">下载并恢复</string>
     <!-- Title shown on the alert dialog prompting the user to update the application in market
      in order to re-enable the disabled shortcuts -->
-    <string name="dialog_update_title">App update required</string>
+    <string name="dialog_update_title">需要更新应用</string>
     <!-- Message shown on the alert dialog prompting the user to update the application -->
-    <string name="dialog_update_message">The app for this icon isn\'t updated. You can update manually to re-enable this shortcut, or remove the icon.</string>
+    <string name="dialog_update_message">此图标对应的应用未更新。您可以手动更新以重新启用该快捷方式，或者移除此图标。</string>
     <!-- Message for the update button in the alert dialog, will bring the user to market -->
-    <string name="dialog_update">Update</string>
+    <string name="dialog_update">更新</string>
     <!-- Message for the remove button in the alert dialog -->
     <string name="dialog_remove">移除</string>
     <!-- Strings for widgets & more in the popup container/bottom sheet -->
     <!-- Accessibility title for the popup containing a list of widgets. [CHAR_LIMIT=50] -->
-    <string name="widgets_list">Widgets list</string>
+    <string name="widgets_list">小组件列表</string>
     <!-- Text announced by accessibility when the popup containing the list of widgets is closed. [CHAR_LIMIT=100] -->
-    <string name="widgets_list_closed">Widgets list closed</string>
+    <string name="widgets_list_closed">小组件列表已关闭</string>
     <!-- Strings for accessibility actions -->
     <!-- Accessibility action to add an app to workspace. [CHAR_LIMIT=30] -->
     <string name="action_add_to_workspace">添加至主屏幕</string>
     <!-- Accessibility action to move item to the current location. [CHAR_LIMIT=30] -->
     <string name="action_move_here">将项目移至此处</string>
     <!-- Accessibility confirmation for item removed. [CHAR_LIMIT=50]-->
-    <string name="item_removed">Item removed</string>
+    <string name="item_removed">项目已移除</string>
     <!-- Action shown in snackbar to undo item removal. [CHAR_LIMIT=20] -->
     <string name="undo">还原</string>
     <!-- Accessibility action to move an item on the workspace. [CHAR_LIMIT=30] -->
@@ -491,6 +490,6 @@
     <string name="pref_sleep_gesture_title">双击息屏</string>
     <string name="pref_sleep_gesture_summary">双击空白处以关闭屏幕</string>
     <!-- All Apps Suggestions -->
-    <string name="all_apps_suggestions_title">Show suggestions</string>
-    <string name="all_apps_suggestions_summary">Display suggested apps at the top of the app drawer</string>
+    <string name="all_apps_suggestions_title">显示建议</string>
+    <string name="all_apps_suggestions_summary">在应用抽屉里显示建议的应用</string>
 </resources>
