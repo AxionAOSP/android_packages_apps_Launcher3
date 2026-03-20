@@ -253,6 +253,14 @@
     <string name="action_share">Share</string>
     <!-- Label for a button that causes a screen shot of the current app to be taken. [CHAR_LIMIT=40] -->
     <string name="action_screenshot">Screenshot</string>
+    <!-- Label for a button that selects text from the task thumbnail. [CHAR_LIMIT=20] -->
+    <string name="action_select_text">Select</string>
+    <!-- Toast message when no text is detected in the task thumbnail. [CHAR_LIMIT=40] -->
+    <string name="select_text_no_text">No text detected</string>
+    <!-- Toast message when text detection fails. [CHAR_LIMIT=40] -->
+    <string name="select_text_failed">Text detection failed</string>
+    <!-- Toast message when text has been copied to clipboard. [CHAR_LIMIT=40] -->
+    <string name="select_text_copied">Copied to clipboard</string>
     <!-- Label for a button that enters split screen selection mode. [CHAR_LIMIT=20] -->
     <string name="action_split">Split</string>
     <!-- Label for a button that saves a new app pair. [CHAR_LIMIT=20] -->
