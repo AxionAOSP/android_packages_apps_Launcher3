@@ -16,8 +16,10 @@
 
 package com.android.launcher3.deviceprofile
 
+import android.content.Context
 import android.content.res.Resources
 import com.android.launcher3.InvariantDeviceProfile
+import com.android.launcher3.LauncherPrefs
 import com.android.launcher3.R
 import com.android.launcher3.responsive.CalculatedHotseatSpec
 
@@ -50,6 +52,7 @@ data class HotseatProfile(
 
     companion object Factory {
         fun createHotseatProfile(
+            context: Context,
             deviceProperties: DeviceProperties,
             res: Resources,
             inv: InvariantDeviceProfile,
@@ -88,8 +91,17 @@ data class HotseatProfile(
             val hotseatBarWorkspaceSpacePx =
                 if (responsiveHotseatSpec != null) 0
                 else res.getDimensionPixelSize(R.dimen.dynamic_grid_hotseat_side_padding)
-            val hotseatQsbHeight = res.getDimensionPixelSize(R.dimen.qsb_widget_height)
-            val hotseatQsbShadowHeight = res.getDimensionPixelSize(R.dimen.qsb_shadow_height)
+            val hotseatDisabled = "none" == LauncherPrefs.SEARCH_PROVIDER.get(context)
+
+            var hotseatQsbHeight = res.getDimensionPixelSize(R.dimen.qsb_widget_height)
+            if (hotseatDisabled) {
+                hotseatQsbHeight = 0
+            }
+
+            var hotseatQsbShadowHeight = res.getDimensionPixelSize(R.dimen.qsb_shadow_height)
+            if (hotseatDisabled) {
+                hotseatQsbShadowHeight = 0
+            }
 
             return HotseatProfile(
                 areNavButtonsInline = areNavButtonsInline,

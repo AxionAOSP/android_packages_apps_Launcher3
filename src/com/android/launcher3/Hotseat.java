@@ -105,13 +105,9 @@ public class Hotseat extends CellLayout implements Insettable {
 
     public Hotseat(Context context, AttributeSet attrs, int defStyle) {
         super(context, attrs, defStyle);
-        if (Flags.enableQsbOnHotseat()) {
-            mQsb = LayoutInflater.from(context).inflate(R.layout.qsb_container_hotseat, this,
-                    false);
-        } else {
-            mQsb = LayoutInflater.from(context).inflate(R.layout.search_container_hotseat, this,
-                    false);
-        }
+
+        mQsb = LayoutInflater.from(context).inflate(R.layout.qsb_container_hotseat, this,
+                false);
 
         addView(mQsb);
         mIconsAlphaChannels = new MultiValueAlpha(getShortcutsAndWidgets(),
@@ -322,8 +318,9 @@ public class Hotseat extends CellLayout implements Insettable {
         super.onMeasure(widthMeasureSpec, heightMeasureSpec);
 
         DeviceProfile dp = mActivity.getDeviceProfile();
-        mQsb.measure(makeMeasureSpec(dp.hotseatQsbWidth, MeasureSpec.EXACTLY),
-                makeMeasureSpec(dp.getHotseatProfile().getQsbHeight(), MeasureSpec.EXACTLY));
+        mQsb.measure(MeasureSpec.makeMeasureSpec(dp.hotseatQsbWidth, MeasureSpec.EXACTLY),
+                MeasureSpec.makeMeasureSpec(dp.getHotseatProfile().getQsbHeight(),
+                        MeasureSpec.EXACTLY));
     }
 
     @Override
@@ -342,9 +339,25 @@ public class Hotseat extends CellLayout implements Insettable {
         }
         int right = left + qsbMeasuredWidth;
 
-        int bottom = b - t - dp.getQsbOffsetY();
-        int top = bottom - dp.getHotseatProfile().getQsbHeight();
-        mQsb.layout(left, top, right, bottom);
+        int height = b - t;
+        int qsbHeight = dp.getHotseatProfile().getQsbHeight();
+        int bottomOffset;
+        int subtraction;
+        if (dp.isQsbInline) {
+            bottomOffset = dp.getHotseatBarBottomPadding();
+            subtraction = (qsbHeight - dp.hotseatCellHeightPx) / 2;
+        } else if (dp.isTaskbarPresent) {
+            int offsetY = (dp.hotseatBarSizePx - qsbHeight)
+                    + dp.getHotseatProfile().getQsbShadowHeight();
+            int bottom = height - offsetY;
+            mQsb.layout(left, bottom - qsbHeight, right, bottom);
+            return;
+        } else {
+            bottomOffset = dp.hotseatBarBottomSpacePx;
+            subtraction = dp.getHotseatProfile().getQsbShadowHeight();
+        }
+        int bottom = height - (bottomOffset - subtraction);
+        mQsb.layout(left, bottom - qsbHeight, right, bottom);
     }
 
     /**
