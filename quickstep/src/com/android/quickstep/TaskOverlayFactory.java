@@ -47,6 +47,7 @@ import com.android.quickstep.views.DesktopTaskView;
 import com.android.quickstep.views.GroupedTaskView;
 import com.android.quickstep.views.OverviewActionsView;
 import com.android.quickstep.views.RecentsView;
+import com.android.quickstep.views.TextSelectionOverlay;
 import com.android.quickstep.views.RecentsViewContainer;
 import com.android.quickstep.views.TaskContainer;
 import com.android.quickstep.views.TaskView;
@@ -270,6 +271,19 @@ public class TaskOverlayFactory {
                     .saveAppPair(taskView);
         }
 
+        protected void selectText() {
+            Bitmap thumbnail = getThumbnail();
+            if (thumbnail == null || !isRealSnapshot()) {
+                showBlockedByPolicyMessage();
+                return;
+            }
+            TextSelectionOverlay.show(
+                    mTaskContainer.getTaskView(),
+                    mTaskContainer.getSnapshotView(),
+                    thumbnail
+            );
+        }
+
         /**
          * Called when the overlay is no longer used.
          */
@@ -435,6 +449,10 @@ public class TaskOverlayFactory {
             public void onSaveAppPair() {
                 endLiveTileMode(TaskOverlay.this::saveAppPair);
             }
+
+            public void onSelectText() {
+                endLiveTileMode(() -> TaskOverlay.this.selectText());
+            }
         }
     }
 
@@ -451,5 +469,8 @@ public class TaskOverlayFactory {
 
         /** User wants to save an app pair with current group of apps. */
         void onSaveAppPair();
+
+        /** User wants to select text from the task thumbnail. */
+        void onSelectText();
     }
 }
