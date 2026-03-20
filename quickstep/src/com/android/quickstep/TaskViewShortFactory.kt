@@ -58,6 +58,12 @@ interface TaskViewShortFactory {
         override fun onClick(view: View) {
             val recentsView = taskView.recentsView ?: return
             dismissTaskMenuView()
+            val proxy = SystemUiProxy.INSTANCE.get(view.context)
+            for (container in taskView.taskContainers) {
+                val key = container.task.key
+                val packageName = key.packageName ?: continue
+                proxy.forceStopPackage(packageName, key.userId)
+            }
             recentsView.dismissTaskView(taskView, true, true)
             mTarget.statsLogManager
                 .logger()
