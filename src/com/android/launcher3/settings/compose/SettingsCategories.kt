@@ -34,7 +34,7 @@ import com.android.launcher3.states.RotationHelper
 import com.android.launcher3.util.DisplayController
 import com.android.launcher3.settings.SettingsActivity
 import com.android.launcher3.Flags
-import com.android.launcher3.LauncherFiles
+import com.android.launcher3.LauncherPrefs
 import com.android.launcher3.allapps.compose.shared.constants.PreferenceKeys
 import com.android.launcher3.allapps.compose.search.domain.UniversalSearchManager
 import com.android.launcher3.qsb.SearchWidgetHelper
@@ -185,13 +185,9 @@ fun HomeScreenSettings(viewModel: SettingsState, context: Context) {
                     .map { info -> info.provider.flattenToString() to info.label }
             }
 
-            val searchPrefs = context.getSharedPreferences(
-                LauncherFiles.SHARED_PREFERENCES_KEY, Context.MODE_PRIVATE
-            )
+            val launcherPrefs = remember { LauncherPrefs.get(context) }
             var selectedProvider by remember {
-                mutableStateOf(
-                    searchPrefs.getString(SearchWidgetHelper.KEY_SEARCH_PROVIDER, "none") ?: "none"
-                )
+                mutableStateOf(launcherPrefs.get(LauncherPrefs.SEARCH_PROVIDER) ?: "none")
             }
 
             if (searchWidgetOptions.isNotEmpty()) {
@@ -205,9 +201,7 @@ fun HomeScreenSettings(viewModel: SettingsState, context: Context) {
                     value = selectedProvider,
                     onValueChange = { newValue ->
                         selectedProvider = newValue
-                        searchPrefs.edit()
-                            .putString(SearchWidgetHelper.KEY_SEARCH_PROVIDER, newValue)
-                            .apply()
+                        launcherPrefs.put(LauncherPrefs.SEARCH_PROVIDER, newValue)
                     }
                 )
             }
