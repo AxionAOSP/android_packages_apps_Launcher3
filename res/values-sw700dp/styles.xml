@@ -1,4 +1,5 @@
-<?xml version="1.0" encoding="utf-8"?><!--
+<?xml version="1.0" encoding="utf-8"?>
+<!--
   ~ Copyright (C) 2023 The Android Open Source Project
   ~
   ~ Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,32 +15,13 @@
   ~ limitations under the License.
   -->
 
-<resources xmlns:android="http://schemas.android.com/apk/res/android">
-    <style name="CellStyleDefault">
-        <item name="iconDrawablePadding">7dp</item>
-    </style>
-    <style name="DropTargetButton" parent="DropTargetButtonBase">
-        <item name="android:fontFamily">variable-title-large</item>
-    </style>
-
-    <style name="AllAppsStyle4x4Fold" parent="@style/AllAppsStyleDefault">
-        <item name="horizontalPadding">32dp</item>
-    </style>
-
-    <style name="AllAppsStyle4x5Fold" parent="@style/AllAppsStyleDefault">
-        <item name="horizontalPadding">32dp</item>
-    </style>
-
+<resources>
     <style name="AllAppsStyle5x5Fold" parent="@style/AllAppsStyleDefault">
-        <item name="horizontalPadding">42dp</item>
-    </style>
-
-    <style name="AllAppsStyle_4_Col_Fold" parent="@style/AllAppsStyleDefault">
-        <item name="horizontalPadding">32dp</item>
+        <item name="horizontalPadding">28dp</item>
     </style>
 
     <style name="AllAppsStyle_5_Col_Fold" parent="@style/AllAppsStyleDefault">
-        <item name="horizontalPadding">42dp</item>
+        <item name="horizontalPadding">28dp</item>
     </style>
 
     <style name="CellStyle4x4Fold" parent="@style/CellStyleDefault">
@@ -51,7 +33,7 @@
     </style>
 
     <style name="CellStyle5x5Fold" parent="@style/CellStyleDefault">
-        <item name="iconDrawablePadding">10dp</item>
+        <item name="iconDrawablePadding">8dp</item>
     </style>
 
     <style name="CellStyle_4_Col_Fold" parent="@style/CellStyleDefault">
@@ -59,33 +41,45 @@
     </style>
 
     <style name="CellStyle_5_Col_Fold" parent="@style/CellStyleDefault">
-        <item name="iconDrawablePadding">10dp</item>
+        <item name="iconDrawablePadding">8dp</item>
     </style>
 
     <style name="Folder4x4FoldStyle" parent="@style/FolderStyleDefault">
-        <item name="folderCellHeight">80dp</item>
-        <item name="folderCellWidth">58dp</item>
+        <item name="folderCellHeight">89dp</item>
+        <item name="folderCellWidth">68dp</item>
     </style>
 
     <style name="Folder4x5FoldStyle" parent="@style/FolderStyleDefault">
-        <item name="folderCellHeight">83dp</item>
-        <item name="folderCellWidth">58dp</item>
+        <item name="folderCellHeight">89dp</item>
+        <item name="folderCellWidth">68dp</item>
     </style>
 
     <style name="Folder5x5FoldStyle" parent="@style/FolderStyleDefault">
         <item name="folderBorderSpace">12dp</item>
-        <item name="folderCellHeight">71dp</item>
-        <item name="folderCellWidth">48dp</item>
+        <item name="folderCellHeight">83dp</item>
+        <item name="folderCellWidth">64dp</item>
+    </style>
+
+    <style name="Folder5x8Style" parent="@style/FolderStyleDefault">
+        <item name="folderCellHeight">104dp</item>
+        <item name="folderCellWidth">102dp</item>
+        <item name="folderFooterHeight">64dp</item>
+    </style>
+
+    <style name="Folder6x5Style" parent="@style/FolderStyleDefault">
+        <item name="folderCellHeight">104dp</item>
+        <item name="folderCellWidth">102dp</item>
+        <item name="folderFooterHeight">64dp</item>
     </style>
 
     <style name="Folder_4_Col_FoldStyle" parent="@style/FolderStyleDefault">
-        <item name="folderCellHeight">83dp</item>
-        <item name="folderCellWidth">58dp</item>
+        <item name="folderCellHeight">89dp</item>
+        <item name="folderCellWidth">68dp</item>
     </style>
 
     <style name="Folder_5_Col_FoldStyle" parent="@style/FolderStyleDefault">
         <item name="folderBorderSpace">12dp</item>
-        <item name="folderCellHeight">71dp</item>
-        <item name="folderCellWidth">48dp</item>
+        <item name="folderCellHeight">83dp</item>
+        <item name="folderCellWidth">64dp</item>
     </style>
 </resources>

@@ -18,4 +18,60 @@
     <style name="CellStyleDefault">
         <item name="iconDrawablePadding">4dp</item>
     </style>
+
+    <style name="AllAppsStyle5x8" parent="@style/AllAppsStyleDefault">
+        <item name="horizontalPadding">32dp</item>
+    </style>
+
+    <style name="AllAppsStyle6x5" parent="@style/AllAppsStyleDefault">
+        <item name="horizontalPadding">32dp</item>
+    </style>
+
+    <style name="CellStyle4x4Fold" parent="@style/CellStyleDefault">
+        <item name="iconDrawablePadding">4dp</item>
+    </style>
+
+    <style name="CellStyle4x5Fold" parent="@style/CellStyleDefault">
+        <item name="iconDrawablePadding">4dp</item>
+    </style>
+
+    <style name="CellStyle5x5Fold" parent="@style/CellStyleDefault">
+        <item name="iconDrawablePadding">4dp</item>
+    </style>
+
+    <style name="CellStyle5x8" parent="@style/CellStyleDefault">
+        <item name="iconDrawablePadding">8dp</item>
+    </style>
+
+    <style name="CellStyle6x5" parent="@style/CellStyleDefault">
+        <item name="iconDrawablePadding">8dp</item>
+    </style>
+
+    <style name="CellStyle_4_Col_Fold" parent="@style/CellStyleDefault">
+        <item name="iconDrawablePadding">4dp</item>
+    </style>
+
+    <style name="CellStyle_5_Col_Fold" parent="@style/CellStyleDefault">
+        <item name="iconDrawablePadding">4dp</item>
+    </style>
+
+    <style name="Folder5x8Style" parent="@style/FolderStyleDefault">
+        <item name="folderCellHeight">74dp</item>
+        <item name="folderCellWidth">74dp</item>
+        <item name="folderFooterHeight">64dp</item>
+    </style>
+
+    <style name="Folder6x5Style" parent="@style/FolderStyleDefault">
+        <item name="folderCellHeight">74dp</item>
+        <item name="folderCellWidth">74dp</item>
+        <item name="folderFooterHeight">64dp</item>
+    </style>
+
+    <style name="FolderStyleDefault" parent="">
+        <item name="folderBorderSpace">16dp</item>
+        <item name="folderCellHeight">94dp</item>
+        <item name="folderCellWidth">80dp</item>
+        <item name="folderFooterHeight">56dp</item>
+        <item name="folderTopPadding">24dp</item>
+    </style>
 </resources>

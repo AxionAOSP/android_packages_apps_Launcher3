@@ -608,4 +608,140 @@
     <style name="NTCellStyleDefault" parent="@style/CellStyleDefault">
         <item name="iconDrawablePadding">@dimen/grid_icon_drawable_padding</item>
     </style>
+
+    <style name="AllAppsStyle6x5" parent="@style/AllAppsStyleDefault">
+        <item name="horizontalPadding">32dp</item>
+    </style>
+
+    <style name="AllAppsStyle5x8" parent="@style/AllAppsStyleDefault">
+        <item name="horizontalPadding">16dp</item>
+    </style>
+
+    <style name="AllAppsStyle4x4Fold" parent="@style/AllAppsStyleDefault">
+        <item name="horizontalPadding">16dp</item>
+    </style>
+
+    <style name="AllAppsStyle4x5Fold" parent="@style/AllAppsStyleDefault">
+        <item name="horizontalPadding">16dp</item>
+    </style>
+
+    <style name="AllAppsStyle5x5Fold" parent="@style/AllAppsStyleDefault">
+        <item name="horizontalPadding">16dp</item>
+    </style>
+
+    <style name="AllAppsStyle_4_Col_Fold" parent="@style/AllAppsStyleDefault">
+        <item name="horizontalPadding">16dp</item>
+    </style>
+
+    <style name="AllAppsStyle_5_Col_Fold" parent="@style/AllAppsStyleDefault">
+        <item name="horizontalPadding">16dp</item>
+    </style>
+
+    <style name="CellStyle4x4Fold" parent="@style/CellStyleDefault">
+        <item name="iconDrawablePadding">12dp</item>
+    </style>
+
+    <style name="CellStyle4x5Fold" parent="@style/CellStyleDefault">
+        <item name="iconDrawablePadding">5dp</item>
+    </style>
+
+    <style name="CellStyle5x5Fold" parent="@style/CellStyleDefault">
+        <item name="iconDrawablePadding">8dp</item>
+    </style>
+
+    <style name="CellStyle5x8" parent="@style/CellStyleDefault">
+        <item name="iconDrawablePadding">14dp</item>
+    </style>
+
+    <style name="CellStyle6x5" parent="@style/CellStyleDefault">
+        <item name="iconDrawablePadding">14dp</item>
+    </style>
+
+    <style name="CellStyle_4_Col_Fold" parent="@style/CellStyleDefault">
+        <item name="iconDrawablePadding">5dp</item>
+    </style>
+
+    <style name="CellStyle_5_Col_Fold" parent="@style/CellStyleDefault">
+        <item name="iconDrawablePadding">8dp</item>
+    </style>
+
+    <style name="Folder2x2Style" parent="@style/FolderStyleDefault">
+        <item name="folderCellHeight">199dp</item>
+        <item name="folderCellWidth">176dp</item>
+    </style>
+
+    <style name="Folder3x3Style" parent="@style/FolderStyleDefault">
+        <item name="folderCellHeight">128dp</item>
+        <item name="folderCellWidth">112dp</item>
+        <item name="folderFooterHeight">64dp</item>
+    </style>
+
+    <style name="Folder4x4Style" parent="@style/FolderStyleDefault">
+        <item name="folderCellHeight">94dp</item>
+        <item name="folderCellWidth">80dp</item>
+    </style>
+
+    <style name="Folder4x5Style" parent="@style/FolderStyleDefault">
+        <item name="folderCellHeight">94dp</item>
+        <item name="folderCellWidth">80dp</item>
+    </style>
+
+    <style name="Folder5x5Style" parent="@style/FolderStyleDefault">
+        <item name="folderCellHeight">79dp</item>
+        <item name="folderCellWidth">61dp</item>
+    </style>
+
+    <style name="Folder6x5Style" parent="@style/FolderStyleDefault">
+        <item name="folderCellHeight">90dp</item>
+        <item name="folderCellWidth">77dp</item>
+        <item name="folderFooterHeight">64dp</item>
+    </style>
+
+    <style name="Folder5x8Style" parent="@style/FolderStyleDefault">
+        <item name="folderCellHeight">90dp</item>
+        <item name="folderCellWidth">77dp</item>
+        <item name="folderFooterHeight">64dp</item>
+    </style>
+
+    <style name="Folder4x4FoldStyle" parent="@style/FolderStyleDefault">
+        <item name="folderCellHeight">92dp</item>
+        <item name="folderCellWidth">68dp</item>
+    </style>
+
+    <style name="Folder4x5FoldStyle" parent="@style/FolderStyleDefault">
+        <item name="folderCellHeight">73dp</item>
+        <item name="folderCellWidth">65dp</item>
+    </style>
+
+    <style name="Folder5x5FoldStyle" parent="@style/FolderStyleDefault">
+        <item name="folderBorderSpace">12dp</item>
+        <item name="folderCellHeight">72dp</item>
+        <item name="folderCellWidth">55dp</item>
+    </style>
+
+    <style name="Folder_3_Row_Style" parent="@style/FolderStyleDefault">
+        <item name="folderCellHeight">79dp</item>
+        <item name="folderCellWidth">61dp</item>
+    </style>
+
+    <style name="Folder_4_Col_Style" parent="@style/FolderStyleDefault">
+        <item name="folderCellHeight">94dp</item>
+        <item name="folderCellWidth">80dp</item>
+    </style>
+
+    <style name="Folder_5_Col_Style" parent="@style/FolderStyleDefault">
+        <item name="folderCellHeight">79dp</item>
+        <item name="folderCellWidth">61dp</item>
+    </style>
+
+    <style name="Folder_4_Col_FoldStyle" parent="@style/FolderStyleDefault">
+        <item name="folderCellHeight">73dp</item>
+        <item name="folderCellWidth">65dp</item>
+    </style>
+
+    <style name="Folder_5_Col_FoldStyle" parent="@style/FolderStyleDefault">
+        <item name="folderBorderSpace">12dp</item>
+        <item name="folderCellHeight">72dp</item>
+        <item name="folderCellWidth">55dp</item>
+    </style>
 </resources>

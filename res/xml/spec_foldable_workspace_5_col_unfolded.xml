@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<workspaceSpecs xmlns:launcher="http://schemas.android.com/apk/res-auto">
+    <specs launcher:maxAspectRatio="@dimen/aspect_ratio_portrait_and_square">
+        <workspaceSpec
+            launcher:dimensionType="height"
+            launcher:maxAvailableSize="9999dp">
+            <startPadding launcher:ofAvailableSpace="0.0161"/>
+            <endPadding launcher:ofAvailableSpace="0.0553"/>
+            <gutter launcher:ofAvailableSpace="0.0201"/>
+            <cellSize launcher:ofRemainderSpace="1"/>
+        </workspaceSpec>
+        <workspaceSpec
+            launcher:dimensionType="width"
+            launcher:maxAvailableSize="9999dp">
+            <startPadding launcher:ofAvailableSpace="0.0272"/>
+            <endPadding launcher:ofAvailableSpace="0.0272"/>
+            <gutter launcher:ofAvailableSpace="0.0181"/>
+            <cellSize launcher:ofRemainderSpace="1"/>
+        </workspaceSpec>
+    </specs>
+    <specs launcher:maxAspectRatio="@dimen/aspect_ratio_landscape">
+        <workspaceSpec
+            launcher:dimensionType="height"
+            launcher:maxAvailableSize="9999dp">
+            <startPadding launcher:ofAvailableSpace="0.0161"/>
+            <endPadding launcher:ofAvailableSpace="0.0553"/>
+            <gutter launcher:ofAvailableSpace="0.0201"/>
+            <cellSize launcher:ofRemainderSpace="1"/>
+        </workspaceSpec>
+        <workspaceSpec
+            launcher:dimensionType="width"
+            launcher:maxAvailableSize="9999dp">
+            <startPadding launcher:ofAvailableSpace="0.0272"/>
+            <endPadding launcher:ofAvailableSpace="0.0272"/>
+            <gutter launcher:ofAvailableSpace="0.0181"/>
+            <cellSize launcher:ofRemainderSpace="1"/>
+        </workspaceSpec>
+    </specs>
+</workspaceSpecs>

@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<allAppsSpecs xmlns:launcher="http://schemas.android.com/apk/res-auto">
+    <specs launcher:maxAspectRatio="@dimen/aspect_ratio_landscape">
+        <allAppsSpec
+            launcher:dimensionType="height"
+            launcher:maxAvailableSize="9999dp">
+            <startPadding launcher:fixedSize="24dp"/>
+            <endPadding launcher:fixedSize="0dp"/>
+            <gutter launcher:fixedSize="12dp"/>
+            <cellSize launcher:matchWorkspace="true"/>
+        </allAppsSpec>
+        <allAppsSpec
+            launcher:dimensionType="width"
+            launcher:maxAvailableSize="9999dp">
+            <startPadding launcher:fixedSize="24dp"/>
+            <endPadding launcher:fixedSize="24dp"/>
+            <gutter launcher:fixedSize="12dp"/>
+            <cellSize launcher:matchWorkspace="true"/>
+        </allAppsSpec>
+    </specs>
+</allAppsSpecs>
