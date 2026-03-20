@@ -486,9 +486,9 @@
     <!-- label for 4-sided cookie option shape in customization picker -->
     <string name="four_sided_cookie_shape_title">4-sided cookie</string>
     <!-- label for 7-sided cookie option shape in customization picker -->
-    <string name="seven_sided_cookie_shape_title">7-sided cookie</string>
+    <string name="seven_sided_cookie_shape_title">7 边形</string>
     <!-- label for arch shape option in customization picker -->
-    <string name="arch_shape_title">Arch</string>
+    <string name="arch_shape_title">拱门</string>
     <!-- DT2S -->
     <string name="pref_sleep_gesture_title">Double tap to sleep</string>
     <string name="pref_sleep_gesture_summary">Double tap on empty space for screen off</string>
