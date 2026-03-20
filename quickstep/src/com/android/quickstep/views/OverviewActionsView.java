@@ -213,6 +213,8 @@ public class OverviewActionsView<T extends OverlayUICallbacks> extends FrameLayo
         // casting this.
         View screenshotButton = findViewById(R.id.action_screenshot);
         screenshotButton.setOnClickListener(this);
+        View selectTextButton = findViewById(R.id.action_select_text);
+        selectTextButton.setOnClickListener(this);
         mSplitButton = findViewById(R.id.action_split);
         mSplitButton.setOnClickListener(this);
         mSaveAppPairButton.setOnClickListener(this);
@@ -235,6 +237,8 @@ public class OverviewActionsView<T extends OverlayUICallbacks> extends FrameLayo
         int id = view.getId();
         if (id == R.id.action_screenshot) {
             mCallbacks.onScreenshot();
+        } else if (id == R.id.action_select_text) {
+            mCallbacks.onSelectText();
         } else if (id == R.id.action_split) {
             mCallbacks.onSplit();
         } else if (id == R.id.action_save_app_pair) {

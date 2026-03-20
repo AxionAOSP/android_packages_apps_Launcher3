@@ -639,6 +639,7 @@ android_library {
     // dependency. See b/208647810 for how this can go wrong.
     static_libs: [
         "SystemUI-statsd",
+        "ax_ocr",
         "QuickstepResLib",
     ],
     manifest: "quickstep/AndroidManifest.xml",
