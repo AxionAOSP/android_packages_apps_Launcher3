@@ -515,6 +515,10 @@
     <dimen name="task_menu_edge_padding">0dp</dimen>
     <dimen name="overview_task_margin">0dp</dimen>
     <dimen name="overview_actions_height">0dp</dimen>
+    <dimen name="overview_task_thumbnail_top_margin">0dp</dimen>
+    <dimen name="overview_actions_btn_size">0dp</dimen>
+    <dimen name="overview_actions_clear_all_width">0dp</dimen>
+    <dimen name="overview_actions_clear_all_top_margin">0dp</dimen>
     <dimen name="overview_actions_margin_gesture">0dp</dimen>
     <dimen name="overview_actions_top_margin">0dp</dimen>
     <dimen name="overview_grid_side_margin">0dp</dimen>

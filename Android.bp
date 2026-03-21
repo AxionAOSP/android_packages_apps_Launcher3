@@ -694,6 +694,13 @@ android_app {
         "privapp_whitelist_com.android.launcher3-extra",
         "launcher.quickstep.protolog.pb",
     ],
+    jni_libs: [
+        "libtensorflowlite_jni",
+        "libtensorflowlite_gpu_jni",
+    ],
+    aaptflags: [
+        "-0 .tflite",
+    ],
 
     resource_dirs: ["quickstep/res"],
 

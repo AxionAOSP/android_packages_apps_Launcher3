@@ -29,7 +29,9 @@ import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
 import android.widget.FrameLayout;
+import android.widget.ImageButton;
 import android.widget.LinearLayout;
+import android.widget.TextView;
 
 import androidx.annotation.IntDef;
 import androidx.annotation.Nullable;
@@ -147,6 +149,13 @@ public class OverviewActionsView<T extends OverlayUICallbacks> extends FrameLayo
     /** Container for the action buttons below a focused, non-split Overview tile. */
     protected LinearLayout mActionButtons;
     private Button mSplitButton;
+    private Button mClearAllButton;
+    private ImageButton mFreeformButton;
+    private View mFreeformPreSpace;
+    private View mFreeformSpace;
+    private ImageButton mLockButton;
+    private TextView mLockHint;
+    private TextView mLockHintLandscape;
     /**
      * The "save app pair" button. Currently this is the only button that is not contained in
      * mActionButtons, since it is the sole button that appears for a grouped task.
@@ -217,6 +226,16 @@ public class OverviewActionsView<T extends OverlayUICallbacks> extends FrameLayo
         selectTextButton.setOnClickListener(this);
         mSplitButton = findViewById(R.id.action_split);
         mSplitButton.setOnClickListener(this);
+        mClearAllButton = findViewById(R.id.action_clear_all);
+        mClearAllButton.setOnClickListener(this);
+        mFreeformButton = findViewById(R.id.action_freeform);
+        mFreeformButton.setOnClickListener(this);
+        mFreeformPreSpace = findViewById(R.id.action_freeform_pre_space);
+        mFreeformSpace = findViewById(R.id.action_freeform_space);
+        mLockButton = findViewById(R.id.action_lock);
+        mLockButton.setOnClickListener(this);
+        mLockHint = findViewById(R.id.lock_hint);
+        mLockHintLandscape = findViewById(R.id.lock_hint_landscape);
         mSaveAppPairButton.setOnClickListener(this);
     }
 
@@ -243,13 +262,18 @@ public class OverviewActionsView<T extends OverlayUICallbacks> extends FrameLayo
             mCallbacks.onSplit();
         } else if (id == R.id.action_save_app_pair) {
             mCallbacks.onSaveAppPair();
+        } else if (id == R.id.action_clear_all) {
+            mCallbacks.onClearAll();
+        } else if (id == R.id.action_freeform) {
+            mCallbacks.onFreeform();
+        } else if (id == R.id.action_lock) {
+            mCallbacks.onLock();
         }
     }
 
     @Override
     protected void onConfigurationChanged(Configuration newConfig) {
         super.onConfigurationChanged(newConfig);
-        updateVerticalMargin(DisplayController.getNavigationMode(getContext()));
     }
 
     @Override
@@ -458,5 +482,34 @@ public class OverviewActionsView<T extends OverlayUICallbacks> extends FrameLayo
                 : R.drawable.ic_save_app_pair_up_down;
         mSaveAppPairButton.setCompoundDrawablesRelativeWithIntrinsicBounds(
                 appPairIconRes, 0, 0, 0);
+    }
+
+    public void setFreeformVisible(boolean visible) {
+        if (mFreeformButton == null) return;
+        int vis = visible ? VISIBLE : GONE;
+        mFreeformButton.setVisibility(vis);
+        mFreeformPreSpace.setVisibility(vis);
+        mFreeformSpace.setVisibility(vis);
+    }
+
+    public void setClearAllEnabled(boolean enabled) {
+        if (mClearAllButton != null) {
+            mClearAllButton.setEnabled(enabled);
+        }
+    }
+
+    public void updateLockState(boolean isLocked) {
+        if (mLockButton == null) return;
+        mLockButton.setImageResource(
+                isLocked ? R.drawable.ic_app_locked : R.drawable.ic_app_unlocked);
+    }
+
+    public void setLockHint(String hint) {
+        if (mLockHint != null) {
+            mLockHint.setText(hint);
+        }
+        if (mLockHintLandscape != null) {
+            mLockHintLandscape.setText(hint);
+        }
     }
 }

@@ -49,7 +49,8 @@ data class OverviewProfile(
                 taskIconDrawableSizeGridPx =
                     res.getDimensionPixelSize(R.dimen.task_thumbnail_icon_drawable_size_grid),
                 taskThumbnailTopMarginPx =
-                    if (enableOverviewIconMenu()) 0 else taskIconSizePx + taskMarginPx,
+                    if (enableOverviewIconMenu()) 0
+                    else res.getDimensionPixelSize(R.dimen.overview_task_thumbnail_top_margin),
                 // Don't add margin with floating search bar to minimize risk of overlapping.
                 actionsTopMarginPx =
                     if (Flags.floatingSearchBar()) 0

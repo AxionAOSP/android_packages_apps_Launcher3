@@ -47,7 +47,7 @@
     <!--  The border width shown when task is hovered  -->
     <dimen name="task_hover_border_width">4dp</dimen>
     <!--  The space under the focused task icon  -->
-    <dimen name="overview_task_margin">16dp</dimen>
+    <dimen name="overview_task_margin">14dp</dimen>
     <!--  The horizontal space between tasks  -->
     <dimen name="overview_page_spacing">16dp</dimen>
     <!--  The collapsed max width of the icon menu text  -->
@@ -127,11 +127,15 @@
 
     <!-- Overrideable in overlay that provides the Overview Actions. -->
     <dimen name="overview_actions_top_margin">24dp</dimen>
-    <dimen name="overview_actions_height">48dp</dimen>
+    <dimen name="overview_actions_height">132dp</dimen>
     <dimen name="overview_actions_button_spacing">16dp</dimen>
     <dimen name="overview_actions_button_radius">28dp</dimen>
     <dimen name="overview_actions_button_vertical_padding">10dp</dimen>
     <dimen name="overview_actions_button_horizontal_padding">16dp</dimen>
+    <dimen name="overview_actions_btn_size">40dp</dimen>
+    <dimen name="overview_task_thumbnail_top_margin">15dp</dimen>
+    <dimen name="overview_actions_clear_all_width">160dp</dimen>
+    <dimen name="overview_actions_clear_all_top_margin">16dp</dimen>
 
     <!-- These speeds are in dp/s -->
     <dimen name="max_task_dismiss_drag_velocity">2.25dp</dimen>
@@ -627,5 +631,10 @@
         frameworks/base/libs/WindowManager/Shell/shared/res/values/dimen.xml.
     -->
     <dimen name="desktop_windowing_freeform_task_rounded_corner_radius">16dp</dimen>
+
+    <dimen name="freeform_target_btn_size">60dp</dimen>
+    <dimen name="freeform_target_hover_size">80dp</dimen>
+    <dimen name="freeform_target_icon_size">24dp</dimen>
+    <dimen name="freeform_target_margin_bottom">20dp</dimen>
 
 </resources>
