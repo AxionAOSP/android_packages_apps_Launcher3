@@ -241,15 +241,17 @@
     <style name="OverviewActionsContainer">
         <item name="buttonStyle">@style/OverviewActionButton</item>
         <item name="android:buttonStyle">@style/OverviewActionButton</item>
+        <item name="overviewActionCircleButtonBackground">@drawable/overview_action_circle_bg</item>
     </style>
 
     <style name="OverviewActionsContainerBlur">
         <item name="buttonStyle">@style/OverviewActionButton.Blur</item>
         <item name="android:buttonStyle">@style/OverviewActionButton.Blur</item>
+        <item name="overviewActionCircleButtonBackground">@drawable/overview_action_circle_bg_blur</item>
     </style>
 
     <style name="OverviewActionButton" parent="@android:style/Widget.DeviceDefault.Button.Borderless">
-        <item name="android:maxHeight">@dimen/overview_actions_height</item>
+        <item name="android:maxHeight">@dimen/overview_actions_btn_size</item>
         <item name="android:paddingVertical">4dp</item>
         <item name="android:paddingHorizontal">@dimen/overview_actions_button_horizontal_padding
         </item>

@@ -327,8 +327,9 @@ CONTAINER : StatefulContainer<T> {
         val isFlingingTowardsDismiss = detector.isFling(velocity) && velocityIsGoingUp
         val isFlingingTowardsRestState = detector.isFling(velocity) && !velocityIsGoingUp
         isDismissing =
-            allowDetach && isFlingingTowardsDismiss ||
-                (isBeyondDismissThreshold && !isFlingingTowardsRestState)
+            !taskBeingDragged.isLocked &&
+                (allowDetach && isFlingingTowardsDismiss ||
+                    (isBeyondDismissThreshold && !isFlingingTowardsRestState))
         val dismissThreshold = (DISMISS_THRESHOLD_FRACTION * dismissLength * verticalFactor).toInt()
         val finalPosition = if (isDismissing) (dismissLength * verticalFactor).toFloat() else 0f
         springAnimation =

@@ -37,6 +37,7 @@ import android.view.MotionEvent
 import android.view.View
 import android.view.View.OnClickListener
 import android.view.ViewGroup
+import android.view.Gravity
 import android.view.ViewStub
 import android.view.accessibility.AccessibilityNodeInfo
 import android.widget.FrameLayout
@@ -46,10 +47,25 @@ import androidx.annotation.VisibleForTesting
 import androidx.core.animation.doOnCancel
 import androidx.core.view.isGone
 import androidx.core.view.isInvisible
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material3.Icon
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.ComposeView
+import androidx.compose.ui.res.colorResource
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.unit.dp
 import androidx.core.view.updateLayoutParams
 import com.android.app.animation.Interpolators
 import com.android.app.tracing.traceSection
 import com.android.launcher3.AbstractFloatingView
+import com.android.launcher3.LauncherPrefs
 import com.android.launcher3.Flags.enableDesktopExplodedView
 import com.android.launcher3.Flags.enableRefactorDigitalWellbeingToast
 import com.android.launcher3.Flags.enableRefactorTaskContentView
@@ -109,6 +125,7 @@ import com.android.quickstep.util.TaskCornerRadius
 import com.android.quickstep.util.TaskRemovedDuringLaunchListener
 import com.android.quickstep.util.isExternalDisplay
 import com.android.quickstep.util.safeDisplayId
+import com.android.quickstep.views.IconAppChipView
 import com.android.quickstep.views.IconAppChipView.AppChipStatus
 import com.android.quickstep.views.OverviewActionsView.DISABLED_NO_THUMBNAIL
 import com.android.quickstep.views.OverviewActionsView.DISABLED_ROTATED
@@ -324,6 +341,8 @@ constructor(
     var isEndQuickSwitchCuj = false
     var isBeingDraggedForDismissal = false
     var isBeingDismissed: Boolean = false
+    var isLocked: Boolean = false
+    private var lockBadgeView: ComposeView? = null
 
     private val systemGestureExclusionRectList = listOf(Rect()) // We only need 1 exclusion Rect
 
@@ -1161,7 +1180,38 @@ constructor(
                 }
             }
             setOrientationState(orientedState)
+
+            val lockedApps = LauncherPrefs.getPrefs(context)
+                .getStringSet(RecentsView.APPS_LOCKED, emptySet()) ?: emptySet()
+            val packageName = firstTask?.key?.getPackageName()
+            isLocked = packageName != null && lockedApps.contains(packageName)
+            updateLockBadge()
         }
+
+    fun updateLockBadge() {
+        val showBadge = isLocked &&
+            container.deviceProfile.deviceProperties.isTablet
+        if (showBadge) {
+            if (lockBadgeView == null) {
+                lockBadgeView = ComposeView(context).apply {
+                    setContent { LockBadge() }
+                }
+                val lp = FrameLayout.LayoutParams(
+                    FrameLayout.LayoutParams.WRAP_CONTENT,
+                    FrameLayout.LayoutParams.WRAP_CONTENT,
+                    Gravity.BOTTOM or Gravity.END
+                )
+                val margin = (8 * resources.displayMetrics.density).toInt()
+                lp.setMargins(margin, margin, margin, margin)
+                addView(lockBadgeView, lp)
+            }
+        } else {
+            lockBadgeView?.let {
+                removeView(it)
+                lockBadgeView = null
+            }
+        }
+    }
 
     private fun applyThumbnailSplashAlpha() {
         val alpha = getSplashAlphaProgress()
@@ -2154,6 +2204,24 @@ constructor(
 
     protected open fun getContainerForIconView(iconView: TaskViewIcon) =
         taskContainers.firstOrNull { it.iconView === iconView }
+
+    @Composable
+    private fun LockBadge() {
+        Box(
+            modifier = Modifier
+                .size(28.dp)
+                .clip(CircleShape)
+                .background(colorResource(R.color.materialColorSurfaceBright)),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                painter = painterResource(R.drawable.ic_app_locked),
+                contentDescription = null,
+                modifier = Modifier.size(16.dp),
+                tint = colorResource(R.color.materialColorOnSurface)
+            )
+        }
+    }
 
     companion object {
         private const val TAG = "TaskView"

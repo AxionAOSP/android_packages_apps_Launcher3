@@ -87,7 +87,7 @@
         <item name="overviewScrimColorFallback">@color/overview_scrim</item>
         <item name="overviewScrimForegroundPrimaryBlur">@color/overview_scrim_foreground_primary</item>
         <item name="overviewScrimForegroundSecondaryBlur">@color/overview_scrim_foreground_secondary</item>
-        <item name="overviewScrimColorBlur">#80FFFFFF</item>
+        <item name="overviewScrimColorBlur">#80333333</item>
         <item name="preloadIconAccentColor">@color/preload_icon_accent_color_light</item>
         <item name="preloadIconBackgroundColor">@color/preload_icon_background_color_light</item>
         <item name="android:windowTranslucentStatus">false</item>

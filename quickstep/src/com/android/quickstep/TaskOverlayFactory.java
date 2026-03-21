@@ -22,6 +22,8 @@ import static com.android.quickstep.views.OverviewActionsView.DISABLED_ROTATED;
 import static com.android.quickstep.views.RecentsViewContainer.containerFromContext;
 
 import android.annotation.SuppressLint;
+import android.app.FreeformLauncher;
+import android.content.ComponentName;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.Insets;
@@ -284,11 +286,40 @@ public class TaskOverlayFactory {
             );
         }
 
+        protected void launchFreeform() {
+            Task task = mTaskContainer.getTask();
+            ComponentName component = task.key.getComponent();
+            if (component != null) {
+                FreeformLauncher.launch(component.getPackageName(),
+                        component.getClassName());
+            } else {
+                String pkg = task.key.getPackageName();
+                if (pkg != null) {
+                    FreeformLauncher.launch(pkg);
+                }
+            }
+        }
+
+        protected void clearAllTasks() {
+            RecentsView recentsView = mTaskContainer.getTaskView().getRecentsView();
+            if (recentsView == null) return;
+            recentsView.getClearAllButton().performClick();
+        }
+
         /**
          * Called when the overlay is no longer used.
          */
         public void reset() {
             setThumbnailState(null);
+            dismissTextSelectionOverlay();
+        }
+
+        private void dismissTextSelectionOverlay() {
+            TaskView taskView = mTaskContainer.getTaskView();
+            TextSelectionOverlay existing = taskView.findViewWithTag("TextSelectionOverlay");
+            if (existing != null) {
+                existing.dismiss();
+            }
         }
 
         /**
@@ -453,6 +484,24 @@ public class TaskOverlayFactory {
             public void onSelectText() {
                 endLiveTileMode(() -> TaskOverlay.this.selectText());
             }
+
+            public void onClearAll() {
+                TaskOverlay.this.clearAllTasks();
+            }
+
+            public void onFreeform() {
+                endLiveTileMode(TaskOverlay.this::launchFreeform);
+            }
+
+            public void onLock() {
+                TaskView taskView = mTaskContainer.getTaskView();
+                if (taskView == null) return;
+                RecentsView recentsView = taskView.getRecentsView();
+                if (recentsView == null) return;
+                String packageName = mTask.key.getPackageName();
+                recentsView.lockApp(packageName, !taskView.isLocked(), mTask.key);
+                getActionsView().updateLockState(taskView.isLocked());
+            }
         }
     }
 
@@ -472,5 +521,11 @@ public class TaskOverlayFactory {
 
         /** User wants to select text from the task thumbnail. */
         void onSelectText();
+
+        void onClearAll();
+
+        void onFreeform();
+
+        void onLock();
     }
 }
