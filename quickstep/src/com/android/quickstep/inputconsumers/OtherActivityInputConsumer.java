@@ -31,6 +31,7 @@ import static com.android.launcher3.util.Executors.MAIN_EXECUTOR;
 import static com.android.launcher3.util.VelocityUtils.PX_PER_MS;
 import static com.android.quickstep.util.ActiveGestureLog.INTENT_EXTRA_LOG_TRACE_ID;
 
+import android.app.FreeformLauncher;
 import android.content.Context;
 import android.content.ContextWrapper;
 import android.content.Intent;
@@ -64,6 +65,8 @@ import com.android.quickstep.util.ActiveGestureProtoLogProxy;
 import com.android.quickstep.util.CachedEventDispatcher;
 import com.android.quickstep.util.MotionPauseDetector;
 import com.android.quickstep.util.NavBarPosition;
+import com.android.quickstep.TopTaskTracker.CachedTaskInfo;
+import com.android.quickstep.views.FreeformDragTargetView;
 import com.android.systemui.shared.system.InputChannelCompat.InputEventReceiver;
 import com.android.systemui.shared.system.InputMonitorCompat;
 
@@ -126,6 +129,9 @@ public class OtherActivityInputConsumer extends ContextWrapper implements InputC
     // Might be displacement in X or Y, depending on the direction we are swiping from the nav bar.
     private float mStartDisplacement;
 
+    private final float mFreeformShowDisplacement;
+    private FreeformDragTargetView mFreeformTarget;
+
     // The callback called upon finishing the recents transition if it was force-canceled
     private Runnable mForceFinishRecentsTransitionCallback;
 
@@ -173,6 +179,7 @@ public class OtherActivityInputConsumer extends ContextWrapper implements InputC
         mStartDisplacement = continuingPreviousGesture ? 0 : -mTouchSlop;
         mDisableHorizontalSwipe = !mPassedPilferInputSlop && disableHorizontalSwipe;
         mRotationTouchHelper = rotationTouchHelper;
+        mFreeformShowDisplacement = base.getResources().getDisplayMetrics().heightPixels * 0.25f;
     }
 
     @Override
@@ -394,6 +401,7 @@ public class OtherActivityInputConsumer extends ContextWrapper implements InputC
                     if (mPassedWindowMoveSlop) {
                         // Move
                         mInteractionHandler.updateDisplacement(displacement - mStartDisplacement);
+                        updateFreeformTarget(ev, upDist);
                     }
 
                     if (mDeviceState.isFullyGesturalNavMode()
@@ -418,6 +426,11 @@ public class OtherActivityInputConsumer extends ContextWrapper implements InputC
                             + " disp=" + squaredHypot(displacementX, displacementY)
                             + " slop=" + mSquaredTouchSlop);
                 }
+                if (ev.getActionMasked() == ACTION_UP
+                        && tryLaunchFreeform(ev)) {
+                    break;
+                }
+                hideFreeformTarget();
                 finishTouchTracking(ev);
                 break;
             }
@@ -613,6 +626,47 @@ public class OtherActivityInputConsumer extends ContextWrapper implements InputC
      */
     public void setForceFinishRecentsTransitionCallback(Runnable r) {
         mForceFinishRecentsTransitionCallback = r;
+    }
+
+    private boolean mFreeformTargetActivated;
+
+    private void updateFreeformTarget(MotionEvent ev, float upDist) {
+        if (!mFreeformTargetActivated && upDist > mFreeformShowDisplacement) {
+            mFreeformTargetActivated = true;
+            if (mFreeformTarget == null) {
+                mFreeformTarget = new FreeformDragTargetView(getBaseContext());
+            }
+            mFreeformTarget.show();
+        }
+        if (mFreeformTargetActivated && mFreeformTarget != null) {
+            mFreeformTarget.setHovering(
+                    mFreeformTarget.isEventOver(ev.getRawX(), ev.getRawY()));
+        }
+    }
+
+    private boolean tryLaunchFreeform(MotionEvent ev) {
+        if (mFreeformTarget == null || !mFreeformTarget.isHovering()) return false;
+        mFreeformTarget.removeImmediately();
+        CachedTaskInfo runningTask = mGestureState.getRunningTask();
+        String pkg = runningTask != null ? runningTask.getPackageName() : null;
+        if (pkg != null) {
+            if (mInteractionHandler != null) {
+                mInteractionHandler.onGestureCancelled();
+            }
+            MAIN_EXECUTOR.getHandler().postDelayed(
+                    () -> FreeformLauncher.launch(pkg), 300);
+            finishTouchTracking(ev);
+            return true;
+        }
+        return false;
+    }
+
+    private void hideFreeformTarget() {
+        mFreeformTargetActivated = false;
+        if (mFreeformTarget != null) {
+            mFreeformTarget.removeImmediately();
+            mFreeformTarget = null;
+        }
     }
 
     /**

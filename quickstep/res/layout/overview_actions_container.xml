@@ -25,35 +25,133 @@
 
     <LinearLayout
         android:id="@+id/action_buttons"
-        android:layout_width="wrap_content"
+        android:layout_width="match_parent"
         android:layout_height="@dimen/overview_actions_height"
-        android:layout_gravity="bottom|center_horizontal"
-        android:orientation="horizontal">
+        android:layout_gravity="top|center_horizontal"
+        android:gravity="top"
+        android:orientation="vertical">
 
-        <Button
-            android:id="@+id/action_screenshot"
+        <LinearLayout
+            android:id="@+id/action_buttons_top"
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/overview_actions_btn_size"
+            android:gravity="center"
+            android:orientation="horizontal">
+
+            <Space
+                android:layout_width="0dp"
+                android:layout_height="1dp"
+                android:layout_weight="1" />
+
+            <ImageButton
+                android:id="@+id/action_lock"
+                android:layout_width="@dimen/overview_actions_btn_size"
+                android:layout_height="@dimen/overview_actions_btn_size"
+                android:background="?attr/overviewActionCircleButtonBackground"
+                android:contentDescription="@string/accessibility_lock_task"
+                android:scaleType="center"
+                android:src="@drawable/ic_app_unlocked"
+                android:tint="?android:attr/textColorPrimary" />
+
+            <Space
+                android:layout_width="@dimen/overview_actions_button_spacing"
+                android:layout_height="1dp" />
+
+            <ImageButton
+                android:id="@+id/action_screenshot"
+                android:layout_width="@dimen/overview_actions_btn_size"
+                android:layout_height="@dimen/overview_actions_btn_size"
+                android:background="?attr/overviewActionCircleButtonBackground"
+                android:contentDescription="@string/action_screenshot"
+                android:scaleType="center"
+                android:src="@drawable/ic_screenshot"
+                android:tint="?android:attr/textColorPrimary" />
+
+            <Space
+                android:layout_width="@dimen/overview_actions_button_spacing"
+                android:layout_height="1dp" />
+
+            <ImageButton
+                android:id="@+id/action_select_text"
+                android:layout_width="@dimen/overview_actions_btn_size"
+                android:layout_height="@dimen/overview_actions_btn_size"
+                android:background="?attr/overviewActionCircleButtonBackground"
+                android:contentDescription="@string/action_select_text"
+                android:scaleType="center"
+                android:src="@drawable/ic_select_text"
+                android:tint="?android:attr/textColorPrimary" />
+
+            <Space
+                android:id="@+id/action_freeform_pre_space"
+                android:layout_width="@dimen/overview_actions_button_spacing"
+                android:layout_height="1dp"
+                android:visibility="gone" />
+
+            <ImageButton
+                android:id="@+id/action_freeform"
+                android:layout_width="@dimen/overview_actions_btn_size"
+                android:layout_height="@dimen/overview_actions_btn_size"
+                android:background="?attr/overviewActionCircleButtonBackground"
+                android:contentDescription="@string/action_freeform"
+                android:scaleType="center"
+                android:src="@drawable/ic_overview_freeform"
+                android:tint="?android:attr/textColorPrimary"
+                android:visibility="gone" />
+
+            <Space
+                android:id="@+id/action_freeform_space"
+                android:layout_width="@dimen/overview_actions_button_spacing"
+                android:layout_height="1dp"
+                android:visibility="gone" />
+
+            <Button
+                android:id="@+id/action_split"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/action_split"
+                android:visibility="gone" />
+
+            <Space
+                android:layout_width="0dp"
+                android:layout_height="1dp"
+                android:layout_weight="1" />
+
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/lock_hint"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:drawableStart="@drawable/ic_screenshot"
-            android:text="@string/action_screenshot" />
+            android:layout_gravity="center_horizontal"
+            android:ellipsize="end"
+            android:maxLines="1"
+            android:paddingTop="8dp"
+            android:textColor="?android:attr/textColorSecondary"
+            android:textSize="12sp" />
+
+        <Space
+            android:layout_width="1dp"
+            android:layout_height="@dimen/overview_actions_clear_all_top_margin" />
 
         <Button
-            android:id="@+id/action_select_text"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="@dimen/overview_actions_button_spacing"
-            android:drawableStart="@drawable/ic_select_text"
-            android:text="@string/action_select_text" />
-
-        <Button
-            android:id="@+id/action_split"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="@dimen/overview_actions_button_spacing"
-            android:text="@string/action_split"
-            android:visibility="gone" />
+            android:id="@+id/action_clear_all"
+            android:layout_width="@dimen/overview_actions_clear_all_width"
+            android:layout_height="@dimen/overview_actions_btn_size"
+            android:layout_gravity="center_horizontal"
+            android:text="@string/recents_clear_all" />
 
     </LinearLayout>
+
+    <TextView
+        android:id="@+id/lock_hint_landscape"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_horizontal"
+        android:ellipsize="end"
+        android:maxLines="1"
+        android:textColor="?android:attr/textColorSecondary"
+        android:textSize="12sp"
+        android:visibility="gone" />
 
     <!-- Currently, the only "group action button" is this save app pair button. If more are added,
     a new LinearLayout may be needed to contain them, but beware of increased memory usage. -->
@@ -61,8 +159,8 @@
         android:id="@+id/action_save_app_pair"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="@string/action_save_app_pair"
         android:layout_gravity="bottom|center_horizontal"
+        android:text="@string/action_save_app_pair"
         android:visibility="gone" />
 
 </com.android.quickstep.views.OverviewActionsView>

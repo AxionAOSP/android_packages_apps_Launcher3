@@ -16,6 +16,8 @@
 
 package com.android.quickstep
 
+import android.app.FreeformLauncher
+import android.provider.Settings
 import android.view.View
 import com.android.launcher3.R
 import com.android.launcher3.logging.StatsLogManager.LauncherEvent
@@ -26,6 +28,7 @@ import com.android.quickstep.views.GroupedTaskView
 import com.android.quickstep.views.RecentsViewContainer
 import com.android.quickstep.views.RecentsViewContainer.containerFromContext
 import com.android.quickstep.views.TaskView
+import com.android.wm.shell.shared.desktopmode.DesktopModeStatus
 
 /**
  * Represents a system shortcut that can be shown for a [TaskView]. Appears as a single entry in the
@@ -41,6 +44,67 @@ interface TaskViewShortFactory {
     fun showForGroupedTask() = false
 
     fun showForDesktopTask() = false
+
+    class LockAppSystemShortcut(
+        iconResId: Int,
+        textResId: Int,
+        container: RecentsViewContainer,
+        private val taskView: TaskView,
+    ) :
+        SystemShortcut<ActivityContext>(
+            iconResId,
+            textResId,
+            container,
+            taskView.itemInfo,
+            taskView,
+        ) {
+        override fun onClick(view: View) {
+            val recentsView = taskView.recentsView ?: return
+            val task = taskView.firstTask ?: return
+            val packageName = task.key?.packageName ?: return
+            dismissTaskMenuView()
+            recentsView.lockApp(packageName, !taskView.isLocked, task.key)
+            (mTarget as RecentsViewContainer).actionsView.updateLockState(taskView.isLocked)
+            taskView.updateLockBadge()
+        }
+    }
+
+    class FreeformSystemShortcut(
+        iconResId: Int,
+        textResId: Int,
+        container: RecentsViewContainer,
+        private val taskView: TaskView,
+    ) :
+        SystemShortcut<ActivityContext>(
+            iconResId,
+            textResId,
+            container,
+            taskView.itemInfo,
+            taskView,
+        ) {
+        override fun onClick(view: View) {
+            val recentsView = taskView.recentsView ?: return
+            dismissTaskMenuView()
+            recentsView.switchToScreenshot {
+                recentsView.finishRecentsAnimation(true, false) {
+                    (mTarget as RecentsViewContainer).returnToHomescreen()
+                    recentsView.handler.post {
+                        val taskKey = taskView.firstTask?.key ?: return@post
+                        val component = taskKey.component
+                        if (component != null) {
+                            FreeformLauncher.launch(component.packageName, component.className)
+                        } else {
+                            val pkg = taskKey.packageName ?: return@post
+                            FreeformLauncher.launch(pkg)
+                        }
+                        mTarget.statsLogManager.logger()
+                            .withItemInfo(taskView.itemInfo)
+                            .log(LauncherEvent.LAUNCHER_SYSTEM_SHORTCUT_FREE_FORM_TAP)
+                    }
+                }
+            }
+        }
+    }
 
     class RemoveTaskSystemShortcut(
         iconResId: Int,
@@ -81,6 +145,53 @@ interface TaskViewShortFactory {
                 .filter { taskView !is DesktopTaskView || it.showForDesktopTask() }
                 .flatMap { it.getShortcuts(containerFromContext(taskView.context), taskView) }
 
+        private val FREE_FORM: TaskViewShortFactory =
+            object : TaskViewShortFactory {
+                override fun getShortcuts(
+                    container: RecentsViewContainer,
+                    taskView: TaskView,
+                ): List<SystemShortcut<ActivityContext>> {
+                    val task = taskView.firstTask ?: return emptyList()
+                    if (!task.isDockable) return emptyList()
+                    val context = container.asContext()
+                    val freeformEnabled = Settings.Global.getInt(
+                        context.contentResolver,
+                        Settings.Global.DEVELOPMENT_ENABLE_FREEFORM_WINDOWS_SUPPORT, 0
+                    ) != 0
+                    if (!freeformEnabled || DesktopModeStatus.canEnterDesktopMode(context)) {
+                        return emptyList()
+                    }
+                    return listOf(
+                        FreeformSystemShortcut(
+                            R.drawable.ic_caption_desktop_button_foreground,
+                            R.string.recent_task_option_freeform,
+                            container,
+                            taskView,
+                        )
+                    )
+                }
+            }
+
+        private val LOCK_APP: TaskViewShortFactory =
+            object : TaskViewShortFactory {
+                override fun getShortcuts(
+                    container: RecentsViewContainer,
+                    taskView: TaskView,
+                ): List<SystemShortcut<ActivityContext>> {
+                    if (taskView.firstTask == null) return emptyList()
+                    val isLocked = taskView.isLocked
+                    val iconRes = if (isLocked) R.drawable.ic_app_locked
+                        else R.drawable.ic_app_unlocked
+                    val textRes = if (isLocked) R.string.recent_task_option_unlock
+                        else R.string.recent_task_option_lock
+                    return listOf(
+                        LockAppSystemShortcut(iconRes, textRes, container, taskView)
+                    )
+                }
+
+                override fun showForGroupedTask() = true
+            }
+
         private val REMOVE_TASK: TaskViewShortFactory =
             object : TaskViewShortFactory {
                 override fun getShortcuts(
@@ -106,6 +217,7 @@ interface TaskViewShortFactory {
                 override fun showForDesktopTask() = true
             }
 
-        private val TASK_VIEW_MENU_OPTIONS: Array<TaskViewShortFactory> = arrayOf(REMOVE_TASK)
+        private val TASK_VIEW_MENU_OPTIONS: Array<TaskViewShortFactory> =
+            arrayOf(FREE_FORM, LOCK_APP, REMOVE_TASK)
     }
 }

@@ -93,6 +93,7 @@ import android.app.ActivityManager;
 import android.content.Context;
 import android.content.Intent;
 import android.content.LocusId;
+import android.content.SharedPreferences;
 import android.content.pm.LauncherApps;
 import android.content.res.Configuration;
 import android.graphics.Bitmap;
@@ -149,6 +150,7 @@ import androidx.dynamicanimation.animation.SpringAnimation;
 import com.android.internal.jank.Cuj;
 import com.android.launcher3.AbstractFloatingView;
 import com.android.launcher3.BuildConfig;
+import com.android.launcher3.LauncherPrefs;
 import com.android.launcher3.DeviceProfile;
 import com.android.launcher3.Insettable;
 import com.android.launcher3.MotionEventsUtils;
@@ -292,6 +294,7 @@ public abstract class RecentsView<
         TaskVisualsChangeListener {
 
     protected static final String TAG = "RecentsView";
+    public static final String APPS_LOCKED = "apps_locked";
 
     public static final FloatProperty<RecentsView<?, ?>> CONTENT_ALPHA =
             new FloatProperty<>("contentAlpha") {
@@ -4434,6 +4437,15 @@ public abstract class RecentsView<
 
         boolean isCurrentDesktop = taskView instanceof DesktopTaskView;
         mActionsView.updateHiddenFlags(HIDDEN_DESKTOP, isCurrentDesktop);
+
+        mActionsView.setFreeformVisible(
+                taskView != null && !isCurrentSplit && !isCurrentDesktop);
+        mActionsView.setClearAllEnabled(hasTaskViews());
+
+        if (taskView != null) {
+            mActionsView.updateLockState(taskView.isLocked());
+        }
+        updateLockHint();
     }
 
     /**
@@ -4504,27 +4516,44 @@ public abstract class RecentsView<
         PendingAnimation anim = new PendingAnimation(duration);
 
         for (TaskView taskView : getTaskViews()) {
-            addDismissedTaskAnimations(taskView, duration, anim);
+            if (!taskView.isLocked()) {
+                addDismissedTaskAnimations(taskView, duration, anim);
+            }
         }
 
+        boolean hasLockedTasks = false;
+        for (TaskView tv : getTaskViews()) {
+            if (tv.isLocked()) {
+                hasLockedTasks = true;
+                break;
+            }
+        }
+
+        final boolean locked = hasLockedTasks;
         mPendingAnimation = anim;
         mPendingAnimation.addEndListener(isSuccess -> {
             if (isSuccess) {
-                // Remove desktops first, since desks can be empty (so they have no recent tasks),
-                // and closing all tasks on a desk doesn't always necessarily mean that the desk
-                // will be removed. So, there are no guarantees that the below call to
-                // `ActivityManagerWrapper::removeAllRecentTasks()` will be enough.
-                SystemUiProxy.INSTANCE.get(getContext()).removeAllDesks(
-                        DesktopModeTransitionSource.RECENTS);
-
-                // Remove all the task views now
-                finishRecentsAnimation(true /* toHome */, false /* shouldPip */, () -> {
-                    UI_HELPER_EXECUTOR.getHandler().post(
-                            ActivityManagerWrapper.getInstance()::removeAllRecentTasks);
-                    removeAllTaskViews();
-                    startHome();
+                if (locked) {
+                    removeTasksWithoutLocked();
+                    updateLockHint();
                     InteractionJankMonitorWrapper.end(Cuj.CUJ_LAUNCHER_OVERVIEW_CLEAR_ALL);
-                });
+                } else {
+                    // Remove desktops first, since desks can be empty (so they have no recent
+                    // tasks), and closing all tasks on a desk doesn't always necessarily mean
+                    // that the desk will be removed. So, there are no guarantees that the below
+                    // call to `ActivityManagerWrapper::removeAllRecentTasks()` will be enough.
+                    SystemUiProxy.INSTANCE.get(getContext()).removeAllDesks(
+                            DesktopModeTransitionSource.RECENTS);
+
+                    // Remove all the task views now
+                    finishRecentsAnimation(true /* toHome */, false /* shouldPip */, () -> {
+                        UI_HELPER_EXECUTOR.getHandler().post(
+                                ActivityManagerWrapper.getInstance()::removeAllRecentTasks);
+                        removeAllTaskViews();
+                        startHome();
+                        InteractionJankMonitorWrapper.end(Cuj.CUJ_LAUNCHER_OVERVIEW_CLEAR_ALL);
+                    });
+                }
             }
             mPendingAnimation = null;
         });
@@ -4638,6 +4667,7 @@ public abstract class RecentsView<
 
     /** Dismisses the entire [taskView]. */
     public void dismissTaskView(TaskView taskView, boolean animateTaskView, boolean removeTask) {
+        if (taskView.isLocked()) return;
         if (enableExpressiveDismissTaskMotion() && (!showAsGrid() || enableGridOnlyOverview())) {
             mDismissUtils.createTaskDismissSpringAnimation(taskView, removeTask,
                     false /* isSplitSelection */);
@@ -4659,6 +4689,78 @@ public abstract class RecentsView<
             runDismissAnimation(createAllTasksDismissAnimation(DISMISS_TASK_DURATION));
         }
         mContainer.getStatsLogManager().logger().log(LAUNCHER_TASK_CLEAR_ALL);
+    }
+
+    public void setAppLock(String packageName, boolean lock) {
+        SharedPreferences prefs = LauncherPrefs.getPrefs(getContext());
+        Set<String> oldLocked = prefs.getStringSet(APPS_LOCKED, new HashSet<>());
+        Set<String> locked = new HashSet<>(oldLocked);
+        for (int i = getTaskViewCount() - 1; i >= 0; i--) {
+            TaskView tv = getTaskViewAt(i);
+            if (tv.getFirstTask() != null
+                    && packageName.equals(tv.getFirstTask().key.getPackageName())) {
+                tv.setLocked(lock);
+                if (lock) {
+                    if (locked.add(packageName)) {
+                        Toast.makeText(getContext(),
+                                R.string.recent_task_lock_success, Toast.LENGTH_SHORT).show();
+                    }
+                } else {
+                    if (locked.remove(packageName)) {
+                        Toast.makeText(getContext(),
+                                R.string.recent_task_unlock_success, Toast.LENGTH_SHORT).show();
+                    }
+                }
+            }
+        }
+        prefs.edit().putStringSet(APPS_LOCKED, locked).apply();
+    }
+
+    public void lockApp(String packageName, boolean lock, Task.TaskKey taskKey) {
+        setAppLock(packageName, lock);
+        updateLockHint();
+    }
+
+    void removeTasksWithoutLocked() {
+        for (int i = getTaskViewCount() - 1; i >= 0; i--) {
+            TaskView tv = getTaskViewAt(i);
+            if (tv != null && !tv.isLocked()) {
+                Task task = tv.getFirstTask();
+                if (task != null) {
+                    UI_HELPER_EXECUTOR.getHandler().post(
+                            () -> ActivityManagerWrapper.getInstance()
+                                    .removeTask(task.key.id));
+                }
+                removeView(tv);
+            }
+        }
+    }
+
+    public void updateLockHint() {
+        int lockCount = 0;
+        int taskCount = getTaskViewCount();
+        for (int i = taskCount - 1; i >= 0; i--) {
+            TaskView tv = getTaskViewAt(i);
+            if (tv != null && tv.isLocked()) {
+                lockCount++;
+            }
+        }
+        mActionsView.setClearAllEnabled(true);
+        if (lockCount > 0) {
+            if (lockCount == taskCount) {
+                mActionsView.setLockHint(
+                        getContext().getString(R.string.recent_task_all_lock));
+                mActionsView.setClearAllEnabled(false);
+            } else if (lockCount == 1) {
+                mActionsView.setLockHint(
+                        getContext().getString(R.string.recent_task_one_lock));
+            } else {
+                mActionsView.setLockHint(
+                        getContext().getString(R.string.recent_task_some_lock, lockCount));
+            }
+        } else {
+            mActionsView.setLockHint("");
+        }
     }
 
     private void dismissCurrentTask() {
