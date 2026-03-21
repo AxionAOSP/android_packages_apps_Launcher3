@@ -358,8 +358,11 @@ public class InvariantDeviceProfile {
 
         // Filter out options that don't have the same number of columns as the grid
         DeviceGridState deviceGridState = new DeviceGridState(mPrefs);
-        List<DisplayOption> allOptionsFilteredByColCount =
-                filterByColumnCount(allOptions, deviceGridState.getColumns());
+        boolean deviceTypeChanged =
+                deviceGridState.getDeviceType() != displayInfo.getDeviceType();
+        List<DisplayOption> allOptionsFilteredByColCount = deviceTypeChanged
+                ? Collections.emptyList()
+                : filterByColumnCount(allOptions, deviceGridState.getColumns());
 
         DisplayOption displayOption =
                 invDistWeightedInterpolate(displayInfo, allOptionsFilteredByColCount.isEmpty()
