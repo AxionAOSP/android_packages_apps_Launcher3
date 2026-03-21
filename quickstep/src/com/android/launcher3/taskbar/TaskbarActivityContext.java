@@ -41,6 +41,7 @@ import static com.android.launcher3.taskbar.TaskbarAutohideSuspendController.FLA
 import static com.android.launcher3.taskbar.TaskbarAutohideSuspendController.FLAG_AUTOHIDE_SUSPEND_FULLSCREEN;
 import static com.android.launcher3.taskbar.TaskbarDesktopExperienceFlags.enableAutoStashConnectedDisplayTaskbar;
 import static com.android.launcher3.taskbar.TaskbarManagerImpl.ENABLE_TASKBAR_URI;
+import static com.android.launcher3.taskbar.TaskbarManagerImpl.NAV_BAR_IME_URI;
 import static com.android.launcher3.taskbar.TaskbarManagerImpl.NAVIGATION_BAR_HINT_URI;
 import static com.android.launcher3.taskbar.TaskbarStashController.FLAG_IN_SECONDARY_LAUNCHER_ON_CD;
 import static com.android.launcher3.taskbar.TaskbarStashController.FLAG_STASHED_IN_APP_AUTO;
@@ -246,6 +247,7 @@ public class TaskbarActivityContext extends BaseTaskbarContext {
 
     private NavigationMode mNavMode;
     private boolean mImeDrawsImeNavBar;
+    private boolean mHideImeNavBar;
 
     /**
      * Static return value of {@link #isImeDocked}, used for testing only. A {@code null} value will
@@ -560,6 +562,7 @@ public class TaskbarActivityContext extends BaseTaskbarContext {
         mNavMode = getNavigationMode();
 
         SettingsCache settingsCache = SettingsCache.INSTANCE.get(this);
+        mHideImeNavBar = !settingsCache.getValue(NAV_BAR_IME_URI);
         mIsUserSetupComplete = settingsCache.getValue(Secure.getUriFor(Secure.USER_SETUP_COMPLETE));
         mIsNavBarKidsMode = settingsCache.getValue(Secure.getUriFor(Secure.NAV_BAR_KIDS_MODE));
         mIsNavBarForceVisible = mIsNavBarKidsMode;
@@ -894,6 +897,10 @@ public class TaskbarActivityContext extends BaseTaskbarContext {
 
     public boolean imeDrawsImeNavBar() {
         return mImeDrawsImeNavBar;
+    }
+
+    public boolean isImeNavBarHidden() {
+        return mHideImeNavBar;
     }
 
     public int getCornerRadius() {
