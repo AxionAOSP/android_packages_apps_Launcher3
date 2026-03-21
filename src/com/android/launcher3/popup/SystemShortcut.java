@@ -29,15 +29,22 @@ import androidx.annotation.Nullable;
 
 import com.android.launcher3.AbstractFloatingView;
 import com.android.launcher3.AbstractFloatingViewHelper;
+import com.android.launcher3.CellLayout;
 import com.android.launcher3.DropTargetHandler;
 import com.android.launcher3.Flags;
+import com.android.launcher3.Launcher;
 import com.android.launcher3.LauncherSettings;
 import com.android.launcher3.R;
 import com.android.launcher3.SecondaryDropTarget;
 import com.android.launcher3.Utilities;
+import com.android.launcher3.Workspace;
 import com.android.launcher3.accessibility.LauncherAccessibilityDelegate;
 import com.android.launcher3.allapps.PrivateProfileManager;
+import com.android.launcher3.celllayout.CellLayoutLayoutParams;
+import com.android.launcher3.folder.FolderIcon;
+import com.android.launcher3.folder.FolderStylePickerSheet;
 import com.android.launcher3.logging.StatsLogManager;
+import com.android.launcher3.model.data.FolderInfo;
 import com.android.launcher3.model.data.ItemInfo;
 import com.android.launcher3.model.data.ItemInfoWithIcon;
 import com.android.launcher3.model.data.WorkspaceItemInfo;
@@ -575,6 +582,211 @@ public abstract class SystemShortcut<T extends ActivityContext> extends ItemInfo
             }
         }
     }
+    public static final Factory<ActivityContext> ENLARGE =
+            (context, itemInfo, originalView) -> {
+                if (originalView == null) {
+                    return null;
+                }
+                if ((itemInfo.itemType != LauncherSettings.Favorites.ITEM_TYPE_DEEP_SHORTCUT)
+                        && (itemInfo.itemType != LauncherSettings.Favorites.ITEM_TYPE_APPLICATION)
+                        && (itemInfo.itemType != LauncherSettings.Favorites.ITEM_TYPE_FOLDER)
+                        && !(itemInfo instanceof WorkspaceItemInfo)) {
+                    return null;
+                }
+                if (itemInfo.spanX != 1 || itemInfo.spanY != 1) {
+                    return null;
+                }
+
+                if (context instanceof Launcher) {
+                    Launcher launcher = (Launcher) context;
+                    Workspace workspace = launcher.getWorkspace();
+                    int screenId = itemInfo.screenId;
+                    int cellX = itemInfo.cellX;
+                    int cellY = itemInfo.cellY;
+
+                    CellLayout layout = workspace.getScreenWithId(screenId);
+                    if (layout != null) {
+                        boolean isVacant = false;
+
+                        int countX = layout.getCountX();
+                        int countY = layout.getCountY();
+
+                        if (cellX + 1 < countX && cellY + 1 < countY) {
+                            boolean right = layout.isRegionVacant(cellX + 1, cellY, 1, 1);
+                            boolean bottom = layout.isRegionVacant(cellX, cellY + 1, 1, 1);
+                            boolean diag = layout.isRegionVacant(cellX + 1, cellY + 1, 1, 1);
+
+                            Log.d(TAG, "Checking Enlarge for " + itemInfo.title + " at (" + cellX + "," + cellY + ")" +
+                                    " right=" + right + " bottom=" + bottom + " diag=" + diag);
+
+                            if (right && bottom && diag) {
+                                isVacant = true;
+                            }
+                        } else {
+                            Log.d(TAG, "Checking Enlarge for " + itemInfo.title + " at (" + cellX + "," + cellY + ")" +
+                                    " failed boundary check: " + (cellX+1) + "<" + countX + " && " + (cellY+1) + "<" + countY);
+                        }
+
+                        if (!isVacant) {
+                            return null;
+                        }
+                    }
+                }
+
+                return new EnlargeIcon<>(context, itemInfo, originalView);
+            };
+
+    public static class EnlargeIcon<T extends ActivityContext> extends SystemShortcut<T> {
+
+        public EnlargeIcon(T target, ItemInfo itemInfo, @NonNull View originalView) {
+            super(R.drawable.ic_enlarge, R.string.action_enlarge, target, itemInfo, originalView);
+        }
+
+        @Override
+        public void onClick(View view) {
+            if (!(mTarget instanceof Launcher)) {
+                return;
+            }
+            Launcher launcher = (Launcher) mTarget;
+            Workspace workspace = launcher.getWorkspace();
+            CellLayout layout = workspace.getScreenWithId(mItemInfo.screenId);
+            if (layout == null) {
+                return;
+            }
+
+            View workspaceView = layout.getChildAt(mItemInfo.cellX, mItemInfo.cellY);
+            if (workspaceView == null) {
+                return;
+            }
+
+            CellLayoutLayoutParams lp =
+                    (CellLayoutLayoutParams)
+                            workspaceView.getLayoutParams();
+
+            layout.markCellsAsUnoccupiedForView(workspaceView);
+
+            int newX = mItemInfo.cellX;
+            int newY = mItemInfo.cellY;
+
+            if (layout.isRegionVacant(mItemInfo.cellX, mItemInfo.cellY, 2, 2)) {
+            } else if (layout.isRegionVacant(mItemInfo.cellX - 1, mItemInfo.cellY, 2, 2)) {
+                newX = mItemInfo.cellX - 1;
+            } else if (layout.isRegionVacant(mItemInfo.cellX, mItemInfo.cellY - 1, 2, 2)) {
+                newY = mItemInfo.cellY - 1;
+            } else if (layout.isRegionVacant(mItemInfo.cellX - 1, mItemInfo.cellY - 1, 2, 2)) {
+                newX = mItemInfo.cellX - 1;
+                newY = mItemInfo.cellY - 1;
+            }
+
+            lp.setCellX(newX);
+            lp.setCellY(newY);
+            lp.cellHSpan = 2;
+            lp.cellVSpan = 2;
+            mItemInfo.cellX = newX;
+            mItemInfo.cellY = newY;
+            mItemInfo.spanX = 2;
+            mItemInfo.spanY = 2;
+
+            layout.markCellsAsOccupiedForView(workspaceView);
+            workspaceView.requestLayout();
+            mTarget.getModelWriter().updateItemInDatabase(mItemInfo);
+            AbstractFloatingView.closeAllOpenViews(mTarget);
+        }
+    }
+
+    public static final Factory<ActivityContext> MINIMIZE =
+            (context, itemInfo, originalView) -> {
+                if (originalView == null) {
+                    return null;
+                }
+                if (itemInfo.spanX != 2 || itemInfo.spanY != 2) {
+                    return null;
+                }
+                return new MinimizeIcon<>(context, itemInfo, originalView);
+            };
+
+    public static class MinimizeIcon<T extends ActivityContext> extends SystemShortcut<T> {
+
+        public MinimizeIcon(T target, ItemInfo itemInfo, @NonNull View originalView) {
+            super(R.drawable.ic_minimize, R.string.action_minimize, target, itemInfo, originalView);
+        }
+
+        @Override
+        public void onClick(View view) {
+            if (!(mTarget instanceof Launcher)) {
+                return;
+            }
+            Launcher launcher = (Launcher) mTarget;
+            Workspace workspace = launcher.getWorkspace();
+            CellLayout layout = workspace.getScreenWithId(mItemInfo.screenId);
+            if (layout == null) {
+                return;
+            }
+
+            View workspaceView = layout.getChildAt(mItemInfo.cellX, mItemInfo.cellY);
+            if (workspaceView == null) {
+                return;
+            }
+
+            CellLayoutLayoutParams lp =
+                    (CellLayoutLayoutParams)
+                            workspaceView.getLayoutParams();
+
+            layout.markCellsAsUnoccupiedForView(workspaceView);
+
+            lp.cellHSpan = 1;
+            lp.cellVSpan = 1;
+            mItemInfo.spanX = 1;
+            mItemInfo.spanY = 1;
+
+            layout.markCellsAsOccupiedForView(workspaceView);
+            workspaceView.requestLayout();
+            mTarget.getModelWriter().updateItemInDatabase(mItemInfo);
+            AbstractFloatingView.closeAllOpenViews(mTarget);
+        }
+    }
+
+    public static final Factory<Launcher> CUSTOMIZE_FOLDER =
+            (context, itemInfo, originalView) -> {
+                if (itemInfo.itemType != LauncherSettings.Favorites.ITEM_TYPE_FOLDER) {
+                    return null;
+                }
+                return new CustomizeFolder(context, itemInfo, originalView);
+            };
+
+    public static class CustomizeFolder extends SystemShortcut<Launcher> {
+        public CustomizeFolder(Launcher target, ItemInfo itemInfo, View originalView) {
+            super(R.drawable.ic_customize, R.string.action_customize_folder, target, itemInfo, originalView);
+        }
+
+        @Override
+        public void onClick(View view) {
+            AbstractFloatingView.closeAllOpenViews(mTarget);
+            if (!(mItemInfo instanceof FolderInfo folderInfo)) {
+                return;
+            }
+            FolderIcon folderIcon = findFolderIcon(mOriginalView);
+            if (folderIcon != null) {
+                FolderStylePickerSheet.Companion.show(mTarget, folderIcon, folderInfo);
+            }
+        }
+
+        private FolderIcon findFolderIcon(View view) {
+            View current = view;
+            while (current != null) {
+                if (current instanceof FolderIcon) {
+                    return (FolderIcon) current;
+                }
+                if (current.getParent() instanceof View) {
+                    current = (View) current.getParent();
+                } else {
+                    break;
+                }
+            }
+            return null;
+        }
+    }
+
     public static final Factory<ActivityContext> BUBBLE_SHORTCUT =
             (activity, itemInfo, originalView) -> {
                 if ((itemInfo.itemType != LauncherSettings.Favorites.ITEM_TYPE_DEEP_SHORTCUT)

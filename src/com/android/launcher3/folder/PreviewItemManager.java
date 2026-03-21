@@ -32,6 +32,7 @@ import android.animation.ObjectAnimator;
 import android.animation.ValueAnimator;
 import android.content.Context;
 import android.graphics.Canvas;
+import android.graphics.Paint;
 import android.graphics.Path;
 import android.graphics.PointF;
 import android.graphics.Rect;
@@ -45,6 +46,7 @@ import androidx.annotation.VisibleForTesting;
 
 import com.android.launcher3.BubbleTextView;
 import com.android.launcher3.LauncherAppState;
+import com.android.launcher3.LauncherSettings;
 import com.android.launcher3.Utilities;
 import com.android.launcher3.apppairs.AppPairIcon;
 import com.android.launcher3.apppairs.AppPairIconDrawingParams;
@@ -53,6 +55,7 @@ import com.android.launcher3.model.data.AppPairInfo;
 import com.android.launcher3.model.data.ItemInfo;
 import com.android.launcher3.model.data.ItemInfoWithIcon;
 import com.android.launcher3.model.data.WorkspaceItemInfo;
+import com.android.launcher3.util.Themes;
 import com.android.launcher3.views.ActivityContext;
 
 import java.util.ArrayList;
@@ -90,6 +93,7 @@ public class PreviewItemManager {
     private float mIntrinsicIconSize = -1;
     private int mTotalWidth = -1;
     private int mPrevTopPadding = -1;
+    private int mPrevFolderStyle = -1;
     private Drawable mReferenceDrawable = null;
 
     private int mNumOfPrevItems = 0;
@@ -105,6 +109,7 @@ public class PreviewItemManager {
     private final float mClipThreshold;
     private float mCurrentPageItemsTransX = 0;
     private boolean mShouldSlideInFirstPage;
+    private final Paint mIndicatorPaint;
 
     static final int INITIAL_ITEM_ANIMATION_DURATION = 350;
     private static final int FINAL_ITEM_ANIMATION_DURATION = 200;
@@ -119,6 +124,36 @@ public class PreviewItemManager {
         mIconSize = ActivityContext.lookupContext(
                 mContext).getDeviceProfile().getFolderProfile().getChildIconSizePx();
         mClipThreshold = dpToPx(1f);
+        mIndicatorPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+    }
+
+    public ItemInfo getItemAtPosition(float x, float y) {
+        float adjustedX = x - mIcon.mBackground.basePreviewOffsetX;
+        float adjustedY = y - mIcon.mBackground.basePreviewOffsetY;
+
+        int indicatorIndex = getIndicatorIndex();
+        int totalItems = mIcon.mInfo.getContents().size();
+
+        for (int i = 0; i < mFirstPageParams.size(); i++) {
+            PreviewItemDrawingParams params = mFirstPageParams.get(i);
+            if (params.hidden || params.item == null) continue;
+
+            if (indicatorIndex >= 0 && totalItems > indicatorIndex && i >= indicatorIndex) {
+                continue;
+            }
+
+            float iconSize = mIntrinsicIconSize * params.scale;
+            float iconLeft = params.transX;
+            float iconTop = params.transY;
+            float iconRight = iconLeft + iconSize;
+            float iconBottom = iconTop + iconSize;
+
+            if (adjustedX >= iconLeft && adjustedX <= iconRight
+                && adjustedY >= iconTop && adjustedY <= iconBottom) {
+                return params.item;
+            }
+        }
+        return null;
     }
 
     /**
@@ -127,6 +162,12 @@ public class PreviewItemManager {
      */
     public FolderPreviewItemAnim createFirstItemAnimation(final boolean reverse,
             final Runnable onCompleteRunnable) {
+        if (mFirstPageParams.isEmpty()) {
+            if (onCompleteRunnable != null) {
+                onCompleteRunnable.run();
+            }
+            return null;
+        }
         return reverse
                 ? new FolderPreviewItemAnim(this, mFirstPageParams.get(0), 0, 2, -1, -1,
                 FINAL_ITEM_ANIMATION_DURATION, onCompleteRunnable)
@@ -152,15 +193,27 @@ public class PreviewItemManager {
     }
 
     private void computePreviewDrawingParams(int drawableSize, int totalSize) {
+        int folderStyle = mIcon.getFolderStyle();
         if (mIntrinsicIconSize != drawableSize || mTotalWidth != totalSize ||
-                mPrevTopPadding != mIcon.getPaddingTop()) {
+                mPrevTopPadding != mIcon.getPaddingTop() || mPrevFolderStyle != folderStyle) {
             mIntrinsicIconSize = drawableSize;
             mTotalWidth = totalSize;
             mPrevTopPadding = mIcon.getPaddingTop();
+            mPrevFolderStyle = folderStyle;
 
             mIcon.mBackground.setup(mIcon.getContext(), mIcon.mActivity, mIcon, mTotalWidth,
                     mIcon.getPaddingTop());
             mIcon.mPreviewLayoutRule.init(
+                    mIcon.mBackground.previewSize, mIntrinsicIconSize,
+                    Utilities.isRtl(mIcon.getResources()),
+                    mIcon.mActivity.getDeviceProfile().getFolderProfile().getNumColumns()
+            );
+            mIcon.mGridLayoutRule.init(
+                    mIcon.mBackground.previewSize, mIntrinsicIconSize,
+                    Utilities.isRtl(mIcon.getResources()),
+                    mIcon.mActivity.getDeviceProfile().getFolderProfile().getNumColumns()
+            );
+            mIcon.mCircleLayoutRule.init(
                     mIcon.mBackground.previewSize, mIntrinsicIconSize,
                     Utilities.isRtl(mIcon.getResources()),
                     mIcon.mActivity.getDeviceProfile().getFolderProfile().getNumColumns()
@@ -176,7 +229,15 @@ public class PreviewItemManager {
         if (index == -1) {
             return getFinalIconParams(params);
         }
-        return mIcon.mPreviewLayoutRule.computePreviewItemDrawingParams(index, curNumItems, params);
+        int style = mIcon.getFolderStyle();
+        switch (style) {
+            case LauncherSettings.Favorites.FOLDER_STYLE_GRID:
+                return mIcon.mGridLayoutRule.computePreviewItemDrawingParams(index, curNumItems, params);
+            case LauncherSettings.Favorites.FOLDER_STYLE_CIRCLE:
+                return mIcon.mCircleLayoutRule.computePreviewItemDrawingParams(index, curNumItems, params);
+            default:
+                return mIcon.mPreviewLayoutRule.computePreviewItemDrawingParams(index, curNumItems, params);
+        }
     }
 
     private PreviewItemDrawingParams getFinalIconParams(PreviewItemDrawingParams params) {
@@ -189,15 +250,29 @@ public class PreviewItemManager {
         return params;
     }
 
+    private final PreviewItemDrawingParams mSynthesizedDotParams = new PreviewItemDrawingParams(0, 0, 0);
+
     public void drawParams(Canvas canvas, ArrayList<PreviewItemDrawingParams> params,
             PointF offset, boolean shouldClipPath, Path clipPath) {
+        int indicatorIndex = getIndicatorIndex();
+
+        if (mIcon.getFolderStyle() == LauncherSettings.Favorites.FOLDER_STYLE_CIRCLE
+                && indicatorIndex == 6 && params.size() == 6) {
+            computePreviewItemDrawingParams(6, 7, mSynthesizedDotParams);
+            drawIndicatorDots(canvas, mSynthesizedDotParams, offset);
+        }
+
         // The first item should be drawn last (ie. on top of later items)
         for (int i = params.size() - 1; i >= 0; i--) {
             PreviewItemDrawingParams p = params.get(i);
             if (!p.hidden) {
                 // Exiting param should always be clipped.
                 boolean isExiting = p.index == EXIT_INDEX;
-                drawPreviewItem(canvas, p, offset, isExiting | shouldClipPath, clipPath);
+                if (indicatorIndex >= 0 && p.index == indicatorIndex) {
+                    drawIndicatorDots(canvas, p, offset);
+                } else {
+                    drawPreviewItem(canvas, p, offset, isExiting | shouldClipPath, clipPath);
+                }
             }
         }
     }
@@ -258,6 +333,91 @@ public class PreviewItemManager {
         canvas.restore();
     }
 
+    private void drawIndicatorDots(Canvas canvas, PreviewItemDrawingParams params, PointF offset) {
+        int style = mIcon.getFolderStyle();
+
+        if (style == LauncherSettings.Favorites.FOLDER_STYLE_QUADRANT) {
+            drawQuadrantMiniIcons(canvas, params, offset);
+        } else {
+            drawDotsIndicator(canvas, params, offset);
+        }
+    }
+
+    private void drawQuadrantMiniIcons(Canvas canvas, PreviewItemDrawingParams params, PointF offset) {
+        canvas.save();
+        canvas.translate(offset.x + params.transX, offset.y + params.transY);
+        canvas.scale(params.scale, params.scale);
+
+        float iconSize = mIntrinsicIconSize;
+        float miniIconSize = iconSize * 0.42f;
+        float spacing = iconSize * 0.08f;
+        float startX = (iconSize - 2 * miniIconSize - spacing) / 2f;
+        float startY = startX;
+
+        List<ItemInfo> items = mIcon.mInfo.getContents();
+        int startIndex = 3;
+
+        int drawn = 0;
+        for (int itemIdx = startIndex; itemIdx < items.size() && drawn < 4; itemIdx++) {
+            ItemInfo item = items.get(itemIdx);
+            Drawable icon = null;
+            if (item instanceof ItemInfoWithIcon) {
+                icon = ((ItemInfoWithIcon) item).newIcon(mContext, FLAG_THEMED);
+            }
+
+            if (icon == null) {
+                continue;
+            }
+
+            int row = drawn / 2;
+            int col = drawn % 2;
+            float x = startX + col * (miniIconSize + spacing);
+            float y = startY + row * (miniIconSize + spacing);
+
+            canvas.save();
+            canvas.translate(x, y);
+            icon.setBounds(0, 0, (int) miniIconSize, (int) miniIconSize);
+            icon.draw(canvas);
+            canvas.restore();
+            drawn++;
+        }
+
+        canvas.restore();
+    }
+
+    private void drawDotsIndicator(Canvas canvas, PreviewItemDrawingParams params, PointF offset) {
+        canvas.save();
+        canvas.translate(offset.x + params.transX, offset.y + params.transY);
+        canvas.scale(params.scale, params.scale);
+
+        float iconSize = mIntrinsicIconSize;
+        float dotRadius = iconSize * 0.05f;
+        float spacing = iconSize * 0.12f;
+        float centerX = iconSize / 2f;
+        float centerY = iconSize / 2f;
+
+        mIndicatorPaint.setColor(Themes.getColorAccent(mContext));
+
+        canvas.drawCircle(centerX - spacing, centerY - spacing, dotRadius, mIndicatorPaint);
+        canvas.drawCircle(centerX + spacing, centerY - spacing, dotRadius, mIndicatorPaint);
+        canvas.drawCircle(centerX - spacing, centerY + spacing, dotRadius, mIndicatorPaint);
+        canvas.drawCircle(centerX + spacing, centerY + spacing, dotRadius, mIndicatorPaint);
+
+        canvas.restore();
+    }
+
+    private int getIndicatorIndex() {
+        int style = mIcon.getFolderStyle();
+        if (style == LauncherSettings.Favorites.FOLDER_STYLE_QUADRANT) {
+            return ClippedFolderIconLayoutRule.MAX_NUM_ITEMS_IN_PREVIEW - 1;
+        } else if (style == LauncherSettings.Favorites.FOLDER_STYLE_GRID) {
+            return GridFolderLayoutRule.MAX_NUM_ITEMS_IN_PREVIEW - 1;
+        } else if (style == LauncherSettings.Favorites.FOLDER_STYLE_CIRCLE) {
+            return 6;
+        }
+        return -1;
+    }
+
     public void hidePreviewItem(int index, boolean hidden) {
         // If there are more params than visible in the preview, they are used for enter/exit
         // animation purposes and they were added to the front of the list.
@@ -285,6 +445,7 @@ public class PreviewItemManager {
         int numItemsInFirstPagePreview = page == 0 ? items.size() : MAX_NUM_ITEMS_IN_PREVIEW;
         for (int i = 0; i < params.size(); i++) {
             PreviewItemDrawingParams p = params.get(i);
+            p.index = i;
             setDrawable(p, items.get(i));
 
             if (!animate) {
@@ -309,6 +470,17 @@ public class PreviewItemManager {
                 }
                 p.anim = anim;
                 p.anim.start();
+            }
+        }
+
+        // Ensure that the reference drawable is set, even if the folder has no items in the
+        // preview
+        if (mReferenceDrawable == null) {
+            List<ItemInfo> allItems = mIcon.mInfo.getContents();
+            if (!allItems.isEmpty()) {
+                PreviewItemDrawingParams dummyParams = new PreviewItemDrawingParams(0, 0, 0);
+                setDrawable(dummyParams, allItems.get(0));
+                mReferenceDrawable = dummyParams.drawable;
             }
         }
     }

@@ -29,7 +29,9 @@ import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
 import android.animation.ObjectAnimator;
 import android.content.Context;
+import android.content.Intent;
 import android.graphics.Canvas;
+import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Rect;
 import android.graphics.drawable.Drawable;
@@ -56,6 +58,9 @@ import com.android.launcher3.DropTarget.DragObject;
 import com.android.launcher3.Launcher;
 import com.android.launcher3.LauncherSettings;
 import com.android.launcher3.OnAlarmListener;
+import com.android.launcher3.popup.PopupContainer;
+import com.android.launcher3.popup.PopupContainerWithArrow;
+import com.android.launcher3.popup.SystemShortcut;
 import com.android.launcher3.R;
 import com.android.launcher3.Reorderable;
 import com.android.launcher3.Utilities;
@@ -65,6 +70,7 @@ import com.android.launcher3.celllayout.CellLayoutLayoutParams;
 import com.android.launcher3.dot.FolderDotInfo;
 import com.android.launcher3.dragndrop.BaseItemDragListener;
 import com.android.launcher3.dragndrop.DragLayer;
+import com.android.launcher3.dragndrop.DragOptions;
 import com.android.launcher3.dragndrop.DragView;
 import com.android.launcher3.dragndrop.DraggableView;
 import com.android.launcher3.graphics.ThemeManager;
@@ -91,6 +97,7 @@ import com.android.launcher3.widget.PendingAddShortcutInfo;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 import java.util.function.Predicate;
 
 /**
@@ -121,6 +128,8 @@ public class FolderIcon extends FrameLayout implements FloatingIconViewCompanion
 
     FolderGridOrganizer mPreviewVerifier;
     final ClippedFolderIconLayoutRule mPreviewLayoutRule;
+    GridFolderLayoutRule mGridLayoutRule;
+    CircleFolderLayoutRule mCircleLayoutRule;
     private final PreviewItemManager mPreviewItemManager;
     private PreviewItemDrawingParams mTmpParams = new PreviewItemDrawingParams(0, 0, 0);
     private final List<ItemInfo> mCurrentPreviewItems = new ArrayList<>();
@@ -139,9 +148,13 @@ public class FolderIcon extends FrameLayout implements FloatingIconViewCompanion
     private Animator mDotScaleAnim;
 
     private Rect mTouchArea = new Rect();
+    private float mLastTouchX;
+    private float mLastTouchY;
 
     private float mScaleForReorderBounce = 1f;
     private PopupController mPopupController;
+
+    private final Paint mCoverTextPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
 
     private static final Property<FolderIcon, Float> DOT_SCALE_PROPERTY
             = new Property<FolderIcon, Float>(Float.TYPE, "dotScale") {
@@ -167,6 +180,8 @@ public class FolderIcon extends FrameLayout implements FloatingIconViewCompanion
 
         mLongPressHelper = new CheckLongPressHelper(this);
         mPreviewLayoutRule = new ClippedFolderIconLayoutRule();
+        mGridLayoutRule = new GridFolderLayoutRule();
+        mCircleLayoutRule = new CircleFolderLayoutRule();
         mPreviewItemManager = new PreviewItemManager(this);
         mDotParams = new DotRenderer.DrawParams();
         mDotParams.setDotColor(Themes.getAttrColor(context, R.attr.notificationDotColor));
@@ -302,8 +317,10 @@ public class FolderIcon extends FrameLayout implements FloatingIconViewCompanion
         getFolder().addFolderContent(destInfo);
         // This will animate the first item from it's position as an icon into its
         // position as the first item in the preview
-        mPreviewItemManager.createFirstItemAnimation(false /* reverse */, null)
-                .start();
+        FolderPreviewItemAnim anim = mPreviewItemManager.createFirstItemAnimation(false /* reverse */, null);
+        if (anim != null) {
+            anim.start();
+        }
 
         // This will animate the dragView (srcView) into the new folder
         onDrop(srcInfo, d, dstRect, scaleRelativeToDragLayer, 1,
@@ -312,8 +329,12 @@ public class FolderIcon extends FrameLayout implements FloatingIconViewCompanion
 
     public void performDestroyAnimation(Runnable onCompleteRunnable) {
         // This will animate the final item in the preview to be full size.
-        mPreviewItemManager.createFirstItemAnimation(true /* reverse */, onCompleteRunnable)
-                .start();
+        FolderPreviewItemAnim anim = mPreviewItemManager.createFirstItemAnimation(true /* reverse */, onCompleteRunnable);
+        if (anim != null) {
+            anim.start();
+        } else if (onCompleteRunnable != null) {
+            onCompleteRunnable.run();
+        }
     }
 
     public void onDragExit() {
@@ -506,7 +527,43 @@ public class FolderIcon extends FrameLayout implements FloatingIconViewCompanion
     }
 
     public ClippedFolderIconLayoutRule getLayoutRule() {
+        if (mInfo != null) {
+            switch (mInfo.folderStyle) {
+                case LauncherSettings.Favorites.FOLDER_STYLE_GRID:
+                    return mGridLayoutRule;
+                case LauncherSettings.Favorites.FOLDER_STYLE_CIRCLE:
+                    return mCircleLayoutRule;
+                case LauncherSettings.Favorites.FOLDER_STYLE_QUADRANT:
+                default:
+                    return mPreviewLayoutRule;
+            }
+        }
         return mPreviewLayoutRule;
+    }
+
+    public GridFolderLayoutRule getGridLayoutRule() {
+        return mGridLayoutRule;
+    }
+
+    public CircleFolderLayoutRule getCircleLayoutRule() {
+        return mCircleLayoutRule;
+    }
+
+    public int getFolderStyle() {
+        return mInfo != null ? mInfo.folderStyle : LauncherSettings.Favorites.FOLDER_STYLE_QUADRANT;
+    }
+
+    public int getMaxPreviewItems() {
+        switch (getFolderStyle()) {
+            case LauncherSettings.Favorites.FOLDER_STYLE_GRID:
+                return GridFolderLayoutRule.MAX_NUM_ITEMS_IN_PREVIEW;
+            case LauncherSettings.Favorites.FOLDER_STYLE_CIRCLE:
+                return CircleFolderLayoutRule.MAX_NUM_ITEMS_IN_PREVIEW;
+            case LauncherSettings.Favorites.FOLDER_STYLE_COVER:
+                return 0;
+            default:
+                return ClippedFolderIconLayoutRule.MAX_NUM_ITEMS_IN_PREVIEW;
+        }
     }
 
     @Override
@@ -564,6 +621,7 @@ public class FolderIcon extends FrameLayout implements FloatingIconViewCompanion
     public void setFolderBackground(PreviewBackground bg) {
         mBackground = bg;
         mBackground.setInvalidateDelegate(this);
+        requestLayout();
     }
 
     @Override
@@ -596,15 +654,77 @@ public class FolderIcon extends FrameLayout implements FloatingIconViewCompanion
             mBackground.drawBackground(canvas);
         }
 
-        if (mCurrentPreviewItems.isEmpty() && !mAnimating) return;
-
-        mPreviewItemManager.draw(canvas);
+        if (getFolderStyle() == LauncherSettings.Favorites.FOLDER_STYLE_COVER) {
+            drawCoverText(canvas);
+        } else {
+            if (mCurrentPreviewItems.isEmpty() && !mAnimating) return;
+            mPreviewItemManager.draw(canvas);
+        }
 
         if (!mBackground.drawingDelegated()) {
             mBackground.drawBackgroundStroke(canvas);
         }
 
         drawDot(canvas);
+    }
+
+    private void drawCoverText(Canvas canvas) {
+        String text = mInfo.coverText;
+        if (text == null || text.isEmpty()) {
+            text = mInfo.title != null && mInfo.title.length() > 0
+                    ? extractGraphemes(mInfo.title.toString(), 1) : "?";
+        }
+        text = extractGraphemes(text, 1);
+
+        float cx = mBackground.getOffsetX() + mBackground.previewSize * mBackground.mScale / 2f;
+        float cy = mBackground.getOffsetY() + mBackground.previewSize * mBackground.mScale / 2f;
+        float textSize = mBackground.previewSize * mBackground.mScale * 0.45f;
+
+        mCoverTextPaint.setTextSize(textSize);
+        mCoverTextPaint.setTextAlign(Paint.Align.CENTER);
+        mCoverTextPaint.setColor(Color.WHITE);
+
+        Paint.FontMetrics fm = mCoverTextPaint.getFontMetrics();
+        float textY = cy - (fm.ascent + fm.descent) / 2f;
+        canvas.drawText(text, cx, textY, mCoverTextPaint);
+    }
+
+    private String extractGraphemes(String text, int maxGraphemes) {
+        if (text == null || text.isEmpty()) return "";
+        int endIndex = 0;
+        int graphemeCount = 0;
+        while (endIndex < text.length() && graphemeCount < maxGraphemes) {
+            int cp = text.codePointAt(endIndex);
+            endIndex += Character.charCount(cp);
+            graphemeCount++;
+        }
+        return text.substring(0, Math.min(endIndex, text.length()));
+    }
+
+    private String extractFirstGrapheme(String text) {
+        if (text == null || text.isEmpty()) return "";
+        int firstCodePoint = text.codePointAt(0);
+        int charCount = Character.charCount(firstCodePoint);
+        if (charCount < text.length()) {
+            int nextCodePoint = text.codePointAt(charCount);
+            if (nextCodePoint >= 0xFE00 && nextCodePoint <= 0xFE0F) {
+                charCount += Character.charCount(nextCodePoint);
+            }
+            if (charCount < text.length() && text.codePointAt(charCount) == 0x200D) {
+                int endIndex = charCount;
+                while (endIndex < text.length()) {
+                    int cp = text.codePointAt(endIndex);
+                    endIndex += Character.charCount(cp);
+                    if (endIndex < text.length()) {
+                        int next = text.codePointAt(endIndex);
+                        if (next != 0x200D && !(next >= 0xFE00 && next <= 0xFE0F)) break;
+                        endIndex += Character.charCount(next);
+                    }
+                }
+                charCount = endIndex;
+            }
+        }
+        return text.substring(0, Math.min(charCount, text.length()));
     }
 
     public void drawDot(Canvas canvas) {
@@ -631,7 +751,11 @@ public class FolderIcon extends FrameLayout implements FloatingIconViewCompanion
         boolean showLabel = mFolderName.shouldShowLabel();
         boolean shouldCenterIcon = mActivity.getDeviceProfile().getWorkspaceIconProfile()
                 .getIconCenterVertically();
-        if (shouldCenterIcon || !showLabel) {
+        boolean isEnlarged = mInfo != null && mInfo.spanX == 2 && mInfo.spanY == 2;
+
+        if (isEnlarged) {
+            setPadding(getPaddingLeft(), 0, getPaddingRight(), 0);
+        } else if (shouldCenterIcon || !showLabel) {
             int iconSize = mActivity.getDeviceProfile().getWorkspaceIconProfile().getIconSizePx();
             Paint.FontMetrics fm = mFolderName.getPaint().getFontMetrics();
             int cellHeightPx = iconSize + mFolderName.getCompoundDrawablePadding()
@@ -655,11 +779,38 @@ public class FolderIcon extends FrameLayout implements FloatingIconViewCompanion
         return mFolderName.getVisibility() == VISIBLE;
     }
 
+    public DragOptions.PreDragCondition startLongPressAction() {
+        Launcher launcher = Launcher.getLauncher(getContext());
+        PopupContainer<?> openPopup = PopupContainer.getOpen(launcher);
+        if (openPopup != null) {
+            openPopup.close(false);
+        }
+        mFolderName.setTag(mInfo);
+        PopupContainerWithArrow<Launcher> popup =
+                PopupContainerWithArrow.<Launcher>create(
+                        mFolderName.getContext(), mFolderName, mInfo, true);
+        List<SystemShortcut<?>> systemShortcuts = launcher.getSupportedShortcuts(mInfo)
+                .map(s -> (SystemShortcut<?>) s.getShortcut(launcher, mInfo, mFolderName))
+                .filter(s -> s != null)
+                .collect(Collectors.toList());
+        popup.populateAndShowRows(0, systemShortcuts);
+        popup.requestFocus();
+        return popup.createPreDragCondition();
+    }
+
     /**
      * Returns the list of items which should be visible in the preview
      */
     public List<ItemInfo> getPreviewItemsOnPage(int page) {
-        return mPreviewVerifier.setFolderInfo(mInfo).previewItemsForPage(page, mInfo.getContents());
+        List<ItemInfo> contents = mInfo.getContents();
+        int maxItems = getMaxPreviewItems();
+        int itemsPerPage = mPreviewVerifier.getMaxItemsPerPage();
+        int start = itemsPerPage * page;
+        int end = Math.min(start + maxItems, contents.size());
+        if (start >= contents.size()) {
+            return new ArrayList<>();
+        }
+        return new ArrayList<>(contents.subList(start, end));
     }
 
     @Override
@@ -696,9 +847,12 @@ public class FolderIcon extends FrameLayout implements FloatingIconViewCompanion
 
     @Override
     public boolean onTouchEvent(MotionEvent event) {
-        if (event.getAction() == MotionEvent.ACTION_DOWN
-                && shouldIgnoreTouchDown(event.getX(), event.getY())) {
-            return false;
+        if (event.getAction() == MotionEvent.ACTION_DOWN) {
+            mLastTouchX = event.getX();
+            mLastTouchY = event.getY();
+            if (shouldIgnoreTouchDown(mLastTouchX, mLastTouchY)) {
+                return false;
+            }
         }
 
         // Call the superclass onTouchEvent first, because sometimes it changes the state to
@@ -707,6 +861,25 @@ public class FolderIcon extends FrameLayout implements FloatingIconViewCompanion
         mLongPressHelper.onTouchEvent(event);
         // Keep receiving the rest of the events
         return true;
+    }
+
+    @Override
+    public boolean performClick() {
+        boolean isEnlarged = mInfo != null && mInfo.spanX == 2 && mInfo.spanY == 2;
+        if (isEnlarged) {
+            ItemInfo hitItem = mPreviewItemManager.getItemAtPosition(mLastTouchX, mLastTouchY);
+            if (hitItem != null && mFolder != null && !mFolder.isOpen() && !mFolder.isDestroyed()) {
+                if (hitItem instanceof WorkspaceItemInfo) {
+                    WorkspaceItemInfo info = (WorkspaceItemInfo) hitItem;
+                    Intent intent = info.getIntent();
+                    if (intent != null) {
+                        mActivity.startActivitySafely(this, intent, info);
+                        return true;
+                    }
+                }
+            }
+        }
+        return super.performClick();
     }
 
     /**
