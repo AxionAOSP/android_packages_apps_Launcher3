@@ -28,12 +28,16 @@ import static com.android.launcher3.views.FloatingIconViewCompanion.setPropertie
 
 import android.animation.Animator;
 import android.content.Context;
+import android.graphics.Bitmap;
 import android.graphics.Canvas;
+import android.graphics.HardwareRenderer;
 import android.graphics.Path;
 import android.graphics.Rect;
 import android.graphics.RectF;
+import android.graphics.RenderNode;
 import android.content.res.ThemeEngine;
 import android.graphics.drawable.AdaptiveIconDrawable;
+import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.os.CancellationSignal;
 import android.provider.Settings;
@@ -65,6 +69,7 @@ import com.android.launcher3.icons.IconShape;
 import com.android.launcher3.model.data.ItemInfo;
 import com.android.launcher3.model.data.ItemInfoWithIcon;
 import com.android.launcher3.popup.SystemShortcut;
+import com.android.launcher3.allapps.compose.ui.view.ComposeAppIconView;
 import com.android.launcher3.shortcuts.DeepShortcutView;
 import com.android.launcher3.util.AsyncView;
 
@@ -329,7 +334,8 @@ public class FloatingIconView extends FrameLayout implements
                 boolean shouldThemeIcon = (btvIcon instanceof FastBitmapDrawable fbd)
                         && fbd.isCreatedForTheme();
                 fullIcon = getFullDrawable(l, info, width, height, shouldThemeIcon);
-            } else if (!(originalView instanceof BubbleTextView)) {
+            } else if (!(originalView instanceof BubbleTextView)
+                    && !(originalView instanceof FolderIcon)) {
                 fullIcon = getFullDrawable(l, info, width, height, true /* shouldThemeIcon */);
             }
 
@@ -590,7 +596,7 @@ public class FloatingIconView extends FrameLayout implements
         RectF position = new RectF();
         getLocationBoundsForView(l, v, isOpening, position);
 
-        final FastBitmapDrawable btvIcon;
+        final Drawable btvIcon;
         final Supplier<Drawable> btvDrawableSupplier;
         if (v instanceof BubbleTextView btv) {
             if (info instanceof ItemInfoWithIcon iiwi && iiwi.shouldShowPendingIcon()) {
@@ -601,6 +607,26 @@ public class FloatingIconView extends FrameLayout implements
                 // Clone when needed
                 btvDrawableSupplier = () -> btvIcon.getConstantState().newDrawable();
             }
+        } else if (v instanceof FolderIcon) {
+            FolderIcon folderIcon = (FolderIcon) v;
+            Rect r = new Rect();
+            folderIcon.getPreviewBounds(r);
+
+            RenderNode renderNode = new RenderNode("FolderIconSnapshot");
+            renderNode.setPosition(0, 0, r.width(), r.height());
+            Canvas canvas = renderNode.beginRecording();
+            canvas.translate(-r.left, -r.top);
+            folderIcon.draw(canvas);
+            renderNode.endRecording();
+            Bitmap b = HardwareRenderer.createHardwareBitmap(renderNode, r.width(), r.height());
+
+            btvIcon = new BitmapDrawable(l.getResources(), b);
+            btvDrawableSupplier = () -> btvIcon.getConstantState().newDrawable();
+        } else if (v instanceof ComposeAppIconView cav) {
+            btvIcon = cav.getIcon();
+            btvDrawableSupplier = btvIcon != null && btvIcon.getConstantState() != null
+                    ? () -> btvIcon.getConstantState().newDrawable()
+                    : null;
         } else {
             btvIcon = null;
             btvDrawableSupplier = null;
@@ -608,9 +634,10 @@ public class FloatingIconView extends FrameLayout implements
 
         boolean isThemed = false;
         boolean usingCustomShape = false;
-        if (btvIcon != null) {
-            isThemed = btvIcon.isThemed();
-            usingCustomShape = (btvIcon.creationFlags & FLAG_CUSTOM_SHAPE) != 0;
+        if (btvIcon instanceof FastBitmapDrawable) {
+            FastBitmapDrawable fastBtvIcon = (FastBitmapDrawable) btvIcon;
+            isThemed = fastBtvIcon.isThemed();
+            usingCustomShape = (fastBtvIcon.creationFlags & FLAG_CUSTOM_SHAPE) != 0;
         }
 
         IconLoadResult result = new IconLoadResult(info, isThemed, usingCustomShape);

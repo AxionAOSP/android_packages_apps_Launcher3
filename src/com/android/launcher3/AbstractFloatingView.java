@@ -110,6 +110,7 @@ public abstract class AbstractFloatingView extends LinearLayout implements Touch
     public static final int TYPE_ONE_GRID_MIGRATION_EDU = 1 << 23;
     public static final int TYPE_NUDGE = 1 << 24;
     public static final int TYPE_TASKBAR_OVERFLOW = 1 << 25;
+    public static final int TYPE_FOLDER_STYLE_PICKER = 1 << 26;
 
     public static final int TYPE_ALL = TYPE_FOLDER | TYPE_ACTION_POPUP
             | TYPE_WIDGETS_BOTTOM_SHEET | TYPE_WIDGET_RESIZE_FRAME | TYPE_WIDGETS_FULL_SHEET
@@ -119,7 +120,7 @@ public abstract class AbstractFloatingView extends LinearLayout implements Touch
             | TYPE_TASKBAR_EDUCATION_DIALOG | TYPE_TASKBAR_ALL_APPS | TYPE_OPTIONS_POPUP_DIALOG
             | TYPE_ADD_TO_HOME_CONFIRMATION | TYPE_TASKBAR_OVERLAY_PROXY
             | TYPE_TASKBAR_PINNING_POPUP | TYPE_PIN_IME_POPUP | TYPE_ONE_GRID_MIGRATION_EDU
-            | TYPE_NUDGE | TYPE_TASKBAR_OVERFLOW;
+            | TYPE_NUDGE | TYPE_TASKBAR_OVERFLOW | TYPE_FOLDER_STYLE_PICKER;
 
     // Type of popups which should be kept open during launcher rebind
     public static final int TYPE_REBIND_SAFE = TYPE_WIDGETS_FULL_SHEET

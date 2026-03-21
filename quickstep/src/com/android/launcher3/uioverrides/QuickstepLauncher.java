@@ -56,8 +56,11 @@ import static com.android.launcher3.popup.QuickstepSystemShortcut.getSplitSelect
 import static com.android.launcher3.popup.SystemShortcut.ADD_TO_HOME_SCREEN;
 import static com.android.launcher3.popup.SystemShortcut.APP_INFO;
 import static com.android.launcher3.popup.SystemShortcut.BUBBLE_SHORTCUT;
+import static com.android.launcher3.popup.SystemShortcut.CUSTOMIZE_FOLDER;
 import static com.android.launcher3.popup.SystemShortcut.DONT_SUGGEST_APP;
+import static com.android.launcher3.popup.SystemShortcut.ENLARGE;
 import static com.android.launcher3.popup.SystemShortcut.INSTALL;
+import static com.android.launcher3.popup.SystemShortcut.MINIMIZE;
 import static com.android.launcher3.popup.SystemShortcut.PRIVATE_PROFILE_INSTALL;
 import static com.android.launcher3.popup.SystemShortcut.REMOVE;
 import static com.android.launcher3.popup.SystemShortcut.UNINSTALL_APP;
@@ -569,6 +572,11 @@ public class QuickstepLauncher extends Launcher implements RecentsViewContainer,
                 && (container == CONTAINER_ALL_APPS
                 || container == CONTAINER_ALL_APPS_PREDICTION)) {
             shortcuts.add(ADD_TO_HOME_SCREEN);
+        }
+        if (container == CONTAINER_DESKTOP || container == CONTAINER_HOTSEAT) {
+            shortcuts.add(ENLARGE);
+            shortcuts.add(MINIMIZE);
+            shortcuts.add(CUSTOMIZE_FOLDER);
         }
         shortcuts.add(DONT_SUGGEST_APP);
         shortcuts.add(PRIVATE_PROFILE_INSTALL);

@@ -28,7 +28,7 @@ public class ShortcutUtil {
      * Returns true when we should show shortcut menu for the item.
      */
     public static boolean supportsShortcuts(ItemInfo info) {
-        return isActive(info) && (isApp(info) || isPinnedShortcut(info));
+        return isActive(info) && (isApp(info) || isPinnedShortcut(info) || isFolder(info));
     }
 
     /**
@@ -68,5 +68,9 @@ public class ShortcutUtil {
         return info.itemType == LauncherSettings.Favorites.ITEM_TYPE_DEEP_SHORTCUT
                 && info.container != ItemInfo.NO_ID
                 && info instanceof WorkspaceItemInfo;
+    }
+
+    private static boolean isFolder(ItemInfo info) {
+        return info.itemType == LauncherSettings.Favorites.ITEM_TYPE_FOLDER;
     }
 }
