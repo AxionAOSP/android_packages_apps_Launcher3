@@ -245,6 +245,16 @@
     <string name="pin_to_taskbar">Pin to Taskbar</string>
     <!-- Label for unpinning an item from the taskbar. [CHAR_LIMIT=20] -->
     <string name="unpin_from_taskbar">Unpin from Taskbar</string>
+    <string name="action_enlarge">Enlarge</string>
+    <string name="action_minimize">Minimize</string>
+    <string name="action_customize_folder">Customize</string>
+
+    <string name="folder_style_picker_title">Folder Style</string>
+    <string name="folder_style_quadrant">Quadrant</string>
+    <string name="folder_style_grid">Grid</string>
+    <string name="folder_style_circle">Circle</string>
+    <string name="folder_style_cover">Cover</string>
+    <string name="folder_cover_text_hint">Emoji</string>
 
     <!-- Permissions: -->
     <skip />

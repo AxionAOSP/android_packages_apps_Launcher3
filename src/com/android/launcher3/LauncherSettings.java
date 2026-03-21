@@ -326,6 +326,23 @@ public class LauncherSettings {
          */
         public static final String APPWIDGET_SOURCE = "appWidgetSource";
 
+        /**
+         * Stores the style of the folder.
+         * <p>Type: INTEGER</p>
+         */
+        public static final String FOLDER_STYLE = "folderStyle";
+
+        public static final int FOLDER_STYLE_QUADRANT = 0;
+        public static final int FOLDER_STYLE_GRID = 1;
+        public static final int FOLDER_STYLE_CIRCLE = 2;
+        public static final int FOLDER_STYLE_COVER = 3;
+
+        /**
+         * Stores the cover text for the folder.
+         * <p>Type: TEXT</p>
+         */
+        public static final String COVER_TEXT = "coverText";
+
         public static void addTableToDb(SQLiteDatabase db, long myProfileId, boolean optional) {
             addTableToDb(db, myProfileId, optional, TABLE_NAME);
         }
@@ -359,6 +376,8 @@ public class LauncherSettings {
             columnsToTypes.put(RANK, "INTEGER NOT NULL DEFAULT 0");
             columnsToTypes.put(OPTIONS, "INTEGER NOT NULL DEFAULT 0");
             columnsToTypes.put(APPWIDGET_SOURCE, "INTEGER NOT NULL DEFAULT -1");
+            columnsToTypes.put(FOLDER_STYLE, "INTEGER NOT NULL DEFAULT 0");
+            columnsToTypes.put(COVER_TEXT, "TEXT");
             return columnsToTypes;
         }
 

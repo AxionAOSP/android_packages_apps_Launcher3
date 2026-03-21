@@ -164,6 +164,9 @@ private constructor(
         originalIcon?.forceHideDot = true
         // All views are added. Animate layout from now on.
         layoutTransition = LayoutTransition()
+        if (deepShortcuts.isEmpty()) {
+            return
+        }
         // Load the shortcuts on a background thread and update the container as it animates.
         Executors.MODEL_EXECUTOR.handler.postAtFrontOfQueue(
             PopupPopulator.createUpdateRunnable(

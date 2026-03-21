@@ -929,11 +929,10 @@ public class CellLayout extends ViewGroup {
         if (child instanceof DraggableView) {
             DraggableView draggableChild = (DraggableView) child;
             if (draggableChild.getViewType() == DRAGGABLE_ICON) {
-                cellToPoint(cellX, cellY, outPoint);
-                draggableChild.getWorkspaceVisualDragBounds(mTempRect);
-                mTempRect.offset(outPoint[0], outPoint[1]);
-                outPoint[0] = mTempRect.centerX();
-                outPoint[1] = mTempRect.centerY();
+                CellLayoutLayoutParams lp = (CellLayoutLayoutParams) child.getLayoutParams();
+                int spanX = lp.cellHSpan;
+                int spanY = lp.cellVSpan;
+                regionToCenterPoint(lp.getCellX(), lp.getCellY(), spanX, spanY, outPoint);
                 return;
             }
         }
@@ -947,8 +946,16 @@ public class CellLayout extends ViewGroup {
         DeviceProfile grid = mActivity.getDeviceProfile();
         float iconVisibleRadius = ICON_VISIBLE_AREA_FACTOR
                 * grid.getWorkspaceIconProfile().getIconSizePx() / 2;
-        // Halfway between reorder radius and icon.
-        return (getReorderRadius(targetCell, 1, 1) + iconVisibleRadius) / 2;
+        int spanX = 1;
+        int spanY = 1;
+        View child = getChildAt(targetCell[0], targetCell[1]);
+        if (child != null) {
+            CellLayoutLayoutParams lp = (CellLayoutLayoutParams) child.getLayoutParams();
+            spanX = lp.cellHSpan;
+            spanY = lp.cellVSpan;
+            iconVisibleRadius *= Math.max(spanX, spanY);
+        }
+        return (getReorderRadius(targetCell, spanX, spanY) + iconVisibleRadius) / 2;
     }
 
     /**
@@ -962,9 +969,8 @@ public class CellLayout extends ViewGroup {
         cellToRect(targetCell[0], targetCell[1], spanX, spanY, cellBoundsWithSpacing);
         cellBoundsWithSpacing.inset(-mBorderSpace.x / 2, -mBorderSpace.y / 2);
 
-        if (canCreateFolder(getChildAt(targetCell[0], targetCell[1])) && spanX == 1 && spanY == 1) {
-            // Take only the circle in the smaller dimension, to ensure we don't start reordering
-            // too soon before accepting a folder drop.
+        View child = getChildAt(targetCell[0], targetCell[1]);
+        if (canCreateFolder(child)) {
             int minRadius = centerPoint[0] - cellBoundsWithSpacing.left;
             minRadius = Math.min(minRadius, centerPoint[1] - cellBoundsWithSpacing.top);
             minRadius = Math.min(minRadius, cellBoundsWithSpacing.right - centerPoint[0]);
