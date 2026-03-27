@@ -15,6 +15,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.*
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.style.TextAlign
@@ -182,14 +183,13 @@ fun AllAppsComposeGrid(
         }
     }
 
-    LaunchedEffect(listState) {
-        snapshotFlow {
-            listState.canScrollBackward to listState.canScrollForward
-        }.collect { (canScrollUp, canScrollDown) ->
-            interactions.controller?.let {
-                it.canScrollUp = canScrollUp
-                it.canScrollDown = canScrollDown
-            }
+    val canScrollBack by remember { derivedStateOf { listState.canScrollBackward } }
+    val canScrollFwd by remember { derivedStateOf { listState.canScrollForward } }
+
+    LaunchedEffect(canScrollBack, canScrollFwd) {
+        interactions.controller?.let {
+            it.canScrollUp = canScrollBack
+            it.canScrollDown = canScrollFwd
         }
     }
 
@@ -213,9 +213,17 @@ fun AllAppsComposeGrid(
 
     val isScrollingProvider = remember<() -> Boolean> { { listState.isScrollInProgress } }
 
+    val scrollClipRadius = 32.dp
+    val scrollClipShape = RoundedCornerShape(topStart = scrollClipRadius, topEnd = scrollClipRadius)
+
     Box(modifier = modifier.fillMaxSize()) {
         LazyColumn(
-            modifier = Modifier.fillMaxSize(),
+            modifier = Modifier
+                .fillMaxSize()
+                .graphicsLayer {
+                    this.clip = true
+                    this.shape = scrollClipShape
+                },
             state = listState,
             userScrollEnabled = isScrollEnabled,
             contentPadding = contentPadding,
