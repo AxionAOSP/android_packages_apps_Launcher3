@@ -409,7 +409,9 @@ public class DeviceProfile {
         }
 
         if (mIsResponsiveGrid) {
-            updateHotseatSizes(mResponsiveWorkspaceCellSpec.getIconSize());
+            float wsScale = LauncherPrefs.WORKSPACE_ICON_SCALE.get(context);
+            updateHotseatSizes(Math.round(
+                    mResponsiveWorkspaceCellSpec.getIconSize() * wsScale));
         } else {
             updateHotseatSizes(pxFromDp(inv.iconSize[mTypeIndex], mMetrics));
         }
@@ -478,6 +480,28 @@ public class DeviceProfile {
                     responsiveAspectRatio,
                     mResponsiveAllAppsHeightSpec.getAvailableSpace(),
                     mResponsiveWorkspaceCellSpec);
+            float workspaceIconScale = LauncherPrefs.WORKSPACE_ICON_SCALE.get(context);
+            if (workspaceIconScale != 1f) {
+                mResponsiveWorkspaceCellSpec = new CalculatedCellSpec(
+                        mResponsiveWorkspaceCellSpec.getAvailableSpace(),
+                        mResponsiveWorkspaceCellSpec.getSpec(),
+                        Math.round(mResponsiveWorkspaceCellSpec.getIconSize() * workspaceIconScale),
+                        mResponsiveWorkspaceCellSpec.getIconTextSize(),
+                        mResponsiveWorkspaceCellSpec.getIconDrawablePadding(),
+                        mResponsiveWorkspaceCellSpec.getIconTextMaxLineCount(),
+                        mResponsiveWorkspaceCellSpec.getIconTextMaxLineCountMatchesWorkspace());
+            }
+            float allAppsIconScale = LauncherPrefs.ALLAPPS_ICON_SCALE.get(context);
+            if (allAppsIconScale != 1f) {
+                mResponsiveAllAppsCellSpec = new CalculatedCellSpec(
+                        mResponsiveAllAppsCellSpec.getAvailableSpace(),
+                        mResponsiveAllAppsCellSpec.getSpec(),
+                        Math.round(mResponsiveAllAppsCellSpec.getIconSize() * allAppsIconScale),
+                        mResponsiveAllAppsCellSpec.getIconTextSize(),
+                        mResponsiveAllAppsCellSpec.getIconDrawablePadding(),
+                        mResponsiveAllAppsCellSpec.getIconTextMaxLineCount(),
+                        mResponsiveAllAppsCellSpec.getIconTextMaxLineCountMatchesWorkspace());
+            }
         }
 
         splitPlaceholderInset = res.getDimensionPixelSize(R.dimen.split_placeholder_inset);
