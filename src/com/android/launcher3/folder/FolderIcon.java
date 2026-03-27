@@ -789,6 +789,7 @@ public class FolderIcon extends FrameLayout implements FloatingIconViewCompanion
         PopupContainerWithArrow<Launcher> popup =
                 PopupContainerWithArrow.<Launcher>create(
                         mFolderName.getContext(), mFolderName, mInfo, true);
+        popup.configureForLauncher(launcher, mInfo);
         List<SystemShortcut<?>> systemShortcuts = launcher.getSupportedShortcuts(mInfo)
                 .map(s -> (SystemShortcut<?>) s.getShortcut(launcher, mInfo, mFolderName))
                 .filter(s -> s != null)
