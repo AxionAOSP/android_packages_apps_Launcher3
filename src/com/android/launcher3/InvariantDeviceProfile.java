@@ -370,7 +370,7 @@ public class InvariantDeviceProfile {
                                 : new ArrayList<>(allOptionsFilteredByColCount),
                         displayInfo.getDeviceType());
 
-        if (!displayOption.grid.name.equals(gridName)) {
+        if (!deviceTypeChanged && !displayOption.grid.name.equals(gridName)) {
             mPrefs.put(GRID_NAME, displayOption.grid.name);
         }
 
