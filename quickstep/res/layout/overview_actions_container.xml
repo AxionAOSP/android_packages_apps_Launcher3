@@ -43,6 +43,10 @@
                 android:layout_height="1dp"
                 android:layout_weight="1" />
 
+            <Space
+                android:layout_width="@dimen/overview_actions_button_spacing"
+                android:layout_height="1dp" />
+
             <ImageButton
                 android:id="@+id/action_lock"
                 android:layout_width="@dimen/overview_actions_btn_size"
