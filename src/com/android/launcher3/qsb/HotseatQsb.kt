@@ -107,9 +107,9 @@ fun HotseatQsb() {
                     }
                 )
 
-                override fun onInterceptTouchEvent(ev: MotionEvent): Boolean {
+                override fun dispatchTouchEvent(ev: MotionEvent): Boolean {
                     gestureDetector.onTouchEvent(ev)
-                    return super.onInterceptTouchEvent(ev)
+                    return super.dispatchTouchEvent(ev)
                 }
             }
         }.also { it.startListening() }
