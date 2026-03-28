@@ -337,9 +337,12 @@ public class InvariantDeviceProfile {
             }
         };
         prefs.addListener(prefListener, FIXED_LANDSCAPE_MODE, ENABLE_TWOLINE_ALLAPPS_TOGGLE,
-                WORKSPACE_ICON_SCALE, ALLAPPS_ICON_SCALE);
+                ALLAPPS_THEMED_ICONS, DRAWER_OPEN_KEYBOARD, SHOW_DESKTOP_LABELS,
+                SHOW_DRAWER_LABELS, WORKSPACE_ICON_SCALE, ALLAPPS_ICON_SCALE, SEARCH_PROVIDER);
         lifeCycle.addCloseable(() -> prefs.removeListener(prefListener,
-                FIXED_LANDSCAPE_MODE, ENABLE_TWOLINE_ALLAPPS_TOGGLE, SEARCH_PROVIDER));
+                FIXED_LANDSCAPE_MODE, ENABLE_TWOLINE_ALLAPPS_TOGGLE, ALLAPPS_THEMED_ICONS,
+                DRAWER_OPEN_KEYBOARD, SHOW_DESKTOP_LABELS, SHOW_DRAWER_LABELS,
+                WORKSPACE_ICON_SCALE, ALLAPPS_ICON_SCALE, SEARCH_PROVIDER));
 
         SimpleBroadcastReceiver localeReceiver = new SimpleBroadcastReceiver(context,
                 mMainExecutor, i -> onConfigChanged());
