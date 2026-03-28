@@ -334,7 +334,7 @@ public class DeviceProfile {
         int hotseatBarBottomSpace;
         int minQsbMargin = res.getDimensionPixelSize(R.dimen.min_qsb_margin);
 
-        if (mIsResponsiveGrid) {
+        if (displayOptionSpec.hotseatSpecsId != INVALID_RESOURCE_HANDLE) {
             float responsiveAspectRatio =
                     (float) mDeviceProperties.getWidthPx() / mDeviceProperties.getHeightPx();
             HotseatSpecsProvider hotseatSpecsProvider =
@@ -349,14 +349,18 @@ public class DeviceProfile {
             hotseatQsbSpace = mResponsiveHotseatSpec.getHotseatQsbSpace();
             hotseatBarBottomSpace =
                     isVerticalBarLayout() ? 0 : mResponsiveHotseatSpec.getEdgePadding();
+        } else {
+            hotseatQsbSpace = pxFromDp(inv.hotseatQsbSpace[mTypeIndex], mMetrics);
+            hotseatBarBottomSpace = pxFromDp(inv.hotseatBarBottomSpace[mTypeIndex], mMetrics);
+        }
 
+        if (mIsResponsiveGrid) {
+            float responsiveAspectRatio =
+                    (float) mDeviceProperties.getWidthPx() / mDeviceProperties.getHeightPx();
             ResponsiveCellSpecsProvider workspaceCellSpecs = ResponsiveCellSpecsProvider.create(
                     new ResourceHelper(context, displayOptionSpec.workspaceCellSpecsId));
             mResponsiveWorkspaceCellSpec = workspaceCellSpecs.getCalculatedSpec(
                     responsiveAspectRatio, mDeviceProperties.getHeightPx());
-        } else {
-            hotseatQsbSpace = pxFromDp(inv.hotseatQsbSpace[mTypeIndex], mMetrics);
-            hotseatBarBottomSpace = pxFromDp(inv.hotseatBarBottomSpace[mTypeIndex], mMetrics);
         }
 
         if ("none".equals(LauncherPrefs.SEARCH_PROVIDER.get(context))) {
