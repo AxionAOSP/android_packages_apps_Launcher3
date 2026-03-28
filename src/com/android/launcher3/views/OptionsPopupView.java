@@ -46,6 +46,7 @@ import com.android.launcher3.Launcher;
 import com.android.launcher3.LauncherSettings;
 import com.android.launcher3.R;
 import com.android.launcher3.Utilities;
+import com.android.launcher3.icons.IconStyleSheet;
 import com.android.launcher3.logging.StatsLogManager.EventEnum;
 import com.android.launcher3.model.data.WorkspaceItemInfo;
 import com.android.launcher3.popup.ArrowPopup;
@@ -232,6 +233,11 @@ public class OptionsPopupView<T extends Context & ActivityContext> extends Arrow
                 LAUNCHER_ALL_APPS_TAP_OR_LONGPRESS,
                 OptionsPopupView::enterAllApps));
         options.add(new OptionItem(launcher,
+                R.string.action_customize_icon,
+                R.drawable.ic_customize,
+                IGNORE,
+                OptionsPopupView::openIconStyleSheet));
+        options.add(new OptionItem(launcher,
                 R.string.settings_button_text,
                 R.drawable.ic_setting,
                 LAUNCHER_SETTINGS_BUTTON_TAP_OR_LONGPRESS,
@@ -257,6 +263,12 @@ public class OptionsPopupView<T extends Context & ActivityContext> extends Arrow
 
     private static boolean onWidgetsClicked(View view) {
         return Launcher.getLauncher(view.getContext()).openWidgetPicker();
+    }
+
+    private static boolean openIconStyleSheet(View view) {
+        Launcher launcher = Launcher.getLauncher(view.getContext());
+        IconStyleSheet.show(launcher);
+        return true;
     }
 
     private static boolean startSettings(View view) {

@@ -19,11 +19,11 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.pm.ActivityInfo;
 import android.content.pm.ComponentInfo;
+import android.content.pm.PackageManager;
 import android.content.res.Resources;
-import android.content.res.ThemeEngine;
 import android.content.res.XmlResourceParser;
-import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
+import android.provider.Settings;
 import android.text.TextUtils;
 import android.util.ArrayMap;
 import android.util.Log;
@@ -54,7 +54,10 @@ public class LauncherIconProvider extends IconProvider {
     private static final String TAG = "LIconProvider";
     private static final Map<String, ThemeData> DISABLED_MAP = Collections.emptyMap();
 
+    private static final String KEY_THEMED_ICON_PACK = "themed_icon_pack";
+
     private Map<String, ThemeData> mThemedIconMap;
+    private String mLoadedThemedIconPack;
 
     protected final ThemeManager mThemeManager;
 
@@ -80,32 +83,48 @@ public class LauncherIconProvider extends IconProvider {
 
     @Override
     public Drawable getIcon(ComponentInfo info, int iconDpi) {
-        try {
-            if (info instanceof ActivityInfo) {
-                ActivityInfo activityInfo = (ActivityInfo) info;
-                ThemeEngine engine = ThemeEngine.getInstance(mContext);
-                if (engine != null) {
-                    Drawable themed = engine.getIconPackDrawable(
-                        new ComponentName(activityInfo.packageName, activityInfo.name), iconDpi);
-                    if (themed instanceof BitmapDrawable) {
-                        return new FullBleedBitmapDrawable(
-                                mContext.getResources(),
-                                ((BitmapDrawable) themed).getBitmap());
-                    } else if (themed != null) {
-                        return themed;
-                    }
-                }
+        if (info instanceof ActivityInfo) {
+            ActivityInfo activityInfo = (ActivityInfo) info;
+            ComponentName cn = new ComponentName(activityInfo.packageName, activityInfo.name);
+            Drawable iconPackIcon = AxIconsHelper.loadIconPackDrawable(mContext, cn, iconDpi);
+            if (iconPackIcon != null) {
+                return iconPackIcon;
             }
-        } catch (Throwable t) {
         }
         return super.getIcon(info, iconDpi);
     }
 
+    public void invalidateThemedIconMap() {
+        if (mThemedIconMap != DISABLED_MAP) {
+            mThemedIconMap = null;
+        }
+    }
+
+    private String getThemedIconPackPackage() {
+        try {
+            return Settings.Secure.getString(
+                    mContext.getContentResolver(), KEY_THEMED_ICON_PACK);
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
     private Map<String, ThemeData> getThemedIconMap() {
+        String currentPack = getThemedIconPackPackage();
+        boolean packChanged = (currentPack == null && mLoadedThemedIconPack != null)
+                || (currentPack != null && !currentPack.equals(mLoadedThemedIconPack));
+        if (packChanged && mThemedIconMap != DISABLED_MAP) {
+            mThemedIconMap = null;
+        }
+
         if (mThemedIconMap != null) {
             return mThemedIconMap;
         }
+
         ArrayMap<String, ThemeData> map = new ArrayMap<>();
+
+        loadExternalThemedIconPack(map, currentPack);
+
         Resources res = mContext.getResources();
         try (XmlResourceParser parser = res.getXml(R.xml.grayscale_icon_map)) {
             final int depth = parser.getDepth();
@@ -121,7 +140,7 @@ public class LauncherIconProvider extends IconProvider {
                 if (TAG_ICON.equals(parser.getName())) {
                     String pkg = parser.getAttributeValue(null, ATTR_PACKAGE);
                     int iconId = parser.getAttributeResourceValue(null, ATTR_DRAWABLE, 0);
-                    if (iconId != 0 && !TextUtils.isEmpty(pkg)) {
+                    if (iconId != 0 && !TextUtils.isEmpty(pkg) && !map.containsKey(pkg)) {
                         map.put(pkg, new ThemeData(res, iconId, mContext));
                     }
                 }
@@ -129,7 +148,97 @@ public class LauncherIconProvider extends IconProvider {
         } catch (Exception e) {
             Log.e(TAG, "Unable to parse icon map", e);
         }
+
+        mLoadedThemedIconPack = currentPack;
         mThemedIconMap = map;
         return mThemedIconMap;
+    }
+
+    private void loadExternalThemedIconPack(ArrayMap<String, ThemeData> map, String packPackage) {
+        if (packPackage == null || packPackage.isEmpty()) return;
+
+        try {
+            Resources packRes = mContext.getPackageManager()
+                    .getResourcesForApplication(packPackage);
+
+            int mapResId = packRes.getIdentifier(
+                    "grayscale_icon_map", "xml", packPackage);
+            if (mapResId != 0) {
+                loadThemedIconMapFromResource(map, packRes, mapResId, packPackage);
+                return;
+            }
+
+            int filterResId = packRes.getIdentifier("appfilter", "xml", packPackage);
+            if (filterResId != 0) {
+                loadThemedIconMapFromAppFilter(map, packRes, filterResId, packPackage);
+            }
+        } catch (PackageManager.NameNotFoundException e) {
+            Log.w(TAG, "Themed icon pack not found: " + packPackage);
+        } catch (Exception e) {
+            Log.e(TAG, "Failed to load themed icon pack: " + packPackage, e);
+        }
+    }
+
+    private void loadThemedIconMapFromResource(ArrayMap<String, ThemeData> map,
+            Resources packRes, int resId, String packPackage) {
+        try (XmlResourceParser parser = packRes.getXml(resId)) {
+            final int depth = parser.getDepth();
+            int type;
+            while ((type = parser.next()) != XmlPullParser.START_TAG
+                    && type != XmlPullParser.END_DOCUMENT);
+
+            while (((type = parser.next()) != XmlPullParser.END_TAG
+                    || parser.getDepth() > depth) && type != XmlPullParser.END_DOCUMENT) {
+                if (type != XmlPullParser.START_TAG) continue;
+                if (TAG_ICON.equals(parser.getName())) {
+                    String pkg = parser.getAttributeValue(null, ATTR_PACKAGE);
+                    int iconId = parser.getAttributeResourceValue(null, ATTR_DRAWABLE, 0);
+                    if (iconId != 0 && !TextUtils.isEmpty(pkg)) {
+                        map.put(pkg, new ThemeData(packRes, iconId, mContext));
+                    }
+                }
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "Failed to parse grayscale_icon_map from " + packPackage, e);
+        }
+    }
+
+    private void loadThemedIconMapFromAppFilter(ArrayMap<String, ThemeData> map,
+            Resources packRes, int resId, String packPackage) {
+        try (XmlResourceParser parser = packRes.getXml(resId)) {
+            int type;
+            while ((type = parser.next()) != XmlPullParser.END_DOCUMENT) {
+                if (type != XmlPullParser.START_TAG) continue;
+                if (!"item".equals(parser.getName())) continue;
+
+                String component = parser.getAttributeValue(null, "component");
+                String drawableName = parser.getAttributeValue(null, ATTR_DRAWABLE);
+                if (component == null || drawableName == null) continue;
+
+                String pkg = extractPackageFromComponent(component);
+                if (pkg == null || map.containsKey(pkg)) continue;
+
+                String fgName = drawableName + "_foreground";
+                int fgId = packRes.getIdentifier(fgName, "drawable", packPackage);
+                if (fgId == 0) {
+                    fgId = packRes.getIdentifier(drawableName, "drawable", packPackage);
+                }
+                if (fgId != 0) {
+                    map.put(pkg, new ThemeData(packRes, fgId, mContext));
+                }
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "Failed to parse appfilter from " + packPackage, e);
+        }
+    }
+
+    private static String extractPackageFromComponent(String component) {
+        if (component == null) return null;
+        if (component.startsWith("ComponentInfo{") && component.endsWith("}")) {
+            String inner = component.substring(14, component.length() - 1);
+            int slash = inner.indexOf('/');
+            return slash > 0 ? inner.substring(0, slash) : null;
+        }
+        return null;
     }
 }
