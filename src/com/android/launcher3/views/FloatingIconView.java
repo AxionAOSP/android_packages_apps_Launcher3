@@ -35,12 +35,10 @@ import android.graphics.Path;
 import android.graphics.Rect;
 import android.graphics.RectF;
 import android.graphics.RenderNode;
-import android.content.res.ThemeEngine;
 import android.graphics.drawable.AdaptiveIconDrawable;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.os.CancellationSignal;
-import android.provider.Settings;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.util.Pair;
@@ -63,6 +61,7 @@ import com.android.launcher3.Utilities;
 import com.android.launcher3.dragndrop.DragLayer;
 import com.android.launcher3.folder.FolderIcon;
 import com.android.launcher3.graphics.PreloadIconDelegate;
+import com.android.launcher3.icons.AxIconsHelper;
 import com.android.launcher3.icons.FastBitmapDrawable;
 import com.android.launcher3.icons.IconNormalizer;
 import com.android.launcher3.icons.IconShape;
@@ -380,25 +379,16 @@ public class FloatingIconView extends FrameLayout implements
                 (InsettableFrameLayout.LayoutParams) getLayoutParams();
         mBadge = badge;
 
-        boolean hasIconPack = false;
-        boolean isAxIconsStyle = false;
-        try {
-            ThemeEngine engine = ThemeEngine.getInstance(mLauncher);
-            hasIconPack = engine != null && engine.hasActiveIconPack();
-            if (!hasIconPack) {
-                String style = Settings.Secure.getString(
-                        mLauncher.getContentResolver(), "themed_icon_style");
-                isAxIconsStyle = !"aosp".equals(style);
-            }
-        } catch (Throwable t) {
-        }
-        boolean useSimpleRendering = hasIconPack || isAxIconsStyle;
+        boolean isIconPackIcon = AxIconsHelper.isIconPackDrawable(drawable);
+        boolean useSimpleRendering = isIconPackIcon
+                || (AxIconsHelper.isAxIconsEnabled(mLauncher)
+                    && !(drawable instanceof AdaptiveIconDrawable));
 
-        if (useSimpleRendering && drawable != null && !(drawable instanceof AdaptiveIconDrawable)) {
-            mClipIconView.setIcon(drawable, iconOffset, lp, mIsOpening, usingCustomShape, dp);
-        } else if (useSimpleRendering) {
-            Drawable simpleIcon = btvIcon != null ? btvIcon.get() : drawable;
-            mClipIconView.setIcon(simpleIcon, 0, lp, mIsOpening, usingCustomShape, dp);
+        if (useSimpleRendering) {
+            Drawable simpleIcon = isIconPackIcon ? drawable
+                    : (btvIcon != null ? btvIcon.get() : drawable);
+            mClipIconView.setIcon(simpleIcon, isIconPackIcon ? 0 : iconOffset,
+                    lp, mIsOpening, usingCustomShape, dp);
         } else {
             mClipIconView.setIcon(drawable, iconOffset, lp, mIsOpening, usingCustomShape, dp);
         }

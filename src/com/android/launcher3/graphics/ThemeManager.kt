@@ -184,6 +184,8 @@ constructor(
             }
 
         val themedIconStyle = prefs.get(THEMED_ICON_STYLE)
+        val themedIconPack = Settings.Secure.getString(
+            context.contentResolver, KEY_THEMED_ICON_PACK) ?: ""
 
         return IconState(
             iconMask = iconMask,
@@ -194,6 +196,7 @@ constructor(
             shapeRadius = shapeModel?.shapeRadius ?: DEFAULT_ICON_RADIUS,
             themeCode = themeCode,
             themedIconStyle = themedIconStyle,
+            themedIconPack = themedIconPack,
         )
     }
 
@@ -208,8 +211,9 @@ constructor(
         val folderShape: ShapeDelegate,
         val shapeRadius: Float,
         val themedIconStyle: String = "axion",
+        val themedIconPack: String = "",
     ) {
-        fun toUniqueId() = "$themeCode,$isCircle,$themedIconStyle"
+        fun toUniqueId() = "$themeCode,$isCircle,$themedIconStyle,$themedIconPack"
 
         val iconShapeInfo = IconShapeInfo.fromPath(iconShape.getPath(), DEFAULT_PATH_SIZE_INT)
         val folderShapeInfo = IconShapeInfo.fromPath(folderShape.getPath(), DEFAULT_PATH_SIZE_INT)
@@ -241,11 +245,14 @@ constructor(
                 Settings.Secure.getUriFor(KEY_THEMED_ICON_STYLE), false, this)
             context.contentResolver.registerContentObserver(
                 Settings.Secure.getUriFor(KEY_THEMED_ICONS), false, this)
+            context.contentResolver.registerContentObserver(
+                Settings.Secure.getUriFor(KEY_THEMED_ICON_PACK), false, this)
         }
 
         override fun onChange(selfChange: Boolean, uri: Uri?) {
             super.onChange(selfChange, uri)
             syncSettingsToPrefs()
+            verifyIconState()
         }
 
         override fun close() {
@@ -269,6 +276,7 @@ constructor(
         private const val ACTION_OVERLAY_CHANGED = "android.intent.action.OVERLAY_CHANGED"
         private const val KEY_THEMED_ICONS = "themed_icons"
         private const val KEY_THEMED_ICON_STYLE = "themed_icon_style"
+        private const val KEY_THEMED_ICON_PACK = "themed_icon_pack"
         private val CONFIG_ICON_MASK_RES_ID: Int =
             Resources.getSystem().getIdentifier("config_icon_mask", "string", "android")
 

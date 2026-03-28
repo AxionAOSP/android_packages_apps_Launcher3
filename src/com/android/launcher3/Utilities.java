@@ -39,7 +39,6 @@ import android.content.pm.LauncherApps;
 import android.content.pm.ShortcutInfo;
 import android.content.res.Configuration;
 import android.content.res.Resources;
-import android.content.res.ThemeEngine;
 import android.graphics.Color;
 import android.graphics.ColorFilter;
 import android.graphics.LightingColorFilter;
@@ -84,6 +83,7 @@ import com.android.launcher3.deviceprofile.DeviceProperties;
 import com.android.launcher3.dragndrop.FolderAdaptiveIcon;
 import com.android.launcher3.graphics.ThemeManager;
 import com.android.launcher3.graphics.TintedDrawableSpan;
+import com.android.launcher3.icons.AxIconsHelper;
 import com.android.launcher3.icons.BitmapInfo;
 import com.android.launcher3.icons.CacheableShortcutInfo;
 import com.android.launcher3.icons.IconShape;
@@ -733,15 +733,8 @@ public final class Utilities {
         if (mainIcon instanceof AdaptiveIconDrawable aid) {
             result = aid;
         } else {
-            boolean skipWrapping = false;
-            try {
-                ThemeEngine engine = ThemeEngine.getInstance(context);
-                if (engine != null && engine.hasActiveIconPack()) {
-                    skipWrapping = true;
-                }
-            } catch (Throwable t) {
-            }
-            if (skipWrapping) {
+            if (AxIconsHelper.hasActiveIconPack(context)
+                    || AxIconsHelper.isIconPackDrawable(mainIcon)) {
                 return null;
             }
             // Wrap the main icon in AID

@@ -248,6 +248,16 @@
     <string name="action_enlarge">Enlarge</string>
     <string name="action_minimize">Minimize</string>
     <string name="action_customize_folder">Customize</string>
+    <string name="action_customize_icon">Customize icons</string>
+    <string name="icon_pack_picker_title">Customize icons</string>
+    <string name="icon_pack_picker_default">Default</string>
+    <string name="icon_pack_picker_reset">Reset to default</string>
+    <string name="icon_pack_title">Icon Pack</string>
+    <string name="themed_icons_card_title">Themed Icons</string>
+    <string name="themed_icons_description">Monochrome icons that adapt to your colors</string>
+    <string name="icon_shape_title">Icon Shape</string>
+    <string name="themed_icon_pack_title">Themed Icon Pack</string>
+    <string name="themed_icon_pack_none">None</string>
 
     <string name="folder_style_picker_title">Folder Style</string>
     <string name="folder_style_quadrant">Quadrant</string>
