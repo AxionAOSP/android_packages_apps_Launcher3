@@ -109,14 +109,23 @@ public class ItemLongClickListener {
         int cellY = info.cellY;
         int countX = layout.getCountX();
         int countY = layout.getCountY();
-
-        if (cellX + 1 >= countX || cellY + 1 >= countY) return false;
-
-        boolean right = layout.isRegionVacant(cellX + 1, cellY, 1, 1);
-        boolean bottom = layout.isRegionVacant(cellX, cellY + 1, 1, 1);
-        boolean diag = layout.isRegionVacant(cellX + 1, cellY + 1, 1, 1);
-
-        return right && bottom && diag;
+        int[][] offsets = {{0, 0}, {-1, 0}, {0, -1}, {-1, -1}};
+        for (int[] off : offsets) {
+            int ax = cellX + off[0];
+            int ay = cellY + off[1];
+            if (ax < 0 || ay < 0 || ax + 1 >= countX || ay + 1 >= countY) continue;
+            boolean allVacant = true;
+            for (int dx = 0; dx <= 1 && allVacant; dx++) {
+                for (int dy = 0; dy <= 1 && allVacant; dy++) {
+                    int cx = ax + dx;
+                    int cy = ay + dy;
+                    if (cx == cellX && cy == cellY) continue;
+                    if (!layout.isRegionVacant(cx, cy, 1, 1)) allVacant = false;
+                }
+            }
+            if (allVacant) return true;
+        }
+        return false;
     }
 
     public static void beginDrag(View v, Launcher launcher, ItemInfo info,
