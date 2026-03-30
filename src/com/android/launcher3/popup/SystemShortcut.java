@@ -600,34 +600,10 @@ public abstract class SystemShortcut<T extends ActivityContext> extends ItemInfo
                 if (context instanceof Launcher) {
                     Launcher launcher = (Launcher) context;
                     Workspace workspace = launcher.getWorkspace();
-                    int screenId = itemInfo.screenId;
-                    int cellX = itemInfo.cellX;
-                    int cellY = itemInfo.cellY;
-
-                    CellLayout layout = workspace.getScreenWithId(screenId);
+                    CellLayout layout = workspace.getScreenWithId(itemInfo.screenId);
                     if (layout != null) {
-                        boolean isVacant = false;
-
-                        int countX = layout.getCountX();
-                        int countY = layout.getCountY();
-
-                        if (cellX + 1 < countX && cellY + 1 < countY) {
-                            boolean right = layout.isRegionVacant(cellX + 1, cellY, 1, 1);
-                            boolean bottom = layout.isRegionVacant(cellX, cellY + 1, 1, 1);
-                            boolean diag = layout.isRegionVacant(cellX + 1, cellY + 1, 1, 1);
-
-                            Log.d(TAG, "Checking Enlarge for " + itemInfo.title + " at (" + cellX + "," + cellY + ")" +
-                                    " right=" + right + " bottom=" + bottom + " diag=" + diag);
-
-                            if (right && bottom && diag) {
-                                isVacant = true;
-                            }
-                        } else {
-                            Log.d(TAG, "Checking Enlarge for " + itemInfo.title + " at (" + cellX + "," + cellY + ")" +
-                                    " failed boundary check: " + (cellX+1) + "<" + countX + " && " + (cellY+1) + "<" + countY);
-                        }
-
-                        if (!isVacant) {
+                        if (findEnlargeAnchor(layout, itemInfo.cellX,
+                                itemInfo.cellY, true) == null) {
                             return null;
                         }
                     }
@@ -635,6 +611,29 @@ public abstract class SystemShortcut<T extends ActivityContext> extends ItemInfo
 
                 return new EnlargeIcon<>(context, itemInfo, originalView);
             };
+
+    private static int[] findEnlargeAnchor(CellLayout layout, int cellX, int cellY,
+            boolean skipSelf) {
+        int countX = layout.getCountX();
+        int countY = layout.getCountY();
+        int[][] offsets = {{0, 0}, {-1, 0}, {0, -1}, {-1, -1}};
+        for (int[] off : offsets) {
+            int ax = cellX + off[0];
+            int ay = cellY + off[1];
+            if (ax < 0 || ay < 0 || ax + 1 >= countX || ay + 1 >= countY) continue;
+            boolean allVacant = true;
+            for (int dx = 0; dx <= 1 && allVacant; dx++) {
+                for (int dy = 0; dy <= 1 && allVacant; dy++) {
+                    int cx = ax + dx;
+                    int cy = ay + dy;
+                    if (skipSelf && cx == cellX && cy == cellY) continue;
+                    if (!layout.isRegionVacant(cx, cy, 1, 1)) allVacant = false;
+                }
+            }
+            if (allVacant) return new int[]{ax, ay};
+        }
+        return null;
+    }
 
     public static class EnlargeIcon<T extends ActivityContext> extends SystemShortcut<T> {
 
@@ -663,27 +662,20 @@ public abstract class SystemShortcut<T extends ActivityContext> extends ItemInfo
                     (CellLayoutLayoutParams)
                             workspaceView.getLayoutParams();
 
-            layout.markCellsAsUnoccupiedForView(workspaceView);
-
-            int newX = mItemInfo.cellX;
-            int newY = mItemInfo.cellY;
-
-            if (layout.isRegionVacant(mItemInfo.cellX, mItemInfo.cellY, 2, 2)) {
-            } else if (layout.isRegionVacant(mItemInfo.cellX - 1, mItemInfo.cellY, 2, 2)) {
-                newX = mItemInfo.cellX - 1;
-            } else if (layout.isRegionVacant(mItemInfo.cellX, mItemInfo.cellY - 1, 2, 2)) {
-                newY = mItemInfo.cellY - 1;
-            } else if (layout.isRegionVacant(mItemInfo.cellX - 1, mItemInfo.cellY - 1, 2, 2)) {
-                newX = mItemInfo.cellX - 1;
-                newY = mItemInfo.cellY - 1;
+            int[] anchor = findEnlargeAnchor(layout, mItemInfo.cellX,
+                    mItemInfo.cellY, true);
+            if (anchor == null) {
+                return;
             }
 
-            lp.setCellX(newX);
-            lp.setCellY(newY);
+            layout.markCellsAsUnoccupiedForView(workspaceView);
+
+            lp.setCellX(anchor[0]);
+            lp.setCellY(anchor[1]);
             lp.cellHSpan = 2;
             lp.cellVSpan = 2;
-            mItemInfo.cellX = newX;
-            mItemInfo.cellY = newY;
+            mItemInfo.cellX = anchor[0];
+            mItemInfo.cellY = anchor[1];
             mItemInfo.spanX = 2;
             mItemInfo.spanY = 2;
 
