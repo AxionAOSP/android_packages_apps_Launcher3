@@ -1882,12 +1882,23 @@ public abstract class RecentsView<
                 }
             }
 
-            mScroller.setFinalX(pageSnapped);
-            // Ensure the scroll/snap doesn't happen too fast;
-            int extraScrollDuration = OVERSCROLL_PAGE_SNAP_ANIMATION_DURATION
-                    - mScroller.getDuration();
-            if (extraScrollDuration > 0) {
-                mScroller.extendDuration(extraScrollDuration);
+            int scrollerDuration = mScroller.getDuration();
+            if (scrollerDuration == 0) {
+                // Zero-velocity fling (tap during scroll): mSplineDistance is 0 so
+                // setFinalX + extendDuration would freeze the view then teleport it.
+                // Use startScroll to create a proper animation from the current position.
+                int currentScroll = getPagedOrientationHandler().getPrimaryScroll(this);
+                mScroller.startScroll(currentScroll, 0,
+                        pageSnapped - currentScroll, 0,
+                        OVERSCROLL_PAGE_SNAP_ANIMATION_DURATION);
+            } else {
+                mScroller.setFinalX(pageSnapped);
+                // Ensure the scroll/snap doesn't happen too fast;
+                int extraScrollDuration = OVERSCROLL_PAGE_SNAP_ANIMATION_DURATION
+                        - scrollerDuration;
+                if (extraScrollDuration > 0) {
+                    mScroller.extendDuration(extraScrollDuration);
+                }
             }
             debugLog(TAG, "onNotSnappingToPageInFreeScroll - mNextPage: " + mNextPage
                     + ", scrollSnapped: " + pageSnapped);

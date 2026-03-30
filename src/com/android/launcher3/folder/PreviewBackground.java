@@ -181,30 +181,17 @@ public class PreviewBackground extends DelegatedCellDrawing {
         DeviceProfile grid = activity.getDeviceProfile();
         previewSize = grid.folderIconSizePx;
 
-        boolean isEnlarged = availableSpaceX > grid.getWorkspaceIconProfile().getIconSizePx() * 1.5;
-        boolean enlargedBySpaceCheck = isEnlarged;
-        boolean enlargedByInfoSpan = false;
-        boolean enlargedByLayoutParams = false;
-        int infoSpanX = 0, infoSpanY = 0;
-        int lpSpanX = 0, lpSpanY = 0;
+        boolean isEnlarged = false;
 
         if (invalidateDelegate instanceof FolderIcon) {
             FolderIcon fi = (FolderIcon) invalidateDelegate;
-            if (fi.mInfo != null) {
-                infoSpanX = fi.mInfo.spanX;
-                infoSpanY = fi.mInfo.spanY;
-                if (infoSpanX == 2 && infoSpanY == 2) {
-                    isEnlarged = true;
-                    enlargedByInfoSpan = true;
-                }
+            if (fi.mInfo != null && fi.mInfo.spanX == 2 && fi.mInfo.spanY == 2) {
+                isEnlarged = true;
             }
             if (!isEnlarged && fi.getLayoutParams() instanceof CellLayoutLayoutParams) {
                 CellLayoutLayoutParams lp = (CellLayoutLayoutParams) fi.getLayoutParams();
-                lpSpanX = lp.cellHSpan;
-                lpSpanY = lp.cellVSpan;
-                if (lpSpanX >= 2 && lpSpanY >= 2) {
+                if (lp.cellHSpan >= 2 && lp.cellVSpan >= 2) {
                     isEnlarged = true;
-                    enlargedByLayoutParams = true;
                 }
             }
         }
