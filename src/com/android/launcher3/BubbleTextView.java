@@ -1600,22 +1600,26 @@ public class BubbleTextView extends TextView implements ItemInfoUpdateReceiver,
                 LauncherActivityInfo lai = la.resolveActivity(info.getIntent(), info.user);
                 if (lai == null) return;
 
-                InvariantDeviceProfile idp =
-                        LauncherAppState.getInstance(getContext()).getInvariantDeviceProfile();
+                LauncherAppState app = LauncherAppState.getInstance(getContext());
+                InvariantDeviceProfile idp = app.getInvariantDeviceProfile();
                 int enlargedDpi = (int) (idp.fillResIconDpi
                         * ((float) targetSize / idp.iconBitmapSize));
 
-                Drawable fullResIcon = lai.getIcon(enlargedDpi);
+                Drawable fullResIcon =
+                        app.getIconProvider().getIcon(lai.getActivityInfo(), enlargedDpi);
                 if (fullResIcon == null) return;
 
-                BaseIconFactory factory =
-                        new BaseIconFactory(getContext(), enlargedDpi, targetSize);
+                ThemeManager themeManager = ThemeManager.INSTANCE.get(getContext());
+                BaseIconFactory factory = new BaseIconFactory(
+                        getContext(), enlargedDpi, targetSize,
+                        Flags.enableLauncherIconShapes(), themeManager.getThemeController());
                 BitmapInfo bitmapInfo = factory.createBadgedIconBitmap(fullResIcon);
                 factory.close();
 
                 post(() -> {
                     if (getTag() != info) return;
-                    FastBitmapDrawable newIcon = bitmapInfo.newIcon(getContext());
+                    FastBitmapDrawable newIcon =
+                            bitmapInfo.newIcon(getContext(), FLAG_THEMED);
                     newIcon.setBounds(0, 0, targetSize, targetSize);
                     updateIcon(newIcon);
                     mIcon = newIcon;
