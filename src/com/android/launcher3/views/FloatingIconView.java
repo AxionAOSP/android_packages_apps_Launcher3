@@ -381,8 +381,7 @@ public class FloatingIconView extends FrameLayout implements
 
         boolean isIconPackIcon = AxIconsHelper.isIconPackDrawable(drawable);
         boolean useSimpleRendering = isIconPackIcon
-                || (AxIconsHelper.isAxIconsEnabled(mLauncher)
-                    && !(drawable instanceof AdaptiveIconDrawable));
+                || AxIconsHelper.isAxIconsEnabled(mLauncher);
 
         if (useSimpleRendering) {
             Drawable simpleIcon = isIconPackIcon ? drawable
