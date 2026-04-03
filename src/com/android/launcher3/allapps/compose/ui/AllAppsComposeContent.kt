@@ -872,10 +872,13 @@ private fun AllAppsCategoriesView(
     val isScrollingProvider = remember<() -> Boolean> { { gridState.isScrollInProgress } }
 
     LaunchedEffect(expandedCategory) {
-        if (expandedCategory != null) {
-            interactions.controller?.let {
+        interactions.controller?.let {
+            if (expandedCategory != null) {
                 it.canScrollUp = true
                 it.canScrollDown = false
+            } else {
+                it.canScrollUp = gridState.canScrollBackward
+                it.canScrollDown = gridState.canScrollForward
             }
         }
     }

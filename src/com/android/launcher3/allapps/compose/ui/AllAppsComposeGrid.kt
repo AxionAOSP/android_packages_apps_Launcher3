@@ -22,6 +22,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.*
 import com.android.launcher3.model.data.AppInfo
 
+private const val SCROLL_SNAP_THRESHOLD_PX = 5
+
 private enum class RowPosition { FIRST, MIDDLE, LAST, ONLY }
 
 private sealed interface GridCellItem {
@@ -183,7 +185,12 @@ fun AllAppsComposeGrid(
         }
     }
 
-    val canScrollBack by remember { derivedStateOf { listState.canScrollBackward } }
+    val canScrollBack by remember {
+        derivedStateOf {
+            listState.firstVisibleItemIndex > 0 ||
+                listState.firstVisibleItemScrollOffset > SCROLL_SNAP_THRESHOLD_PX
+        }
+    }
     val canScrollFwd by remember { derivedStateOf { listState.canScrollForward } }
 
     LaunchedEffect(canScrollBack, canScrollFwd) {
