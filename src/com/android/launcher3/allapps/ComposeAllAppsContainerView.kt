@@ -157,6 +157,13 @@ class ComposeAllAppsContainerView @JvmOverloads constructor(
         return !controller.canScrollUp
     }
 
+    override fun requestDisallowInterceptTouchEvent(disallowIntercept: Boolean) {
+        if (disallowIntercept && !controller.canScrollUp) {
+            return
+        }
+        super.requestDisallowInterceptTouchEvent(disallowIntercept)
+    }
+
     override fun onAllAppsTransitionProgress(progress: Float) {
         mTransitionProgress = progress
         controller.setTransitionProgressWithRefresh(progress)
