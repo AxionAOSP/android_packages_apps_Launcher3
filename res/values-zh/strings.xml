@@ -21,11 +21,11 @@
     <!-- Application name -->
     <string name="app_name">Launcher3</string>
     <!-- Work folder name -->
-    <string name="work_folder_name">Work</string>
+    <string name="work_folder_name">工作</string>
     <!-- Displayed when user selects a shortcut for an app that was uninstalled [CHAR_LIMIT=none]-->
-    <string name="activity_not_found">App isn\'t installed.</string>
+    <string name="activity_not_found">應用程式未安裝。</string>
     <!-- Displayed when user selects a shortcut for an app that is current not available [CHAR_LIMIT=none]-->
-    <string name="activity_not_available">App isn\'t available</string>
+    <string name="activity_not_available">應用程式目前無法使用</string>
     <!-- SafeMode shortcut error string -->
     <string name="safemode_shortcut_error">Downloaded app disabled in Safe mode</string>
     <!-- SafeMode widget error string -->
@@ -33,7 +33,7 @@
     <!-- Message shown when a shortcut is not available. It could have been temporarily disabled and may start working again after some time. -->
     <string name="shortcut_not_available">Shortcut isn\'t available</string>
     <!-- User visible name for the launcher/home screen. [CHAR_LIMIT=30] -->
-    <string name="home_screen">Home</string>
+    <string name="home_screen">主頁</string>
     <!-- Description for setting the current launcher as the default home app. [CHAR_LIMIT=none]-->
     <string name="set_default_home_app">Set <xliff:g id="launcher_name" example="Launcher3">%1$s</xliff:g> as default home app in Settings</string>
     <!-- Options for recent tasks -->
@@ -137,7 +137,7 @@
     <!-- Tab label. A user can tap this tab to access their personal widgets. [CHAR_LIMIT=25] -->
     <string name="widgets_full_sheet_personal_tab">Personal</string>
     <!-- Tab label. A user can tap this tab to access their work widgets. [CHAR_LIMIT=25] -->
-    <string name="widgets_full_sheet_work_tab">Work</string>
+    <string name="widgets_full_sheet_work_tab">工作</string>
     <!-- A widget category label for grouping widgets related to conversations. [CHAR_LIMIT=30] -->
     <string name="widget_category_conversations">Conversations</string>
     <!-- A widget category label for grouping widgets related to note taking. [CHAR_LIMIT=30] -->
@@ -421,7 +421,7 @@
     <!-- Label of tab to indicate personal apps -->
     <string name="all_apps_personal_tab">Personal</string>
     <!-- Label of tab to indicate work apps -->
-    <string name="all_apps_work_tab">Work</string>
+    <string name="all_apps_work_tab">工作</string>
     <!-- Content description of personal tab to indicate personal apps -->
     <string name="all_apps_personal_tab_content_description">Personal apps tab</string>
     <!-- Content description of work tab to indicate work apps -->

@@ -483,6 +483,6 @@
     <string name="pref_sleep_gesture_title">ダブルタップでスリープ</string>
     <string name="pref_sleep_gesture_summary">Double tap on empty space for screen off</string>
     <!-- All Apps Suggestions -->
-    <string name="all_apps_suggestions_title">Show suggestions</string>
+    <string name="all_apps_suggestions_title">候補を表示</string>
     <string name="all_apps_suggestions_summary">Display suggested apps at the top of the app drawer</string>
 </resources>

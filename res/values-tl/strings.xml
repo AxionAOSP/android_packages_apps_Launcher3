@@ -152,7 +152,7 @@
          placeholder text is the widget name. [CHAR_LIMIT=none] -->
     <string name="widget_add_button_content_description">Add <xliff:g id="widget_name" example="Calendar month view">%1$s</xliff:g> widget</string>
     <!-- Text on the button that enables users to expand the widgets list to see all widget apps besides the default ones displayed. [CHAR_LIMIT=15] -->
-    <string name="widgets_list_expand_button_label">Show all</string>
+    <string name="widgets_list_expand_button_label">Ipakita lahat</string>
     <!-- Accessibility content description for the button that enables users to expand the widgets list to see all widget apps besides the default ones displayed. [CHAR_LIMIT=none]  -->
     <string name="widgets_list_expand_button_content_description">Show all widgets</string>
     <!-- Accessibility announcement to indicate to the users that widgets list is now expanded -->
@@ -171,10 +171,10 @@
     <!-- No-search-results text. [CHAR_LIMIT=50] -->
     <string name="all_apps_no_search_results">No apps found matching \"<xliff:g id="query" example="Android">%1$s</xliff:g>\"</string>
     <!-- Label for an icon representing any generic app. [CHAR_LIMIT=50] -->
-    <string name="label_application">App</string>
+    <string name="label_application">Aplikasyon</string>
     <!-- Label for the header text of the All Apps section in All Apps view, used to separate Predicted Apps and Actions section from All Apps section. [CHAR_LIMIT=50] -->
-    <string name="all_apps_label">All apps</string>
-    <string name="all_apps_list_label">Apps list</string>
+    <string name="all_apps_label">Lahat ng aplikasyon</string>
+    <string name="all_apps_list_label">Listahan ng mga aplikasyon</string>
     <!-- Popup items -->
     <!-- Text to display as the header above notifications. [CHAR_LIMIT=30] -->
     <string name="notifications_header">Notifications</string>
@@ -188,7 +188,7 @@
     <!-- Error message when user has filled the hotseat -->
     <string name="hotseat_out_of_space">No more room in the Favorites tray</string>
     <!-- All applications label -->
-    <string name="all_apps_button_label">Apps list</string>
+    <string name="all_apps_button_label">Listahan ng mga aplikasyon</string>
     <string name="all_apps_search_results">Search results</string>
     <string name="all_apps_button_personal_label">Personal apps list</string>
     <string name="all_apps_button_work_label">Work apps list</string>

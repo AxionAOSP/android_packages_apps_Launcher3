@@ -19,11 +19,11 @@
 <resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
     <!-- General -->
     <!-- Application name -->
-    <string name="app_name">Launcher3</string>
+    <string name="app_name">Лаунчер</string>
     <!-- Work folder name -->
     <string name="work_folder_name">Работа</string>
     <!-- Displayed when user selects a shortcut for an app that was uninstalled [CHAR_LIMIT=none]-->
-    <string name="activity_not_found">Приложение удалено</string>
+    <string name="activity_not_found">Приложение не установлено.</string>
     <!-- Displayed when user selects a shortcut for an app that is current not available [CHAR_LIMIT=none]-->
     <string name="activity_not_available">Приложение недоступно</string>
     <!-- SafeMode shortcut error string -->
@@ -35,7 +35,7 @@
     <!-- User visible name for the launcher/home screen. [CHAR_LIMIT=30] -->
     <string name="home_screen">Главный экран</string>
     <!-- Description for setting the current launcher as the default home app. [CHAR_LIMIT=none]-->
-    <string name="set_default_home_app">Set <xliff:g id="launcher_name" example="Launcher3">%1$s</xliff:g> as default home app in Settings</string>
+    <string name="set_default_home_app">Установить <xliff:g id="launcher_name" example="Launcher3">%1$s</xliff:g> в качестве лаунчера по умолчанию</string>
     <!-- Options for recent tasks -->
     <!-- Title for an option to enter split screen mode for a given app -->
     <string name="recent_task_option_split_screen">Разделить экран</string>
@@ -51,16 +51,16 @@
     <!-- App pair default title -->
     <string name="app_pair_default_title"><xliff:g id="app1" example="Chrome">%1$s</xliff:g> | <xliff:g id="app2" example="YouTube">%2$s</xliff:g></string>
     <!-- Displayed when an app pair can't launch at this screen size [CHAR_LIMIT=none] -->
-    <string name="app_pair_unlaunchable_at_screen_size">Одновременно использовать эти два приложения на устройстве нельзя.</string>
+    <string name="app_pair_unlaunchable_at_screen_size">Эта пара приложений не поддерживается на этом устройстве</string>
     <!-- Displayed when an app pair can't launch at this screen size, but user can unfold device to restore functionality [CHAR_LIMIT=none] -->
-    <string name="app_pair_needs_unfold">Чтобы одновременно использовать эти два приложения, разложите устройство.</string>
+    <string name="app_pair_needs_unfold">Разверните устройство, чтобы использовать эту пару приложений</string>
     <!-- Displayed when user selects a shortcut for an app pair that is currently not available [CHAR_LIMIT=none]-->
     <string name="app_pair_not_available">Одновременное использование двух приложений недоступно</string>
     <!-- Widgets -->
     <!-- Message to tell the user to press and hold on a widget to add it [CHAR_LIMIT=50] -->
-    <string name="long_press_widget_to_add">Чтобы переместить виджет, нажмите на него и удерживайте</string>
+    <string name="long_press_widget_to_add">Нажмите &amp; удерживайте виджет, чтобы переместить его.</string>
     <!-- Accessibility spoken hint message in widget picker, which allows user to add a widget. Custom action is the label for additional accessibility actions available in this mode [CHAR_LIMIT=100] -->
-    <string name="long_accessible_way_to_add">Чтобы использовать специальные действия или перенести виджет, нажмите на него дважды и удерживайте.</string>
+    <string name="long_accessible_way_to_add">Дважды нажмите &amp; удерживайте, чтобы переместить виджет или использовать специальные действия.</string>
     <!-- Accessibility label for the icon button shown in the widget picker that opens a overflow
          menu with widgets viewing options. [CHAR_LIMIT=25] -->
     <string name="widget_picker_widget_options_button_description">Другие параметры</string>
@@ -69,25 +69,25 @@
     <string name="widget_picker_show_all_widgets_menu_item_title">Показать все виджеты</string>
     <!-- The format string for the dimensions of a widget in the drawer -->
     <!-- There is a special version of this format string for Farsi -->
-    <string name="widget_dims_format">%1$d x %2$d</string>
+    <string name="widget_dims_format">%1$d \u00d7 %2$d</string>
     <!-- Accessibility spoken message format for the dimensions of a widget in the drawer -->
     <string name="widget_accessible_dims_format">Ширина %1$d, высота %2$d</string>
     <!-- Spoken text for a screen reader. The placeholder text is the widget name.
          [CHAR_LIMIT=none]-->
-    <string name="widget_preview_context_description"><xliff:g id="widget_name" example="Calendar month view">%1$s</xliff:g> widget</string>
+    <string name="widget_preview_context_description">Виджет <xliff:g id="widget_name" example="Calendar month view">%1$s</xliff:g></string>
     <!-- Spoken text for a screen reader. The first placeholder text is the widget name, the
          remaining placeholders are for the widget dimensions.
          [CHAR_LIMIT=none]-->
-    <string name="widget_preview_name_and_dims_content_description">        <xliff:g id="widget_name" example="Calendar month view">%1$s</xliff:g> widget, %2$d wide by %3$d high
+    <string name="widget_preview_name_and_dims_content_description">      <xliff:g id="widget_name" example="Calendar month view">%1$s</xliff:g> Виджет %2$d на %3$d
     </string>
     <!-- Message to tell the user to press and hold a widget/icon to add it to the home screen.
          [CHAR LIMIT=NONE]  -->
-    <string name="add_item_request_drag_hint">Нажмите на виджет и удерживайте его, чтобы переместить в нужное место на главном экране.</string>
+    <string name="add_item_request_drag_hint">Нажмите &amp; удерживайте виджет, чтобы переместить его на рабочем столе</string>
     <!-- Button label to automatically add a widget to home screen [CHAR_LIMIT=50] -->
     <string name="add_to_home_screen">Добавить на главный экран</string>
     <!-- Accessibility spoken message announced when a widget gets added to the home screen using a
          button in a dialog. [CHAR_LIMIT=none] -->
-    <string name="added_to_home_screen_accessibility_text"><xliff:g id="widget_name" example="Calendar month view">%1$s</xliff:g> widget added to home screen</string>
+    <string name="added_to_home_screen_accessibility_text">Виджет <xliff:g id="widget_name" example="Calendar month view">%1$s</xliff:g> добавлен на главный экран</string>
     <!-- Widget suggestions header title in the full widgets picker for large screen devices
     in landscape mode. [CHAR_LIMIT=50] -->
     <string name="suggested_widgets_header_title">Рекомендации</string>
@@ -96,7 +96,7 @@
     <string name="productivity_widget_recommendation_category_label">Основное</string>
     <!-- Title for the widget suggestions category that displays widgets provided by
     news and magazines related apps [CHAR_LIMIT=50] -->
-    <string name="news_widget_recommendation_category_label">Новости и журналы</string>
+    <string name="news_widget_recommendation_category_label">Новости &amp; журналы</string>
     <!-- Title for the widget suggestions category that displays widgets provided by
     entertainment apps [CHAR_LIMIT=50] -->
     <string name="entertainment_widget_recommendation_category_label">Развлечения</string>
@@ -107,16 +107,18 @@
     [CHAR_LIMIT=50] -->
     <string name="others_widget_recommendation_category_label">Рекомендации</string>
     <!-- accessibilityPaneTitle for the right pane when showing suggested widgets. -->
-    <string name="widget_picker_right_pane_accessibility_title"><xliff:g id="selected_header" example="Calendar">%1$s</xliff:g> widgets on right, search and options on left</string>
+    <string name="widget_picker_right_pane_accessibility_title"><xliff:g id="selected_header" example="Calendar">%1$s</xliff:g> Виджет справа, поиск и опции слева</string>
     <!-- Label for showing the number of widgets an app has in the full widgets picker.
          [CHAR_LIMIT=25][ICU SYNTAX] -->
-    <string name="widgets_count">{count,plural, =1{# виджет}one{# виджет}few{# виджета}many{# виджетов}other{# виджета}}</string>
+    <string name="widgets_count">        {count,plural, =1{# виджет}one{# виджет}few{# виджета}many{# виджетов}other{# виджета}}
+    </string>
     <!-- Label for showing the number of shortcut an app has in the full widgets picker.
          [CHAR_LIMIT=25][ICU SYNTAX] -->
-    <string name="shortcuts_count">{count,plural, =1{# ярлык}one{# ярлык}few{# ярлыка}many{# ярлыков}other{# ярлыка}}</string>
+    <string name="shortcuts_count">        {count,plural, =1{# ярлык}one{# ярлык}few{# ярлыка}many{# ярлыков}other{# ярлыка}}
+    </string>
     <!-- Label for showing both the number of widgets and shortcuts an app has in the full widgets
          picker. [CHAR_LIMIT=50] -->
-    <string name="widgets_and_shortcuts_count"><xliff:g id="widgets_count" example="5 widgets">%1$s</xliff:g>, <xliff:g id="shortcuts_count" example="1 shortcut">%2$s</xliff:g></string>
+    <string name="widgets_and_shortcuts_count"><xliff:g id="widgets_count" example="5 widgets">%1$s</xliff:g> <xliff:g id="shortcuts_count" example="1 shortcut">%2$s</xliff:g></string>
     <!-- Text for both the tile of a popup view, which shows all available widgets installed on
          the device, and the text of a button, which opens this popup view. [CHAR LIMIT=30]-->
     <string name="widget_button_text">Виджеты</string>
@@ -148,7 +150,7 @@
     <string name="widget_add_button_label">Добавить</string>
     <!-- Accessibility content description for the button that adds a widget to the home screen. The
          placeholder text is the widget name. [CHAR_LIMIT=none] -->
-    <string name="widget_add_button_content_description">Add <xliff:g id="widget_name" example="Calendar month view">%1$s</xliff:g> widget</string>
+    <string name="widget_add_button_content_description">Добавить <xliff:g id="widget_name" example="Calendar month view">%1$s</xliff:g> виджет</string>
     <!-- Text on the button that enables users to expand the widgets list to see all widget apps besides the default ones displayed. [CHAR_LIMIT=15] -->
     <string name="widgets_list_expand_button_label">Показать все</string>
     <!-- Accessibility content description for the button that enables users to expand the widgets list to see all widget apps besides the default ones displayed. [CHAR_LIMIT=none]  -->
@@ -167,7 +169,7 @@
     <!-- Loading apps text. [CHAR_LIMIT=50] -->
     <string name="all_apps_loading_message">Загрузка приложений…</string>
     <!-- No-search-results text. [CHAR_LIMIT=50] -->
-    <string name="all_apps_no_search_results">No apps found matching \"<xliff:g id="query" example="Android">%1$s</xliff:g>\"</string>
+    <string name="all_apps_no_search_results">Не найдено приложений по запросу \"<xliff:g id="query" example="Android">%1$s</xliff:g>\"</string>
     <!-- Label for an icon representing any generic app. [CHAR_LIMIT=50] -->
     <string name="label_application">Приложение</string>
     <!-- Label for the header text of the All Apps section in All Apps view, used to separate Predicted Apps and Actions section from All Apps section. [CHAR_LIMIT=50] -->
@@ -211,17 +213,17 @@
     <string name="pin_prediction">Закрепить рекомендацию</string>
     <!-- Label for bubbling a launcher item. [CHAR_LIMIT=20] -->
     <string name="bubble">Подсказка</string>
-    <string name="action_pin_to_top">Pin to top</string>
-    <string name="action_unpin">Unpin</string>
-    <string name="action_enlarge">Enlarge</string>
-    <string name="action_minimize">Minimize</string>
-    <string name="action_customize_folder">Customize</string>
-    <string name="folder_style_picker_title">Folder Style</string>
-    <string name="folder_style_quadrant">Quadrant</string>
-    <string name="folder_style_grid">Grid</string>
-    <string name="folder_style_circle">Circle</string>
-    <string name="folder_style_cover">Cover</string>
-    <string name="folder_cover_text_hint">Emoji</string>
+    <string name="action_pin_to_top">Закрепить</string>
+    <string name="action_unpin">Открепить</string>
+    <string name="action_enlarge">Развернуть</string>
+    <string name="action_minimize">Свернуть</string>
+    <string name="action_customize_folder">Кастомизация</string>
+    <string name="folder_style_picker_title">Стиль папки</string>
+    <string name="folder_style_quadrant">Квадрат</string>
+    <string name="folder_style_grid">Сетка</string>
+    <string name="folder_style_circle">Круг</string>
+    <string name="folder_style_cover">Обложка</string>
+    <string name="folder_cover_text_hint">Эмодзи</string>
     <!-- Permissions: -->
     <!-- Permission short label -->
     <string name="permlab_install_shortcut">Создание ярлыков</string>
@@ -250,7 +252,7 @@
     <string name="paginate_right">Перейти на следующую страницу</string>
     <!-- Accessibility -->
     <!-- The format string for when an app is temporarily disabled. -->
-    <string name="disabled_app_label">Disabled <xliff:g id="app_name" example="Messenger">%1$s</xliff:g></string>
+    <string name="disabled_app_label">Приложение <xliff:g id="app_name" example="Messenger">%1$s</xliff:g> отключено</string>
     <!-- The format string for when an app has a notification dot (meaning it has associated notifications). [ICU_FORMAT]-->
     <string name="dotted_app_label">{count,plural, =1{В приложении \"{app_name}\" # уведомление}one{В приложении \"{app_name}\" # уведомление}few{В приложении \"{app_name}\" # уведомления}many{В приложении \"{app_name}\" # уведомлений}other{В приложении \"{app_name}\" # уведомления}}</string>
     <!-- The format string for default page scroll text [CHAR_LIMIT=none] -->
@@ -263,7 +265,7 @@
     <string name="app_minimized_state_description">Свернуто</string>
     <!-- Folder accessibility -->
     <!-- The format string for when a folder is opened, speaks the dimensions -->
-    <string name="folder_opened">Folder opened, <xliff:g id="width" example="5">%1$d</xliff:g> by <xliff:g id="height" example="3">%2$d</xliff:g></string>
+    <string name="folder_opened">Открыта папка <xliff:g id="width" example="5">%1$d</xliff:g> на <xliff:g id="height" example="3">%2$d</xliff:g></string>
     <!-- Instruction that clicking outside will close folder -->
     <string name="folder_tap_to_close">Нажмите, чтобы закрыть папку</string>
     <!-- Instruction that clicking outside will commit folder rename -->
@@ -271,16 +273,16 @@
     <!-- Indication that folder closed -->
     <string name="folder_closed">Папка закрыта</string>
     <!-- Folder renamed format -->
-    <string name="folder_renamed">Folder renamed to <xliff:g id="name" example="Games">%1$s</xliff:g></string>
+    <string name="folder_renamed">Папка переименована в <xliff:g id="name" example="Games">%1$s</xliff:g></string>
     <!-- Folder name format when folder has less than 4 items -->
-    <string name="folder_name_format_exact">Folder: <xliff:g id="name" example="Games">%1$s</xliff:g>, <xliff:g id="size" example="2">%2$d</xliff:g> items</string>
+    <string name="folder_name_format_exact">Папка: <xliff:g id="name" example="Games">%1$s</xliff:g>, <xliff:g id="size" example="2">%2$d</xliff:g> объектов</string>
     <!-- Folder name format when folder has 4 or more items shown in preview-->
-    <string name="folder_name_format_overflow">Folder: <xliff:g id="name" example="Games">%1$s</xliff:g>, <xliff:g id="size" example="2">%2$d</xliff:g> or more items</string>
+    <string name="folder_name_format_overflow">Папка: <xliff:g id="name" example="Games">%1$s</xliff:g>, <xliff:g id="size" example="2">%2$d</xliff:g> и более объектов</string>
     <!-- Accessibility announement for unnamed folders -->
     <string name="unnamed_folder">Папка без названия</string>
     <!-- App pair accessibility -->
     <!-- App pair name -->
-    <string name="app_pair_name_format">App pair: <xliff:g id="app1" example="Chrome">%1$s</xliff:g> and <xliff:g id="app2" example="YouTube">%2$s</xliff:g></string>
+    <string name="app_pair_name_format">Пара приложений: <xliff:g id="app1" example="Chrome">%1$s</xliff:g> и <xliff:g id="app2" example="YouTube">%2$s</xliff:g></string>
     <!-- Strings for the customization mode -->
     <!-- Text for wallpaper change button [CHAR LIMIT=30]-->
     <string name="styles_wallpaper_button_text">Обои и стиль</string>
@@ -308,7 +310,7 @@
     <!-- Title for the dialog shown when the app does not has notification access, explaining the requirement for notification access [CHAR LIMIT=50] -->
     <string name="title_missing_notification_access">Нужен доступ к уведомлениям</string>
     <!-- Message explaining to the user that the notification access is required by the app for showing 'Notification dots' [CHAR LIMIT=NONE] -->
-    <string name="msg_missing_notification_access">To show Notification Dots, turn on app notifications for <xliff:g id="name" example="My App">%1$s</xliff:g></string>
+    <string name="msg_missing_notification_access">Для показа точки уведомлений, включите уведомления у <xliff:g id="name" example="My App">%1$s</xliff:g></string>
     <!-- Button text in the confirmation dialog which would take the user to the system settings [CHAR LIMIT=50] -->
     <string name="title_change_settings">Изменить настройки</string>
     <!-- Summary for Notification dots setting. Tapping this will link enable/disable notification dots feature on the home screen. [CHAR LIMIT=50] -->
@@ -331,13 +333,13 @@
     The second "it" refers to the app. -->
     <string name="abandoned_promise_explanation">Приложение не установлено. Вы можете удалить значок или найти приложение и установить его вручную.</string>
     <!-- Title for an app which is being installed. -->
-    <string name="app_installing_title"><xliff:g id="name" example="Messenger">%1$s</xliff:g> installing, <xliff:g id="progress" example="30%">%2$s</xliff:g> complete</string>
+    <string name="app_installing_title">Установка <xliff:g id="name" example="Messenger">%1$s</xliff:g>, завершено <xliff:g id="progress" example="30%">%2$s</xliff:g></string>
     <!-- Title for an app which is being downloaded. -->
-    <string name="app_downloading_title"><xliff:g id="name" example="Messenger">%1$s</xliff:g> downloading, <xliff:g id="progress" example="30%">%2$s</xliff:g> complete</string>
+    <string name="app_downloading_title">Загружаем <xliff:g id="name" example="Messenger">%1$s</xliff:g>, завершено <xliff:g id="progress" example="30%">%2$s</xliff:g></string>
     <!-- Title for an app whose download has been started. -->
-    <string name="app_waiting_download_title"><xliff:g id="name" example="Messenger">%1$s</xliff:g> waiting to install</string>
+    <string name="app_waiting_download_title">Ожидает установки: <xliff:g id="name" example="Messenger">%1$s</xliff:g></string>
     <!-- Title for an app which is archived. -->
-    <string name="app_archived_title"><xliff:g id="name" example="Messenger">%1$s</xliff:g> is archived.</string>
+    <string name="app_archived_title">Архивировано: <xliff:g id="name" example="Messenger">%1$s</xliff:g>.</string>
     <!-- Accessibility Action for an app which is archived. -->
     <string name="app_unarchiving_action">скачать и восстановить</string>
     <!-- Title shown on the alert dialog prompting the user to update the application in market
@@ -366,21 +368,21 @@
     <!-- Accessibility action to move an item on the workspace. [CHAR_LIMIT=30] -->
     <string name="action_move">Переместить элемент</string>
     <!-- Accessibility description to move item to empty cell. -->
-    <string name="move_to_empty_cell_description">Move to row <xliff:g id="number" example="1">%1$s</xliff:g> column <xliff:g id="number" example="1">%2$s</xliff:g> in <xliff:g id="string" example="Home screen 2 of 4">%3$s</xliff:g></string>
+    <string name="move_to_empty_cell_description">Переместить в ряд <xliff:g id="number" example="1">%1$s</xliff:g> столбца <xliff:g id="number" example="1">%2$s</xliff:g> в <xliff:g id="string" example="Home screen 2 of 4">%3$s</xliff:g></string>
     <!-- Accessibility description to move item inside a folder. -->
-    <string name="move_to_position">Move to position <xliff:g id="number" example="1">%1$s</xliff:g></string>
+    <string name="move_to_position">Переместить в позицию <xliff:g id="number" example="1">%1$s</xliff:g></string>
     <!-- Accessibility description to move item to the hotseat. -->
-    <string name="move_to_hotseat_position">Move to favorites position <xliff:g id="number" example="1">%1$s</xliff:g></string>
+    <string name="move_to_hotseat_position">Переместить в позицию избранных <xliff:g id="number" example="1">%1$s</xliff:g></string>
     <!-- Accessibility confirmation for item move. -->
     <string name="item_moved">Элемент перемещен.</string>
     <!-- Accessibility description to move item into an existing folder. -->
-    <string name="add_to_folder">Add to folder: <xliff:g id="name" example="Games">%1$s</xliff:g></string>
+    <string name="add_to_folder">Добавить в папку: <xliff:g id="name" example="Games">%1$s</xliff:g></string>
     <!-- Accessibility description to move item into an existing folder containing an app. -->
-    <string name="add_to_folder_with_app">Add to folder with <xliff:g id="name" example="Messenger">%1$s</xliff:g></string>
+    <string name="add_to_folder_with_app">Добавить в папку с приложением <xliff:g id="name" example="Messenger">%1$s</xliff:g></string>
     <!-- Accessibility confirmation for item added to folder. -->
     <string name="added_to_folder">Элемент добавлен в папку.</string>
     <!-- Accessibility description to create folder with another item. -->
-    <string name="create_folder_with">Create folder with: <xliff:g id="name" example="Game">%1$s</xliff:g></string>
+    <string name="create_folder_with">Создать папку с приложением <xliff:g id="name" example="Game">%1$s</xliff:g></string>
     <!-- Accessibility confirmation for folder created. -->
     <string name="folder_created">Папка создана.</string>
     <!-- Accessibility action to move an item from folder to workspace. [CHAR_LIMIT=30] -->
@@ -396,11 +398,11 @@
     <!-- Accessibility action to decrease height of a widget. [CHAR_LIMIT=30] -->
     <string name="action_decrease_height">Уменьшить высоту</string>
     <!-- Accessibility confirmation for widget resize. -->
-    <string name="widget_resized">Widget resized to width <xliff:g id="number" example="2">%1$s</xliff:g> height <xliff:g id="number" example="1">%2$s</xliff:g></string>
+    <string name="widget_resized">Размер виджета изменен до <xliff:g id="number" example="2">%1$s</xliff:g> в ширину и <xliff:g id="number" example="1">%2$s</xliff:g> в высоту</string>
     <!-- Accessibility action to show quick actions menu for an icon. [CHAR_LIMIT=30] -->
     <string name="action_deep_shortcut">Быстрое меню</string>
     <!-- Accessibility name for the app widget resize frame. -->
-    <string name="widget_frame_name">Widget Resize Frame for <xliff:g id="string" example="Clock">%1$s</xliff:g></string>
+    <string name="widget_frame_name">Изменение размера виджета <xliff:g id="string" example="Clock">%1$s</xliff:g></string>
     <!-- Accessibility action to close the widget resize frame. [CHAR_LIMIT=30] -->
     <string name="action_close">Закрыть</string>
     <!-- Accessibility action to dismiss a notification in the shortcuts menu for an icon. [CHAR_LIMIT=30] -->
@@ -444,7 +446,7 @@
     <!-- A hint shown in launcher settings develop options filter box -->
     <string name="developer_options_filter_hint">Фильтр</string>
     <!-- Failed action error message: e.g. Failed: Pause -->
-    <string name="remote_action_failed">Failed: <xliff:g id="what" example="Pause">%1$s</xliff:g></string>
+    <string name="remote_action_failed">Не удалось выполнить: <xliff:g id="what" example="Pause">%1$s</xliff:g></string>
     <!-- Strings for Private Space -->
     <!-- Private space tile label -->
     <string name="private_space_label">Частное пространство</string>
@@ -470,7 +472,7 @@
     <string name="ps_app_content_description">Добавляйте в частное пространство файлы и многое другое</string>
     <!-- Strings for icon shapes -->
     <!-- label for circle shape option in customization picker -->
-    <string name="circle_shape_title">Circle</string>
+    <string name="circle_shape_title">Круг</string>
     <!-- label for square shape option in customization picker -->
     <string name="square_shape_title">Квадрат</string>
     <!-- label for 4-sided cookie option shape in customization picker -->
@@ -480,9 +482,9 @@
     <!-- label for arch shape option in customization picker -->
     <string name="arch_shape_title">Арка</string>
     <!-- DT2S -->
-    <string name="pref_sleep_gesture_title">Double tap to sleep</string>
-    <string name="pref_sleep_gesture_summary">Double tap on empty space for screen off</string>
+    <string name="pref_sleep_gesture_title">Двойное нажатие для выключения экрана</string>
+    <string name="pref_sleep_gesture_summary">Двойное нажатие по пустому месту для выключения экрана</string>
     <!-- All Apps Suggestions -->
-    <string name="all_apps_suggestions_title">Show suggestions</string>
-    <string name="all_apps_suggestions_summary">Display suggested apps at the top of the app drawer</string>
+    <string name="all_apps_suggestions_title">Показать рекомендации</string>
+    <string name="all_apps_suggestions_summary">Показать рекомендуемые приложения вверху списка приложений</string>
 </resources>
