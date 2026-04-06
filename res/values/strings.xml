@@ -248,6 +248,12 @@
     <string name="action_enlarge">Enlarge</string>
     <string name="action_minimize">Minimize</string>
     <string name="action_customize_folder">Customize</string>
+    <string name="custom_icon_shortcut_label">Change icon</string>
+    <string name="custom_icon_picker_title">Select icon pack</string>
+    <string name="custom_icon_no_packs">No icon packs installed</string>
+    <string name="custom_icon_no_drawables">No icons found in this pack</string>
+    <string name="custom_icon_reset">Reset to default</string>
+    <string name="custom_icon_back">Back</string>
     <string name="action_customize_icon">Customize icons</string>
     <string name="icon_pack_picker_title">Customize icons</string>
     <string name="icon_pack_picker_default">Default</string>

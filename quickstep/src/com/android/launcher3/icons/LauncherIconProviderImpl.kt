@@ -16,8 +16,11 @@
 
 package com.android.launcher3.icons
 
+import android.content.ComponentName
 import android.content.Context
+import android.content.pm.ActivityInfo
 import android.content.pm.ApplicationInfo
+import android.content.pm.ComponentInfo
 import android.content.pm.PackageItemInfo
 import android.content.res.Resources.NotFoundException
 import android.graphics.drawable.AdaptiveIconDrawable
@@ -30,6 +33,7 @@ import com.android.launcher3.graphics.ShapeDelegate.Circle
 import com.android.launcher3.graphics.ThemeManager
 import com.android.launcher3.icons.cache.CachingLogic
 import com.android.launcher3.icons.cache.LauncherActivityCachingLogic
+import com.android.launcher3.icons.customicon.IconOverrideRepository
 import com.android.launcher3.util.ComponentKey
 import com.android.launcher3.util.DaggerSingletonTracker
 import com.android.launcher3.util.Executors.MODEL_EXECUTOR
@@ -54,6 +58,7 @@ constructor(
     private val iconCacheProvider: Provider<IconCache>,
     pluginManagerWrapper: PluginManagerWrapper,
     lifecycle: DaggerSingletonTracker,
+    private val iconOverrideRepository: IconOverrideRepository,
 ) : LauncherIconProvider(ctx, themeManager), PluginListener<IconProcessorPlugin> {
 
     init {
@@ -62,6 +67,18 @@ constructor(
     }
 
     private var processor: IconProcessorPlugin? = null
+
+    override fun getIcon(info: ComponentInfo, iconDpi: Int): Drawable? {
+        if (info is ActivityInfo) {
+            val cn = ComponentName(info.packageName, info.name)
+            val override = iconOverrideRepository.get(cn)
+            if (override != null) {
+                val d = IconPackDrawableLoader.loadDrawable(mContext, override.packPackage, override.drawableName, iconDpi)
+                if (d != null) return d
+            }
+        }
+        return super.getIcon(info, iconDpi)
+    }
 
     override fun getApplicationInfoHash(appInfo: ApplicationInfo): String =
         (appInfo.sourceDir?.hashCode() ?: 0).toString() + " " + appInfo.longVersionCode
