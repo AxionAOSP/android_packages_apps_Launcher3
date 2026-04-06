@@ -112,7 +112,7 @@ object IconStyleSheet {
             IconStyleTheme {
                 BottomSheetDialog(
                     onDismiss = { launcher.dragLayer.removeView(composeView) },
-                    heightFraction = 0.75f,
+                    heightFraction = 0.5f,
                 ) {
                     IconStyleContent()
                 }
