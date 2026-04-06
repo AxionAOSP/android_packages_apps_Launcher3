@@ -23,16 +23,15 @@ import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Path
 import android.graphics.Rect
-import android.os.Process
-import android.util.Log
 import android.os.UserHandle
 import android.util.AttributeSet
+import android.util.Log
 import android.view.KeyEvent
 import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
 import android.view.WindowInsets
-import androidx.compose.ui.platform.ComposeView
+import com.android.axion.compose.host.AxComposeView
 import com.android.launcher3.DeviceProfile
 import com.android.launcher3.InsettableFrameLayout
 import com.android.launcher3.Launcher
@@ -82,23 +81,11 @@ class ComposeAllAppsContainerView @JvmOverloads constructor(
         mBottomSheetBackground = findViewById(R.id.bottom_sheet_background)
         clipChildren = false
 
-        controller.attachContainer(this, mPrivateProfileManager, mWorkManager)
+        val cv = findViewById<AxComposeView>(R.id.all_apps_compose_view)
+        Log.d(TAG, "initContent: inflated AxComposeView=$cv, attaching to controller")
+        controller.attachContainer(this, cv, mPrivateProfileManager, mWorkManager)
         controller.updateConfig(mActivityContext.deviceProfile)
-
-        val host = findViewById<ViewGroup>(R.id.all_apps_compose_view)
-        val cv = ComposeView(context)
-        cv.layoutParams = ViewGroup.LayoutParams(
-            ViewGroup.LayoutParams.MATCH_PARENT,
-            ViewGroup.LayoutParams.MATCH_PARENT
-        )
-        controller.setupComposeView(cv)
-        // TODO: remove this hack
-        try {
-            host.addView(cv)
-        } catch (e: Exception) {
-            Log.e(TAG, "ComposeView attach failed, restarting", e)
-            Process.killProcess(Process.myPid())
-        }
+        cv.setContent { controller.Content() }
 
         mSearchContainer = inflateSearchBar()
         mSearchContainer.visibility = GONE
@@ -121,6 +108,7 @@ class ComposeAllAppsContainerView @JvmOverloads constructor(
     }
 
     override fun onDetachedFromWindow() {
+        Log.d(TAG, "onDetachedFromWindow", Throwable())
         super.onDetachedFromWindow()
         controller.detachContainer()
     }
@@ -141,6 +129,7 @@ class ComposeAllAppsContainerView @JvmOverloads constructor(
         super.onConfigurationChanged(newConfig)
         val newUiMode = newConfig.uiMode and Configuration.UI_MODE_NIGHT_MASK
         if (newUiMode != lastUiMode) {
+            Log.d(TAG, "onConfigurationChanged: uiMode $lastUiMode -> $newUiMode")
             lastUiMode = newUiMode
             controller.onUiModeChanged()
         }
@@ -158,7 +147,7 @@ class ComposeAllAppsContainerView @JvmOverloads constructor(
     }
 
     override fun requestDisallowInterceptTouchEvent(disallowIntercept: Boolean) {
-        if (disallowIntercept && !controller.canScrollUp) {
+        if (disallowIntercept && !controller.canScrollUp && !controller.isLongPressing) {
             return
         }
         super.requestDisallowInterceptTouchEvent(disallowIntercept)

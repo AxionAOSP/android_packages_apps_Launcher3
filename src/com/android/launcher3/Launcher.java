@@ -688,6 +688,15 @@ public class Launcher extends StatefulActivity<LauncherState>
     }
 
     @Override
+    public void handleConfigurationChanged(Configuration newConfig) {
+        int diff = newConfig.diff(mOldConfig);
+        if ((diff & CONFIG_UI_MODE) != 0) {
+            System.exit(0); // TODO: fix this hack
+        }
+        super.handleConfigurationChanged(newConfig);
+    }
+
+    @Override
     public void onIdpChanged(boolean modelPropertiesChanged) {
         onHandleConfigurationChanged();
     }

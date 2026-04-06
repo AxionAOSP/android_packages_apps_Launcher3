@@ -700,6 +700,8 @@ fun AllAppsComposeContent(
                                         onHistoryDeleteClick = { keyword ->
                                             searchManager.removeFromHistory(keyword)
                                         },
+                                        suggestedApps = state.predictedApps.ifEmpty { state.apps.take(10) },
+                                        activeQuery = searchQuery,
                                         topResultComponent = topSearchResult?.appInfo?.componentName?.flattenToString(),
                                         modifier = Modifier.fillMaxSize()
                                     )

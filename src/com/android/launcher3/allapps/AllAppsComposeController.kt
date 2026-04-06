@@ -53,13 +53,10 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.platform.ComposeView
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.repeatOnLifecycle
-import com.android.axion.compose.lifecycle.repeatWhenAttached
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.ViewCompositionStrategy
+import com.android.axion.compose.host.AxComposeView
+import com.android.launcher3.allapps.compose.ui.viewmodel.AllAppsComposeViewModel
 import com.android.launcher3.AbstractFloatingView
 import com.android.launcher3.DeviceProfile
 import com.android.launcher3.DragSource
@@ -93,6 +90,12 @@ class AllAppsComposeController @Inject constructor(
 
     private val launcher: Launcher? = activityContext as? Launcher
 
+    val viewModel = AllAppsComposeViewModel(allAppsStore, activityContext as Context).also { vm ->
+        val dp = activityContext.deviceProfile
+        val profile = dp.allAppsProfile
+        vm.onConfigChanged(dp.numShownAllAppsColumns, profile.iconSizePx, profile.cellWidthPx, profile.cellHeightPx)
+    }
+
     val callbacks: AllAppsComposeCallbacks = createCallbacks()
 
     var transitionProgress by mutableFloatStateOf(0f)
@@ -118,6 +121,7 @@ class AllAppsComposeController @Inject constructor(
 
     var canScrollUp by mutableStateOf(false)
     var canScrollDown by mutableStateOf(false)
+    var isLongPressing: Boolean = false
     var folderExpanded by mutableStateOf(false)
     var selectedProfileTab by mutableIntStateOf(TAB_PERSONAL)
     var searchQuery by mutableStateOf("")
@@ -135,7 +139,7 @@ class AllAppsComposeController @Inject constructor(
     private var isBackCallbackRegistered = false
 
     private var container: ViewGroup? = null
-    private var composeView: ComposeView? = null
+    private var composeView: AxComposeView? = null
     private var privateProfileManager: PrivateProfileManager? = null
     private var workProfileManager: WorkProfileManager? = null
     private var sharedHostView: ComposeAppIconView? = null
@@ -157,26 +161,33 @@ class AllAppsComposeController @Inject constructor(
 
     fun attachContainer(
         container: ComposeAllAppsContainerView,
+        cv: AxComposeView,
         privateManager: PrivateProfileManager,
         workManager: WorkProfileManager
     ) {
+        Log.d(TAG, "attachContainer: container=${container.javaClass.simpleName}, cv=$cv", Throwable())
         this.container = container
+        composeView = cv
         privateProfileManager = privateManager
         workProfileManager = workManager
         launcher?.addOnDeviceProfileChangeListener(this)
     }
 
-    fun attachTaskbarContainer(container: ViewGroup) {
+    fun attachTaskbarContainer(container: ViewGroup, cv: AxComposeView) {
+        Log.d(TAG, "attachTaskbarContainer: container=${container.javaClass.simpleName}, cv=$cv", Throwable())
         this.container = container
+        composeView = cv
         updateConfig(activityContext.deviceProfile)
         transitionProgress = 1f
     }
 
     fun detachContainer() {
+        Log.d(TAG, "detachContainer: composeView=$composeView", Throwable())
         unregisterBackCallback()
         launcher?.removeOnDeviceProfileChangeListener(this)
         dismissFolderHandler = null
         showFolderPickerHandler = null
+        viewModel.cleanup()
         composeView = null
         sharedHostView?.let { (it.parent as? ViewGroup)?.removeView(it) }
         sharedHostView = null
@@ -196,29 +207,23 @@ class AllAppsComposeController @Inject constructor(
         hiddenIconComponent = null
     }
 
-    fun setupComposeView(cv: ComposeView) {
-        composeView = cv
-        cv.repeatWhenAttached {
-            lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) {
-                cv.setContent {
-                    AllAppsComposeTheme {
-                        val host = @Composable {
-                            AllAppsComposeHost(allAppsStore, activityContext as Context, this@AllAppsComposeController)
-                        }
-                        (activityContext as? OnBackPressedDispatcherOwner)?.let {
-                            CompositionLocalProvider(
-                                LocalOnBackPressedDispatcherOwner provides it,
-                                content = host
-                            )
-                        } ?: host()
-                    }
-                }
+    @Composable
+    fun Content() {
+        AllAppsComposeTheme {
+            val host = @Composable {
+                AllAppsComposeHost(allAppsStore, activityContext as Context, this@AllAppsComposeController)
             }
+            (activityContext as? OnBackPressedDispatcherOwner)?.let {
+                CompositionLocalProvider(
+                    LocalOnBackPressedDispatcherOwner provides it,
+                    content = host
+                )
+            } ?: host()
         }
-        cv.setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
     }
 
     override fun onDeviceProfileChanged(dp: DeviceProfile) {
+        Log.d(TAG, "onDeviceProfileChanged: composeView=$composeView", Throwable())
         (container as? ComposeAllAppsContainerView)?.onProfileChanged(dp)
         updateConfig(dp)
         resetState()
@@ -227,10 +232,12 @@ class AllAppsComposeController @Inject constructor(
     }
 
     fun onUiModeChanged() {
+        Log.d(TAG, "onUiModeChanged: composeView=$composeView, configUpdate=$configUpdate", Throwable())
         configUpdate = configUpdate.copy(uiMode = configUpdate.uiMode + 1)
     }
 
     private fun resetComposeViewProperties() {
+        Log.d(TAG, "resetComposeViewProperties: composeView=$composeView")
         composeView?.let { cv ->
             cv.translationY = 0f
             cv.alpha = 1f
@@ -248,7 +255,7 @@ class AllAppsComposeController @Inject constructor(
         )
     }
 
-    fun getComposeView(): ComposeView? = composeView
+    fun getComposeView(): AxComposeView? = composeView
 
     fun getComposeIconForClose(packageName: String, user: UserHandle): View? {
         lastLaunchedComponent?.let { comp ->

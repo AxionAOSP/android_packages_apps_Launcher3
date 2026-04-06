@@ -163,7 +163,12 @@ fun AllAppsComposeGrid(
     val effectiveColumns = if (numColumns > 0) numColumns else 4
 
     var isScrollEnabled by remember { mutableStateOf(true) }
-    val onLongPressStatusChanged = remember<(Boolean) -> Unit> { { isLongPressed -> isScrollEnabled = !isLongPressed } }
+    val onLongPressStatusChanged = remember<(Boolean) -> Unit> {
+        { isLongPressed ->
+            isScrollEnabled = !isLongPressed
+            interactions.controller?.isLongPressing = isLongPressed
+        }
+    }
     var wasFullyClosed by remember { mutableStateOf(true) }
     var prevItemCount by remember { mutableIntStateOf(0) }
 

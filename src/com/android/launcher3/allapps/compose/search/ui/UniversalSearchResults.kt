@@ -2,6 +2,7 @@ package com.android.launcher3.allapps.compose.search.ui
 
 import com.android.launcher3.allapps.compose.search.model.*
 
+import android.app.DownloadManager
 import android.content.Context
 import android.content.Intent
 import android.graphics.BitmapFactory
@@ -77,6 +78,8 @@ fun UniversalSearchResults(
     onHistoryClick: (String) -> Unit,
     onHistoryDeleteClick: (String) -> Unit,
     topResultComponent: String? = null,
+    suggestedApps: List<AppInfo> = emptyList(),
+    activeQuery: String = "",
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
@@ -92,57 +95,345 @@ fun UniversalSearchResults(
         listState.scrollToItem(0)
     }
 
-    val stateHistory = remember(state.query, state.history) {
-        if (state.query.isEmpty()) {
-            state.history
-        } else {
-            state.history.filter { it.contains(state.query, ignoreCase = true) }
-        }
-    }
+    val stateHistory = state.history
+
+    val imeBottom = WindowInsets.ime.asPaddingValues().calculateBottomPadding()
 
     LazyColumn(
         state = listState,
         modifier = modifier.fillMaxSize(),
-        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 24.dp),
+        contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 24.dp, bottom = (imeBottom + 80.dp)),
         verticalArrangement = Arrangement.spacedBy(24.dp)
     ) {
-
-        if (state.privateSpace != null) {
-            item(key = "private_space_section") {
-                AnimatedVisibility(
-                    visible = true,
-                    enter = fadeIn(animationSpec = tween(300)) + slideInVertically(animationSpec = tween(300)) { -it / 4 }
-                ) {
-                    PrivateSpaceResultItem(
-                        privateSpace = state.privateSpace,
-                        onClick = { onPrivateSpaceClick(state.privateSpace) }
-                    )
-                }
-            }
-        }
-
-        if (state.apps.isNotEmpty()) {
-            item(key = "apps_section") {
-                AnimatedVisibility(
-                    visible = true,
-                    enter = fadeIn(animationSpec = tween(300, delayMillis = 25)) + slideInVertically(animationSpec = tween(300, delayMillis = 25)) { -it / 4 }
-                ) {
-                    LazyRow(
-                        horizontalArrangement = Arrangement.spacedBy(12.dp),
-                        contentPadding = PaddingValues(horizontal = 4.dp, vertical = 4.dp)
+        if (activeQuery.isEmpty()) {
+            if (suggestedApps.isNotEmpty()) {
+                item(key = "suggested_apps") {
+                    AnimatedVisibility(
+                        visible = true,
+                        enter = fadeIn(animationSpec = tween(300))
                     ) {
-                        items(state.apps, key = { "search_${it.appInfo.componentName}_${it.appInfo.user.hashCode()}" }) { app ->
-                            val isTopResult = app.appInfo.componentName?.flattenToString() == topResultComponent
-                            AppResultIconItem(
-                                app = app,
-                                iconSizePx = iconSizePx,
-                                cellHeightPx = cellHeightPx,
-                                onClick = onAppClick,
-                                onLongClick = onAppLongClick,
-                                onDragStart = onAppDragStart,
-                                onDragMove = onAppDragMove,
-                                onDragEnd = onAppDragEnd,
-                                isHighlighted = isTopResult
+                        SuggestedAppsSection(
+                            apps = suggestedApps.take(10),
+                            iconSizePx = iconSizePx,
+                            cellHeightPx = cellHeightPx,
+                            onClick = onAppClick,
+                            onLongClick = onAppLongClick,
+                            onDragStart = onAppDragStart,
+                            onDragMove = onAppDragMove,
+                            onDragEnd = onAppDragEnd
+                        )
+                    }
+                }
+            }
+
+            item(key = "shortcuts") {
+                AnimatedVisibility(
+                    visible = true,
+                    enter = fadeIn(animationSpec = tween(300, delayMillis = 50))
+                ) {
+                    ShortcutPillsSection()
+                }
+            }
+        }
+
+        if (activeQuery.isNotEmpty()) {
+            if (state.privateSpace != null) {
+                item(key = "private_space_section") {
+                    AnimatedVisibility(
+                        visible = true,
+                        enter = fadeIn(animationSpec = tween(300)) + slideInVertically(animationSpec = tween(300)) { -it / 4 }
+                    ) {
+                        PrivateSpaceResultItem(
+                            privateSpace = state.privateSpace,
+                            onClick = { onPrivateSpaceClick(state.privateSpace) }
+                        )
+                    }
+                }
+            }
+
+            if (state.apps.isNotEmpty()) {
+                item(key = "apps_section") {
+                    AnimatedVisibility(
+                        visible = true,
+                        enter = fadeIn(animationSpec = tween(300, delayMillis = 25)) + slideInVertically(animationSpec = tween(300, delayMillis = 25)) { -it / 4 }
+                    ) {
+                        LazyRow(
+                            horizontalArrangement = Arrangement.spacedBy(12.dp),
+                            contentPadding = PaddingValues(horizontal = 4.dp, vertical = 4.dp)
+                        ) {
+                            items(state.apps, key = { "search_${it.appInfo.componentName}_${it.appInfo.user.hashCode()}" }) { app ->
+                                val isTopResult = app.appInfo.componentName?.flattenToString() == topResultComponent
+                                AppResultIconItem(
+                                    app = app,
+                                    iconSizePx = iconSizePx,
+                                    cellHeightPx = cellHeightPx,
+                                    onClick = onAppClick,
+                                    onLongClick = onAppLongClick,
+                                    onDragStart = onAppDragStart,
+                                    onDragMove = onAppDragMove,
+                                    onDragEnd = onAppDragEnd,
+                                    isHighlighted = isTopResult
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+
+            if (state.appActions != null) {
+                item(key = "app_actions_section") {
+                    AnimatedVisibility(
+                        visible = true,
+                        enter = fadeIn(animationSpec = tween(300, delayMillis = 40)) + slideInVertically(animationSpec = tween(300, delayMillis = 40)) { -it / 4 }
+                    ) {
+                        AppActionsResultItem(
+                            appActions = state.appActions,
+                            iconSizePx = iconSizePx,
+                            onActionClick = { action -> onAppActionClick(state.appActions, action) }
+                        )
+                    }
+                }
+            }
+
+            if (state.settings.isNotEmpty()) {
+                item(key = "settings_section") {
+                    AnimatedVisibility(
+                        visible = true,
+                        enter = fadeIn(animationSpec = tween(300, delayMillis = 50)) + slideInVertically(animationSpec = tween(300, delayMillis = 50)) { -it / 4 }
+                    ) {
+                        ResultGroupSection(title = "Settings") {
+                            state.settings.forEachIndexed { index, setting ->
+                                if (index > 0) HorizontalDivider(color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f))
+                                SettingResultItem(setting, onClick = { onSettingClick(setting) })
+                            }
+                        }
+                    }
+                }
+            }
+
+            if (state.contacts.isNotEmpty()) {
+                item(key = "contacts_section") {
+                    AnimatedVisibility(
+                        visible = true,
+                        enter = fadeIn(animationSpec = tween(300, delayMillis = 100)) + slideInVertically(animationSpec = tween(300, delayMillis = 100)) { -it / 4 }
+                    ) {
+                        ResultGroupSection(title = "Contacts") {
+                            state.contacts.forEachIndexed { index, contact ->
+                                if (index > 0) HorizontalDivider(color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f))
+                                ContactResultItem(contact, onClick = { onContactClick(contact) })
+                            }
+                        }
+                    }
+                }
+            } else if (!state.hasContactsPermission && !state.isLoading) {
+                item(key = "contacts_permission") {
+                    AnimatedVisibility(
+                        visible = true,
+                        enter = fadeIn(animationSpec = tween(300, delayMillis = 100))
+                    ) {
+                        PermissionRequestItem(
+                            title = "Search Contacts",
+                            description = "Grant permission to search your contacts",
+                            icon = Icons.Default.Person,
+                            onClick = onRequestContactsPermission
+                        )
+                    }
+                }
+            }
+
+            if (state.messages.isNotEmpty()) {
+                item(key = "messages_section") {
+                    AnimatedVisibility(
+                        visible = true,
+                        enter = fadeIn(animationSpec = tween(300, delayMillis = 150)) + slideInVertically(animationSpec = tween(300, delayMillis = 150)) { -it / 4 }
+                    ) {
+                        ResultGroupSection(title = "Messages") {
+                            state.messages.forEachIndexed { index, message ->
+                                if (index > 0) HorizontalDivider(color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f))
+                                MessageResultItem(message, onClick = { onMessageClick(message) })
+                            }
+                        }
+                    }
+                }
+            } else if (!state.hasSmsPermission && !state.isLoading) {
+                item(key = "messages_permission") {
+                    AnimatedVisibility(
+                        visible = true,
+                        enter = fadeIn(animationSpec = tween(300, delayMillis = 150))
+                    ) {
+                        PermissionRequestItem(
+                            title = "Search Messages",
+                            description = "Grant permission to search your messages",
+                            icon = Icons.Default.Message,
+                            onClick = onRequestSmsPermission
+                        )
+                    }
+                }
+            }
+
+            if (state.files.isNotEmpty()) {
+                item(key = "files_section") {
+                    AnimatedVisibility(
+                        visible = true,
+                        enter = fadeIn(animationSpec = tween(300, delayMillis = 200)) + slideInVertically(animationSpec = tween(300, delayMillis = 200)) { -it / 4 }
+                    ) {
+                        ResultGroupSection(title = "Files") {
+                            state.files.forEachIndexed { index, file ->
+                                if (index > 0) HorizontalDivider(color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f))
+                                FileResultItem(file, context, onClick = { onFileClick(file) })
+                            }
+                        }
+                    }
+                }
+            } else if (!state.hasFilesPermission && !state.isLoading) {
+                item(key = "files_permission") {
+                    AnimatedVisibility(
+                        visible = true,
+                        enter = fadeIn(animationSpec = tween(300, delayMillis = 200))
+                    ) {
+                        PermissionRequestItem(
+                            title = "Search Files",
+                            description = "Grant permission to search all files",
+                            icon = Icons.Default.Folder,
+                            onClick = {
+                                try {
+                                    val intent = Intent(Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION)
+                                    intent.data = Uri.parse("package:" + context.packageName)
+                                    context.startActivity(intent)
+                                } catch (e: Exception) {
+                                    onRequestFilePermission()
+                                }
+                            }
+                        )
+                    }
+                }
+            }
+
+            if (state.photos.isNotEmpty()) {
+                item(key = "photos_section") {
+                    AnimatedVisibility(
+                        visible = true,
+                        enter = fadeIn(animationSpec = tween(300, delayMillis = 250)) + slideInVertically(animationSpec = tween(300, delayMillis = 250)) { -it / 4 }
+                    ) {
+                        ResultGroupSection(title = "Photos") {
+                            LazyRow(
+                                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                contentPadding = PaddingValues(horizontal = 4.dp, vertical = 8.dp)
+                            ) {
+                                items(state.photos) { photo ->
+                                    PhotoResultItem(photo, context, onClick = { onPhotoClick(photo) })
+                                }
+                            }
+                        }
+                    }
+                }
+            } else if (!state.hasPhotosPermission && !state.isLoading) {
+                item(key = "photos_permission") {
+                    AnimatedVisibility(
+                        visible = true,
+                        enter = fadeIn(animationSpec = tween(300, delayMillis = 250))
+                    ) {
+                        PermissionRequestItem(
+                            title = "Search Photos",
+                            description = "Grant permission to search your photos",
+                            icon = Icons.Default.Image,
+                            onClick = onRequestFilePermission
+                        )
+                    }
+                }
+            }
+            if (state.calendar.isNotEmpty()) {
+                item(key = "calendar_section") {
+                    AnimatedVisibility(
+                        visible = true,
+                        enter = fadeIn(animationSpec = tween(300, delayMillis = 300)) + slideInVertically(animationSpec = tween(300, delayMillis = 300)) { -it / 4 }
+                    ) {
+                        ResultGroupSection(title = "Calendar") {
+                            state.calendar.forEachIndexed { index, event ->
+                                if (index > 0) HorizontalDivider(color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f))
+                                CalendarResultItem(event, onClick = { onCalendarClick(event) })
+                            }
+                        }
+                    }
+                }
+            } else if (!state.hasCalendarPermission && !state.isLoading) {
+                item(key = "calendar_permission") {
+                    AnimatedVisibility(
+                        visible = true,
+                        enter = fadeIn(animationSpec = tween(300, delayMillis = 300))
+                    ) {
+                        PermissionRequestItem(
+                            title = "Search Calendar",
+                            description = "Grant permission to search your calendar",
+                            icon = Icons.Default.Event,
+                            onClick = onRequestCalendarPermission
+                        )
+                    }
+                }
+            }
+
+            if (state.webActions.isNotEmpty()) {
+                item(key = "web_section") {
+                    AnimatedVisibility(
+                        visible = true,
+                        enter = fadeIn(animationSpec = tween(300, delayMillis = 350)) + slideInVertically(animationSpec = tween(300, delayMillis = 350)) { -it / 4 }
+                    ) {
+                        ResultGroupSection(title = "Web Search") {
+                            state.webActions.forEachIndexed { index, action ->
+                                if (index > 0) HorizontalDivider(color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f))
+                                WebActionItem(action, iconSizePx = iconSizePx, onClick = { onWebActionClick(action) })
+                            }
+                        }
+                    }
+                }
+            }
+
+            if (state.inAppSearches.isNotEmpty()) {
+                item(key = "inapp_section") {
+                    AnimatedVisibility(
+                        visible = true,
+                        enter = fadeIn(animationSpec = tween(300, delayMillis = 400)) + slideInVertically(animationSpec = tween(300, delayMillis = 400)) { -it / 4 }
+                    ) {
+                        ResultGroupSection(title = "Search In Apps") {
+                            state.inAppSearches.forEachIndexed { index, search ->
+                                if (index > 0) HorizontalDivider(color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f))
+                                InAppSearchResultItem(search, onClick = { onInAppSearchClick(search) })
+                            }
+                        }
+                    }
+                }
+            }
+
+            val hasNoResults = state.apps.isEmpty() &&
+                state.contacts.isEmpty() &&
+                state.messages.isEmpty() &&
+                state.files.isEmpty() &&
+                state.photos.isEmpty() &&
+                state.calendar.isEmpty() &&
+                state.settings.isEmpty() &&
+                state.webActions.isEmpty() &&
+                state.inAppSearches.isEmpty() &&
+                !state.isLoading
+
+            if (hasNoResults) {
+                item(key = "empty_state") {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 64.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.spacedBy(24.dp)
+                        ) {
+                            NoResultsIllustration(
+                                modifier = Modifier.size(120.dp)
+                            )
+                            Text(
+                                text = "No results found",
+                                style = MaterialTheme.typography.bodyLarge,
+                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
                             )
                         }
                     }
@@ -150,288 +441,19 @@ fun UniversalSearchResults(
             }
         }
 
-        if (state.appActions != null) {
-            item(key = "app_actions_section") {
-                AnimatedVisibility(
-                    visible = true,
-                    enter = fadeIn(animationSpec = tween(300, delayMillis = 40)) + slideInVertically(animationSpec = tween(300, delayMillis = 40)) { -it / 4 }
-                ) {
-                    AppActionsResultItem(
-                        appActions = state.appActions,
-                        iconSizePx = iconSizePx,
-                        onActionClick = { action -> onAppActionClick(state.appActions, action) }
-                    )
-                }
-            }
-        }
-
-        if (stateHistory.isNotEmpty()) {
+        if (activeQuery.isEmpty() && stateHistory.isNotEmpty()) {
             item(key = "history_section") {
-                AnimatedVisibility(
-                    visible = true,
-                    enter = fadeIn(animationSpec = tween(300, delayMillis = 50)) + slideInVertically(animationSpec = tween(300, delayMillis = 50)) { -it / 4 }
-                ) {
-                    ResultGroupSection(title = "Recent") {
-                        stateHistory.forEachIndexed { index, keyword ->
-                            if (index > 0) HorizontalDivider(color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f))
-                            HistoryResultItem(
-                                keyword = keyword,
-                                onClick = { onHistoryClick(keyword) },
-                                onDelete = { onHistoryDeleteClick(keyword) }
-                            )
-                        }
-                    }
-                }
-            }
-        }
-        
-        if (state.settings.isNotEmpty()) {
-            item(key = "settings_section") {
-                AnimatedVisibility(
-                    visible = true,
-                    enter = fadeIn(animationSpec = tween(300, delayMillis = 50)) + slideInVertically(animationSpec = tween(300, delayMillis = 50)) { -it / 4 }
-                ) {
-                    ResultGroupSection(title = "Settings") {
-                        state.settings.forEachIndexed { index, setting ->
-                            if (index > 0) HorizontalDivider(color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f))
-                            SettingResultItem(setting, onClick = { onSettingClick(setting) })
-                        }
-                    }
-                }
-            }
-        }
-
-        if (state.contacts.isNotEmpty()) {
-            item(key = "contacts_section") {
-                AnimatedVisibility(
-                    visible = true,
-                    enter = fadeIn(animationSpec = tween(300, delayMillis = 100)) + slideInVertically(animationSpec = tween(300, delayMillis = 100)) { -it / 4 }
-                ) {
-                    ResultGroupSection(title = "Contacts") {
-                        state.contacts.forEachIndexed { index, contact ->
-                            if (index > 0) HorizontalDivider(color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f))
-                            ContactResultItem(contact, onClick = { onContactClick(contact) })
-                        }
-                    }
-                }
-            }
-        } else if (state.query.isNotEmpty() && !state.hasContactsPermission && !state.isLoading) {
-            item(key = "contacts_permission") {
                 AnimatedVisibility(
                     visible = true,
                     enter = fadeIn(animationSpec = tween(300, delayMillis = 100))
                 ) {
-                    PermissionRequestItem(
-                        title = "Search Contacts",
-                        description = "Grant permission to search your contacts",
-                        icon = Icons.Default.Person,
-                        onClick = onRequestContactsPermission
+                    RecentSearchChipsSection(
+                        history = stateHistory,
+                        onHistoryClick = onHistoryClick,
+                        onHistoryDeleteClick = onHistoryDeleteClick
                     )
                 }
             }
-        }
-        
-        if (state.messages.isNotEmpty()) {
-            item(key = "messages_section") {
-                AnimatedVisibility(
-                    visible = true,
-                    enter = fadeIn(animationSpec = tween(300, delayMillis = 150)) + slideInVertically(animationSpec = tween(300, delayMillis = 150)) { -it / 4 }
-                ) {
-                    ResultGroupSection(title = "Messages") {
-                        state.messages.forEachIndexed { index, message ->
-                            if (index > 0) HorizontalDivider(color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f))
-                            MessageResultItem(message, onClick = { onMessageClick(message) })
-                        }
-                    }
-                }
-            }
-        } else if (state.query.isNotEmpty() && !state.hasSmsPermission && !state.isLoading) {
-            item(key = "messages_permission") {
-                AnimatedVisibility(
-                    visible = true,
-                    enter = fadeIn(animationSpec = tween(300, delayMillis = 150))
-                ) {
-                    PermissionRequestItem(
-                        title = "Search Messages",
-                        description = "Grant permission to search your messages",
-                        icon = Icons.Default.Message,
-                        onClick = onRequestSmsPermission
-                    )
-                }
-            }
-        }
-        
-        if (state.files.isNotEmpty()) {
-            item(key = "files_section") {
-                AnimatedVisibility(
-                    visible = true,
-                    enter = fadeIn(animationSpec = tween(300, delayMillis = 200)) + slideInVertically(animationSpec = tween(300, delayMillis = 200)) { -it / 4 }
-                ) {
-                    ResultGroupSection(title = "Files") {
-                        state.files.forEachIndexed { index, file ->
-                            if (index > 0) HorizontalDivider(color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f))
-                            FileResultItem(file, context, onClick = { onFileClick(file) })
-                        }
-                    }
-                }
-            }
-        } else if (state.query.isNotEmpty() && !state.hasFilesPermission && !state.isLoading) {
-            item(key = "files_permission") {
-                AnimatedVisibility(
-                    visible = true,
-                    enter = fadeIn(animationSpec = tween(300, delayMillis = 200))
-                ) {
-                    PermissionRequestItem(
-                        title = "Search Files",
-                        description = "Grant permission to search all files",
-                        icon = Icons.Default.Folder,
-                        onClick = {
-                            try {
-                                val intent = Intent(Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION)
-                                intent.data = Uri.parse("package:" + context.packageName)
-                                context.startActivity(intent)
-                            } catch (e: Exception) {
-                                onRequestFilePermission()
-                            }
-                        }
-                    )
-                }
-            }
-        }
-        
-        if (state.photos.isNotEmpty()) {
-            item(key = "photos_section") {
-                AnimatedVisibility(
-                    visible = true,
-                    enter = fadeIn(animationSpec = tween(300, delayMillis = 250)) + slideInVertically(animationSpec = tween(300, delayMillis = 250)) { -it / 4 }
-                ) {
-                    ResultGroupSection(title = "Photos") {
-                        LazyRow(
-                            horizontalArrangement = Arrangement.spacedBy(8.dp),
-                            contentPadding = PaddingValues(horizontal = 4.dp, vertical = 8.dp)
-                        ) {
-                            items(state.photos) { photo ->
-                                PhotoResultItem(photo, context, onClick = { onPhotoClick(photo) })
-                            }
-                        }
-                    }
-                }
-            }
-        } else if (state.query.isNotEmpty() && !state.hasPhotosPermission && !state.isLoading) {
-            item(key = "photos_permission") {
-                AnimatedVisibility(
-                    visible = true,
-                    enter = fadeIn(animationSpec = tween(300, delayMillis = 250))
-                ) {
-                    PermissionRequestItem(
-                        title = "Search Photos",
-                        description = "Grant permission to search your photos",
-                        icon = Icons.Default.Image,
-                        onClick = onRequestFilePermission
-                    )
-                }
-            }
-        }
-        if (state.calendar.isNotEmpty()) {
-            item(key = "calendar_section") {
-                AnimatedVisibility(
-                    visible = true,
-                    enter = fadeIn(animationSpec = tween(300, delayMillis = 300)) + slideInVertically(animationSpec = tween(300, delayMillis = 300)) { -it / 4 }
-                ) {
-                    ResultGroupSection(title = "Calendar") {
-                        state.calendar.forEachIndexed { index, event ->
-                            if (index > 0) HorizontalDivider(color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f))
-                            CalendarResultItem(event, onClick = { onCalendarClick(event) })
-                        }
-                    }
-                }
-            }
-        } else if (state.query.isNotEmpty() && !state.hasCalendarPermission && !state.isLoading) {
-            item(key = "calendar_permission") {
-                AnimatedVisibility(
-                    visible = true,
-                    enter = fadeIn(animationSpec = tween(300, delayMillis = 300))
-                ) {
-                    PermissionRequestItem(
-                        title = "Search Calendar",
-                        description = "Grant permission to search your calendar",
-                        icon = Icons.Default.Event,
-                        onClick = onRequestCalendarPermission
-                    )
-                }
-            }
-        }
-
-        if (state.webActions.isNotEmpty()) {
-            item(key = "web_section") {
-                AnimatedVisibility(
-                    visible = true,
-                    enter = fadeIn(animationSpec = tween(300, delayMillis = 350)) + slideInVertically(animationSpec = tween(300, delayMillis = 350)) { -it / 4 }
-                ) {
-                    ResultGroupSection(title = "Web Search") {
-                        state.webActions.forEachIndexed { index, action ->
-                            if (index > 0) HorizontalDivider(color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f))
-                            WebActionItem(action, iconSizePx = iconSizePx, onClick = { onWebActionClick(action) })
-                        }
-                    }
-                }
-            }
-        }
-
-        if (state.inAppSearches.isNotEmpty()) {
-            item(key = "inapp_section") {
-                AnimatedVisibility(
-                    visible = true,
-                    enter = fadeIn(animationSpec = tween(300, delayMillis = 400)) + slideInVertically(animationSpec = tween(300, delayMillis = 400)) { -it / 4 }
-                ) {
-                    ResultGroupSection(title = "Search In Apps") {
-                        state.inAppSearches.forEachIndexed { index, search ->
-                            if (index > 0) HorizontalDivider(color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f))
-                            InAppSearchResultItem(search, onClick = { onInAppSearchClick(search) })
-                        }
-                    }
-                }
-            }
-        }
-        
-        val hasNoResults = state.apps.isEmpty() && 
-                           state.contacts.isEmpty() && 
-                           state.messages.isEmpty() && 
-                           state.files.isEmpty() && 
-                           state.photos.isEmpty() && 
-                           state.calendar.isEmpty() && 
-                           state.settings.isEmpty() && 
-                           state.webActions.isEmpty() && 
-                           state.inAppSearches.isEmpty() &&
-                           !state.isLoading
-        
-        if (hasNoResults) {
-            item(key = "empty_state") {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 64.dp),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Column(
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.spacedBy(24.dp)
-                    ) {
-                        NoResultsIllustration(
-                            modifier = Modifier.size(120.dp)
-                        )
-                        Text(
-                            text = if (state.query.isEmpty()) "Start typing to search" else "No results found",
-                            style = MaterialTheme.typography.bodyLarge,
-                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
-                        )
-                    }
-                }
-            }
-        }
-        
-        item {
-            Spacer(modifier = Modifier.height(100.dp))
         }
     }
 }
@@ -1228,6 +1250,206 @@ private fun PrivateSpaceResultItem(
             contentDescription = null,
             tint = MaterialTheme.colorScheme.onSurface
         )
+    }
+}
+
+@Composable
+private fun SuggestedAppsSection(
+    apps: List<AppInfo>,
+    iconSizePx: Int,
+    cellHeightPx: Int,
+    onClick: (ComposeIconInfo) -> Unit,
+    onLongClick: (ComposeIconInfo) -> Unit,
+    onDragStart: ((ComposeIconInfo) -> Unit)?,
+    onDragMove: ((screenX: Float, screenY: Float) -> Unit)?,
+    onDragEnd: ((screenX: Float, screenY: Float) -> Unit)?
+) {
+    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Text(
+            text = "Suggested apps",
+            style = MaterialTheme.typography.titleMedium,
+            color = MaterialTheme.colorScheme.onSurface,
+            modifier = Modifier.padding(start = 12.dp)
+        )
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clip(RoundedCornerShape(28.dp))
+                .background(MaterialTheme.colorScheme.surfaceBright.copy(alpha = 0.5f))
+                .padding(vertical = 8.dp)
+        ) {
+            val rows = apps.chunked(5)
+            rows.forEach { rowApps ->
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceEvenly
+                ) {
+                    rowApps.forEach { app ->
+                        Box(
+                            modifier = Modifier.width(72.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            AllAppsComposeAppIcon(
+                                appInfo = app,
+                                showLabel = true,
+                                iconSizePx = iconSizePx,
+                                cellHeightPx = cellHeightPx,
+                                onClick = onClick,
+                                onLongClick = onLongClick,
+                                onDragStart = onDragStart,
+                                onDragMove = onDragMove,
+                                onDragEnd = onDragEnd,
+                                isScrollingProvider = { false },
+                                modifier = Modifier.fillMaxWidth()
+                            )
+                        }
+                    }
+                    repeat(5 - rowApps.size) {
+                        Box(modifier = Modifier.width(72.dp))
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun ShortcutPillsSection() {
+    val context = LocalContext.current
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        ShortcutPill(
+            label = "Downloads",
+            icon = Icons.Default.Download,
+            modifier = Modifier.weight(1f),
+            onClick = {
+                try {
+                    context.startActivity(
+                        Intent(DownloadManager.ACTION_VIEW_DOWNLOADS)
+                            .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                    )
+                } catch (e: Exception) { }
+            }
+        )
+        ShortcutPill(
+            label = "Screenshots",
+            icon = Icons.Default.Image,
+            modifier = Modifier.weight(1f),
+            onClick = {
+                try {
+                    context.startActivity(
+                        Intent(Intent.ACTION_VIEW).apply {
+                            type = "image/*"
+                            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                        }
+                    )
+                } catch (e: Exception) { }
+            }
+        )
+    }
+}
+
+@Composable
+private fun ShortcutPill(
+    label: String,
+    icon: ImageVector,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Surface(
+        onClick = onClick,
+        shape = RoundedCornerShape(50),
+        color = MaterialTheme.colorScheme.surfaceBright.copy(alpha = 0.5f),
+        modifier = modifier.height(44.dp)
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(horizontal = 16.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.Center
+        ) {
+            Icon(
+                imageVector = icon,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.size(18.dp)
+            )
+            Spacer(modifier = Modifier.width(8.dp))
+            Text(
+                text = label,
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurface,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+        }
+    }
+}
+
+@Composable
+private fun RecentSearchChipsSection(
+    history: List<String>,
+    onHistoryClick: (String) -> Unit,
+    onHistoryDeleteClick: (String) -> Unit
+) {
+    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Text(
+                text = "Recent searches",
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.onSurface,
+                modifier = Modifier.padding(start = 12.dp)
+            )
+            IconButton(onClick = { history.forEach { onHistoryDeleteClick(it) } }) {
+                Icon(
+                    imageVector = Icons.Default.Delete,
+                    contentDescription = "Clear all",
+                    tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+                    modifier = Modifier.size(20.dp)
+                )
+            }
+        }
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clip(RoundedCornerShape(28.dp))
+                .background(MaterialTheme.colorScheme.surfaceBright.copy(alpha = 0.5f))
+                .padding(horizontal = 12.dp, vertical = 12.dp)
+        ) {
+            LazyRow(
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                contentPadding = PaddingValues(horizontal = 4.dp)
+            ) {
+                items(history, key = { "chip_$it" }) { keyword ->
+                    InputChip(
+                        selected = false,
+                        onClick = { onHistoryClick(keyword) },
+                        label = {
+                            Text(
+                                text = keyword,
+                                style = MaterialTheme.typography.bodyMedium
+                            )
+                        },
+                        trailingIcon = {
+                            Icon(
+                                imageVector = Icons.Default.Close,
+                                contentDescription = "Remove",
+                                modifier = Modifier
+                                    .size(16.dp)
+                                    .clickable { onHistoryDeleteClick(keyword) }
+                            )
+                    }
+                )
+            }
+        }
+        }
     }
 }
 

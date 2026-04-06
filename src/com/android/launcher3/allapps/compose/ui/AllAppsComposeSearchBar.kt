@@ -18,6 +18,8 @@ import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.TextFieldValue
+import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -37,6 +39,13 @@ fun AllAppsComposeSearchBar(
     hasTopResult: Boolean = false
 ) {
     val focusRequester = remember { FocusRequester() }
+    var textFieldValue by remember { mutableStateOf(TextFieldValue(query, TextRange(query.length))) }
+
+    LaunchedEffect(query) {
+        if (query != textFieldValue.text) {
+            textFieldValue = TextFieldValue(query, TextRange(query.length))
+        }
+    }
 
     LaunchedEffect(focusTrigger) {
         if (shouldAutoFocus && focusTrigger > 0) {
@@ -68,7 +77,7 @@ fun AllAppsComposeSearchBar(
             Spacer(modifier = Modifier.width(12.dp))
 
             Box(modifier = Modifier.weight(1f)) {
-                if (query.isEmpty()) {
+                if (textFieldValue.text.isEmpty()) {
                     Text(
                         text = placeholder,
                         style = MaterialTheme.typography.bodyLarge,
@@ -76,8 +85,14 @@ fun AllAppsComposeSearchBar(
                     )
                 }
                 BasicTextField(
-                    value = query,
-                    onValueChange = onQueryChange,
+                    value = textFieldValue,
+                    onValueChange = { newValue ->
+                        val prevText = textFieldValue.text
+                        textFieldValue = newValue
+                        if (newValue.text != prevText) {
+                            onQueryChange(newValue.text)
+                        }
+                    },
                     textStyle = TextStyle(
                         fontSize = 16.sp,
                         color = MaterialTheme.colorScheme.onSurface
@@ -88,8 +103,8 @@ fun AllAppsComposeSearchBar(
                         imeAction = if (hasTopResult) ImeAction.Go else ImeAction.Search
                     ),
                     keyboardActions = KeyboardActions(
-                        onSearch = { onSearchSubmit(query) },
-                        onGo = { onSearchSubmit(query) }
+                        onSearch = { onSearchSubmit(textFieldValue.text) },
+                        onGo = { onSearchSubmit(textFieldValue.text) }
                     ),
                     modifier = Modifier
                         .fillMaxWidth()
@@ -97,7 +112,7 @@ fun AllAppsComposeSearchBar(
                 )
             }
 
-            if (query.isNotEmpty()) {
+            if (textFieldValue.text.isNotEmpty()) {
                 Spacer(modifier = Modifier.width(8.dp))
                 IconButton(
                     onClick = onClearQuery,

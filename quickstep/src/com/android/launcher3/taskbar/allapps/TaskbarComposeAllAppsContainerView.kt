@@ -22,13 +22,12 @@ import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Rect
 import android.util.AttributeSet
-import android.util.Log
 import android.view.KeyEvent
 import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
 import android.view.WindowInsets
-import androidx.compose.ui.platform.ComposeView
+import com.android.axion.compose.host.AxComposeView
 import com.android.launcher3.InsettableFrameLayout
 import com.android.launcher3.R
 import com.android.launcher3.allapps.AllAppsComposeController
@@ -80,21 +79,10 @@ class TaskbarComposeAllAppsContainerView @JvmOverloads constructor(
         mBottomSheetBackground = findViewById(R.id.bottom_sheet_background)
         clipChildren = false
 
-        controller.attachTaskbarContainer(this)
+        val cv = findViewById<AxComposeView>(R.id.all_apps_compose_view)
+        controller.attachTaskbarContainer(this, cv)
         controller.updateConfig(mActivityContext.deviceProfile)
-
-        val host = findViewById<ViewGroup>(R.id.all_apps_compose_view)
-        val cv = ComposeView(context)
-        cv.layoutParams = ViewGroup.LayoutParams(
-            ViewGroup.LayoutParams.MATCH_PARENT,
-            ViewGroup.LayoutParams.MATCH_PARENT
-        )
-        controller.setupComposeView(cv)
-        try {
-            host.addView(cv)
-        } catch (e: Exception) {
-            Log.e(TAG, "ComposeView attach failed", e)
-        }
+        cv.setContent { controller.Content() }
 
         mSearchContainer = inflateSearchBar()
         mSearchContainer.visibility = GONE

@@ -42,15 +42,11 @@ fun AllAppsComposeHost(
     context: Context,
     controller: AllAppsComposeController
 ) {
-    val viewModel = remember(allAppsStore) {
-        AllAppsComposeViewModel(allAppsStore, context)
-    }
+    val viewModel = controller.viewModel
 
     DisposableEffect(viewModel) {
         viewModel.reinitialize()
-        onDispose {
-            viewModel.cleanup()
-        }
+        onDispose { }
     }
 
     val lifecycleOwner = LocalLifecycleOwner.current

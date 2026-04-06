@@ -28,11 +28,9 @@ import com.android.launcher3.model.data.PrivateSpaceInstallAppButtonInfo
 import com.android.launcher3.pm.UserCache
 import com.android.launcher3.util.ItemInfoMatcher
 import com.android.launcher3.util.SettingsCache
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
-import kotlinx.coroutines.flow.flowOn
 
 class AllAppsRepository(
     private val allAppsStore: AllAppsStore,
@@ -48,7 +46,7 @@ class AllAppsRepository(
         allAppsStore.addUpdateListener(listener)
         trySend(buildAppsData())
         awaitClose { allAppsStore.removeUpdateListener(listener) }
-    }.flowOn(Dispatchers.Default)
+    }
 
     val preferences: Flow<DrawerPreferences> = callbackFlow {
         val prefs = context.getSharedPreferences(
