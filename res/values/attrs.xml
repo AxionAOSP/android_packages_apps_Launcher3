@@ -56,6 +56,7 @@
     <attr name="overviewActionsContainerStyle" format="reference" />
     <attr name="overviewActionButtonStyle" format="reference" />
     <attr name="overviewActionCircleButtonBackground" format="reference" />
+    <attr name="overviewActionButtonContainerColor" format="color" />
     <attr name="addDesktopButtonBackgroundDrawable" format="reference" />
     <attr name="popupNotificationDotColor" format="color" />
     <attr name="notificationDotColor" format="color" />

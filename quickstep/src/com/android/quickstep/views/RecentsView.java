@@ -2209,6 +2209,12 @@ public abstract class RecentsView<
             int finalTargetPage = targetPage;
             runOnPageScrollsInitialized(() -> setCurrentPage(finalTargetPage));
         }
+        if (targetPage >= 0) {
+            TaskView targetTaskView = getTaskViewAt(targetPage);
+            if (targetTaskView != null) {
+                mActionsView.updateLockState(targetTaskView.isLocked());
+            }
+        }
 
         traceBegin(Trace.TRACE_TAG_APP, "RecentsView.applyLoadPlan.cleanupStates");
         if (mIgnoreResetTaskId != INVALID_TASK_ID &&

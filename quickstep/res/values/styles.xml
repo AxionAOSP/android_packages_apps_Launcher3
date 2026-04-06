@@ -242,12 +242,14 @@
         <item name="buttonStyle">@style/OverviewActionButton</item>
         <item name="android:buttonStyle">@style/OverviewActionButton</item>
         <item name="overviewActionCircleButtonBackground">@drawable/overview_action_circle_bg</item>
+        <item name="overviewActionButtonContainerColor">@color/materialColorSurfaceBright</item>
     </style>
 
     <style name="OverviewActionsContainerBlur">
         <item name="buttonStyle">@style/OverviewActionButton.Blur</item>
         <item name="android:buttonStyle">@style/OverviewActionButton.Blur</item>
         <item name="overviewActionCircleButtonBackground">@drawable/overview_action_circle_bg_blur</item>
+        <item name="overviewActionButtonContainerColor">@*android:color/surface_effect_1</item>
     </style>
 
     <style name="OverviewActionButton" parent="@android:style/Widget.DeviceDefault.Button.Borderless">
