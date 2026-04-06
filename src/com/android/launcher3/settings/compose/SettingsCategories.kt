@@ -34,9 +34,9 @@ import com.android.launcher3.states.RotationHelper
 import com.android.launcher3.util.DisplayController
 import com.android.launcher3.settings.SettingsActivity
 import com.android.launcher3.Flags
-import com.android.launcher3.LauncherPrefs
 import com.android.launcher3.allapps.compose.shared.constants.PreferenceKeys
 import com.android.launcher3.allapps.compose.search.domain.UniversalSearchManager
+import com.android.launcher3.qsb.HotseatQsbSearchProvider
 import com.android.launcher3.qsb.SearchWidgetHelper
 import kotlin.math.roundToInt
 
@@ -185,10 +185,11 @@ fun HomeScreenSettings(viewModel: SettingsState, context: Context) {
                     .map { info -> info.provider.flattenToString() to info.label }
             }
 
-            val launcherPrefs = remember { LauncherPrefs.get(context) }
-            var selectedProvider by remember {
-                mutableStateOf(launcherPrefs.get(LauncherPrefs.SEARCH_PROVIDER) ?: "none")
-            }
+            val settingsFlow = rememberSettingsFlow(SettingsType.SECURE)
+            val selectedProvider by rememberSettingString(
+                HotseatQsbSearchProvider.KEY,
+                default = HotseatQsbSearchProvider.DEFAULT
+            )
 
             if (searchWidgetOptions.isNotEmpty()) {
                 ListPreference(
@@ -200,8 +201,7 @@ fun HomeScreenSettings(viewModel: SettingsState, context: Context) {
                     options = listOf("none" to "None") + searchWidgetOptions,
                     value = selectedProvider,
                     onValueChange = { newValue ->
-                        selectedProvider = newValue
-                        launcherPrefs.put(LauncherPrefs.SEARCH_PROVIDER, newValue)
+                        settingsFlow.putString(HotseatQsbSearchProvider.KEY, newValue)
                     }
                 )
             }

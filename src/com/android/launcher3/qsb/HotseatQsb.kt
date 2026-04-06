@@ -22,6 +22,10 @@ import android.appwidget.AppWidgetProviderInfo
 import android.content.Context
 import android.content.SharedPreferences
 import android.util.Log
+import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.material3.dynamicDarkColorScheme
+import androidx.compose.material3.dynamicLightColorScheme
+import com.android.axion.compose.host.AxComposeView
 import android.view.GestureDetector
 import android.view.MotionEvent
 import androidx.compose.foundation.clickable
@@ -38,9 +42,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -48,10 +50,10 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
+import com.android.axion.compose.preferences.rememberSettingString
 import com.android.launcher3.Launcher
 import com.android.launcher3.LauncherAppState
 import com.android.launcher3.LauncherConstants
-import com.android.launcher3.LauncherPrefChangeListener
 import com.android.launcher3.LauncherPrefs
 import com.android.launcher3.R
 import com.android.launcher3.dagger.LauncherComponentProvider
@@ -60,28 +62,34 @@ private const val TAG = "HotseatQsb"
 private const val QSB_WIDGET_HOST_ID = 1026
 private const val PREF_WIDGET_ID = "qsb_widget_id"
 
+fun createView(context: Context): AxComposeView = AxComposeView(context).also {
+    it.setContent {
+        HotseatQsbTheme {
+            HotseatQsb()
+        }
+    }
+}
+
+@Composable
+private fun HotseatQsbTheme(content: @Composable () -> Unit) {
+    val context = LocalContext.current
+    val colorScheme = if (isSystemInDarkTheme()) {
+        dynamicDarkColorScheme(context)
+    } else {
+        dynamicLightColorScheme(context)
+    }
+    MaterialTheme(colorScheme = colorScheme, content = content)
+}
+
 @Composable
 fun HotseatQsb() {
     val context = LocalContext.current
     val launcherPrefs = remember { LauncherPrefs.get(context) }
 
-    var searchProvider by remember {
-        mutableStateOf(launcherPrefs.get(LauncherPrefs.SEARCH_PROVIDER) ?: "none")
-    }
-
-    DisposableEffect(Unit) {
-        val listener = LauncherPrefChangeListener { key ->
-            if (key == LauncherPrefs.SEARCH_PROVIDER.sharedPrefKey) {
-                val newValue = launcherPrefs.get(LauncherPrefs.SEARCH_PROVIDER) ?: "none"
-                Log.d(TAG, "Pref changed: $newValue")
-                searchProvider = newValue
-            }
-        }
-        launcherPrefs.addListener(listener, LauncherPrefs.SEARCH_PROVIDER)
-        onDispose {
-            launcherPrefs.removeListener(listener, LauncherPrefs.SEARCH_PROVIDER)
-        }
-    }
+    val searchProvider by rememberSettingString(
+        HotseatQsbSearchProvider.KEY,
+        default = HotseatQsbSearchProvider.DEFAULT
+    )
 
     val widgetInfo = remember(searchProvider) {
         SearchWidgetHelper.getSearchWidgetProvider(context).also {

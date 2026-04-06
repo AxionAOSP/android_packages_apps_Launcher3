@@ -30,22 +30,24 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.database.ContentObserver;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.util.AttributeSet;
 import android.view.LayoutInflater;
 import android.view.View;
+import com.android.launcher3.qsb.HotseatQsbKt;
 import android.view.ViewGroup;
 import android.widget.FrameLayout;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.WorkerThread;
-import androidx.compose.ui.platform.ComposeView;
 
 import com.android.launcher3.BuildConfig;
 import com.android.launcher3.InvariantDeviceProfile;
 import com.android.launcher3.LauncherAppState;
-import com.android.launcher3.LauncherPrefChangeListener;
 import com.android.launcher3.LauncherPrefs;
 import com.android.launcher3.R;
 import com.android.launcher3.dagger.LauncherComponentProvider;
@@ -117,31 +119,32 @@ public class QsbContainerView extends FrameLayout {
     @Override
     protected void onAttachedToWindow() {
         super.onAttachedToWindow();
-        LauncherPrefs.get(getContext()).addListener(mListener, LauncherPrefs.SEARCH_PROVIDER);
+        getContext().getContentResolver().registerContentObserver(
+                HotseatQsbSearchProvider.getUri(), false, mObserver);
         updateVisibility();
 
         if (getChildCount() == 0) {
-            ComposeView composeView = new ComposeView(getContext());
-            addView(composeView, new LayoutParams(LayoutParams.MATCH_PARENT,
+            addView(HotseatQsbKt.createView(getContext()), new LayoutParams(LayoutParams.MATCH_PARENT,
                     LayoutParams.MATCH_PARENT));
-            HotseatQsbSetup.setupComposeView(composeView);
         }
     }
 
     @Override
     protected void onDetachedFromWindow() {
-        LauncherPrefs.get(getContext()).removeListener(mListener, LauncherPrefs.SEARCH_PROVIDER);
+        getContext().getContentResolver().unregisterContentObserver(mObserver);
         super.onDetachedFromWindow();
     }
 
-    private final LauncherPrefChangeListener mListener = key -> {
-        if (LauncherPrefs.SEARCH_PROVIDER.getSharedPrefKey().equals(key)) {
-            updateVisibility();
-        }
-    };
+    private final ContentObserver mObserver =
+            new ContentObserver(new Handler(Looper.getMainLooper())) {
+                @Override
+                public void onChange(boolean selfChange) {
+                    updateVisibility();
+                }
+            };
 
     private void updateVisibility() {
-        String provider = LauncherPrefs.SEARCH_PROVIDER.get(getContext());
+        String provider = HotseatQsbSearchProvider.get(getContext());
         setVisibility("none".equals(provider) ? GONE : VISIBLE);
     }
 
@@ -191,9 +194,7 @@ public class QsbContainerView extends FrameLayout {
         @Override
         public View onCreateView(
                 LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-            ComposeView composeView = new ComposeView(getContext());
-            HotseatQsbSetup.setupComposeView(composeView);
-            return composeView;
+            return HotseatQsbKt.createView(getContext());
         }
 
         private View createQsb(ViewGroup container) {

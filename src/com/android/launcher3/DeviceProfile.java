@@ -53,7 +53,6 @@ import androidx.annotation.VisibleForTesting;
 
 import com.android.launcher3.CellLayout.ContainerType;
 import com.android.launcher3.InvariantDeviceProfile.DisplayOptionSpec;
-import com.android.launcher3.LauncherPrefs;
 import com.android.launcher3.deviceprofile.AllAppsProfile;
 import com.android.launcher3.deviceprofile.BottomSheetProfile;
 import com.android.launcher3.deviceprofile.DeviceProperties;
@@ -64,6 +63,7 @@ import com.android.launcher3.deviceprofile.OverviewProfile;
 import com.android.launcher3.deviceprofile.TaskbarProfile;
 import com.android.launcher3.deviceprofile.WorkspaceProfile;
 import com.android.launcher3.icons.DotRenderer;
+import com.android.launcher3.qsb.HotseatQsbSearchProvider;
 import com.android.launcher3.qsb.SearchWidgetHelper;
 import com.android.launcher3.model.data.ItemInfo;
 import com.android.launcher3.responsive.CalculatedCellSpec;
@@ -363,7 +363,7 @@ public class DeviceProfile {
                     responsiveAspectRatio, mDeviceProperties.getHeightPx());
         }
 
-        if ("none".equals(LauncherPrefs.SEARCH_PROVIDER.get(context))) {
+        if ("none".equals(HotseatQsbSearchProvider.get(context))) {
             hotseatQsbSpace = 0;
         }
 

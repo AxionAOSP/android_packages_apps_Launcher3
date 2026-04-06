@@ -27,7 +27,6 @@ import static com.android.launcher3.LauncherPrefs.ENABLE_TWOLINE_ALLAPPS_TOGGLE;
 import static com.android.launcher3.LauncherPrefs.FIXED_LANDSCAPE_MODE;
 import static com.android.launcher3.LauncherPrefs.GRID_NAME;
 import static com.android.launcher3.LauncherPrefs.NON_FIXED_LANDSCAPE_GRID_NAME;
-import static com.android.launcher3.LauncherPrefs.SEARCH_PROVIDER;
 import static com.android.launcher3.LauncherPrefs.SHOW_DESKTOP_LABELS;
 import static com.android.launcher3.LauncherPrefs.SHOW_DRAWER_LABELS;
 import static com.android.launcher3.LauncherPrefs.WORKSPACE_ICON_SCALE;
@@ -43,6 +42,9 @@ import static com.android.launcher3.util.SimpleBroadcastReceiver.actionsFilter;
 
 import android.content.Context;
 import android.content.Intent;
+import android.database.ContentObserver;
+import android.os.Handler;
+import android.os.Looper;
 import com.android.launcher3.concurrent.annotations.Ui;
 import android.content.res.Resources;
 import android.content.res.TypedArray;
@@ -75,6 +77,7 @@ import com.android.launcher3.icons.DotRenderer;
 import com.android.launcher3.logging.FileLog;
 import com.android.launcher3.model.DeviceGridState;
 import com.android.launcher3.provider.RestoreDbTask;
+import com.android.launcher3.qsb.HotseatQsbSearchProvider;
 import com.android.launcher3.testing.shared.ResourceUtils;
 import com.android.launcher3.util.DaggerSingletonObject;
 import com.android.launcher3.util.DaggerSingletonTracker;
@@ -331,18 +334,29 @@ public class InvariantDeviceProfile {
                     SHOW_DESKTOP_LABELS.getSharedPrefKey().equals(key) ||
                     SHOW_DRAWER_LABELS.getSharedPrefKey().equals(key) ||
                     WORKSPACE_ICON_SCALE.getSharedPrefKey().equals(key) ||
-                    ALLAPPS_ICON_SCALE.getSharedPrefKey().equals(key) ||
-                    SEARCH_PROVIDER.getSharedPrefKey().equals(key)) {
+                    ALLAPPS_ICON_SCALE.getSharedPrefKey().equals(key)) {
                 onConfigChanged();
             }
         };
         prefs.addListener(prefListener, FIXED_LANDSCAPE_MODE, ENABLE_TWOLINE_ALLAPPS_TOGGLE,
                 ALLAPPS_THEMED_ICONS, DRAWER_OPEN_KEYBOARD, SHOW_DESKTOP_LABELS,
-                SHOW_DRAWER_LABELS, WORKSPACE_ICON_SCALE, ALLAPPS_ICON_SCALE, SEARCH_PROVIDER);
+                SHOW_DRAWER_LABELS, WORKSPACE_ICON_SCALE, ALLAPPS_ICON_SCALE);
         lifeCycle.addCloseable(() -> prefs.removeListener(prefListener,
                 FIXED_LANDSCAPE_MODE, ENABLE_TWOLINE_ALLAPPS_TOGGLE, ALLAPPS_THEMED_ICONS,
                 DRAWER_OPEN_KEYBOARD, SHOW_DESKTOP_LABELS, SHOW_DRAWER_LABELS,
-                WORKSPACE_ICON_SCALE, ALLAPPS_ICON_SCALE, SEARCH_PROVIDER));
+                WORKSPACE_ICON_SCALE, ALLAPPS_ICON_SCALE));
+
+        ContentObserver searchProviderObserver =
+                new ContentObserver(new Handler(Looper.getMainLooper())) {
+                    @Override
+                    public void onChange(boolean selfChange) {
+                        onConfigChanged();
+                    }
+                };
+        context.getContentResolver().registerContentObserver(
+                HotseatQsbSearchProvider.getUri(), false, searchProviderObserver);
+        lifeCycle.addCloseable(() ->
+                context.getContentResolver().unregisterContentObserver(searchProviderObserver));
 
         SimpleBroadcastReceiver localeReceiver = new SimpleBroadcastReceiver(context,
                 mMainExecutor, i -> onConfigChanged());

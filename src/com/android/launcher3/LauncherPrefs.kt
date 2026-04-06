@@ -323,9 +323,6 @@ constructor(@ApplicationContext private val encryptedContext: Context) {
 
         @JvmField
         val DISABLE_WALLPAPER_ZOOM = backedUpItem("pref_disable_wallpaper_zoom", false)
-        @JvmField
-        val SEARCH_PROVIDER =
-            backedUpItem("pref_qsb_search_provider", "none", EncryptionType.DEVICE_PROTECTED)
         @JvmField val SEARCH_SHOW_WEB_ACTIONS = backedUpItem("pref_search_show_web_actions", true)
         @JvmField val SEARCH_SHOW_IN_APP_SEARCH = backedUpItem("pref_search_show_in_app_search", true)
         @JvmField

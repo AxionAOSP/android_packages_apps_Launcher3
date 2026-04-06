@@ -27,7 +27,6 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.WorkerThread;
 
-import com.android.launcher3.LauncherPrefs;
 import com.android.launcher3.widget.WidgetManagerHelper;
 
 import java.util.ArrayList;
@@ -49,7 +48,7 @@ public class SearchWidgetHelper {
 
     @Nullable
     public static AppWidgetProviderInfo getSearchWidgetProvider(@NonNull Context context) {
-        String providerStr = LauncherPrefs.SEARCH_PROVIDER.get(context);
+        String providerStr = HotseatQsbSearchProvider.get(context);
         AppWidgetManager appWidgetManager = AppWidgetManager.getInstance(context);
 
         if (providerStr != null && !providerStr.isEmpty()) {
@@ -92,7 +91,7 @@ public class SearchWidgetHelper {
     @WorkerThread
     @Nullable
     public static String getSearchWidgetPackageName(@NonNull Context context) {
-        String providerStr = LauncherPrefs.SEARCH_PROVIDER.get(context);
+        String providerStr = HotseatQsbSearchProvider.get(context);
 
         if (providerStr != null && !providerStr.isEmpty()) {
             if ("none".equals(providerStr)) {
