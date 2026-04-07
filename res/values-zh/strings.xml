@@ -19,527 +19,523 @@
 <resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
     <!-- General -->
     <!-- Application name -->
-    <string name="app_name">Launcher3</string>
+    <string name="app_name">启动器</string>
     <!-- Work folder name -->
     <string name="work_folder_name">工作</string>
     <!-- Displayed when user selects a shortcut for an app that was uninstalled [CHAR_LIMIT=none]-->
-    <string name="activity_not_found">應用程式未安裝。</string>
+    <string name="activity_not_found">未安装应用。</string>
     <!-- Displayed when user selects a shortcut for an app that is current not available [CHAR_LIMIT=none]-->
-    <string name="activity_not_available">應用程式目前無法使用</string>
+    <string name="activity_not_available">应用不可用</string>
     <!-- SafeMode shortcut error string -->
-    <string name="safemode_shortcut_error">Downloaded app disabled in Safe mode</string>
+    <string name="safemode_shortcut_error">安全模式下已下载应用被禁用</string>
     <!-- SafeMode widget error string -->
-    <string name="safemode_widget_error">Widgets disabled in Safe mode</string>
+    <string name="safemode_widget_error">安全模式下小组件已禁用</string>
     <!-- Message shown when a shortcut is not available. It could have been temporarily disabled and may start working again after some time. -->
-    <string name="shortcut_not_available">Shortcut isn\'t available</string>
+    <string name="shortcut_not_available">快捷方式不可用</string>
     <!-- User visible name for the launcher/home screen. [CHAR_LIMIT=30] -->
-    <string name="home_screen">主頁</string>
+    <string name="home_screen">主屏幕</string>
     <!-- Description for setting the current launcher as the default home app. [CHAR_LIMIT=none]-->
-    <string name="set_default_home_app">Set <xliff:g id="launcher_name" example="Launcher3">%1$s</xliff:g> as default home app in Settings</string>
+    <string name="set_default_home_app">在设置中将 <xliff:g id="launcher_name" example="Launcher3">%1$s</xliff:g> 设为默认主屏幕应用</string>
     <!-- Options for recent tasks -->
     <!-- Title for an option to enter split screen mode for a given app -->
-    <string name="recent_task_option_split_screen">Split screen</string>
-    <string name="recent_task_option_aspect_ratio">Change aspect ratio</string>
-    <string name="split_app_info_accessibility">App info for %1$s</string>
-    <string name="split_app_usage_settings">Usage settings for %1$s</string>
-    <string name="close_task_accessibility">Close %1$s</string>
+    <string name="recent_task_option_split_screen">分屏</string>
+    <string name="recent_task_option_aspect_ratio">调整显示比例</string>
+    <string name="split_app_info_accessibility">%1$s 的应用信息</string>
+    <string name="split_app_usage_settings">%1$s 的使用设置</string>
+    <string name="close_task_accessibility">关闭 %1$s</string>
     <!-- Title for an option to open a new window for a given app   -->
-    <string name="new_window_option_taskbar">New Window</string>
+    <string name="new_window_option_taskbar">窗口</string>
     <!-- Title for an option to manage open windows for a given app   -->
-    <string name="manage_windows_option_taskbar">Manage Windows</string>
+    <string name="manage_windows_option_taskbar">管理窗口</string>
     <!-- Title for an option to close open windows for a given app   -->
-    <string name="close_app_taskbar">Close</string>
+    <string name="close_app_taskbar">关闭</string>
     <!-- App pairs -->
-    <string name="save_app_pair">Save app pair</string>
+    <string name="save_app_pair">保存应用配对</string>
     <!-- App pair default title -->
     <string name="app_pair_default_title"><xliff:g id="app1" example="Chrome">%1$s</xliff:g> | <xliff:g id="app2" example="YouTube">%2$s</xliff:g></string>
     <!-- Displayed when an app pair can't launch at this screen size [CHAR_LIMIT=none] -->
-    <string name="app_pair_unlaunchable_at_screen_size">This app pair isn\'t supported on this device</string>
+    <string name="app_pair_unlaunchable_at_screen_size">此设备不支持该应用配对</string>
     <!-- Displayed when an app pair can't launch at this screen size, but user can unfold device to restore functionality [CHAR_LIMIT=none] -->
-    <string name="app_pair_needs_unfold">Unfold device to use this app pair</string>
+    <string name="app_pair_needs_unfold">请展开设备以使用该应用配对</string>
     <!-- Displayed when user selects a shortcut for an app pair that is currently not available [CHAR_LIMIT=none]-->
-    <string name="app_pair_not_available">App pair isn\'t available</string>
+    <string name="app_pair_not_available">应用配对不可用</string>
     <!-- Widgets -->
     <!-- Message to tell the user to press and hold on a widget to add it [CHAR_LIMIT=50] -->
-    <string name="long_press_widget_to_add">Touch &amp; hold to move a widget.</string>
+    <string name="long_press_widget_to_add">长按 &amp; 以移动小组件。</string>
     <!-- Accessibility spoken hint message in widget picker, which allows user to add a widget. Custom action is the label for additional accessibility actions available in this mode [CHAR_LIMIT=100] -->
-    <string name="long_accessible_way_to_add">Double-tap &amp; hold to move a widget or use custom actions.</string>
+    <string name="long_accessible_way_to_add">双击并长按 &amp; 可移动小组件或执行自定义操作。</string>
     <!-- Accessibility label for the icon button shown in the widget picker that opens a overflow
          menu with widgets viewing options. [CHAR_LIMIT=25] -->
-    <string name="widget_picker_widget_options_button_description">More options</string>
+    <string name="widget_picker_widget_options_button_description">更多选项</string>
     <!-- Label for the checkbox shown in the widget picker toggles whether to show all widgets or
      the default set. [CHAR_LIMIT=25] -->
-    <string name="widget_picker_show_all_widgets_menu_item_title">Show all widgets</string>
+    <string name="widget_picker_show_all_widgets_menu_item_title">显示所有小组件</string>
     <!-- The format string for the dimensions of a widget in the drawer -->
     <!-- There is a special version of this format string for Farsi -->
     <string name="widget_dims_format">%1$d \u00d7 %2$d</string>
     <!-- Accessibility spoken message format for the dimensions of a widget in the drawer -->
-    <string name="widget_accessible_dims_format">%1$d wide by %2$d high</string>
+    <string name="widget_accessible_dims_format">宽：%1$d 高：%2$d</string>
     <!-- Spoken text for a screen reader. The placeholder text is the widget name.
          [CHAR_LIMIT=none]-->
-    <string name="widget_preview_context_description"><xliff:g id="widget_name" example="Calendar month view">%1$s</xliff:g> widget</string>
+    <string name="widget_preview_context_description"><xliff:g id="widget_name" example="Calendar month view">%1$s</xliff:g> 小组件</string>
     <!-- Spoken text for a screen reader. The first placeholder text is the widget name, the
          remaining placeholders are for the widget dimensions.
          [CHAR_LIMIT=none]-->
-    <string name="widget_preview_name_and_dims_content_description">        <xliff:g id="widget_name" example="Calendar month view">%1$s</xliff:g> widget, %2$d wide by %3$d high
-    </string>
+    <string name="widget_preview_name_and_dims_content_description"><xliff:g id="widget_name" example="Calendar month view">%1$s</xliff:g> 小组件，宽：%2$d 高：%3$d    </string>
     <!-- Message to tell the user to press and hold a widget/icon to add it to the home screen.
          [CHAR LIMIT=NONE]  -->
-    <string name="add_item_request_drag_hint">Touch &amp; hold the widget to move it around the home screen</string>
+    <string name="add_item_request_drag_hint">长按 &amp; 小组件可在主屏幕上移动</string>
     <!-- Button label to automatically add a widget to home screen [CHAR_LIMIT=50] -->
-    <string name="add_to_home_screen">Add to home screen</string>
+    <string name="add_to_home_screen">添加至主屏幕</string>
     <!-- Accessibility spoken message announced when a widget gets added to the home screen using a
          button in a dialog. [CHAR_LIMIT=none] -->
-    <string name="added_to_home_screen_accessibility_text"><xliff:g id="widget_name" example="Calendar month view">%1$s</xliff:g> widget added to home screen</string>
+    <string name="added_to_home_screen_accessibility_text">已将 <xliff:g id="widget_name" example="Calendar month view">%1$s</xliff:g> 小组件添加至主屏幕</string>
     <!-- Widget suggestions header title in the full widgets picker for large screen devices
     in landscape mode. [CHAR_LIMIT=50] -->
-    <string name="suggested_widgets_header_title">Suggestions</string>
+    <string name="suggested_widgets_header_title">建议</string>
     <!-- Title for the widget suggestions category that displays widgets provided by
     productivity apps for daily use [CHAR_LIMIT=50] -->
-    <string name="productivity_widget_recommendation_category_label">Essentials</string>
+    <string name="productivity_widget_recommendation_category_label">常用功能</string>
     <!-- Title for the widget suggestions category that displays widgets provided by
     news and magazines related apps [CHAR_LIMIT=50] -->
-    <string name="news_widget_recommendation_category_label">News &amp; magazines</string>
+    <string name="news_widget_recommendation_category_label">资讯 &amp; 杂志</string>
     <!-- Title for the widget suggestions category that displays widgets provided by
     entertainment apps [CHAR_LIMIT=50] -->
-    <string name="entertainment_widget_recommendation_category_label">Entertainment</string>
+    <string name="entertainment_widget_recommendation_category_label">娱乐</string>
     <!-- Title for the widget suggestions category that displays widgets provided by
     social apps [CHAR_LIMIT=50] -->
-    <string name="social_widget_recommendation_category_label">Social</string>
+    <string name="social_widget_recommendation_category_label">社交</string>
     <!-- Title for the widget suggestions category that displays general widget suggestions
     [CHAR_LIMIT=50] -->
-    <string name="others_widget_recommendation_category_label">Suggested for you</string>
+    <string name="others_widget_recommendation_category_label">为你推荐</string>
     <!-- accessibilityPaneTitle for the right pane when showing suggested widgets. -->
-    <string name="widget_picker_right_pane_accessibility_title"><xliff:g id="selected_header" example="Calendar">%1$s</xliff:g> widgets on right, search and options on left</string>
+    <string name="widget_picker_right_pane_accessibility_title">右侧为 <xliff:g id="selected_header" example="Calendar">%1$s</xliff:g> 小组件，左侧为搜索与选项</string>
     <!-- Label for showing the number of widgets an app has in the full widgets picker.
          [CHAR_LIMIT=25][ICU SYNTAX] -->
-    <string name="widgets_count">        {count, plural, =1{# widget} other{# widgets}}
+    <string name="widgets_count">        {count, plural, =1{# 小部件} other{# 小部件}}
     </string>
     <!-- Label for showing the number of shortcut an app has in the full widgets picker.
          [CHAR_LIMIT=25][ICU SYNTAX] -->
-    <string name="shortcuts_count">        {count, plural, =1{# shortcut} other{# shortcuts}}
+    <string name="shortcuts_count">        {count, plural, =1{# 小部件} other{# 小部件}}
     </string>
     <!-- Label for showing both the number of widgets and shortcuts an app has in the full widgets
          picker. [CHAR_LIMIT=50] -->
     <string name="widgets_and_shortcuts_count"><xliff:g id="widgets_count" example="5 widgets">%1$s</xliff:g>, <xliff:g id="shortcuts_count" example="1 shortcut">%2$s</xliff:g></string>
     <!-- Text for both the tile of a popup view, which shows all available widgets installed on
          the device, and the text of a button, which opens this popup view. [CHAR LIMIT=30]-->
-    <string name="widget_button_text">Widgets</string>
+    <string name="widget_button_text">小组件</string>
     <!-- Search bar text shown in the popup view showing all available widgets installed on the
          device. [CHAR_LIMIT=50] -->
-    <string name="widgets_full_sheet_search_bar_hint">Search</string>
+    <string name="widgets_full_sheet_search_bar_hint">搜索</string>
     <!-- Spoken text for screen readers. This text lets a user know that the button is used to clear
          the text that the user entered in the search box. [CHAR_LIMIT=none] -->
-    <string name="widgets_full_sheet_cancel_button_description">Clear text from search box</string>
+    <string name="widgets_full_sheet_cancel_button_description">清空搜索框文本</string>
     <!-- Text shown when there are no widgets or shortcuts that can be added to the device.
          [CHAR_LIMIT=none] -->
-    <string name="no_widgets_available">Widgets and shortcuts aren\'t available</string>
+    <string name="no_widgets_available">小组件和快捷方式不可用</string>
     <!-- Text shown when there are no matching widget or shortcut search results for user's search
          query. [CHAR_LIMIT=none] -->
-    <string name="no_search_results">No widgets or shortcuts found</string>
+    <string name="no_search_results">未找到小组件或快捷方式</string>
     <!-- Tab label. A user can tap this tab to access their personal widgets. [CHAR_LIMIT=25] -->
-    <string name="widgets_full_sheet_personal_tab">Personal</string>
+    <string name="widgets_full_sheet_personal_tab">个人</string>
     <!-- Tab label. A user can tap this tab to access their work widgets. [CHAR_LIMIT=25] -->
     <string name="widgets_full_sheet_work_tab">工作</string>
     <!-- A widget category label for grouping widgets related to conversations. [CHAR_LIMIT=30] -->
-    <string name="widget_category_conversations">Conversations</string>
+    <string name="widget_category_conversations">会话</string>
     <!-- A widget category label for grouping widgets related to note taking. [CHAR_LIMIT=30] -->
-    <string name="widget_category_note_taking">Note-taking</string>
+    <string name="widget_category_note_taking">笔记</string>
     <!-- Accessibility label on the widget preview that on click (if add button is hidden) shows the button to add widget to the home screen. [CHAR_LIMIT=none] -->
-    <string name="widget_cell_tap_to_show_add_button_label">Show add button</string>
+    <string name="widget_cell_tap_to_show_add_button_label">显示添加按钮</string>
     <!-- Accessibility label on the widget preview that on click (if add button is showing) hides the button to add widget to the home screen. [CHAR_LIMIT=none] -->
-    <string name="widget_cell_tap_to_hide_add_button_label">Hide add button</string>
+    <string name="widget_cell_tap_to_hide_add_button_label">隐藏添加按钮</string>
     <!-- Text on the button that adds a widget to the home screen. [CHAR_LIMIT=15] -->
-    <string name="widget_add_button_label">Add</string>
+    <string name="widget_add_button_label">添加</string>
     <!-- Accessibility content description for the button that adds a widget to the home screen. The
          placeholder text is the widget name. [CHAR_LIMIT=none] -->
-    <string name="widget_add_button_content_description">Add <xliff:g id="widget_name" example="Calendar month view">%1$s</xliff:g> widget</string>
+    <string name="widget_add_button_content_description">添加 <xliff:g id="widget_name" example="Calendar month view">%1$s</xliff:g> 小组件</string>
     <!-- Text on the button that enables users to expand the widgets list to see all widget apps besides the default ones displayed. [CHAR_LIMIT=15] -->
-    <string name="widgets_list_expand_button_label">Show all</string>
+    <string name="widgets_list_expand_button_label">全部显示</string>
     <!-- Accessibility content description for the button that enables users to expand the widgets list to see all widget apps besides the default ones displayed. [CHAR_LIMIT=none]  -->
-    <string name="widgets_list_expand_button_content_description">Show all widgets</string>
+    <string name="widgets_list_expand_button_content_description">显示所有小组件</string>
     <!-- Accessibility announcement to indicate to the users that widgets list is now expanded -->
-    <string name="widgets_list_expanded">Showing all widgets</string>
+    <string name="widgets_list_expanded">显示所有小组件</string>
     <!-- Text on an educational tip on widget informing users that they can change widget settings.
          [CHAR_LIMIT=NONE] -->
-    <string name="reconfigurable_widget_education_tip">Tap to change widget settings</string>
+    <string name="reconfigurable_widget_education_tip">点击更改小组件设置</string>
     <!-- Spoken text for screen readers. This text is for an icon that lets the user change a
          widget's settings. [CHAR_LIMIT=50] -->
-    <string name="widget_reconfigure_button_content_description">Change widget settings</string>
+    <string name="widget_reconfigure_button_content_description">更改小组件设置</string>
     <!-- All Apps -->
     <!-- Search bar text in the apps view. [CHAR_LIMIT=50] -->
-    <string name="all_apps_search_bar_hint">Search apps</string>
+    <string name="all_apps_search_bar_hint">搜索应用</string>
     <!-- Loading apps text. [CHAR_LIMIT=50] -->
-    <string name="all_apps_loading_message">Loading apps&#8230;</string>
+    <string name="all_apps_loading_message">正在加载应用程序&#8230;</string>
     <!-- No-search-results text. [CHAR_LIMIT=50] -->
-    <string name="all_apps_no_search_results">No apps found matching \"<xliff:g id="query" example="Android">%1$s</xliff:g>\"</string>
+    <string name="all_apps_no_search_results">没有找到匹配\"<xliff:g id="query" example="Android">%1$s</xliff:g>\"的程序</string>
     <!-- Label for an icon representing any generic app. [CHAR_LIMIT=50] -->
-    <string name="label_application">App</string>
+    <string name="label_application">应用程序</string>
     <!-- Label for the header text of the All Apps section in All Apps view, used to separate Predicted Apps and Actions section from All Apps section. [CHAR_LIMIT=50] -->
-    <string name="all_apps_label">All apps</string>
-    <string name="all_apps_list_label">Apps list</string>
+    <string name="all_apps_label">所有应用</string>
+    <string name="all_apps_list_label">应用列表</string>
     <!-- Popup items -->
     <!-- Text to display as the header above notifications. [CHAR_LIMIT=30] -->
-    <string name="notifications_header">Notifications</string>
+    <string name="notifications_header">通知</string>
     <!-- Drag and drop -->
     <!-- Message to tell the user to press and hold on a shortcut to add it [CHAR_LIMIT=50] -->
-    <string name="long_press_shortcut_to_add">Touch &amp; hold to move a shortcut.</string>
+    <string name="long_press_shortcut_to_add">长按 &amp; 以移动小组件。</string>
     <!-- Accessibility spoken hint message in deep shortcut menu, which allows user to add a shortcut. Custom action is the label for additional accessibility actions available in this mode [CHAR_LIMIT=200] -->
-    <string name="long_accessible_way_to_add_shortcut">Double-tap &amp; hold to move a shortcut or use custom actions.</string>
+    <string name="long_accessible_way_to_add_shortcut">双击并长按 &amp; 可移动小组件或执行自定义操作。</string>
     <!-- Error message when a user can't add more apps, widgets, or shortcuts to a Home screen. -->
-    <string name="out_of_space">No room on this home screen</string>
+    <string name="out_of_space">此主屏幕上已没有空间</string>
     <!-- Error message when user has filled the hotseat -->
-    <string name="hotseat_out_of_space">No more room in the Favorites tray</string>
+    <string name="hotseat_out_of_space">收藏栏已满</string>
     <!-- All applications label -->
-    <string name="all_apps_button_label">Apps list</string>
-    <string name="all_apps_search_results">Search results</string>
-    <string name="all_apps_button_personal_label">Personal apps list</string>
-    <string name="all_apps_button_work_label">Work apps list</string>
+    <string name="all_apps_button_label">应用列表</string>
+    <string name="all_apps_search_results">搜索结果</string>
+    <string name="all_apps_button_personal_label">个人应用列表</string>
+    <string name="all_apps_button_work_label">工作应用列表</string>
     <!-- System shortcuts -->
     <!-- Label for remove drop target (from the homescreen only).
          May appear next to uninstall_drop_target_label [CHAR_LIMIT=20] -->
-    <string name="remove_drop_target_label">Remove</string>
+    <string name="remove_drop_target_label">移除</string>
     <!-- Label for uninstall drop target (from the device).
          May appear next to remove_drop_target_label [CHAR_LIMIT=20]-->
-    <string name="uninstall_drop_target_label">Uninstall</string>
+    <string name="uninstall_drop_target_label">卸载</string>
     <!-- Label for app info drop target. [CHAR_LIMIT=20] -->
-    <string name="app_info_drop_target_label">App info</string>
+    <string name="app_info_drop_target_label">应用信息</string>
     <!-- Label for install to private profile shortcut label. [CHAR_LIMIT=20] -->
-    <string name="install_private_system_shortcut_label">Install in private</string>
+    <string name="install_private_system_shortcut_label">私密安装</string>
     <!-- Label for uninstall app private profile shortcut.-->
-    <string name="uninstall_private_system_shortcut_label">Uninstall app</string>
+    <string name="uninstall_private_system_shortcut_label">卸载应用</string>
     <!-- Label for install drop target. [CHAR_LIMIT=20] -->
-    <string name="install_drop_target_label">Install</string>
+    <string name="install_drop_target_label">安装</string>
     <!-- Label for dismiss prediction. -->
-    <string name="dismiss_prediction_label">Don\'t suggest app</string>
+    <string name="dismiss_prediction_label">不要提供应用建议</string>
     <!-- Label for pinning predicted app. -->
-    <string name="pin_prediction">Pin Prediction</string>
+    <string name="pin_prediction">置顶预测</string>
     <!-- Label for bubbling a launcher item. [CHAR_LIMIT=20] -->
-    <string name="bubble">Bubble</string>
+    <string name="bubble">气泡</string>
     <!-- Label for widget settings shows in the long press menu for widgets. [CHAR_LIMIT=20] -->
-    <string name="widget_settings">設定</string>
+    <string name="widget_settings">设置</string>
     <!-- Label for pinning an item to the taskbar. [CHAR_LIMIT=20] -->
-    <string name="pin_to_taskbar">Pin to Taskbar</string>
+    <string name="pin_to_taskbar">置顶到任务栏</string>
     <!-- Label for unpinning an item from the taskbar. [CHAR_LIMIT=20] -->
-    <string name="unpin_from_taskbar">Unpin from Taskbar</string>
-    <string name="action_enlarge">Enlarge</string>
-    <string name="action_minimize">Minimize</string>
-    <string name="action_customize_folder">Customize</string>
-    <string name="custom_icon_shortcut_label">Change icon</string>
-    <string name="custom_icon_picker_title">Select icon pack</string>
-    <string name="custom_icon_no_packs">No icon packs installed</string>
-    <string name="custom_icon_no_drawables">No icons found in this pack</string>
+    <string name="unpin_from_taskbar">取消置顶任务栏</string>
+    <string name="action_enlarge">扩大</string>
+    <string name="action_minimize">最小化</string>
+    <string name="action_customize_folder">自定义</string>
+    <string name="custom_icon_shortcut_label">更改图标</string>
+    <string name="custom_icon_picker_title">选择图标包</string>
+    <string name="custom_icon_no_packs">没有已安装的图标包</string>
+    <string name="custom_icon_no_drawables">此包中未找到图标</string>
     <string name="custom_icon_reset">恢复默认</string>
-    <string name="custom_icon_back">Back</string>
-    <string name="action_customize_icon">Customize icons</string>
-    <string name="icon_pack_picker_title">Customize icons</string>
-    <string name="icon_pack_picker_default">Default</string>
+    <string name="custom_icon_back">返回</string>
+    <string name="action_customize_icon">自定义图标</string>
+    <string name="icon_pack_picker_title">自定义图标</string>
+    <string name="icon_pack_picker_default">默认</string>
     <string name="icon_pack_picker_reset">恢复默认</string>
-    <string name="icon_pack_title">Icon Pack</string>
-    <string name="themed_icons_card_title">Themed Icons</string>
-    <string name="themed_icons_description">Monochrome icons that adapt to your colors</string>
-    <string name="icon_shape_title">Icon Shape</string>
-    <string name="themed_icon_pack_title">Themed Icon Pack</string>
+    <string name="icon_pack_title">图标包</string>
+    <string name="themed_icons_card_title">主题图标</string>
+    <string name="themed_icons_description">适应颜色的单色图标</string>
+    <string name="icon_shape_title">图标形状</string>
+    <string name="themed_icon_pack_title">主题图标包</string>
     <string name="themed_icon_pack_none">无</string>
-    <string name="folder_style_picker_title">Folder Style</string>
-    <string name="folder_style_quadrant">Quadrant</string>
-    <string name="folder_style_grid">Grid</string>
-    <string name="folder_style_circle">Circle</string>
-    <string name="folder_style_cover">Cover</string>
-    <string name="folder_cover_text_hint">Emoji</string>
+    <string name="folder_style_picker_title">文件夹风格</string>
+    <string name="folder_style_quadrant">象限</string>
+    <string name="folder_style_grid">网格</string>
+    <string name="folder_style_circle">环形</string>
+    <string name="folder_style_cover">封面</string>
+    <string name="folder_cover_text_hint">Emoji 表情</string>
     <!-- Permissions: -->
     <!-- Permission short label -->
-    <string name="permlab_install_shortcut">install shortcuts</string>
+    <string name="permlab_install_shortcut">添加快捷方式</string>
     <!-- Permission description -->
-    <string name="permdesc_install_shortcut">Allows an app to add
-        shortcuts without user intervention.</string>
+    <string name="permdesc_install_shortcut">允许应用在没有用户干预的情况下添加
+        快捷方式。</string>
     <!-- Permission short label -->
-    <string name="permlab_read_settings">read home settings and shortcuts</string>
+    <string name="permlab_read_settings">读取主屏幕设置和快捷方式</string>
     <!-- Permission description -->
-    <string name="permdesc_read_settings">Allows the app to read the settings and
-        shortcuts in home.</string>
+    <string name="permdesc_read_settings">允许应用读取主屏幕中的设置和快捷方式。</string>
     <!-- Permission short label -->
-    <string name="permlab_write_settings">write home settings and shortcuts</string>
+    <string name="permlab_write_settings">编辑主屏幕设置和快捷方式</string>
     <!-- Permission description -->
-    <string name="permdesc_write_settings">Allows the app to change the settings and
-        shortcuts in home.</string>
+    <string name="permdesc_write_settings">允许应用更改主屏幕中的设置和快捷方式。</string>
     <!-- Widgets: -->
     <!-- Error text that lets a user know that the widget can't load. -->
-    <string name="gadget_error_text">Can\'t load widget</string>
+    <string name="gadget_error_text">无法加载小组件</string>
     <!-- Button text. This button lets a user change a widget's settings. -->
-    <string name="gadget_setup_text">Widget settings</string>
+    <string name="gadget_setup_text">小组件设置</string>
     <!-- Instructional text to encourage a user to finish setting up the widget. -->
-    <string name="gadget_complete_setup_text">Tap to finish setup</string>
+    <string name="gadget_complete_setup_text">点击以完成设置</string>
     <!-- Text to inform the user that they can't uninstall a system application -->
-    <string name="uninstall_system_app_text">This is a system app and can\'t be uninstalled.</string>
+    <string name="uninstall_system_app_text">无法卸载系统应用。</string>
     <!-- Default folder title -->
-    <string name="folder_hint_text">Edit Name</string>
-    <string name="paginate_left">Paginate left</string>
-    <string name="paginate_right">Paginate right</string>
+    <string name="folder_hint_text">编辑名称</string>
+    <string name="paginate_left">左分页</string>
+    <string name="paginate_right">右分页</string>
     <!-- Accessibility -->
     <!-- The format string for when an app is temporarily disabled. -->
-    <string name="disabled_app_label">Disabled <xliff:g id="app_name" example="Messenger">%1$s</xliff:g></string>
+    <string name="disabled_app_label">已禁用 <xliff:g id="app_name" example="Messenger">%1$s</xliff:g></string>
     <!-- The format string for when an app has a notification dot (meaning it has associated notifications). [ICU_FORMAT]-->
     <string name="dotted_app_label">        {count, plural,
-            =1      {{app_name} has # notification}
-            other   {{app_name} has # notifications}
+            =1      {{app_name} 有 # 条通知}
+            other   {{app_name} 有 # 条通知}
         }
     </string>
     <!-- content description for hotseat items -->
-    <string name="hotseat_prediction_content_description">Predicted app: <xliff:g id="title" example="Chrome">%1$s</xliff:g></string>
+    <string name="hotseat_prediction_content_description">预测的应用：<xliff:g id="title" example="Chrome">%1$s</xliff:g></string>
     <!-- The format string for default page scroll text [CHAR_LIMIT=none] -->
-    <string name="default_scroll_format">Page %1$d of %2$d</string>
+    <string name="default_scroll_format">页面 %1$d/%2$d</string>
     <!-- The format string for Workspace page scroll text [CHAR_LIMIT=none] -->
-    <string name="workspace_scroll_format">Home screen %1$d of %2$d</string>
+    <string name="workspace_scroll_format">主屏幕 %1$d / %2$d</string>
     <!-- Description for a new page on homescreen[CHAR_LIMIT=none] -->
-    <string name="workspace_new_page">New home screen page</string>
-    <string name="app_running_state_description">Active</string>
-    <string name="app_minimized_state_description">Minimized</string>
+    <string name="workspace_new_page">新页面</string>
+    <string name="app_running_state_description">启用</string>
+    <string name="app_minimized_state_description">最小化</string>
     <!-- Folder accessibility -->
     <!-- The format string for when a folder is opened, speaks the dimensions -->
-    <string name="folder_opened">Folder opened, <xliff:g id="width" example="5">%1$d</xliff:g> by <xliff:g id="height" example="3">%2$d</xliff:g></string>
+    <string name="folder_opened">文件夹已打开，<xliff:g id="width" example="5">%1$d</xliff:g> x <xliff:g id="height" example="3">%2$d</xliff:g></string>
     <!-- Instruction that clicking outside will close folder -->
-    <string name="folder_tap_to_close">Tap to close folder</string>
+    <string name="folder_tap_to_close">点击关闭文件夹</string>
     <!-- Instruction that clicking outside will commit folder rename -->
-    <string name="folder_tap_to_rename">Tap to save rename</string>
+    <string name="folder_tap_to_rename">点击以重命名</string>
     <!-- Indication that folder closed -->
-    <string name="folder_closed">Folder closed</string>
+    <string name="folder_closed">文件夹已关闭</string>
     <!-- Folder renamed format -->
-    <string name="folder_renamed">Folder renamed to <xliff:g id="name" example="Games">%1$s</xliff:g></string>
+    <string name="folder_renamed">文件夹重命名为 <xliff:g id="name" example="Games">%1$s</xliff:g></string>
     <!-- Folder name format when folder has less than 4 items -->
-    <string name="folder_name_format_exact">Folder: <xliff:g id="name" example="Games">%1$s</xliff:g>, <xliff:g id="size" example="2">%2$d</xliff:g> items</string>
+    <string name="folder_name_format_exact">文件夹：<xliff:g id="name" example="Games">%1$s</xliff:g>,<xliff:g id="size" example="2">%2$d</xliff:g> 个项目</string>
     <!-- Folder name format when folder has less than 4 items and a notification dot -->
-    <string name="folder_name_format_exact_with_dot">Folder: <xliff:g id="name" example="Games">%1$s</xliff:g>, <xliff:g id="size" example="2">%2$d</xliff:g> items, has notifications</string>
+    <string name="folder_name_format_exact_with_dot">文件夹: <xliff:g id="name" example="Games">%1$s</xliff:g>, <xliff:g id="size" example="2">%2$d</xliff:g> 项目有通知</string>
     <!-- Folder name format when folder has 4 or more items shown in preview-->
-    <string name="folder_name_format_overflow">Folder: <xliff:g id="name" example="Games">%1$s</xliff:g>, <xliff:g id="size" example="2">%2$d</xliff:g> or more items</string>
+    <string name="folder_name_format_overflow">文件夹：<xliff:g id="name" example="Games">%1$s</xliff:g>,<xliff:g id="size" example="2">%2$d</xliff:g> 个或更多项目</string>
     <!-- Folder name format when folder has 4 or more items shown in preview and a notification dot -->
-    <string name="folder_name_format_overflow_with_dot">Folder: <xliff:g id="name" example="Games">%1$s</xliff:g>, <xliff:g id="size" example="2">%2$d</xliff:g> or more items, has notifications</string>
+    <string name="folder_name_format_overflow_with_dot">文件夹：<xliff:g id="name" example="Games">%1$s</xliff:g>,<xliff:g id="size" example="2">%2$d</xliff:g> 个或更多项目</string>
     <!-- Accessibility announement for unnamed folders -->
-    <string name="unnamed_folder">Unnamed folder</string>
+    <string name="unnamed_folder">未命名文件夹</string>
     <!-- App pair accessibility -->
     <!-- App pair name -->
-    <string name="app_pair_name_format">App pair: <xliff:g id="app1" example="Chrome">%1$s</xliff:g> and <xliff:g id="app2" example="YouTube">%2$s</xliff:g></string>
+    <string name="app_pair_name_format">应用配对： <xliff:g id="app1" example="Chrome">%1$s</xliff:g> 和 <xliff:g id="app2" example="YouTube">%2$s</xliff:g></string>
     <!-- Strings for the customization mode -->
     <!-- Text for wallpaper change button [CHAR LIMIT=30]-->
-    <string name="styles_wallpaper_button_text">Wallpaper &amp; style</string>
+    <string name="styles_wallpaper_button_text">壁纸 &amp; 样式</string>
     <!-- Text for edit home screen button [CHAR LIMIT=30]-->
-    <string name="edit_home_screen">Edit Home Screen</string>
+    <string name="edit_home_screen">编辑主屏幕</string>
     <!-- Text for settings button [CHAR LIMIT=20]-->
-    <string name="settings_button_text">Home settings</string>
+    <string name="settings_button_text">主屏幕设置</string>
     <!-- Message shown when a feature is disabled by the administrator -->
-    <string name="msg_disabled_by_admin">Disabled by your admin</string>
+    <string name="msg_disabled_by_admin">已被您的管理员禁用</string>
     <!-- Strings for settings -->
     <!-- Title for Allow Rotation setting. [CHAR LIMIT=50] -->
-    <string name="allow_rotation_title">Allow home screen rotation</string>
+    <string name="allow_rotation_title">允许旋转主屏幕</string>
     <!-- Text explaining when the home screen will get rotated. [CHAR LIMIT=100] -->
-    <string name="allow_rotation_desc">When phone is rotated</string>
+    <string name="allow_rotation_desc">当手机旋转时</string>
     <!-- Title for Landscape Mode setting. [CHAR LIMIT=50] -->
-    <string name="landscape_mode_title">Landscape mode</string>
+    <string name="landscape_mode_title">横向模式</string>
     <!--  [CHAR LIMIT=100] -->
-    <string name="landscape_mode_desc">Set home screen into landscape mode</string>
+    <string name="landscape_mode_desc">设置主屏幕到横屏模式</string>
     <!-- Title for Notification dots setting. Tapping this will link to the system Notifications settings screen where the user can turn off notification dots globally. [CHAR LIMIT=50] -->
-    <string name="notification_dots_title">Notification dots</string>
+    <string name="notification_dots_title">通知圆点</string>
     <!-- Text to indicate that the system notification dots setting is on [CHAR LIMIT=100] -->
-    <string name="notification_dots_desc_on">On</string>
+    <string name="notification_dots_desc_on">开启</string>
     <!-- Text to indicate that the system notification dots setting is off [CHAR LIMIT=100] -->
-    <string name="notification_dots_desc_off">Off</string>
+    <string name="notification_dots_desc_off">关闭</string>
     <!-- Title for the dialog shown when the app does not has notification access, explaining the requirement for notification access [CHAR LIMIT=50] -->
-    <string name="title_missing_notification_access">Notification access needed</string>
+    <string name="title_missing_notification_access">需要通知权限</string>
     <!-- Message explaining to the user that the notification access is required by the app for showing 'Notification dots' [CHAR LIMIT=NONE] -->
-    <string name="msg_missing_notification_access">To show Notification Dots, turn on app notifications for <xliff:g id="name" example="My App">%1$s</xliff:g></string>
+    <string name="msg_missing_notification_access">要显示通知圆点，请开启<xliff:g id="name" example="My App">%1$s</xliff:g>的应用通知功能</string>
     <!-- Button text in the confirmation dialog which would take the user to the system settings [CHAR LIMIT=50] -->
-    <string name="title_change_settings">Change settings</string>
+    <string name="title_change_settings">更改设置</string>
     <!-- Summary for Notification dots setting. Tapping this will link enable/disable notification dots feature on the home screen. [CHAR LIMIT=50] -->
-    <string name="notification_dots_service_title">Show notification dots</string>
+    <string name="notification_dots_service_title">显示通知圆点</string>
     <!-- Title for Developer Options setting. [CHAR LIMIT=50] -->
-    <string name="developer_options_title">Developer Options</string>
+    <string name="developer_options_title">开发者选项</string>
     <!-- Label for the setting that allows the automatic placement of launcher shortcuts for applications and games installed on the device [CHAR LIMIT=60] -->
-    <string name="auto_add_shortcuts_label">Add app icons to home screen</string>
+    <string name="auto_add_shortcuts_label">将应用图标添加到主屏幕</string>
     <!-- Text description of the setting that allows the automatic placement of launcher shortcuts for applications and games installed on the device [CHAR LIMIT=NONE] -->
-    <string name="auto_add_shortcuts_description">For new apps</string>
+    <string name="auto_add_shortcuts_description">用于新应用</string>
     <!-- Label on an icon that references an uninstalled package, for which we have no information about when it might be installed. [CHAR_LIMIT=15] -->
-    <string name="package_state_unknown">Unknown</string>
+    <string name="package_state_unknown">未知</string>
     <!-- Button for abandoned promises dialog, to removes this abandoned promise icon. -->
-    <string name="abandoned_clean_this">Remove</string>
+    <string name="abandoned_clean_this">移除</string>
     <!-- Button for abandoned promise dialog, to search in the market for the missing package. -->
-    <string name="abandoned_search">Search</string>
+    <string name="abandoned_search">搜索</string>
     <!-- Title for abandoned promise dialog. -->
-    <string name="abandoned_promises_title">This app is not installed</string>
+    <string name="abandoned_promises_title">未安装此应用</string>
     <!-- Explanation for abandoned promise dialog. "The first 'it' refers to the shortcut icon.
     The second "it" refers to the app. -->
-    <string name="abandoned_promise_explanation">The app for this icon isn\'t installed.
-        You can remove it, or search for the app and install it manually.
-    </string>
+    <string name="abandoned_promise_explanation">该图标的应用程序未安装。
+        您可以将其删除，或搜索应用程序并手动安装。    </string>
     <!-- Title for an app which is being installed. -->
-    <string name="app_installing_title"><xliff:g id="name" example="Messenger">%1$s</xliff:g> installing, <xliff:g id="progress" example="30%">%2$s</xliff:g> complete</string>
+    <string name="app_installing_title">正在安装 <xliff:g id="name" example="Messenger">%1$s</xliff:g>，已完成 <xliff:g id="progress" example="30%">%2$s</xliff:g></string>
     <!-- Title for an app which is being downloaded. -->
-    <string name="app_downloading_title"><xliff:g id="name" example="Messenger">%1$s</xliff:g> downloading, <xliff:g id="progress" example="30%">%2$s</xliff:g> complete</string>
+    <string name="app_downloading_title">正在下载 <xliff:g id="name" example="Messenger">%1$s</xliff:g>，已完成 <xliff:g id="progress" example="30%">%2$s</xliff:g></string>
     <!-- Title for an app whose download has been started. -->
-    <string name="app_waiting_download_title"><xliff:g id="name" example="Messenger">%1$s</xliff:g> waiting to install</string>
+    <string name="app_waiting_download_title"><xliff:g id="name" example="Messenger">%1$s</xliff:g> 正在等待安装</string>
     <!-- Title for an app which is archived. -->
-    <string name="app_archived_title"><xliff:g id="name" example="Messenger">%1$s</xliff:g> is archived.</string>
+    <string name="app_archived_title"><xliff:g id="name" example="Messenger">%1$s</xliff:g> 已归档。</string>
     <!-- Accessibility Action for an app which is archived. -->
-    <string name="app_unarchiving_action">download and restore</string>
+    <string name="app_unarchiving_action">下载并恢复</string>
     <!-- Title shown on the alert dialog prompting the user to update the application in market
      in order to re-enable the disabled shortcuts -->
-    <string name="dialog_update_title">App update required</string>
+    <string name="dialog_update_title">需要更新应用</string>
     <!-- Message shown on the alert dialog prompting the user to update the application -->
-    <string name="dialog_update_message">The app for this icon isn\'t updated. You can update manually to re-enable this shortcut, or remove the icon.</string>
+    <string name="dialog_update_message">此图标对应的应用未更新。您可以手动更新以重新启用该快捷方式，或者移除此图标。</string>
     <!-- Message for the update button in the alert dialog, will bring the user to market -->
-    <string name="dialog_update">Update</string>
+    <string name="dialog_update">更新</string>
     <!-- Message for the remove button in the alert dialog -->
-    <string name="dialog_remove">Remove</string>
+    <string name="dialog_remove">移除</string>
     <!-- Strings for widgets & more in the popup container/bottom sheet -->
     <!-- Accessibility title for the popup containing a list of widgets. [CHAR_LIMIT=50] -->
-    <string name="widgets_list">Widgets list</string>
+    <string name="widgets_list">小组件列表</string>
     <!-- Text announced by accessibility when the popup containing the list of widgets is closed. [CHAR_LIMIT=100] -->
-    <string name="widgets_list_closed">Widgets list closed</string>
+    <string name="widgets_list_closed">小组件列表已关闭</string>
     <!-- Strings for accessibility actions -->
     <!-- Accessibility action to add an app to workspace. [CHAR_LIMIT=30] -->
-    <string name="action_add_to_workspace">Add to home screen</string>
+    <string name="action_add_to_workspace">添加至主屏幕</string>
     <!-- Accessibility action to move item to the current location. [CHAR_LIMIT=30] -->
-    <string name="action_move_here">Move item here</string>
+    <string name="action_move_here">将项目移至此处</string>
     <!-- Accessibility confirmation for item removed. [CHAR_LIMIT=50]-->
-    <string name="item_removed">Item removed</string>
+    <string name="item_removed">项目已移除</string>
     <!-- Action shown in snackbar to undo item removal. [CHAR_LIMIT=20] -->
-    <string name="undo">Undo</string>
+    <string name="undo">还原</string>
     <!-- Accessibility action to move an item on the workspace. [CHAR_LIMIT=30] -->
-    <string name="action_move">Move item</string>
+    <string name="action_move">移动项目</string>
     <!-- Accessibility description to move item to empty cell. -->
-    <string name="move_to_empty_cell_description">Move to row <xliff:g id="number" example="1">%1$s</xliff:g> column <xliff:g id="number" example="1">%2$s</xliff:g> in <xliff:g id="string" example="Home screen 2 of 4">%3$s</xliff:g></string>
+    <string name="move_to_empty_cell_description">移至<xliff:g id="number" example="1">%1$s</xliff:g>中的第 <xliff:g id="number" example="1">%2$s</xliff:g>行第<xliff:g id="string" example="Home screen 2 of 4">%3$s</xliff:g>列</string>
     <!-- Accessibility description to move item inside a folder. -->
-    <string name="move_to_position">Move to position <xliff:g id="number" example="1">%1$s</xliff:g></string>
+    <string name="move_to_position">移至位置<xliff:g id="number" example="1">%1$s</xliff:g></string>
     <!-- Accessibility description to move item to the hotseat. -->
-    <string name="move_to_hotseat_position">Move to favorites position <xliff:g id="number" example="1">%1$s</xliff:g></string>
+    <string name="move_to_hotseat_position">移至收藏夹 <xliff:g id="number" example="1">%1$s</xliff:g></string>
     <!-- Accessibility confirmation for item move. -->
-    <string name="item_moved">Item moved</string>
+    <string name="item_moved">已移动项目</string>
     <!-- Accessibility description to move item into an existing folder. -->
-    <string name="add_to_folder">Add to folder: <xliff:g id="name" example="Games">%1$s</xliff:g></string>
+    <string name="add_to_folder">添加到文件夹：<xliff:g id="name" example="Games">%1$s</xliff:g></string>
     <!-- Accessibility description to move item into an existing folder containing an app. -->
-    <string name="add_to_folder_with_app">Add to folder with <xliff:g id="name" example="Messenger">%1$s</xliff:g></string>
+    <string name="add_to_folder_with_app">添加到“<xliff:g id="name" example="Messenger">%1$s</xliff:g>”所在文件夹</string>
     <!-- Accessibility confirmation for item added to folder. -->
-    <string name="added_to_folder">Item added to folder</string>
+    <string name="added_to_folder">项目已添加到文件夹</string>
     <!-- Accessibility description to create folder with another item. -->
-    <string name="create_folder_with">Create folder with: <xliff:g id="name" example="Game">%1$s</xliff:g></string>
+    <string name="create_folder_with">创建“<xliff:g id="name" example="Game">%1$s</xliff:g>”文件夹</string>
     <!-- Accessibility confirmation for folder created. -->
-    <string name="folder_created">Folder created</string>
+    <string name="folder_created">文件夹已创建</string>
     <!-- Accessibility action to move an item from folder to workspace. [CHAR_LIMIT=30] -->
-    <string name="action_move_to_workspace">Move to home screen</string>
+    <string name="action_move_to_workspace">移至主屏幕</string>
     <!-- Accessibility action to resize a widget. [CHAR_LIMIT=30] -->
-    <string name="action_resize">Resize</string>
+    <string name="action_resize">调整大小</string>
     <!-- Accessibility action to increase width of a widget. [CHAR_LIMIT=30] -->
-    <string name="action_increase_width">Increase width</string>
+    <string name="action_increase_width">增加宽度</string>
     <!-- Accessibility action to increase height of a widget. [CHAR_LIMIT=30] -->
-    <string name="action_increase_height">Increase height</string>
+    <string name="action_increase_height">增加高度</string>
     <!-- Accessibility action to decrease width of a widget. [CHAR_LIMIT=30] -->
-    <string name="action_decrease_width">Decrease width</string>
+    <string name="action_decrease_width">减少宽度</string>
     <!-- Accessibility action to decrease height of a widget. [CHAR_LIMIT=30] -->
-    <string name="action_decrease_height">Decrease height</string>
+    <string name="action_decrease_height">减少高度</string>
     <!-- Accessibility confirmation for widget resize. -->
-    <string name="widget_resized">Widget resized to width <xliff:g id="number" example="2">%1$s</xliff:g> height <xliff:g id="number" example="1">%2$s</xliff:g></string>
+    <string name="widget_resized">小部件尺寸已调整为：宽度 <xliff:g id="number" example="2">%1$s</xliff:g>，高度 <xliff:g id="number" example="1">%2$s</xliff:g></string>
     <!-- Accessibility action to show quick actions menu for an icon. [CHAR_LIMIT=30] -->
-    <string name="action_deep_shortcut">Shortcut Menu</string>
+    <string name="action_deep_shortcut">快捷菜单</string>
     <!-- Accessibility name for the app widget resize frame. -->
-    <string name="widget_frame_name">Widget Resize Frame for <xliff:g id="string" example="Clock">%1$s</xliff:g></string>
+    <string name="widget_frame_name"><xliff:g id="string" example="Clock">%1$s</xliff:g> 小部件缩放帧</string>
     <!-- Accessibility action to close the widget resize frame. [CHAR_LIMIT=30] -->
-    <string name="action_close">Close</string>
+    <string name="action_close">关闭</string>
     <!-- Accessibility action to dismiss a notification in the shortcuts menu for an icon. [CHAR_LIMIT=30] -->
-    <string name="action_dismiss_notification">Dismiss</string>
+    <string name="action_dismiss_notification">忽略</string>
     <!-- Content description for arrow tip close button. [CHAR LIMIT=NONE] -->
-    <string name="accessibility_close">Close</string>
+    <string name="accessibility_close">关闭</string>
     <!-- Label of tab to indicate personal apps -->
-    <string name="all_apps_personal_tab">Personal</string>
+    <string name="all_apps_personal_tab">个人</string>
     <!-- Label of tab to indicate work apps -->
     <string name="all_apps_work_tab">工作</string>
     <!-- Content description of personal tab to indicate personal apps -->
-    <string name="all_apps_personal_tab_content_description">Personal apps tab</string>
+    <string name="all_apps_personal_tab_content_description">个人应用标签</string>
     <!-- Content description of work tab to indicate work apps -->
-    <string name="all_apps_work_tab_content_description">Work apps tab</string>
+    <string name="all_apps_work_tab_content_description">工作应用标签</string>
     <!-- This string is in the work profile tab when a user has All Apps open on their phone. This is a label for a toggle to turn the work profile on and off. "Work profile" means a separate profile on a user's phone that's specifically for their work apps and managed by their company. "Work" is used as an adjective.-->
-    <string name="work_profile_toggle_label">Work profile</string>
+    <string name="work_profile_toggle_label">工作资料</string>
     <!--- User onboarding title for work profile apps -->
-    <string name="work_profile_edu_work_apps">Work apps are badged and visible to your IT admin</string>
+    <string name="work_profile_edu_work_apps">工作应用带有标志，您的 IT 管理员可以看到此类应用</string>
     <!-- Info icon unicode for alpha scroller when work edu card is present -->
     <!-- Intent for work profiler scheduler -->
     <!--- heading shown when user opens work apps tab while work apps are paused -->
-    <string name="work_apps_paused_title">Work apps are paused</string>
+    <string name="work_apps_paused_title">工作应用已暂停</string>
     <!--- body shown when user opens work apps tab while work apps are paused.-->
-    <string name="work_apps_paused_info_body">You won’t receive notifications from your work apps</string>
+    <string name="work_apps_paused_info_body">您将不会从您的工作应用接收通知</string>
     <!--- body shown when user opens work apps tab while work apps are paused. -->
-    <string name="work_apps_paused_body">Your work apps can’t send you notifications, use your battery, or access your location</string>
+    <string name="work_apps_paused_body">工作应用无法发送通知、耗电和访问位置信息</string>
     <!--- body shown when user opens work apps tab while work apps are paused and calls and texts are unavailable-->
-    <string name="work_apps_paused_telephony_unavailable_body">You won’t receive phone calls, text messages, or notifications from your work apps</string>
+    <string name="work_apps_paused_telephony_unavailable_body">您将不会收到来自您工作应用的电话、短信或通知</string>
     <!-- string shown in educational banner about work profile -->
-    <string name="work_apps_paused_edu_banner">Work apps are badged and visible to your IT admin</string>
+    <string name="work_apps_paused_edu_banner">工作应用带有标志，您的 IT 管理员可以看到此类应用</string>
     <!-- button string shown to dismiss work tab education -->
-    <string name="work_apps_paused_edu_accept">Got it</string>
+    <string name="work_apps_paused_edu_accept">明白</string>
     <!-- button string shown pause work profile [CHAR LIMIT=28] -->
-    <string name="work_apps_pause_btn_text">Pause work apps</string>
+    <string name="work_apps_pause_btn_text">暂停工作应用</string>
     <!-- button string shown enable work profile -->
-    <string name="work_apps_enable_btn_text">Unpause</string>
+    <string name="work_apps_enable_btn_text">继续</string>
     <!-- Label for the work profile scheduler button in the work profile screen. [CHAR_LIMIT=40] -->
-    <string name="work_scheduler_button_content_description">Work apps schedule</string>
+    <string name="work_scheduler_button_content_description">工作应用计划</string>
     <!-- A hint shown in launcher settings develop options filter box -->
-    <string name="developer_options_filter_hint">Filter</string>
+    <string name="developer_options_filter_hint">筛选</string>
     <!-- Failed action error message: e.g. Failed: Pause -->
-    <string name="remote_action_failed">Failed: <xliff:g id="what" example="Pause">%1$s</xliff:g></string>
+    <string name="remote_action_failed">失败：<xliff:g id="what" example="Pause">%1$s</xliff:g></string>
     <!-- Strings for Private Space -->
     <!-- Private space tile label -->
-    <string name="private_space_label">Private space</string>
+    <string name="private_space_label">私有空间</string>
     <!-- Private space tile secondary label -->
-    <string name="private_space_secondary_label">Tap to set up or open</string>
+    <string name="private_space_secondary_label">点击设置或打开</string>
     <!-- Title for Private Space Container shown at the bottom of all apps drawer -->
-    <string name="ps_container_title">Private</string>
+    <string name="ps_container_title">私用</string>
     <!-- Description for Private Space Settings button -->
-    <string name="ps_container_settings">Private Space Settings</string>
+    <string name="ps_container_settings">私有空间设置</string>
     <!-- Description for Private Space Unlock button -->
-    <string name="ps_container_unlock_button_content_description">Private, unlocked.</string>
+    <string name="ps_container_unlock_button_content_description">私有，已解锁。</string>
     <!-- Description for Private Space Lock button -->
-    <string name="ps_container_lock_button_content_description">Private, locked.</string>
-    <string name="ps_container_lock_title">Lock</string>
+    <string name="ps_container_lock_button_content_description">私有，已锁定。</string>
+    <string name="ps_container_lock_title">锁定</string>
     <!-- Description for Private Space Transition button -->
-    <string name="ps_container_transition">Private Space Transitioning</string>
+    <string name="ps_container_transition">私有空间转换</string>
     <!-- Title for Private Space install app icon -->
-    <string name="ps_add_button_label">Install</string>
+    <string name="ps_add_button_label">安装</string>
     <!-- Title for Private Space app icon to add files and more to Private Space -->
-    <string name="ps_app_label_override">Add</string>
+    <string name="ps_app_label_override">添加</string>
     <!-- Content description for install app icon -->
-    <string name="ps_add_button_content_description">Install apps to Private Space</string>
-    <string name="ps_app_content_description">Add files and more to Private Space</string>
+    <string name="ps_add_button_content_description">安装应用到私有空间</string>
+    <string name="ps_app_content_description">将文件和更多文件添加到私有空间</string>
     <!-- Label for private apps section in private space page -->
-    <string name="ps_private_apps_label">Private apps</string>
+    <string name="ps_private_apps_label">私有应用</string>
     <!-- Label shown when there are no private apps -->
-    <string name="ps_no_private_apps">No private apps</string>
+    <string name="ps_no_private_apps">没有私有应用</string>
     <!-- Label for add app button in private space -->
-    <string name="ps_add_app_button">Add app</string>
+    <string name="ps_add_app_button">添加应用</string>
     <!-- Short label for add app grid icon in private space -->
-    <string name="ps_add_app_short">Add</string>
+    <string name="ps_add_app_short">添加</string>
     <!-- Content description for private space settings button -->
-    <string name="ps_settings_content_description">Private space settings</string>
+    <string name="ps_settings_content_description">私有空间设置</string>
     <!-- Label for unlock button on private space veil -->
     <string name="ps_unlock_button">解锁</string>
-    <string name="folder_delete_title">Delete \"%1$s\"?</string>
-    <string name="folder_delete_message">%1$d apps will return to their default categories.</string>
-    <string name="folder_delete_confirm">Delete</string>
-    <string name="folder_add_title">Add to folder</string>
-    <string name="folder_name_hint">Folder name</string>
-    <string name="folder_create_button">建立</string>
-    <string name="folder_new_button">New folder</string>
-    <string name="folder_remove_button">Remove from folder</string>
-    <string name="folder_rename_title">Rename folder</string>
-    <string name="folder_rename_confirm">Rename</string>
-    <string name="folder_selected_description">Selected</string>
-    <string name="action_cancel">Cancel</string>
-    <string name="action_back">Back</string>
+    <string name="folder_delete_title">删除“%1$s”？</string>
+    <string name="folder_delete_message">%1$d 应用将返回其默认类别。</string>
+    <string name="folder_delete_confirm">删除</string>
+    <string name="folder_add_title">添加到文件夹</string>
+    <string name="folder_name_hint">文件夹名称</string>
+    <string name="folder_create_button">创建</string>
+    <string name="folder_new_button">新建文件夹</string>
+    <string name="folder_remove_button">从文件夹中移除</string>
+    <string name="folder_rename_title">重命名文件夹</string>
+    <string name="folder_rename_confirm">重命名</string>
+    <string name="folder_selected_description">已选择</string>
+    <string name="action_cancel">取消</string>
+    <string name="action_back">返回</string>
     <!-- Strings for icon shapes -->
     <!-- label for circle shape option in customization picker -->
-    <string name="circle_shape_title">Circle</string>
+    <string name="circle_shape_title">环形</string>
     <!-- label for square shape option in customization picker -->
-    <string name="square_shape_title">Square</string>
+    <string name="square_shape_title">矩形</string>
     <!-- label for 4-sided cookie option shape in customization picker -->
-    <string name="four_sided_cookie_shape_title">4-sided cookie</string>
+    <string name="four_sided_cookie_shape_title">4 边形</string>
     <!-- label for 7-sided cookie option shape in customization picker -->
-    <string name="seven_sided_cookie_shape_title">7-sided cookie</string>
+    <string name="seven_sided_cookie_shape_title">7 边形</string>
     <!-- label for arch shape option in customization picker -->
-    <string name="arch_shape_title">Arch</string>
+    <string name="arch_shape_title">拱门</string>
 </resources>
