@@ -528,7 +528,7 @@
     <string name="folder_remove_button">Remove from folder</string>
     <string name="folder_rename_title">Rename folder</string>
     <string name="folder_rename_confirm">Rename</string>
-    <string name="folder_selected_description">Selected</string>
+    <string name="folder_selected_description">已選取</string>
     <string name="action_cancel">Cancel</string>
     <string name="action_back">Back</string>
     <!-- Strings for icon shapes -->
