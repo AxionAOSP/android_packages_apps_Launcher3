@@ -229,18 +229,18 @@
     <string name="custom_icon_picker_title">Select icon pack</string>
     <string name="custom_icon_no_packs">No icon packs installed</string>
     <string name="custom_icon_no_drawables">No icons found in this pack</string>
-    <string name="custom_icon_reset">恢复默认</string>
+    <string name="custom_icon_reset">重設為預設</string>
     <string name="custom_icon_back">Back</string>
     <string name="action_customize_icon">Customize icons</string>
     <string name="icon_pack_picker_title">Customize icons</string>
-    <string name="icon_pack_picker_default">Default</string>
-    <string name="icon_pack_picker_reset">恢复默认</string>
+    <string name="icon_pack_picker_default">預設</string>
+    <string name="icon_pack_picker_reset">重設為預設</string>
     <string name="icon_pack_title">Icon Pack</string>
     <string name="themed_icons_card_title">Themed Icons</string>
     <string name="themed_icons_description">Monochrome icons that adapt to your colors</string>
     <string name="icon_shape_title">Icon Shape</string>
     <string name="themed_icon_pack_title">Themed Icon Pack</string>
-    <string name="themed_icon_pack_none">无</string>
+    <string name="themed_icon_pack_none">無</string>
     <string name="folder_style_picker_title">Folder Style</string>
     <string name="folder_style_quadrant">Quadrant</string>
     <string name="folder_style_grid">Grid</string>
@@ -517,7 +517,7 @@
     <!-- Content description for private space settings button -->
     <string name="ps_settings_content_description">Private space settings</string>
     <!-- Label for unlock button on private space veil -->
-    <string name="ps_unlock_button">解锁</string>
+    <string name="ps_unlock_button">解鎖</string>
     <string name="folder_delete_title">Delete \"%1$s\"?</string>
     <string name="folder_delete_message">%1$d apps will return to their default categories.</string>
     <string name="folder_delete_confirm">Delete</string>
