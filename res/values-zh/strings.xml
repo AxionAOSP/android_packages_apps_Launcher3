@@ -225,21 +225,21 @@
     <string name="action_enlarge">放大</string>
     <string name="action_minimize">縮小</string>
     <string name="action_customize_folder">自訂</string>
-    <string name="custom_icon_shortcut_label">Change icon</string>
-    <string name="custom_icon_picker_title">Select icon pack</string>
-    <string name="custom_icon_no_packs">No icon packs installed</string>
-    <string name="custom_icon_no_drawables">No icons found in this pack</string>
+    <string name="custom_icon_shortcut_label">變更圖示</string>
+    <string name="custom_icon_picker_title">選取圖示包</string>
+    <string name="custom_icon_no_packs">未安裝任何圖示包</string>
+    <string name="custom_icon_no_drawables">此圖示包中找不到圖示</string>
     <string name="custom_icon_reset">重設為預設</string>
-    <string name="custom_icon_back">Back</string>
-    <string name="action_customize_icon">Customize icons</string>
-    <string name="icon_pack_picker_title">Customize icons</string>
+    <string name="custom_icon_back">返回</string>
+    <string name="action_customize_icon">自訂圖示</string>
+    <string name="icon_pack_picker_title">自訂圖示</string>
     <string name="icon_pack_picker_default">預設</string>
     <string name="icon_pack_picker_reset">重設為預設</string>
-    <string name="icon_pack_title">Icon Pack</string>
-    <string name="themed_icons_card_title">Themed Icons</string>
-    <string name="themed_icons_description">Monochrome icons that adapt to your colors</string>
-    <string name="icon_shape_title">Icon Shape</string>
-    <string name="themed_icon_pack_title">Themed Icon Pack</string>
+    <string name="icon_pack_title">圖示包</string>
+    <string name="themed_icons_card_title">主題圖示</string>
+    <string name="themed_icons_description">單色圖示，自動配合你的色彩</string>
+    <string name="icon_shape_title">圖示形狀</string>
+    <string name="themed_icon_pack_title">主題圖示包</string>
     <string name="themed_icon_pack_none">無</string>
     <string name="folder_style_picker_title">資料夾樣式</string>
     <string name="folder_style_quadrant">四宮格</string>
@@ -306,11 +306,11 @@
     <!-- Folder name format when folder has less than 4 items -->
     <string name="folder_name_format_exact">資料夾：<xliff:g id="name" example="Games">%1$s</xliff:g>， <xliff:g id="size" example="2">%2$d</xliff:g> 個項目</string>
     <!-- Folder name format when folder has less than 4 items and a notification dot -->
-    <string name="folder_name_format_exact_with_dot">Folder: <xliff:g id="name" example="Games">%1$s</xliff:g>, <xliff:g id="size" example="2">%2$d</xliff:g> items, has notifications</string>
+    <string name="folder_name_format_exact_with_dot">資料夾：<xliff:g id="name" example="Games">%1$s</xliff:g>，內含 <xliff:g id="size" example="2">%2$d</xliff:g> 個項目，有通知</string>
     <!-- Folder name format when folder has 4 or more items shown in preview-->
     <string name="folder_name_format_overflow">資料夾：<xliff:g id="name" example="Games">%1$s</xliff:g>，<xliff:g id="size" example="2">%2$d</xliff:g> 個以上的項目</string>
     <!-- Folder name format when folder has 4 or more items shown in preview and a notification dot -->
-    <string name="folder_name_format_overflow_with_dot">Folder: <xliff:g id="name" example="Games">%1$s</xliff:g>, <xliff:g id="size" example="2">%2$d</xliff:g> or more items, has notifications</string>
+    <string name="folder_name_format_overflow_with_dot">資料夾：<xliff:g id="name" example="Games">%1$s</xliff:g>，內含至少 <xliff:g id="size" example="2">%2$d</xliff:g> 個項目，有通知</string>
     <!-- Accessibility announement for unnamed folders -->
     <string name="unnamed_folder">未命名的資料夾</string>
     <!-- App pair accessibility -->
@@ -502,30 +502,30 @@
     <string name="ps_add_button_content_description">將應用程式安裝在私人空間</string>
     <string name="ps_app_content_description">將檔案和其他內容新增到私人空間</string>
     <!-- Label for private apps section in private space page -->
-    <string name="ps_private_apps_label">Private apps</string>
+    <string name="ps_private_apps_label">私人應用程式</string>
     <!-- Label shown when there are no private apps -->
-    <string name="ps_no_private_apps">No private apps</string>
+    <string name="ps_no_private_apps">沒有私人應用程式</string>
     <!-- Label for add app button in private space -->
-    <string name="ps_add_app_button">Add app</string>
+    <string name="ps_add_app_button">新增應用程式</string>
     <!-- Short label for add app grid icon in private space -->
     <string name="ps_add_app_short">新增</string>
     <!-- Content description for private space settings button -->
-    <string name="ps_settings_content_description">Private space settings</string>
+    <string name="ps_settings_content_description">私人空間設定</string>
     <!-- Label for unlock button on private space veil -->
     <string name="ps_unlock_button">解鎖</string>
-    <string name="folder_delete_title">Delete \"%1$s\"?</string>
-    <string name="folder_delete_message">%1$d apps will return to their default categories.</string>
-    <string name="folder_delete_confirm">Delete</string>
-    <string name="folder_add_title">Add to folder</string>
-    <string name="folder_name_hint">Folder name</string>
+    <string name="folder_delete_title">刪除「%1$s」？</string>
+    <string name="folder_delete_message">%1$d 個應用程式將回到預設分類。</string>
+    <string name="folder_delete_confirm">刪除</string>
+    <string name="folder_add_title">新增至資料夾</string>
+    <string name="folder_name_hint">資料夾名稱</string>
     <string name="folder_create_button">建立</string>
-    <string name="folder_new_button">New folder</string>
-    <string name="folder_remove_button">Remove from folder</string>
-    <string name="folder_rename_title">Rename folder</string>
-    <string name="folder_rename_confirm">Rename</string>
+    <string name="folder_new_button">新資料夾</string>
+    <string name="folder_remove_button">從資料夾中移除</string>
+    <string name="folder_rename_title">重新命名資料夾</string>
+    <string name="folder_rename_confirm">重新命名</string>
     <string name="folder_selected_description">已選取</string>
-    <string name="action_cancel">Cancel</string>
-    <string name="action_back">Back</string>
+    <string name="action_cancel">取消</string>
+    <string name="action_back">返回</string>
     <!-- Strings for icon shapes -->
     <!-- label for circle shape option in customization picker -->
     <string name="circle_shape_title">圓形</string>
