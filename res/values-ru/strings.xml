@@ -21,7 +21,7 @@
     <!-- Application name -->
     <string name="app_name">Рабочий стол</string>
     <!-- Work folder name -->
-    <string name="work_folder_name">Работа</string>
+    <string name="work_folder_name">Рабочий профиль</string>
     <!-- Displayed when user selects a shortcut for an app that was uninstalled [CHAR_LIMIT=none]-->
     <string name="activity_not_found">Приложение не установлено.</string>
     <!-- Displayed when user selects a shortcut for an app that is current not available [CHAR_LIMIT=none]-->
@@ -42,7 +42,7 @@
     <string name="recent_task_option_aspect_ratio">Изменить соотношение сторон</string>
     <string name="split_app_info_accessibility">Сведения о приложении \"%1$s\"</string>
     <string name="split_app_usage_settings">Настройки использования приложения \"%1$s\"</string>
-    <string name="close_task_accessibility">Close %1$s</string>
+    <string name="close_task_accessibility">Закрыть %1$s</string>
     <!-- Title for an option to open a new window for a given app   -->
     <string name="new_window_option_taskbar">Новое окно</string>
     <!-- Title for an option to manage open windows for a given app   -->
@@ -140,7 +140,7 @@
     <!-- Tab label. A user can tap this tab to access their personal widgets. [CHAR_LIMIT=25] -->
     <string name="widgets_full_sheet_personal_tab">Личные виджеты</string>
     <!-- Tab label. A user can tap this tab to access their work widgets. [CHAR_LIMIT=25] -->
-    <string name="widgets_full_sheet_work_tab">Работа</string>
+    <string name="widgets_full_sheet_work_tab">Рабочий профиль</string>
     <!-- A widget category label for grouping widgets related to conversations. [CHAR_LIMIT=30] -->
     <string name="widget_category_conversations">Разговоры</string>
     <!-- A widget category label for grouping widgets related to note taking. [CHAR_LIMIT=30] -->
@@ -170,7 +170,7 @@
     <!-- Search bar text in the apps view. [CHAR_LIMIT=50] -->
     <string name="all_apps_search_bar_hint">Поиск приложений</string>
     <!-- Loading apps text. [CHAR_LIMIT=50] -->
-    <string name="all_apps_loading_message">Загрузка приложений…</string>
+    <string name="all_apps_loading_message">Загрузка приложений</string>
     <!-- No-search-results text. [CHAR_LIMIT=50] -->
     <string name="all_apps_no_search_results">Не найдено приложений по запросу \"<xliff:g id="query" example="Android">%1$s</xliff:g>\"</string>
     <!-- Label for an icon representing any generic app. [CHAR_LIMIT=50] -->
@@ -183,11 +183,11 @@
     <string name="notifications_header">Уведомления</string>
     <!-- Drag and drop -->
     <!-- Message to tell the user to press and hold on a shortcut to add it [CHAR_LIMIT=50] -->
-    <string name="long_press_shortcut_to_add">Нажмите и удерживайте для переноса ярлыка.</string>
+    <string name="long_press_shortcut_to_add">Нажмите и удерживайте для переноса ярлыка</string>
     <!-- Accessibility spoken hint message in deep shortcut menu, which allows user to add a shortcut. Custom action is the label for additional accessibility actions available in this mode [CHAR_LIMIT=200] -->
-    <string name="long_accessible_way_to_add_shortcut">Чтобы использовать специальные действия или перенести ярлык, нажмите на него дважды и удерживайте.</string>
+    <string name="long_accessible_way_to_add_shortcut">Двойное нажатие и удержание позволяют переместить ярлык или использовать пользовательские действия.</string>
     <!-- Error message when a user can't add more apps, widgets, or shortcuts to a Home screen. -->
-    <string name="out_of_space">На главном экране нет свободного места.</string>
+    <string name="out_of_space">На главном экране нет свободного места</string>
     <!-- Error message when user has filled the hotseat -->
     <string name="hotseat_out_of_space">В разделе \"Избранное\" больше нет места</string>
     <!-- All applications label -->
@@ -219,27 +219,27 @@
     <!-- Label for widget settings shows in the long press menu for widgets. [CHAR_LIMIT=20] -->
     <string name="widget_settings">Настройки</string>
     <!-- Label for pinning an item to the taskbar. [CHAR_LIMIT=20] -->
-    <string name="pin_to_taskbar">Pin to Taskbar</string>
+    <string name="pin_to_taskbar">Закрепить на панели задач</string>
     <!-- Label for unpinning an item from the taskbar. [CHAR_LIMIT=20] -->
-    <string name="unpin_from_taskbar">Unpin from Taskbar</string>
+    <string name="unpin_from_taskbar">Открепить от панели задач</string>
     <string name="action_enlarge">Развернуть</string>
     <string name="action_minimize">Свернуть</string>
     <string name="action_customize_folder">Кастомизация</string>
-    <string name="custom_icon_shortcut_label">Change icon</string>
-    <string name="custom_icon_picker_title">Select icon pack</string>
-    <string name="custom_icon_no_packs">No icon packs installed</string>
-    <string name="custom_icon_no_drawables">No icons found in this pack</string>
+    <string name="custom_icon_shortcut_label">Изменить иконку</string>
+    <string name="custom_icon_picker_title">Выбрать набор иконок</string>
+    <string name="custom_icon_no_packs">Наборы иконок не установлены</string>
+    <string name="custom_icon_no_drawables">Иконки не найдены в этом наборе</string>
     <string name="custom_icon_reset">Сброс по умолчанию</string>
     <string name="custom_icon_back">Назад</string>
-    <string name="action_customize_icon">Customize icons</string>
-    <string name="icon_pack_picker_title">Customize icons</string>
+    <string name="action_customize_icon">Настроить иконки</string>
+    <string name="icon_pack_picker_title">Настроить иконки</string>
     <string name="icon_pack_picker_default">По умолчанию</string>
     <string name="icon_pack_picker_reset">Сброс по умолчанию</string>
-    <string name="icon_pack_title">Icon Pack</string>
-    <string name="themed_icons_card_title">Themed Icons</string>
-    <string name="themed_icons_description">Monochrome icons that adapt to your colors</string>
-    <string name="icon_shape_title">Icon Shape</string>
-    <string name="themed_icon_pack_title">Themed Icon Pack</string>
+    <string name="icon_pack_title">Набор иконок</string>
+    <string name="themed_icons_card_title">Тематические иконки</string>
+    <string name="themed_icons_description">Монохромные иконки, адаптированные к вашим цветам</string>
+    <string name="icon_shape_title">Форма иконок</string>
+    <string name="themed_icon_pack_title">Тематический набор иконок</string>
     <string name="themed_icon_pack_none">Отсутствует</string>
     <string name="folder_style_picker_title">Стиль папки</string>
     <string name="folder_style_quadrant">Квадрат</string>
@@ -249,24 +249,24 @@
     <string name="folder_cover_text_hint">Эмодзи</string>
     <!-- Permissions: -->
     <!-- Permission short label -->
-    <string name="permlab_install_shortcut">Создание ярлыков</string>
+    <string name="permlab_install_shortcut">Установка ярлыков</string>
     <!-- Permission description -->
     <string name="permdesc_install_shortcut">Приложение сможет самостоятельно добавлять ярлыки.</string>
     <!-- Permission short label -->
-    <string name="permlab_read_settings">Доступ к данным о настройках и ярлыках на главном экране</string>
+    <string name="permlab_read_settings">Доступ к настройкам и ярлыкам главного экрана</string>
     <!-- Permission description -->
     <string name="permdesc_read_settings">Приложение получит доступ к данным о настройках и ярлыках на главном экране.</string>
     <!-- Permission short label -->
-    <string name="permlab_write_settings">Изменение настроек и ярлыков на главном экране</string>
+    <string name="permlab_write_settings">Изменение настроек и ярлыков главного экрана</string>
     <!-- Permission description -->
     <string name="permdesc_write_settings">Приложение сможет изменять настройки и ярлыки на главном экране.</string>
     <!-- Widgets: -->
     <!-- Error text that lets a user know that the widget can't load. -->
-    <string name="gadget_error_text">Не удается загрузить виджет.</string>
+    <string name="gadget_error_text">Не удается загрузить виджет</string>
     <!-- Button text. This button lets a user change a widget's settings. -->
     <string name="gadget_setup_text">Настройки виджета</string>
     <!-- Instructional text to encourage a user to finish setting up the widget. -->
-    <string name="gadget_complete_setup_text">Нажмите, чтобы завершить настройку.</string>
+    <string name="gadget_complete_setup_text">Нажмите, чтобы завершить настройку</string>
     <!-- Text to inform the user that they can't uninstall a system application -->
     <string name="uninstall_system_app_text">Это системное приложение, его нельзя удалить.</string>
     <!-- Default folder title -->
@@ -279,11 +279,11 @@
     <!-- The format string for when an app has a notification dot (meaning it has associated notifications). [ICU_FORMAT]-->
     <string name="dotted_app_label">{count, plural, =1 {{app_name}: # уведомление} other {{app_name}: # уведомлений}}    </string>
     <!-- content description for hotseat items -->
-    <string name="hotseat_prediction_content_description">Predicted app: <xliff:g id="title" example="Chrome">%1$s</xliff:g></string>
+    <string name="hotseat_prediction_content_description">Рекомендуемое приложение: <xliff:g id="title" example="Chrome">%1$s</xliff:g></string>
     <!-- The format string for default page scroll text [CHAR_LIMIT=none] -->
     <string name="default_scroll_format">Стр. %1$d из %2$d</string>
     <!-- The format string for Workspace page scroll text [CHAR_LIMIT=none] -->
-    <string name="workspace_scroll_format">Главный экран %1$d из %2$d</string>
+    <string name="workspace_scroll_format">Главный экран %1$d / %2$d</string>
     <!-- Description for a new page on homescreen[CHAR_LIMIT=none] -->
     <string name="workspace_new_page">Новый экран</string>
     <string name="app_running_state_description">Активно</string>
@@ -302,11 +302,11 @@
     <!-- Folder name format when folder has less than 4 items -->
     <string name="folder_name_format_exact">Папка: <xliff:g id="name" example="Games">%1$s</xliff:g>, <xliff:g id="size" example="2">%2$d</xliff:g> объектов</string>
     <!-- Folder name format when folder has less than 4 items and a notification dot -->
-    <string name="folder_name_format_exact_with_dot">Folder: <xliff:g id="name" example="Games">%1$s</xliff:g>, <xliff:g id="size" example="2">%2$d</xliff:g> items, has notifications</string>
+    <string name="folder_name_format_exact_with_dot">Папка: <xliff:g id="name" example="Games">%1$s</xliff:g>, <xliff:g id="size" example="2">%2$d</xliff:g> элементов имеет уведомления</string>
     <!-- Folder name format when folder has 4 or more items shown in preview-->
     <string name="folder_name_format_overflow">Папка: <xliff:g id="name" example="Games">%1$s</xliff:g>, <xliff:g id="size" example="2">%2$d</xliff:g> и более объектов</string>
     <!-- Folder name format when folder has 4 or more items shown in preview and a notification dot -->
-    <string name="folder_name_format_overflow_with_dot">Folder: <xliff:g id="name" example="Games">%1$s</xliff:g>, <xliff:g id="size" example="2">%2$d</xliff:g> or more items, has notifications</string>
+    <string name="folder_name_format_overflow_with_dot">Папка: <xliff:g id="name" example="Games">%1$s</xliff:g>, <xliff:g id="size" example="2">%2$d</xliff:g> или более элементов имеет уведомления</string>
     <!-- Accessibility announement for unnamed folders -->
     <string name="unnamed_folder">Папка без названия</string>
     <!-- App pair accessibility -->
@@ -345,7 +345,7 @@
     <!-- Summary for Notification dots setting. Tapping this will link enable/disable notification dots feature on the home screen. [CHAR LIMIT=50] -->
     <string name="notification_dots_service_title">Показывать значки уведомлений</string>
     <!-- Title for Developer Options setting. [CHAR LIMIT=50] -->
-    <string name="developer_options_title">Для разработчиков</string>
+    <string name="developer_options_title">Параметры разработчика</string>
     <!-- Label for the setting that allows the automatic placement of launcher shortcuts for applications and games installed on the device [CHAR LIMIT=60] -->
     <string name="auto_add_shortcuts_label">Добавлять значки приложений на главный экран</string>
     <!-- Text description of the setting that allows the automatic placement of launcher shortcuts for applications and games installed on the device [CHAR LIMIT=NONE] -->
@@ -360,7 +360,7 @@
     <string name="abandoned_promises_title">Приложение не установлено</string>
     <!-- Explanation for abandoned promise dialog. "The first 'it' refers to the shortcut icon.
     The second "it" refers to the app. -->
-    <string name="abandoned_promise_explanation">Приложение не установлено. Вы можете удалить значок или найти приложение и установить его вручную.</string>
+    <string name="abandoned_promise_explanation">Приложение для этого значка не установлена.         Вы можете удалить его, или искать приложение и установить его вручную.     </string>
     <!-- Title for an app which is being installed. -->
     <string name="app_installing_title">Установка <xliff:g id="name" example="Messenger">%1$s</xliff:g>, завершено <xliff:g id="progress" example="30%">%2$s</xliff:g></string>
     <!-- Title for an app which is being downloaded. -->
@@ -370,7 +370,7 @@
     <!-- Title for an app which is archived. -->
     <string name="app_archived_title">Архивировано: <xliff:g id="name" example="Messenger">%1$s</xliff:g>.</string>
     <!-- Accessibility Action for an app which is archived. -->
-    <string name="app_unarchiving_action">скачать и восстановить</string>
+    <string name="app_unarchiving_action">Загрузить и восстановить</string>
     <!-- Title shown on the alert dialog prompting the user to update the application in market
      in order to re-enable the disabled shortcuts -->
     <string name="dialog_update_title">Обновите приложение</string>
@@ -391,7 +391,7 @@
     <!-- Accessibility action to move item to the current location. [CHAR_LIMIT=30] -->
     <string name="action_move_here">Переместить элемент сюда</string>
     <!-- Accessibility confirmation for item removed. [CHAR_LIMIT=50]-->
-    <string name="item_removed">Объект убран.</string>
+    <string name="item_removed">Объект убран</string>
     <!-- Action shown in snackbar to undo item removal. [CHAR_LIMIT=20] -->
     <string name="undo">Отменить</string>
     <!-- Accessibility action to move an item on the workspace. [CHAR_LIMIT=30] -->
@@ -403,17 +403,17 @@
     <!-- Accessibility description to move item to the hotseat. -->
     <string name="move_to_hotseat_position">Переместить в позицию избранных <xliff:g id="number" example="1">%1$s</xliff:g></string>
     <!-- Accessibility confirmation for item move. -->
-    <string name="item_moved">Элемент перемещен.</string>
+    <string name="item_moved">Элемент перемещен</string>
     <!-- Accessibility description to move item into an existing folder. -->
     <string name="add_to_folder">Добавить в папку: <xliff:g id="name" example="Games">%1$s</xliff:g></string>
     <!-- Accessibility description to move item into an existing folder containing an app. -->
     <string name="add_to_folder_with_app">Добавить в папку с приложением <xliff:g id="name" example="Messenger">%1$s</xliff:g></string>
     <!-- Accessibility confirmation for item added to folder. -->
-    <string name="added_to_folder">Элемент добавлен в папку.</string>
+    <string name="added_to_folder">Элемент добавлен в папку</string>
     <!-- Accessibility description to create folder with another item. -->
     <string name="create_folder_with">Создать папку с приложением <xliff:g id="name" example="Game">%1$s</xliff:g></string>
     <!-- Accessibility confirmation for folder created. -->
-    <string name="folder_created">Папка создана.</string>
+    <string name="folder_created">Папка создана</string>
     <!-- Accessibility action to move an item from folder to workspace. [CHAR_LIMIT=30] -->
     <string name="action_move_to_workspace">Переместить на главный экран</string>
     <!-- Accessibility action to resize a widget. [CHAR_LIMIT=30] -->
@@ -441,7 +441,7 @@
     <!-- Label of tab to indicate personal apps -->
     <string name="all_apps_personal_tab">Личные виджеты</string>
     <!-- Label of tab to indicate work apps -->
-    <string name="all_apps_work_tab">Работа</string>
+    <string name="all_apps_work_tab">Рабочий профиль</string>
     <!-- Content description of personal tab to indicate personal apps -->
     <string name="all_apps_personal_tab_content_description">Вкладка \"Личные приложения\"</string>
     <!-- Content description of work tab to indicate work apps -->
@@ -449,21 +449,21 @@
     <!-- This string is in the work profile tab when a user has All Apps open on their phone. This is a label for a toggle to turn the work profile on and off. "Work profile" means a separate profile on a user's phone that's specifically for their work apps and managed by their company. "Work" is used as an adjective.-->
     <string name="work_profile_toggle_label">Рабочий профиль</string>
     <!--- User onboarding title for work profile apps -->
-    <string name="work_profile_edu_work_apps">У рабочих приложений есть специальный значок. Они видны системному администратору.</string>
+    <string name="work_profile_edu_work_apps">У рабочих приложений есть специальный значок. Они видны системному администратору</string>
     <!-- Info icon unicode for alpha scroller when work edu card is present -->
     <!-- Intent for work profiler scheduler -->
     <!--- heading shown when user opens work apps tab while work apps are paused -->
     <string name="work_apps_paused_title">Рабочие приложения приостановлены</string>
     <!--- body shown when user opens work apps tab while work apps are paused.-->
-    <string name="work_apps_paused_info_body">Вы не будете получать уведомления от рабочих приложений.</string>
+    <string name="work_apps_paused_info_body">Вы не будете получать уведомления от рабочих приложений</string>
     <!--- body shown when user opens work apps tab while work apps are paused. -->
-    <string name="work_apps_paused_body">Рабочие приложения не могут отправлять уведомления, расходовать заряд батареи и получать доступ к данным о вашем местоположении.</string>
+    <string name="work_apps_paused_body">Рабочие приложения не могут отправлять уведомления, расходовать заряд батареи и получать доступ к данным о вашем местоположении</string>
     <!--- body shown when user opens work apps tab while work apps are paused and calls and texts are unavailable-->
-    <string name="work_apps_paused_telephony_unavailable_body">Вы не будете получать вызовы, текстовые сообщения и уведомления от рабочих приложений.</string>
+    <string name="work_apps_paused_telephony_unavailable_body">Вы не будете получать вызовы, текстовые сообщения и уведомления от рабочих приложений</string>
     <!-- string shown in educational banner about work profile -->
-    <string name="work_apps_paused_edu_banner">У рабочих приложений есть специальный значок. Они видны системному администратору.</string>
+    <string name="work_apps_paused_edu_banner">У рабочих приложений есть специальный значок. Они видны системному администратору</string>
     <!-- button string shown to dismiss work tab education -->
-    <string name="work_apps_paused_edu_accept">ОК</string>
+    <string name="work_apps_paused_edu_accept">Ок</string>
     <!-- button string shown pause work profile [CHAR LIMIT=28] -->
     <string name="work_apps_pause_btn_text">Приостановить рабочие приложения</string>
     <!-- button string shown enable work profile -->
@@ -498,27 +498,27 @@
     <string name="ps_add_button_content_description">Установить приложения в личном пространстве</string>
     <string name="ps_app_content_description">Добавляйте в частное пространство файлы и многое другое</string>
     <!-- Label for private apps section in private space page -->
-    <string name="ps_private_apps_label">Private apps</string>
+    <string name="ps_private_apps_label">Приватные приложения</string>
     <!-- Label shown when there are no private apps -->
-    <string name="ps_no_private_apps">No private apps</string>
+    <string name="ps_no_private_apps">Нет приватных приложений</string>
     <!-- Label for add app button in private space -->
-    <string name="ps_add_app_button">Add app</string>
+    <string name="ps_add_app_button">Добавить приложение</string>
     <!-- Short label for add app grid icon in private space -->
     <string name="ps_add_app_short">Добавить</string>
     <!-- Content description for private space settings button -->
-    <string name="ps_settings_content_description">Private space settings</string>
+    <string name="ps_settings_content_description">Настройки приватного пространства</string>
     <!-- Label for unlock button on private space veil -->
     <string name="ps_unlock_button">Разблокировать</string>
-    <string name="folder_delete_title">Delete \"%1$s\"?</string>
-    <string name="folder_delete_message">%1$d apps will return to their default categories.</string>
+    <string name="folder_delete_title">Удалить \"%1$s\"?</string>
+    <string name="folder_delete_message">Приложения (%1$d) вернутся в свои категории по умолчанию.</string>
     <string name="folder_delete_confirm">Удалить</string>
-    <string name="folder_add_title">Add to folder</string>
-    <string name="folder_name_hint">Folder name</string>
+    <string name="folder_add_title">Добавить в папку</string>
+    <string name="folder_name_hint">Название папки</string>
     <string name="folder_create_button">Создать</string>
-    <string name="folder_new_button">New folder</string>
-    <string name="folder_remove_button">Remove from folder</string>
-    <string name="folder_rename_title">Rename folder</string>
-    <string name="folder_rename_confirm">Rename</string>
+    <string name="folder_new_button">Новая папка</string>
+    <string name="folder_remove_button">Удалить из папки</string>
+    <string name="folder_rename_title">Переименовать папку</string>
+    <string name="folder_rename_confirm">Переименовать</string>
     <string name="folder_selected_description">Выбрано</string>
     <string name="action_cancel">Отмена</string>
     <string name="action_back">Назад</string>
@@ -528,9 +528,9 @@
     <!-- label for square shape option in customization picker -->
     <string name="square_shape_title">Квадрат</string>
     <!-- label for 4-sided cookie option shape in customization picker -->
-    <string name="four_sided_cookie_shape_title">Печенье (четыре стороны)</string>
+    <string name="four_sided_cookie_shape_title">4-стороннее печенье</string>
     <!-- label for 7-sided cookie option shape in customization picker -->
-    <string name="seven_sided_cookie_shape_title">Печенье (семь сторон)</string>
+    <string name="seven_sided_cookie_shape_title">7-стороннее печенье</string>
     <!-- label for arch shape option in customization picker -->
     <string name="arch_shape_title">Арка</string>
 </resources>
