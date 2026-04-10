@@ -38,4 +38,5 @@ data class IconConfig(val themed: Boolean = false, val version: Int = 0)
 val LocalAllAppsInteractions = compositionLocalOf { AllAppsInteractions() }
 val LocalPagerSwiping = compositionLocalOf { false }
 val LocalIconConfig = compositionLocalOf { IconConfig() }
+val LocalSectionId = compositionLocalOf { "unknown" }
 

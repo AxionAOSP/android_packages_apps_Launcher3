@@ -30,6 +30,11 @@ import com.android.launcher3.allapps.compose.shared.model.ComposeIconInfo
 
 private val windowLocCache = IntArray(2)
 
+private class LayoutCoordsHolder {
+    var icon: LayoutCoordinates? = null
+    var column: LayoutCoordinates? = null
+}
+
 @Composable
 fun AllAppsComposeAppIcon(
     appInfo: AppInfo,
@@ -48,6 +53,7 @@ fun AllAppsComposeAppIcon(
     modifier: Modifier = Modifier
 ) {
     val isPagerSwiping = LocalPagerSwiping.current
+    val sectionId = LocalSectionId.current
     val context = LocalContext.current
     val density = LocalDensity.current
     val view = LocalView.current
@@ -71,8 +77,7 @@ fun AllAppsComposeAppIcon(
 
     val iconDrawable = AllAppsIconProvider.rememberAppIcon(appInfo, effectiveIconSizePx)
 
-    var iconLayoutCoordinates by remember { mutableStateOf<LayoutCoordinates?>(null) }
-    var columnLayoutCoordinates by remember { mutableStateOf<LayoutCoordinates?>(null) }
+    val layoutCoords = remember { LayoutCoordsHolder() }
 
     fun getScreenOffset(): Offset {
         view.rootView.getLocationOnScreen(windowLocCache)
@@ -80,7 +85,7 @@ fun AllAppsComposeAppIcon(
     }
 
     fun getIconBoundsOnScreen(): RectF {
-        val coords = iconLayoutCoordinates
+        val coords = layoutCoords.icon
         if (coords == null || !coords.isAttached) {
             return RectF(0f, 0f, effectiveIconSizePx.toFloat(), effectiveIconSizePx.toFloat())
         }
@@ -102,6 +107,7 @@ fun AllAppsComposeAppIcon(
         val activityContext: ActivityContext = ActivityContext.lookupContext(context)
 
         hostView.tag = appInfo
+        hostView.sectionId = sectionId
         hostView.iconDrawable = iconDrawable
         hostView.setIconBounds(Rect(0, 0, effectiveIconSizePx, effectiveIconSizePx))
         hostView.setIconSizePx(effectiveIconSizePx)
@@ -159,7 +165,7 @@ fun AllAppsComposeAppIcon(
             .then(heightModifier)
             .width(cellWidth)
             .onGloballyPositioned { coords ->
-                columnLayoutCoordinates = coords
+                layoutCoords.column = coords
             }
             .pointerInput(Unit) {
                 awaitEachGesture {
@@ -193,7 +199,7 @@ fun AllAppsComposeAppIcon(
                                 change.consume()
 
                                 lastScreenPos = change.position.let { pos ->
-                                    val coords = columnLayoutCoordinates
+                                    val coords = layoutCoords.column
                                     val screenOffset = getScreenOffset()
                                     if (coords != null && coords.isAttached) {
                                         val windowPos = coords.localToWindow(pos)
@@ -248,11 +254,15 @@ fun AllAppsComposeAppIcon(
             modifier = Modifier
                 .size(iconSizeDp)
                 .onGloballyPositioned { coords ->
-                    iconLayoutCoordinates = coords
+                    layoutCoords.icon = coords
                 }
                 .drawBehind {
-                    val hidden = controller?.hiddenIconComponent
-                    if (hidden == null || hidden != componentName) {
+                    val hiddenComp = controller?.hiddenIconComponent
+                    val hiddenSect = controller?.hiddenIconSection
+                    val isHidden = hiddenComp != null
+                        && hiddenComp == componentName
+                        && hiddenSect == sectionId
+                    if (!isHidden) {
                         iconDrawable.setBounds(0, 0, size.width.toInt(), size.height.toInt())
                         iconDrawable.draw(drawContext.canvas.nativeCanvas)
                     }

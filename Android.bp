@@ -323,6 +323,7 @@ quickstep_compose_java_defaults {
                 "androidx.compose.ui_ui-tooling-preview",
                 "androidx.compose.ui_ui-tooling",
                 "PlatformComposeCore",
+                "PlatformComposeSceneTransitionLayout",
                 "androidx.compose.ui_ui",
                 "androidx.compose.foundation_foundation",
                 "androidx.compose.foundation_foundation-layout",

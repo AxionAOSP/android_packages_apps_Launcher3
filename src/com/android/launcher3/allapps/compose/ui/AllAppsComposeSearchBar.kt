@@ -16,10 +16,9 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.input.ImeAction
-import androidx.compose.ui.text.input.TextFieldValue
-import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -39,13 +38,6 @@ fun AllAppsComposeSearchBar(
     hasTopResult: Boolean = false
 ) {
     val focusRequester = remember { FocusRequester() }
-    var textFieldValue by remember { mutableStateOf(TextFieldValue(query, TextRange(query.length))) }
-
-    LaunchedEffect(query) {
-        if (query != textFieldValue.text) {
-            textFieldValue = TextFieldValue(query, TextRange(query.length))
-        }
-    }
 
     LaunchedEffect(focusTrigger) {
         if (shouldAutoFocus && focusTrigger > 0) {
@@ -58,6 +50,14 @@ fun AllAppsComposeSearchBar(
             .fillMaxWidth()
             .navigationBarsPadding()
             .imePadding()
+            .pointerInput(Unit) {
+                awaitPointerEventScope {
+                    while (true) {
+                        val event = awaitPointerEvent()
+                        event.changes.forEach { it.consume() }
+                    }
+                }
+            }
     ) {
         Row(
             modifier = Modifier
@@ -77,7 +77,7 @@ fun AllAppsComposeSearchBar(
             Spacer(modifier = Modifier.width(12.dp))
 
             Box(modifier = Modifier.weight(1f)) {
-                if (textFieldValue.text.isEmpty()) {
+                if (query.isEmpty()) {
                     Text(
                         text = placeholder,
                         style = MaterialTheme.typography.bodyLarge,
@@ -85,14 +85,8 @@ fun AllAppsComposeSearchBar(
                     )
                 }
                 BasicTextField(
-                    value = textFieldValue,
-                    onValueChange = { newValue ->
-                        val prevText = textFieldValue.text
-                        textFieldValue = newValue
-                        if (newValue.text != prevText) {
-                            onQueryChange(newValue.text)
-                        }
-                    },
+                    value = query,
+                    onValueChange = onQueryChange,
                     textStyle = TextStyle(
                         fontSize = 16.sp,
                         color = MaterialTheme.colorScheme.onSurface
@@ -103,8 +97,8 @@ fun AllAppsComposeSearchBar(
                         imeAction = if (hasTopResult) ImeAction.Go else ImeAction.Search
                     ),
                     keyboardActions = KeyboardActions(
-                        onSearch = { onSearchSubmit(textFieldValue.text) },
-                        onGo = { onSearchSubmit(textFieldValue.text) }
+                        onSearch = { onSearchSubmit(query) },
+                        onGo = { onSearchSubmit(query) }
                     ),
                     modifier = Modifier
                         .fillMaxWidth()
@@ -112,7 +106,7 @@ fun AllAppsComposeSearchBar(
                 )
             }
 
-            if (textFieldValue.text.isNotEmpty()) {
+            if (query.isNotEmpty()) {
                 Spacer(modifier = Modifier.width(8.dp))
                 IconButton(
                     onClick = onClearQuery,

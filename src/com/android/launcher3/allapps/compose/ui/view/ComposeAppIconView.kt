@@ -23,6 +23,7 @@ import com.android.launcher3.model.data.ItemInfo
 class ComposeAppIconView(context: Context) : View(context), DraggableView, FloatingIconViewCompanion {
 
     var controller: AllAppsComposeController? = null
+    var sectionId: String? = null
 
     var iconDrawable: Drawable? = null
         set(value) {
@@ -69,9 +70,13 @@ class ComposeAppIconView(context: Context) : View(context), DraggableView, Float
     override fun setIconVisible(visible: Boolean) {
         val ctrl = controller ?: return
         if (!visible) {
-            (tag as? ItemInfo)?.getTargetComponent()?.let { ctrl.hiddenIconComponent = it }
+            (tag as? ItemInfo)?.getTargetComponent()?.let {
+                ctrl.hiddenIconComponent = it
+                ctrl.hiddenIconSection = sectionId
+            }
         } else {
             ctrl.hiddenIconComponent = null
+            ctrl.hiddenIconSection = null
         }
         Snapshot.sendApplyNotifications()
     }

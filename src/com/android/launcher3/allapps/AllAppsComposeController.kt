@@ -130,10 +130,12 @@ class AllAppsComposeController @Inject constructor(
         private set
     var lastLaunchedComponent: ComponentName? = null
         private set
+    var lastLaunchedSection: String? = null
 
     var hiddenIconComponent: ComponentName? by mutableStateOf(null)
+    var hiddenIconSection: String? = null
 
-    private var dismissFolderHandler: (() -> Unit)? = null
+
     private var showFolderPickerHandler: ((String) -> Unit)? = null
     private var onBackInvokedCallback: OnBackInvokedCallback? = null
     private var isBackCallbackRegistered = false
@@ -183,9 +185,8 @@ class AllAppsComposeController @Inject constructor(
 
     fun detachContainer() {
         Log.d(TAG, "detachContainer: composeView=$composeView", Throwable())
-        unregisterBackCallback()
+        registerBackIntercept(false)
         launcher?.removeOnDeviceProfileChangeListener(this)
-        dismissFolderHandler = null
         showFolderPickerHandler = null
         viewModel.cleanup()
         composeView = null
@@ -205,6 +206,8 @@ class AllAppsComposeController @Inject constructor(
         selectedProfileTab = TAB_PERSONAL
         searchQuery = ""
         hiddenIconComponent = null
+        hiddenIconSection = null
+        clearLaunchedState()
     }
 
     @Composable
@@ -213,12 +216,15 @@ class AllAppsComposeController @Inject constructor(
             val host = @Composable {
                 AllAppsComposeHost(allAppsStore, activityContext as Context, this@AllAppsComposeController)
             }
-            (activityContext as? OnBackPressedDispatcherOwner)?.let {
-                CompositionLocalProvider(
-                    LocalOnBackPressedDispatcherOwner provides it,
-                    content = host
-                )
-            } ?: host()
+            val owner: OnBackPressedDispatcherOwner = (activityContext as? OnBackPressedDispatcherOwner)
+                ?: object : OnBackPressedDispatcherOwner {
+                    override val lifecycle get() = (activityContext as androidx.lifecycle.LifecycleOwner).lifecycle
+                    override val onBackPressedDispatcher get() = androidx.activity.OnBackPressedDispatcher()
+                }
+            CompositionLocalProvider(
+                LocalOnBackPressedDispatcherOwner provides owner,
+                content = host
+            )
         }
     }
 
@@ -255,9 +261,29 @@ class AllAppsComposeController @Inject constructor(
         )
     }
 
+    fun repositionHostView(screenBounds: RectF) {
+        val hv = sharedHostView ?: return
+        val parentLoc = IntArray(2)
+        (hv.parent as? View)?.getLocationOnScreen(parentLoc)
+        val lp = hv.layoutParams as? RelativeLayout.LayoutParams ?: return
+        lp.leftMargin = (screenBounds.left - parentLoc[0]).toInt()
+        lp.topMargin = (screenBounds.top - parentLoc[1]).toInt()
+        hv.layoutParams = lp
+        val left = lp.leftMargin
+        val top = lp.topMargin
+        hv.layout(left, top, left + hv.getIconSizePx(), top + hv.getIconSizePx())
+    }
+
+    fun clearLaunchedState() {
+        lastLaunchedSection = null
+        lastLaunchedComponent = null
+        lastLaunchedComposeIcon = null
+    }
+
     fun getComposeView(): AxComposeView? = composeView
 
     fun getComposeIconForClose(packageName: String, user: UserHandle): View? {
+        if (lastLaunchedSection == null) return null
         lastLaunchedComponent?.let { comp ->
             if (comp.packageName == packageName) {
                 lastLaunchedComposeIcon?.get()?.let { icon ->
@@ -280,18 +306,7 @@ class AllAppsComposeController @Inject constructor(
         showFolderPickerHandler?.invoke(componentName)
     }
 
-    fun handleBackKeyEvent(event: KeyEvent): Boolean {
-        if (event.keyCode == KeyEvent.KEYCODE_BACK
-            && folderExpanded
-            && dismissFolderHandler != null
-        ) {
-            if (event.action == KeyEvent.ACTION_UP) {
-                dismissFolderHandler?.invoke()
-            }
-            return true
-        }
-        return false
-    }
+    fun handleBackKeyEvent(event: KeyEvent): Boolean = false
 
     private val context: Context = activityContext as Context
 
@@ -305,6 +320,7 @@ class AllAppsComposeController @Inject constructor(
                 WeakReference(hostView)
             } else null
             lastLaunchedComponent = appInfo.componentName
+            lastLaunchedSection = (hostView as? ComposeAppIconView)?.sectionId
             activityContext.startActivitySafely(
                 if (validBounds) hostView else null,
                 appInfo.intent,
@@ -357,17 +373,11 @@ class AllAppsComposeController @Inject constructor(
 
         override fun onFolderExpandedChanged(expanded: Boolean) {
             folderExpanded = expanded
-            registerBackCallback(expanded)
         }
 
-        override fun onSearchExpandedChanged(expanded: Boolean) {
-            if (expanded || !folderExpanded) {
-                registerBackCallback(expanded)
-            }
-        }
+        override fun onSearchExpandedChanged(expanded: Boolean) = Unit
 
         override fun setDismissFolderHandler(handler: (() -> Unit)?) {
-            dismissFolderHandler = handler
         }
 
         override fun startActivity(intent: Intent) {
@@ -470,13 +480,19 @@ class AllAppsComposeController @Inject constructor(
         }
     }
 
-    private fun registerBackCallback(register: Boolean) {
+    var backAction: (() -> Unit)? = null
+    var folderBackAction: (() -> Unit)? = null
+
+    fun registerBackIntercept(register: Boolean) {
         val cont = container ?: return
         val dispatcher = cont.findOnBackInvokedDispatcher() ?: return
         if (register) {
             val callback = onBackInvokedCallback ?: OnBackInvokedCallback {
-                dismissFolderHandler?.invoke()
-            }.also { onBackInvokedCallback = it }
+                Log.d(TAG, "OnBackInvokedCallback: backAction=${backAction != null} folderBackAction=${folderBackAction != null}")
+                (backAction ?: folderBackAction)?.invoke()
+            }.also {
+                onBackInvokedCallback = it
+            }
             if (isBackCallbackRegistered) {
                 dispatcher.unregisterOnBackInvokedCallback(callback)
             }
@@ -490,13 +506,6 @@ class AllAppsComposeController @Inject constructor(
             }
             isBackCallbackRegistered = false
         }
-    }
-
-    private fun unregisterBackCallback() {
-        if (!isBackCallbackRegistered) return
-        val callback = onBackInvokedCallback ?: return
-        container?.findOnBackInvokedDispatcher()?.unregisterOnBackInvokedCallback(callback)
-        isBackCallbackRegistered = false
     }
 
     private fun requestPermission(permission: String, code: Int) {

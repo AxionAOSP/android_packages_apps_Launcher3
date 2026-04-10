@@ -45,10 +45,29 @@ import com.android.launcher3.Utilities
 import com.android.launcher3.allapps.compose.shared.model.ComposeIconInfo
 import com.android.launcher3.allapps.compose.ui.AllAppsComposeAppIcon
 import com.android.launcher3.model.data.AppInfo
+import java.util.concurrent.ConcurrentHashMap
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import androidx.compose.ui.geometry.CornerRadius
+import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
+
+private val packageIconCache = ConcurrentHashMap<String, ImageBitmap>()
+
+private fun getCachedPackageIcon(context: Context, pkg: String): ImageBitmap? {
+    packageIconCache[pkg]?.let { return it }
+    return try {
+        val drawable = context.packageManager.getApplicationIcon(pkg)
+        val w = if (drawable.intrinsicWidth > 0) drawable.intrinsicWidth else 96
+        val h = if (drawable.intrinsicHeight > 0) drawable.intrinsicHeight else 96
+        val bmp = drawable.toBitmap(w, h).asImageBitmap()
+        packageIconCache[pkg] = bmp
+        bmp
+    } catch (e: Exception) {
+        null
+    }
+}
 
 @Composable
 fun UniversalSearchResults(
@@ -472,29 +491,12 @@ fun InAppSearchResultItem(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        val context = LocalContext.current
-        val icon = remember(search.appInfo?.componentName) {
-            val component = search.appInfo?.componentName
-            if (component != null) {
-                try {
-                    context.packageManager.getActivityIcon(component).toBitmap().asImageBitmap()
-                } catch (e: Exception) {
-                    null
-                }
-            } else {
-                null
-            }
-        }
+        val appBitmap = search.appInfo?.bitmap?.icon
+        val icon = remember(appBitmap) { appBitmap?.asImageBitmap() }
 
         if (icon != null) {
             Image(
                 bitmap = icon,
-                contentDescription = null,
-                modifier = Modifier.size(32.dp)
-            )
-        } else if (search.appInfo != null) {
-            Image(
-                bitmap = search.appInfo.bitmap.icon.asImageBitmap(),
                 contentDescription = null,
                 modifier = Modifier.size(32.dp)
             )
@@ -837,22 +839,14 @@ private fun WebActionItem(
         verticalAlignment = Alignment.CenterVertically
     ) {
         val context = LocalContext.current
-        val packageIcon = remember(action, iconSizePx) {
-            val pkg = action.packageName ?: when (action.type) {
-                WebActionType.STORE -> "com.android.vending"
-                WebActionType.GOOGLE -> "com.google.android.googlequicksearchbox"
-                WebActionType.BROWSER -> "com.android.chrome"
-                else -> null
-            }
-
-            if (pkg != null) {
-                try {
-                    val drawable = context.packageManager.getApplicationIcon(pkg)
-                    val width = if (drawable.intrinsicWidth > 0) drawable.intrinsicWidth else iconSizePx
-                    val height = if (drawable.intrinsicHeight > 0) drawable.intrinsicHeight else iconSizePx
-                    drawable.toBitmap(width, height).asImageBitmap()
-                } catch (e: Exception) { null }
-            } else null
+        val pkg = action.packageName ?: when (action.type) {
+            WebActionType.STORE -> "com.android.vending"
+            WebActionType.GOOGLE -> "com.google.android.googlequicksearchbox"
+            WebActionType.BROWSER -> "com.android.chrome"
+            else -> null
+        }
+        val packageIcon = remember(pkg) {
+            if (pkg != null) getCachedPackageIcon(context, pkg) else null
         }
 
         if (packageIcon != null) {
