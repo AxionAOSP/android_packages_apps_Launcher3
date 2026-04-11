@@ -755,13 +755,22 @@ public class FolderIcon extends FrameLayout implements FloatingIconViewCompanion
 
         if (isEnlarged) {
             setPadding(getPaddingLeft(), 0, getPaddingRight(), 0);
-        } else if (shouldCenterIcon || !showLabel) {
-            int iconSize = mActivity.getDeviceProfile().getWorkspaceIconProfile().getIconSizePx();
-            Paint.FontMetrics fm = mFolderName.getPaint().getFontMetrics();
-            int cellHeightPx = iconSize + mFolderName.getCompoundDrawablePadding()
-                    + (int) Math.ceil(showLabel ? fm.bottom - fm.top : 0);
-            setPadding(getPaddingLeft(), (MeasureSpec.getSize(heightMeasureSpec)
-                    - cellHeightPx) / 2, getPaddingRight(), getPaddingBottom());
+            if (mFolderName.getVisibility() != INVISIBLE) {
+                mFolderName.setVisibility(INVISIBLE);
+            }
+        } else {
+            if (mFolderName.getVisibility() != VISIBLE) {
+                mFolderName.setVisibility(VISIBLE);
+            }
+            if (shouldCenterIcon || !showLabel) {
+                int iconSize = mActivity.getDeviceProfile().getWorkspaceIconProfile()
+                        .getIconSizePx();
+                Paint.FontMetrics fm = mFolderName.getPaint().getFontMetrics();
+                int cellHeightPx = iconSize + mFolderName.getCompoundDrawablePadding()
+                        + (int) Math.ceil(showLabel ? fm.bottom - fm.top : 0);
+                setPadding(getPaddingLeft(), (MeasureSpec.getSize(heightMeasureSpec)
+                        - cellHeightPx) / 2, getPaddingRight(), getPaddingBottom());
+            }
         }
         super.onMeasure(widthMeasureSpec, heightMeasureSpec);
     }

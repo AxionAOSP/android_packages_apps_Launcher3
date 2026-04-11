@@ -182,6 +182,7 @@ public class PreviewBackground extends DelegatedCellDrawing {
         previewSize = grid.folderIconSizePx;
 
         boolean isEnlarged = false;
+        int availableSpaceY = 0;
 
         if (invalidateDelegate instanceof FolderIcon) {
             FolderIcon fi = (FolderIcon) invalidateDelegate;
@@ -194,10 +195,14 @@ public class PreviewBackground extends DelegatedCellDrawing {
                     isEnlarged = true;
                 }
             }
+            availableSpaceY = fi.getMeasuredHeight();
         }
 
         if (isEnlarged) {
-            int targetSize = (int) (availableSpaceX * 0.85f);
+            int shortSide = availableSpaceY > 0
+                    ? Math.min(availableSpaceX, availableSpaceY)
+                    : availableSpaceX;
+            int targetSize = (int) (shortSide * 0.95f);
             if (targetSize > previewSize) {
                 previewSize = targetSize;
             }
@@ -205,7 +210,9 @@ public class PreviewBackground extends DelegatedCellDrawing {
 
         basePreviewOffsetX = (availableSpaceX - previewSize) / 2;
         if (isEnlarged) {
-            basePreviewOffsetY = 0;
+            basePreviewOffsetY = availableSpaceY > 0
+                    ? Math.max(0, (availableSpaceY - previewSize) / 2)
+                    : 0;
         } else {
             basePreviewOffsetY = topPadding + grid.folderIconOffsetYPx;
         }
