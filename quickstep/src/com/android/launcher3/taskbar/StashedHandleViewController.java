@@ -29,10 +29,13 @@ import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
 import android.animation.ValueAnimator;
 import android.app.TaskInfo;
+import android.content.ContentResolver;
 import android.content.Context;
 import android.content.res.Resources;
+import android.database.ContentObserver;
 import android.graphics.Outline;
 import android.graphics.Rect;
+import android.net.Uri;
 import android.os.Handler;
 import android.os.Looper;
 import android.view.View;
@@ -40,6 +43,8 @@ import android.view.ViewOutlineProvider;
 
 import androidx.annotation.Nullable;
 
+import com.android.axion.compose.preferences.SettingsFlow;
+import com.android.axion.compose.preferences.SettingsType;
 import com.android.launcher3.ConstantItem;
 import com.android.launcher3.DeviceProfile;
 import com.android.launcher3.Flags;
@@ -59,8 +64,6 @@ import com.android.systemui.shared.system.TaskStackChangeListeners;
 import com.android.wm.shell.shared.handles.RegionSamplingHelper;
 
 import java.io.PrintWriter;
-import java.util.Timer;
-import java.util.TimerTask;
 
 /**
  * Handles properties/data collection, then passes the results to our stashed handle View to render.
@@ -105,16 +108,32 @@ public class StashedHandleViewController implements TaskbarControllers.LoggableT
     private int mTaskbarSize;
 
     // Burn-in protection
-    private Timer mBurnInTimer;
-    private float mTranslationXForBurnIn;
-    private float mTranslationYForBurnIn;
-    private float mHorizontalMaxShift;
-    private float mVerticalMaxShift;
-    private float mHorizontalShiftStep;
-    private float mVerticalShiftStep;
+    public static final String SETTING_KEY_BURN_IN_ENABLED =
+            "pulse_stashed_handle_burn_in_enabled";
+    public static final String SETTING_KEY_BURN_IN_INTERVAL_SEC =
+            "pulse_stashed_handle_burn_in_interval_sec";
+    private static final int BURN_IN_SHIFT_STEPS_PER_EDGE = 3;
     private final Handler mUiHandler = new Handler(Looper.getMainLooper());
+    private final SettingsFlow mBurnInSettingsFlow;
+    private final boolean mBurnInDefaultEnabled;
+    private final int mBurnInDefaultIntervalSec;
+    private final float mHorizontalMaxShift;
+    private final float mVerticalMaxShift;
     private boolean mBurnInProtectionEnabled;
     private long mBurnInShiftIntervalMs;
+    private float mHorizontalShiftStep;
+    private float mVerticalShiftStep;
+    private float mTranslationXForBurnIn;
+    private float mTranslationYForBurnIn;
+    private boolean mBurnInTimerRunning;
+    private boolean mBurnInSettingsObserverRegistered;
+    private final ContentObserver mBurnInSettingsObserver = new ContentObserver(mUiHandler) {
+        @Override
+        public void onChange(boolean selfChange, Uri uri) {
+            loadBurnInSettings();
+            restartBurnInTimer();
+        }
+    };
 
     // The bounds we want to clip to in the settled state when showing the stashed handle.
     private final Rect mStashedHandleBounds = new Rect();
@@ -147,14 +166,16 @@ public class StashedHandleViewController implements TaskbarControllers.LoggableT
         final Resources resources = mActivity.getResources();
         mStashedHandleHeight = resources.getDimensionPixelSize(
                 R.dimen.taskbar_stashed_handle_height);
-        mBurnInProtectionEnabled = resources.getBoolean(R.bool.config_enableBurnInProtection);
-        mBurnInShiftIntervalMs = resources.getInteger(R.integer.config_burnInProtectionShiftInterval) * 1000L;
-
+        mBurnInSettingsFlow = new SettingsFlow(
+                mActivity.getContentResolver(), SettingsType.SECURE);
+        mBurnInDefaultEnabled = resources.getBoolean(R.bool.config_enableBurnInProtection);
+        mBurnInDefaultIntervalSec =
+                resources.getInteger(R.integer.config_burnInProtectionShiftInterval);
         mHorizontalMaxShift = resources.getDimension(R.dimen.burn_in_protection_horizontal_shift);
         mVerticalMaxShift = resources.getDimension(R.dimen.burn_in_protection_vertical_shift);
-
-        mHorizontalShiftStep = mHorizontalMaxShift / 3f;
-        mVerticalShiftStep = mVerticalMaxShift / 3f;
+        mHorizontalShiftStep = mHorizontalMaxShift / BURN_IN_SHIFT_STEPS_PER_EDGE;
+        mVerticalShiftStep = mVerticalMaxShift / BURN_IN_SHIFT_STEPS_PER_EDGE;
+        loadBurnInSettings();
     }
 
     public void init(TaskbarControllers controllers) {
@@ -222,6 +243,7 @@ public class StashedHandleViewController implements TaskbarControllers.LoggableT
             TaskStackChangeListeners.getInstance().registerTaskStackListener(
                     mTaskStackChangeListener);
         }
+        registerBurnInSettingsObserver();
         startBurnInTimer();
     }
 
@@ -260,6 +282,7 @@ public class StashedHandleViewController implements TaskbarControllers.LoggableT
             TaskStackChangeListeners.getInstance().unregisterTaskStackListener(
                     mTaskStackChangeListener);
         }
+        unregisterBurnInSettingsObserver();
         stopBurnInTimer();
     }
 
@@ -372,8 +395,12 @@ public class StashedHandleViewController implements TaskbarControllers.LoggableT
     }
 
     private void updateTranslationY() {
+        mStashedHandleView.setTranslationY(
+                mTranslationYForSwipe + mTranslationYForStash + mTranslationYForBurnIn);
+    }
+
+    private void updateTranslationXForBurnIn() {
         mStashedHandleView.setTranslationX(mTranslationXForBurnIn);
-        mStashedHandleView.setTranslationY(mTranslationYForSwipe + mTranslationYForStash + mTranslationYForBurnIn);
     }
 
     /**
@@ -464,41 +491,88 @@ public class StashedHandleViewController implements TaskbarControllers.LoggableT
     public Rect getBoundsOnScreen() {
         return mStashedHandleView.getSampledRegion();
     }
-    private void startBurnInTimer() {
-        if (!mBurnInProtectionEnabled || mBurnInTimer != null)
-		return;
 
-        mBurnInTimer = new Timer();
-        mBurnInTimer.schedule(new TimerTask() {
-            @Override
-            public void run() {
-                mUiHandler.post(() -> shiftHandle());
-            }
-        }, 0, mBurnInShiftIntervalMs);
+    private final Runnable mBurnInShiftRunnable = new Runnable() {
+        @Override
+        public void run() {
+            shiftHandle();
+            mUiHandler.postDelayed(this, mBurnInShiftIntervalMs);
+        }
+    };
+
+    private void loadBurnInSettings() {
+        mBurnInProtectionEnabled = mBurnInSettingsFlow.getInt(
+                SETTING_KEY_BURN_IN_ENABLED, mBurnInDefaultEnabled ? 1 : 0) != 0;
+        int intervalSec = mBurnInSettingsFlow.getInt(
+                SETTING_KEY_BURN_IN_INTERVAL_SEC, mBurnInDefaultIntervalSec);
+        if (intervalSec < 1) {
+            intervalSec = mBurnInDefaultIntervalSec;
+        }
+        mBurnInShiftIntervalMs = intervalSec * 1000L;
+    }
+
+    private void registerBurnInSettingsObserver() {
+        if (mBurnInSettingsObserverRegistered) {
+            return;
+        }
+        final ContentResolver cr = mActivity.getContentResolver();
+        cr.registerContentObserver(mBurnInSettingsFlow.getUri(SETTING_KEY_BURN_IN_ENABLED),
+                false, mBurnInSettingsObserver);
+        cr.registerContentObserver(mBurnInSettingsFlow.getUri(SETTING_KEY_BURN_IN_INTERVAL_SEC),
+                false, mBurnInSettingsObserver);
+        mBurnInSettingsObserverRegistered = true;
+    }
+
+    private void unregisterBurnInSettingsObserver() {
+        if (!mBurnInSettingsObserverRegistered) {
+            return;
+        }
+        mActivity.getContentResolver().unregisterContentObserver(mBurnInSettingsObserver);
+        mBurnInSettingsObserverRegistered = false;
+    }
+
+    private void restartBurnInTimer() {
+        stopBurnInTimer();
+        if (!mBurnInProtectionEnabled) {
+            mTranslationXForBurnIn = 0f;
+            mTranslationYForBurnIn = 0f;
+            updateTranslationXForBurnIn();
+            updateTranslationY();
+            return;
+        }
+        startBurnInTimer();
+    }
+
+    private void startBurnInTimer() {
+        if (!mBurnInProtectionEnabled || mBurnInTimerRunning) {
+            return;
+        }
+        mBurnInTimerRunning = true;
+        mUiHandler.post(mBurnInShiftRunnable);
     }
 
     private void stopBurnInTimer() {
-        if (mBurnInTimer != null) {
-            mBurnInTimer.cancel();
-            mBurnInTimer = null;
+        if (!mBurnInTimerRunning) {
+            return;
         }
+        mBurnInTimerRunning = false;
+        mUiHandler.removeCallbacks(mBurnInShiftRunnable);
     }
 
     private void shiftHandle() {
         // Horizontal shift logic
         mTranslationXForBurnIn += mHorizontalShiftStep;
-        if (mTranslationXForBurnIn >= mHorizontalMaxShift ||
-            mTranslationXForBurnIn <= -mHorizontalMaxShift) {
-            mHorizontalShiftStep *= -1;
+        if (Math.abs(mTranslationXForBurnIn) >= mHorizontalMaxShift) {
+            mHorizontalShiftStep = -mHorizontalShiftStep;
         }
 
         // Vertical shift logic
         mTranslationYForBurnIn += mVerticalShiftStep;
-        if (mTranslationYForBurnIn >= mVerticalMaxShift ||
-            mTranslationYForBurnIn <= -mVerticalMaxShift) {
-            mVerticalShiftStep *= -1;
+        if (Math.abs(mTranslationYForBurnIn) >= mVerticalMaxShift) {
+            mVerticalShiftStep = -mVerticalShiftStep;
         }
 
+        updateTranslationXForBurnIn();
         updateTranslationY();
     }
 }

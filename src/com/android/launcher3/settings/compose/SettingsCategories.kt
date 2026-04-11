@@ -483,6 +483,51 @@ fun GestureSettings(viewModel: SettingsState) {
             )
         }
     }
+
+    Spacer(modifier = Modifier.height(8.dp))
+
+    NavHandleBurnInSettings()
+}
+
+@Composable
+private fun NavHandleBurnInSettings() {
+    val (burnInEnabled, setBurnInEnabled) = rememberSecureSettingBooleanState(
+        key = "pulse_stashed_handle_burn_in_enabled",
+        defaultValue = true,
+    )
+    val (intervalSec, setIntervalSec) = rememberSecureSettingIntState(
+        key = "pulse_stashed_handle_burn_in_interval_sec",
+        defaultValue = 60,
+    )
+    val sliderValue = intervalSec.coerceIn(15, 300).toFloat()
+
+    PreferenceGroup(title = stringResource(R.string.pref_nav_handle_burn_in_category)) {
+        item {
+            SwitchPreference(
+                title = stringResource(R.string.pref_nav_handle_burn_in_title),
+                summary = stringResource(R.string.pref_nav_handle_burn_in_summary),
+                checked = burnInEnabled,
+                onCheckedChange = setBurnInEnabled,
+            )
+        }
+        item {
+            SliderPreference(
+                title = stringResource(R.string.pref_nav_handle_burn_in_interval_title),
+                summary = stringResource(R.string.pref_nav_handle_burn_in_interval_summary),
+                value = sliderValue,
+                onValueChange = { setIntervalSec(it.roundToInt()) },
+                onValueChangeFinished = {},
+                valueRange = 15f..300f,
+                steps = 0,
+                displayValue = stringResource(
+                    R.string.pref_nav_handle_burn_in_interval_seconds,
+                    sliderValue.roundToInt(),
+                ),
+                enabled = burnInEnabled,
+                onReset = { setIntervalSec(60) },
+            )
+        }
+    }
 }
 
 

@@ -60,6 +60,14 @@
     <string name="pref_sleep_gesture_title">Double tap to sleep</string>
     <string name="pref_sleep_gesture_summary">Double tap on empty space to turn off screen</string>
 
+    <!-- Gesture navigation handle burn-in protection -->
+    <string name="pref_nav_handle_burn_in_category">Navigation handle</string>
+    <string name="pref_nav_handle_burn_in_title">Burn-in protection</string>
+    <string name="pref_nav_handle_burn_in_summary">Slowly shift the gesture handle to reduce OLED burn-in</string>
+    <string name="pref_nav_handle_burn_in_interval_title">Shift interval</string>
+    <string name="pref_nav_handle_burn_in_interval_summary">How often the handle moves to a new position</string>
+    <string name="pref_nav_handle_burn_in_interval_seconds">%1$d s</string>
+
     <!-- About -->
     <string name="about_version">Version</string>
     <string name="about_based_on">Based on Launcher3</string>
