@@ -39,10 +39,19 @@ import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.LoadingIndicator
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.material3.dynamicDarkColorScheme
 import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.runtime.Composable
@@ -65,7 +74,10 @@ import com.android.axion.compose.sheet.BottomSheetDialog
 import com.android.launcher3.Launcher
 import com.android.launcher3.R
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
+
+private const val SEARCH_DEBOUNCE_MS = 800L
 
 object CustomIconPickerScreen {
 
@@ -251,6 +263,7 @@ private fun PackRow(pack: IconPackInfo, onClick: () -> Unit) {
     }
 }
 
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 private fun DrawableGridStage(
     context: Context,
@@ -259,9 +272,28 @@ private fun DrawableGridStage(
     onIconSelected: (String) -> Unit,
 ) {
     var drawables by remember { mutableStateOf<List<IconPackDrawable>?>(null) }
+    var query by remember(pack.packageName) { mutableStateOf("") }
+    var appliedQuery by remember(pack.packageName) { mutableStateOf("") }
 
     LaunchedEffect(pack.packageName) {
         drawables = IconPackEnumerator.listDrawables(context, pack.packageName)
+    }
+
+    LaunchedEffect(query) {
+        if (query == appliedQuery) return@LaunchedEffect
+        delay(SEARCH_DEBOUNCE_MS)
+        appliedQuery = query
+    }
+
+    val isSearching = query.trim() != appliedQuery.trim()
+
+    val filtered = drawables?.let { list ->
+        val trimmed = appliedQuery.trim()
+        if (trimmed.isEmpty()) list
+        else list.filter {
+            it.label.contains(trimmed, ignoreCase = true) ||
+                it.drawableName.contains(trimmed, ignoreCase = true)
+        }
     }
 
     Column(
@@ -275,12 +307,14 @@ private fun DrawableGridStage(
                 .padding(bottom = 12.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            TextButton(onClick = onBack) {
-                Text(
-                    text = stringResource(R.string.custom_icon_back),
-                    color = MaterialTheme.colorScheme.primary,
+            IconButton(onClick = onBack) {
+                Icon(
+                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                    contentDescription = stringResource(R.string.custom_icon_back),
+                    tint = MaterialTheme.colorScheme.onSurface,
                 )
             }
+            Spacer(Modifier.width(8.dp))
             Text(
                 text = pack.label,
                 style = MaterialTheme.typography.titleMedium,
@@ -290,11 +324,42 @@ private fun DrawableGridStage(
             )
         }
 
+        if (!drawables.isNullOrEmpty()) {
+            OutlinedTextField(
+                value = query,
+                onValueChange = { query = it },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 12.dp),
+                singleLine = true,
+                placeholder = {
+                    Text(
+                        text = stringResource(R.string.custom_icon_search_hint),
+                        style = MaterialTheme.typography.bodyMedium,
+                    )
+                },
+                leadingIcon = {
+                    Icon(
+                        imageVector = Icons.Filled.Search,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                },
+                shape = RoundedCornerShape(28.dp),
+                colors = TextFieldDefaults.colors(
+                    focusedContainerColor = MaterialTheme.colorScheme.surfaceContainerHighest,
+                    unfocusedContainerColor = MaterialTheme.colorScheme.surfaceContainerHighest,
+                    focusedIndicatorColor = MaterialTheme.colorScheme.primary,
+                    unfocusedIndicatorColor = MaterialTheme.colorScheme.outlineVariant,
+                ),
+            )
+        }
+
         when {
             drawables == null -> Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(200.dp),
+                    .height(320.dp),
                 contentAlignment = Alignment.Center,
             ) {
                 CircularProgressIndicator()
@@ -305,6 +370,29 @@ private fun DrawableGridStage(
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.padding(vertical = 24.dp),
             )
+            isSearching -> Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(320.dp),
+                contentAlignment = Alignment.Center,
+            ) {
+                LoadingIndicator(
+                    modifier = Modifier.size(48.dp),
+                    color = MaterialTheme.colorScheme.primary,
+                )
+            }
+            filtered!!.isEmpty() -> Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(320.dp),
+                contentAlignment = Alignment.Center,
+            ) {
+                Text(
+                    text = stringResource(R.string.custom_icon_no_search_results),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
             else -> LazyVerticalGrid(
                 columns = GridCells.Adaptive(64.dp),
                 contentPadding = PaddingValues(bottom = 16.dp),
@@ -312,7 +400,7 @@ private fun DrawableGridStage(
                 verticalArrangement = Arrangement.spacedBy(8.dp),
                 modifier = Modifier.height(320.dp),
             ) {
-                items(drawables!!) { item ->
+                items(filtered!!, key = { it.drawableName }) { item ->
                     DrawableCell(
                         context = context,
                         item = item,
