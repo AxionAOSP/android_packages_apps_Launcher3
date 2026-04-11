@@ -20,6 +20,7 @@ import static android.os.Trace.TRACE_TAG_APP;
 import static com.android.launcher3.Flags.enableOverviewBackgroundWallpaperBlur;
 
 import android.app.WallpaperManager;
+import android.content.ContentResolver;
 import android.database.ContentObserver;
 import android.graphics.RenderEffect;
 import android.graphics.Shader;
@@ -28,7 +29,6 @@ import android.os.Binder;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Trace;
-import android.provider.Settings;
 import android.util.FloatProperty;
 import android.util.Log;
 import android.view.CrossWindowBlurListeners;
@@ -40,6 +40,8 @@ import androidx.annotation.Nullable;
 import androidx.annotation.VisibleForTesting;
 
 import com.android.app.animation.Interpolators;
+import com.android.axion.compose.preferences.SettingsFlow;
+import com.android.axion.compose.preferences.SettingsType;
 import com.android.launcher3.Flags;
 import com.android.launcher3.Launcher;
 import com.android.launcher3.LauncherPrefs;
@@ -131,11 +133,22 @@ public class BaseDepthController {
      */
     private EarlyWakeupInfo mEarlyWakeupInfo = new EarlyWakeupInfo();
 
-    private ContentObserver mBlurRadiusObserver;
+    public static final String SETTING_KEY_LAUNCHER_BLUR_ENABLED = "pulse_launcher_blur_enabled";
+    public static final String SETTING_KEY_LAUNCHER_BLUR_RADIUS = "pulse_launcher_blur_radius";
+    private static final int DEFAULT_LAUNCHER_BLUR_RADIUS = 34;
+
+    private final SettingsFlow mBlurSettingsFlow;
+    private final ContentObserver mBlurSettingsObserver;
+
     private void updateMaxBlurRadius() {
-        mMaxBlurRadius = (int) Settings.Secure.getFloat(mLauncher.getContentResolver(),
-            "system_blur_radius", 34f);
+        boolean enabled =
+                mBlurSettingsFlow.getInt(SETTING_KEY_LAUNCHER_BLUR_ENABLED, 1) != 0;
+        mMaxBlurRadius = enabled
+                ? mBlurSettingsFlow.getInt(
+                        SETTING_KEY_LAUNCHER_BLUR_RADIUS, DEFAULT_LAUNCHER_BLUR_RADIUS)
+                : 0;
     }
+
     public BaseDepthController(QuickstepLauncher activity) {
         mLauncher = activity;
         if (Flags.allAppsBlur() || enableOverviewBackgroundWallpaperBlur()) {
@@ -144,15 +157,23 @@ public class BaseDepthController {
         }
         mWallpaperManager = activity.getSystemService(WallpaperManager.class);
 
-        mBlurRadiusObserver = new ContentObserver(new Handler(activity.getMainLooper())) {
+        mBlurSettingsFlow = new SettingsFlow(
+                activity.getContentResolver(), SettingsType.SECURE);
+        mBlurSettingsObserver = new ContentObserver(new Handler(activity.getMainLooper())) {
             @Override
             public void onChange(boolean selfChange) {
                 updateMaxBlurRadius();
+                applyDepthAndBlur();
             }
         };
         updateMaxBlurRadius();
-        activity.getContentResolver().registerContentObserver(
-            Settings.Secure.getUriFor("system_blur_radius"), false, mBlurRadiusObserver);
+        final ContentResolver cr = activity.getContentResolver();
+        cr.registerContentObserver(
+                mBlurSettingsFlow.getUri(SETTING_KEY_LAUNCHER_BLUR_ENABLED),
+                false, mBlurSettingsObserver);
+        cr.registerContentObserver(
+                mBlurSettingsFlow.getUri(SETTING_KEY_LAUNCHER_BLUR_RADIUS),
+                false, mBlurSettingsObserver);
         MultiPropertyFactory<BaseDepthController> depthProperty =
                 new MultiPropertyFactory<>(this, DEPTH, DEPTH_INDEX_COUNT, Float::max);
         stateDepth = depthProperty.get(DEPTH_INDEX_STATE_TRANSITION);
@@ -162,7 +183,7 @@ public class BaseDepthController {
     }
 
     public void destroy() {
-        mLauncher.getContentResolver().unregisterContentObserver(mBlurRadiusObserver);
+        mLauncher.getContentResolver().unregisterContentObserver(mBlurSettingsObserver);
     }
     /**
      * Sets the applier to use for syncing surface transactions to the RenderThread.

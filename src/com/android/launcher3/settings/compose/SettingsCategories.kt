@@ -69,6 +69,51 @@ fun GeneralSettings(viewModel: SettingsState, context: Context) {
             )
         }
     }
+
+    Spacer(modifier = Modifier.height(8.dp))
+
+    LauncherBlurSettings()
+}
+
+@Composable
+private fun LauncherBlurSettings() {
+    val (blurEnabled, setBlurEnabled) = rememberSecureSettingBooleanState(
+        key = "pulse_launcher_blur_enabled",
+        defaultValue = true,
+    )
+    val (blurRadius, setBlurRadius) = rememberSecureSettingIntState(
+        key = "pulse_launcher_blur_radius",
+        defaultValue = 34,
+    )
+    val sliderValue = blurRadius.coerceIn(0, 100).toFloat()
+
+    PreferenceGroup(title = stringResource(R.string.pref_launcher_blur_category)) {
+        item {
+            SwitchPreference(
+                title = stringResource(R.string.pref_launcher_blur_title),
+                summary = stringResource(R.string.pref_launcher_blur_summary),
+                checked = blurEnabled,
+                onCheckedChange = setBlurEnabled,
+            )
+        }
+        item {
+            SliderPreference(
+                title = stringResource(R.string.pref_launcher_blur_radius_title),
+                summary = stringResource(R.string.pref_launcher_blur_radius_summary),
+                value = sliderValue,
+                onValueChange = { setBlurRadius(it.roundToInt()) },
+                onValueChangeFinished = {},
+                valueRange = 0f..100f,
+                steps = 0,
+                displayValue = stringResource(
+                    R.string.pref_launcher_blur_radius_pixels,
+                    sliderValue.roundToInt(),
+                ),
+                enabled = blurEnabled,
+                onReset = { setBlurRadius(34) },
+            )
+        }
+    }
 }
 
 private fun handleNotificationDotsChange(enabled: Boolean, context: Context) {

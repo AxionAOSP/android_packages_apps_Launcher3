@@ -60,6 +60,14 @@
     <string name="pref_sleep_gesture_title">Double tap to sleep</string>
     <string name="pref_sleep_gesture_summary">Double tap on empty space to turn off screen</string>
 
+    <!-- Launcher blur -->
+    <string name="pref_launcher_blur_category">Launcher blur</string>
+    <string name="pref_launcher_blur_title">Enable launcher blur</string>
+    <string name="pref_launcher_blur_summary">Blur wallpaper behind launcher surfaces</string>
+    <string name="pref_launcher_blur_radius_title">Blur radius</string>
+    <string name="pref_launcher_blur_radius_summary">Maximum blur strength</string>
+    <string name="pref_launcher_blur_radius_pixels">%1$d px</string>
+
     <!-- Gesture navigation handle burn-in protection -->
     <string name="pref_nav_handle_burn_in_category">Navigation handle</string>
     <string name="pref_nav_handle_burn_in_title">Burn-in protection</string>
