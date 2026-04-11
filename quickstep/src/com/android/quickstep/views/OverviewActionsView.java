@@ -172,6 +172,8 @@ public class OverviewActionsView<T extends OverlayUICallbacks> extends FrameLayo
     private boolean mIsGroupedTask = false;
     private boolean mCanSaveAppPair = false;
 
+    private final OverviewActionsViewExt mExt = new OverviewActionsViewExt();
+
     public OverviewActionsView(Context context) {
         this(context, null);
     }
@@ -211,7 +213,20 @@ public class OverviewActionsView<T extends OverlayUICallbacks> extends FrameLayo
         mLockHintLandscape = findViewById(R.id.lock_hint_landscape);
         mSaveAppPairButton.setOnClickListener(this);
         mActionsState = new OverviewActionsState();
+        mExt.init(getContext(), mActionsState);
         OverviewActionButtonsBridge.setup(mActionButtons, mActionsState);
+    }
+
+    @Override
+    protected void onAttachedToWindow() {
+        super.onAttachedToWindow();
+        mExt.onAttach();
+    }
+
+    @Override
+    protected void onDetachedFromWindow() {
+        super.onDetachedFromWindow();
+        mExt.onDetach();
     }
 
     /**

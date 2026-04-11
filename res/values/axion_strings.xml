@@ -60,6 +60,21 @@
     <string name="pref_sleep_gesture_title">Double tap to sleep</string>
     <string name="pref_sleep_gesture_summary">Double tap on empty space to turn off screen</string>
 
+    <!-- Recents category -->
+    <string name="settings_category_recents">Recents</string>
+    <string name="settings_category_recents_summary">Overview actions</string>
+    <string name="pref_recents_buttons_category">Action buttons</string>
+    <string name="pref_recents_show_lock_title">Lock app</string>
+    <string name="pref_recents_show_lock_summary">Lock focused task from being cleared</string>
+    <string name="pref_recents_show_screenshot_title">Screenshot</string>
+    <string name="pref_recents_show_screenshot_summary">Capture focused task</string>
+    <string name="pref_recents_show_select_text_title">Select text</string>
+    <string name="pref_recents_show_select_text_summary">Select text from focused task</string>
+    <string name="pref_recents_show_freeform_title">Freeform</string>
+    <string name="pref_recents_show_freeform_summary">Open focused task in a freeform window</string>
+    <string name="pref_recents_show_clear_all_title">Clear all</string>
+    <string name="pref_recents_show_clear_all_summary">Clear all recent tasks</string>
+
     <!-- Launcher blur -->
     <string name="pref_launcher_blur_category">Launcher blur</string>
     <string name="pref_launcher_blur_title">Enable launcher blur</string>

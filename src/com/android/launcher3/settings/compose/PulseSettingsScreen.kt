@@ -25,7 +25,7 @@ import com.android.axion.compose.scaffold.AxionScaffold
 import com.android.launcher3.R
 
 enum class SettingsDestination {
-    ROOT, GENERAL, HOME_SCREEN, APP_DRAWER, SEARCH, GESTURES, ABOUT
+    ROOT, GENERAL, HOME_SCREEN, APP_DRAWER, SEARCH, GESTURES, RECENTS, ABOUT
 }
 
 data class SettingsCategory(
@@ -52,6 +52,7 @@ fun PulseSettingsScreen(
             SettingsCategory(SettingsDestination.APP_DRAWER, R.string.settings_category_drawer, R.string.settings_category_drawer_summary, Icons.Outlined.Apps),
             SettingsCategory(SettingsDestination.SEARCH, R.string.settings_category_search, R.string.settings_category_search_summary, Icons.Outlined.Search),
             SettingsCategory(SettingsDestination.GESTURES, R.string.settings_category_gestures, R.string.settings_category_gestures_summary, Icons.Outlined.TouchApp),
+            SettingsCategory(SettingsDestination.RECENTS, R.string.settings_category_recents, R.string.settings_category_recents_summary, Icons.Outlined.Layers),
             SettingsCategory(SettingsDestination.ABOUT, R.string.settings_category_about, R.string.settings_category_about_summary, Icons.Outlined.Info),
         )
     }
@@ -304,6 +305,7 @@ fun SettingsDetailContent(
         SettingsDestination.APP_DRAWER -> AppDrawerSettings(viewModel)
         SettingsDestination.SEARCH -> SearchSettingsPage(context)
         SettingsDestination.GESTURES -> GestureSettings(viewModel)
+        SettingsDestination.RECENTS -> RecentsSettings()
         SettingsDestination.ABOUT -> AboutSettings(context)
         else -> {}
     }

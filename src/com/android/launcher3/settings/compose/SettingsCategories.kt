@@ -576,6 +576,73 @@ private fun NavHandleBurnInSettings() {
 }
 
 
+@Composable
+fun RecentsSettings() {
+    val (showLock, setShowLock) = rememberSecureSettingBooleanState(
+        key = "pulse_recents_show_lock",
+        defaultValue = true,
+    )
+    val (showScreenshot, setShowScreenshot) = rememberSecureSettingBooleanState(
+        key = "pulse_recents_show_screenshot",
+        defaultValue = true,
+    )
+    val (showSelectText, setShowSelectText) = rememberSecureSettingBooleanState(
+        key = "pulse_recents_show_select_text",
+        defaultValue = true,
+    )
+    val (showFreeform, setShowFreeform) = rememberSecureSettingBooleanState(
+        key = "pulse_recents_show_freeform",
+        defaultValue = true,
+    )
+    val (showClearAll, setShowClearAll) = rememberSecureSettingBooleanState(
+        key = "pulse_recents_show_clear_all",
+        defaultValue = true,
+    )
+
+    PreferenceGroup(title = stringResource(R.string.pref_recents_buttons_category)) {
+        item {
+            SwitchPreference(
+                title = stringResource(R.string.pref_recents_show_lock_title),
+                summary = stringResource(R.string.pref_recents_show_lock_summary),
+                checked = showLock,
+                onCheckedChange = setShowLock,
+            )
+        }
+        item {
+            SwitchPreference(
+                title = stringResource(R.string.pref_recents_show_screenshot_title),
+                summary = stringResource(R.string.pref_recents_show_screenshot_summary),
+                checked = showScreenshot,
+                onCheckedChange = setShowScreenshot,
+            )
+        }
+        item {
+            SwitchPreference(
+                title = stringResource(R.string.pref_recents_show_select_text_title),
+                summary = stringResource(R.string.pref_recents_show_select_text_summary),
+                checked = showSelectText,
+                onCheckedChange = setShowSelectText,
+            )
+        }
+        item {
+            SwitchPreference(
+                title = stringResource(R.string.pref_recents_show_freeform_title),
+                summary = stringResource(R.string.pref_recents_show_freeform_summary),
+                checked = showFreeform,
+                onCheckedChange = setShowFreeform,
+            )
+        }
+        item {
+            SwitchPreference(
+                title = stringResource(R.string.pref_recents_show_clear_all_title),
+                summary = stringResource(R.string.pref_recents_show_clear_all_summary),
+                checked = showClearAll,
+                onCheckedChange = setShowClearAll,
+            )
+        }
+    }
+}
+
 data class Contributor(
     val name: String,
     val role: String,

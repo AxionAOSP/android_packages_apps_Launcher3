@@ -63,6 +63,11 @@ class OverviewActionsState {
     var lockHint by mutableStateOf("")
     var clearAllEnabled by mutableStateOf(true)
     var splitIconRes by mutableIntStateOf(R.drawable.ic_split_vertical)
+    var showLock by mutableStateOf(true)
+    var showScreenshot by mutableStateOf(true)
+    var showSelectText by mutableStateOf(true)
+    var showFreeform by mutableStateOf(true)
+    var showClearAll by mutableStateOf(true)
     var onScreenshot: Runnable? = null
     var onSelectText: Runnable? = null
     var onFreeform: Runnable? = null
@@ -120,36 +125,44 @@ private fun OverviewActionButtonsContent(state: OverviewActionsState) {
             horizontalArrangement = Arrangement.spacedBy(buttonSpacing, Alignment.CenterHorizontally),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            OverviewCircleButton(
-                iconRes = if (state.isLocked) R.drawable.ic_app_locked else R.drawable.ic_app_unlocked,
-                contentDescRes = R.string.accessibility_lock_task,
-                onClick = { state.onLock?.run() },
-                containerColor = containerColor,
-                contentColor = contentColor
-            )
-            OverviewCircleButton(
-                iconRes = R.drawable.ic_screenshot,
-                contentDescRes = R.string.action_screenshot,
-                onClick = { state.onScreenshot?.run() },
-                containerColor = containerColor,
-                contentColor = contentColor
-            )
-            OverviewCircleButton(
-                iconRes = R.drawable.ic_select_text,
-                contentDescRes = R.string.action_select_text,
-                onClick = { state.onSelectText?.run() },
-                containerColor = containerColor,
-                contentColor = contentColor
-            )
-            OverviewCircleButton(
-                iconRes = R.drawable.ic_overview_freeform,
-                contentDescRes = R.string.action_freeform,
-                onClick = { state.onFreeform?.run() },
-                containerColor = containerColor,
-                contentColor = contentColor,
-                enabled = state.freeformVisible,
-                modifier = Modifier.alpha(if (state.freeformVisible) 1f else 0f)
-            )
+            if (state.showLock) {
+                OverviewCircleButton(
+                    iconRes = if (state.isLocked) R.drawable.ic_app_locked else R.drawable.ic_app_unlocked,
+                    contentDescRes = R.string.accessibility_lock_task,
+                    onClick = { state.onLock?.run() },
+                    containerColor = containerColor,
+                    contentColor = contentColor
+                )
+            }
+            if (state.showScreenshot) {
+                OverviewCircleButton(
+                    iconRes = R.drawable.ic_screenshot,
+                    contentDescRes = R.string.action_screenshot,
+                    onClick = { state.onScreenshot?.run() },
+                    containerColor = containerColor,
+                    contentColor = contentColor
+                )
+            }
+            if (state.showSelectText) {
+                OverviewCircleButton(
+                    iconRes = R.drawable.ic_select_text,
+                    contentDescRes = R.string.action_select_text,
+                    onClick = { state.onSelectText?.run() },
+                    containerColor = containerColor,
+                    contentColor = contentColor
+                )
+            }
+            if (state.showFreeform) {
+                OverviewCircleButton(
+                    iconRes = R.drawable.ic_overview_freeform,
+                    contentDescRes = R.string.action_freeform,
+                    onClick = { state.onFreeform?.run() },
+                    containerColor = containerColor,
+                    contentColor = contentColor,
+                    enabled = state.freeformVisible,
+                    modifier = Modifier.alpha(if (state.freeformVisible) 1f else 0f)
+                )
+            }
             if (state.splitVisible) {
                 FilledTonalButton(
                     onClick = { state.onSplit?.run() },
@@ -169,10 +182,11 @@ private fun OverviewActionButtonsContent(state: OverviewActionsState) {
             }
         }
 
+        val lockHintBoxHeight = if (state.showClearAll) 24.dp + clearAllTopMargin else 24.dp
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(24.dp),
+                .height(lockHintBoxHeight),
             contentAlignment = Alignment.Center
         ) {
             Text(
@@ -185,20 +199,20 @@ private fun OverviewActionButtonsContent(state: OverviewActionsState) {
             )
         }
 
-        Spacer(Modifier.height(clearAllTopMargin))
-
-        FilledTonalButton(
-            onClick = { state.onClearAll?.run() },
-            enabled = state.clearAllEnabled,
-            colors = ButtonDefaults.filledTonalButtonColors(
-                containerColor = containerColor,
-                contentColor = contentColor
-            ),
-            modifier = Modifier
-                .width(clearAllWidth)
-                .height(buttonSize)
-        ) {
-            Text(stringResource(R.string.recents_clear_all))
+        if (state.showClearAll) {
+            FilledTonalButton(
+                onClick = { state.onClearAll?.run() },
+                enabled = state.clearAllEnabled,
+                colors = ButtonDefaults.filledTonalButtonColors(
+                    containerColor = containerColor,
+                    contentColor = contentColor
+                ),
+                modifier = Modifier
+                    .width(clearAllWidth)
+                    .height(buttonSize)
+            ) {
+                Text(stringResource(R.string.recents_clear_all))
+            }
         }
     }
 }
