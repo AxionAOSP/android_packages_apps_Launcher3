@@ -103,6 +103,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.Executor;
 import java.util.stream.Collectors;
@@ -281,6 +282,8 @@ public class InvariantDeviceProfile {
 
     private final List<OnIDPChangeListener> mChangeListeners = new CopyOnWriteArrayList<>();
 
+    private int[] mLastKnownDisplayPxSignature;
+
     public TaskbarModeUtil taskbarModeUtil;
     private final LooperExecutor mMainExecutor;
 
@@ -366,20 +369,25 @@ public class InvariantDeviceProfile {
 
     private void initGrid(String gridName) {
         Info displayInfo = mDisplayController.getInfo();
+        int[] currentPxSignature = computeDisplayPxSignature(displayInfo);
+        DeviceGridState previousGridState = new DeviceGridState(mPrefs);
+        boolean deviceTypeChanged =
+                previousGridState.getDeviceType() != displayInfo.getDeviceType();
+        boolean densityOnlyFlip = deviceTypeChanged
+                && mLastKnownDisplayPxSignature != null
+                && Arrays.equals(mLastKnownDisplayPxSignature, currentPxSignature);
+
         List<DisplayOption> allOptions = getPredefinedDeviceProfiles(
                 displayInfo,
                 gridName,
-                (RestoreDbTask.isPending(mPrefs) && !Flags.oneGridSpecs()),
+                (RestoreDbTask.isPending(mPrefs) && !Flags.oneGridSpecs()) || densityOnlyFlip,
                 mPrefs.get(FIXED_LANDSCAPE_MODE)
         );
 
         // Filter out options that don't have the same number of columns as the grid
-        DeviceGridState deviceGridState = new DeviceGridState(mPrefs);
-        boolean deviceTypeChanged =
-                deviceGridState.getDeviceType() != displayInfo.getDeviceType();
-        List<DisplayOption> allOptionsFilteredByColCount = deviceTypeChanged
+        List<DisplayOption> allOptionsFilteredByColCount = (deviceTypeChanged && !densityOnlyFlip)
                 ? Collections.emptyList()
-                : filterByColumnCount(allOptions, deviceGridState.getColumns());
+                : filterByColumnCount(allOptions, previousGridState.getColumns());
 
         DisplayOption displayOption =
                 invDistWeightedInterpolate(displayInfo, allOptionsFilteredByColCount.isEmpty()
@@ -387,16 +395,31 @@ public class InvariantDeviceProfile {
                                 : new ArrayList<>(allOptionsFilteredByColCount),
                         displayInfo.getDeviceType());
 
-        if (!deviceTypeChanged && !displayOption.grid.name.equals(gridName)) {
+        if ((!deviceTypeChanged || densityOnlyFlip)
+                && !displayOption.grid.name.equals(gridName)) {
             mPrefs.put(GRID_NAME, displayOption.grid.name);
         }
 
         initGridForDisplayOption(displayInfo, displayOption);
+        mLastKnownDisplayPxSignature = currentPxSignature;
         FileLog.d(TAG, "After initGrid:"
                 + "gridName:" + gridName
                 + ", dbFile:" + dbFile
+                + ", densityOnlyFlip:" + densityOnlyFlip
                 + ", LauncherPrefs GRID_NAME:" + mPrefs.get(GRID_NAME)
                 + ", LauncherPrefs DB_FILE:" + mPrefs.get(DB_FILE));
+    }
+
+    private static int[] computeDisplayPxSignature(Info displayInfo) {
+        Set<CachedDisplayInfo> allDisplays = displayInfo.getAllDisplays();
+        int[] sig = new int[allDisplays.size() * 2];
+        int i = 0;
+        for (CachedDisplayInfo d : allDisplays) {
+            sig[i++] = d.size.x;
+            sig[i++] = d.size.y;
+        }
+        Arrays.sort(sig);
+        return sig;
     }
 
     private List<DisplayOption> filterByColumnCount(
