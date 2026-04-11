@@ -598,6 +598,10 @@ fun RecentsSettings() {
         key = "pulse_recents_show_clear_all",
         defaultValue = true,
     )
+    val (showMemoryInfo, setShowMemoryInfo) = rememberSecureSettingBooleanState(
+        key = "pulse_recents_show_memory_info",
+        defaultValue = true,
+    )
 
     PreferenceGroup(title = stringResource(R.string.pref_recents_buttons_category)) {
         item {
@@ -638,6 +642,14 @@ fun RecentsSettings() {
                 summary = stringResource(R.string.pref_recents_show_clear_all_summary),
                 checked = showClearAll,
                 onCheckedChange = setShowClearAll,
+            )
+        }
+        item {
+            SwitchPreference(
+                title = stringResource(R.string.pref_recents_show_memory_info_title),
+                summary = stringResource(R.string.pref_recents_show_memory_info_summary),
+                checked = showMemoryInfo,
+                onCheckedChange = setShowMemoryInfo,
             )
         }
     }

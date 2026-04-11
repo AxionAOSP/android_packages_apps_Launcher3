@@ -74,6 +74,9 @@
     <string name="pref_recents_show_freeform_summary">Open focused task in a freeform window</string>
     <string name="pref_recents_show_clear_all_title">Clear all</string>
     <string name="pref_recents_show_clear_all_summary">Clear all recent tasks</string>
+    <string name="pref_recents_show_memory_info_title">Memory info</string>
+    <string name="pref_recents_show_memory_info_summary">Show available memory in overview</string>
+    <string name="overview_memory_usage">%1$s available | %2$s</string>
 
     <!-- Launcher blur -->
     <string name="pref_launcher_blur_category">Launcher blur</string>
