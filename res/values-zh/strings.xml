@@ -231,6 +231,8 @@
     <string name="custom_icon_no_drawables">此圖示包中找不到圖示</string>
     <string name="custom_icon_reset">重設為預設</string>
     <string name="custom_icon_back">返回</string>
+    <string name="custom_icon_search_hint">Search icons</string>
+    <string name="custom_icon_no_search_results">No icons match your search</string>
     <string name="action_customize_icon">自訂圖示</string>
     <string name="icon_pack_picker_title">自訂圖示</string>
     <string name="icon_pack_picker_default">預設</string>
@@ -532,9 +534,9 @@
     <!-- label for square shape option in customization picker -->
     <string name="square_shape_title">方形</string>
     <!-- label for 4-sided cookie option shape in customization picker -->
-    <string name="four_sided_cookie_shape_title">4 邊形餅乾</string>
+    <string name="four_sided_cookie_shape_title">4 角餅乾</string>
     <!-- label for 7-sided cookie option shape in customization picker -->
-    <string name="seven_sided_cookie_shape_title">7 邊形餅乾</string>
+    <string name="seven_sided_cookie_shape_title">7 角餅乾</string>
     <!-- label for arch shape option in customization picker -->
     <string name="arch_shape_title">拱形</string>
 </resources>

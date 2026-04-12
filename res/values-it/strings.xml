@@ -229,6 +229,8 @@
     <string name="custom_icon_no_drawables">No icons found in this pack</string>
     <string name="custom_icon_reset">Reset to default</string>
     <string name="custom_icon_back">Indietro</string>
+    <string name="custom_icon_search_hint">Search icons</string>
+    <string name="custom_icon_no_search_results">No icons match your search</string>
     <string name="action_customize_icon">Customize icons</string>
     <string name="icon_pack_picker_title">Customize icons</string>
     <string name="icon_pack_picker_default">Default</string>
