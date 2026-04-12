@@ -229,6 +229,8 @@
     <string name="custom_icon_no_drawables">No icons found in this pack</string>
     <string name="custom_icon_reset">Varsayılana sıfırla</string>
     <string name="custom_icon_back">Geri</string>
+    <string name="custom_icon_search_hint">Search icons</string>
+    <string name="custom_icon_no_search_results">No icons match your search</string>
     <string name="action_customize_icon">Customize icons</string>
     <string name="icon_pack_picker_title">Customize icons</string>
     <string name="icon_pack_picker_default">Varsayılan</string>
