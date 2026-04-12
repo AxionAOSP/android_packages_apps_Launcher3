@@ -195,7 +195,7 @@ private fun OverviewActionButtonsContent(state: OverviewActionsState) {
                 modifier = Modifier.alpha(if (state.memoryInfo.isNotEmpty()) 1f else 0f),
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                color = MaterialTheme.colorScheme.onSurface,
                 style = MaterialTheme.typography.bodySmall
             )
         }

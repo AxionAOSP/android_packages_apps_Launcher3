@@ -38,6 +38,7 @@ import com.android.launcher3.DeviceProfile;
 import com.android.launcher3.Insettable;
 import com.android.launcher3.R;
 import com.android.launcher3.anim.AnimatedFloat;
+import com.android.launcher3.dagger.LauncherComponentProvider;
 import com.android.launcher3.util.DisplayController;
 import com.android.launcher3.util.MultiValueAlpha;
 import com.android.launcher3.util.NavigationMode;
@@ -172,7 +173,7 @@ public class OverviewActionsView<T extends OverlayUICallbacks> extends FrameLayo
     private boolean mIsGroupedTask = false;
     private boolean mCanSaveAppPair = false;
 
-    private final OverviewActionsViewExt mExt = new OverviewActionsViewExt();
+    private OverviewActionsViewExt mExt;
 
     public OverviewActionsView(Context context) {
         this(context, null);
@@ -213,14 +214,14 @@ public class OverviewActionsView<T extends OverlayUICallbacks> extends FrameLayo
         mLockHintLandscape = findViewById(R.id.lock_hint_landscape);
         mSaveAppPairButton.setOnClickListener(this);
         mActionsState = new OverviewActionsState();
-        mExt.init(getContext(), mActionsState);
+        mExt = LauncherComponentProvider.get(getContext()).getOverviewActionsViewExt();
         OverviewActionButtonsBridge.setup(mActionButtons, mActionsState);
     }
 
     @Override
     protected void onAttachedToWindow() {
         super.onAttachedToWindow();
-        mExt.onAttach();
+        mExt.onAttach(mActionsState);
     }
 
     @Override

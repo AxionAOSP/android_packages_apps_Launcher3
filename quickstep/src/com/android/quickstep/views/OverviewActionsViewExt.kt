@@ -26,6 +26,11 @@ import com.android.axion.compose.preferences.SettingsFlow
 import com.android.axion.compose.preferences.SettingsType
 import com.android.internal.util.MemInfoReader
 import com.android.launcher3.R
+import com.android.launcher3.dagger.ApplicationContext
+import com.android.launcher3.dagger.LauncherAppSingleton
+import com.android.launcher3.util.DaggerSingletonTracker
+import com.android.launcher3.util.SafeCloseable
+import javax.inject.Inject
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -42,58 +47,58 @@ import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.onStart
 
 @OptIn(ExperimentalCoroutinesApi::class)
-class OverviewActionsViewExt {
+@LauncherAppSingleton
+class OverviewActionsViewExt @Inject constructor(
+    @ApplicationContext private val appContext: Context,
+    lifecycleTracker: DaggerSingletonTracker,
+) : SafeCloseable {
 
-    private var appContext: Context? = null
-    private var settingsFlow: SettingsFlow? = null
-    private var state: OverviewActionsState? = null
-    private var scope: CoroutineScope? = null
-    private var activityManager: ActivityManager? = null
+    private val activityManager = appContext.getSystemService(ActivityManager::class.java)!!
+    private val settingsFlow = SettingsFlow(appContext.contentResolver, SettingsType.SECURE)
     private val memInfoReader = MemInfoReader()
+    private var viewScope: CoroutineScope? = null
 
-    fun init(context: Context, state: OverviewActionsState) {
-        val app = context.applicationContext
-        this.state = state
-        this.appContext = app
-        settingsFlow = SettingsFlow(app.contentResolver, SettingsType.SECURE)
-        activityManager = app.getSystemService(ActivityManager::class.java)
+    init {
+        lifecycleTracker.addCloseable(this)
     }
 
-    fun onAttach() {
-        if (scope != null) return
-        val flow = settingsFlow ?: return
-        val target = state ?: return
-        val newScope = CoroutineScope(Dispatchers.Main + SupervisorJob())
-        scope = newScope
+    fun onAttach(state: OverviewActionsState) {
+        if (viewScope != null) return
+        val scope = CoroutineScope(Dispatchers.Main + SupervisorJob())
+        viewScope = scope
 
-        flow.observeBoolean(KEY_SHOW_LOCK, default = true)
-            .onEach { target.showLock = it }
-            .launchIn(newScope)
-        flow.observeBoolean(KEY_SHOW_SCREENSHOT, default = true)
-            .onEach { target.showScreenshot = it }
-            .launchIn(newScope)
-        flow.observeBoolean(KEY_SHOW_SELECT_TEXT, default = true)
-            .onEach { target.showSelectText = it }
-            .launchIn(newScope)
-        flow.observeBoolean(KEY_SHOW_FREEFORM, default = true)
-            .onEach { target.showFreeform = it }
-            .launchIn(newScope)
-        flow.observeBoolean(KEY_SHOW_CLEAR_ALL, default = true)
-            .onEach { target.showClearAll = it }
-            .launchIn(newScope)
+        settingsFlow.observeBoolean(KEY_SHOW_LOCK, default = true)
+            .onEach { state.showLock = it }
+            .launchIn(scope)
+        settingsFlow.observeBoolean(KEY_SHOW_SCREENSHOT, default = true)
+            .onEach { state.showScreenshot = it }
+            .launchIn(scope)
+        settingsFlow.observeBoolean(KEY_SHOW_SELECT_TEXT, default = true)
+            .onEach { state.showSelectText = it }
+            .launchIn(scope)
+        settingsFlow.observeBoolean(KEY_SHOW_FREEFORM, default = true)
+            .onEach { state.showFreeform = it }
+            .launchIn(scope)
+        settingsFlow.observeBoolean(KEY_SHOW_CLEAR_ALL, default = true)
+            .onEach { state.showClearAll = it }
+            .launchIn(scope)
 
-        flow.observeBoolean(KEY_SHOW_MEMORY_INFO, default = true)
+        settingsFlow.observeBoolean(KEY_SHOW_MEMORY_INFO, default = true)
             .flatMapLatest { enabled ->
                 if (enabled) memoryInfoFlow() else emptyFlow<String>().onStart { emit("") }
             }
             .distinctUntilChanged()
-            .onEach { target.memoryInfo = it }
-            .launchIn(newScope)
+            .onEach { state.memoryInfo = it }
+            .launchIn(scope)
     }
 
     fun onDetach() {
-        scope?.cancel()
-        scope = null
+        viewScope?.cancel()
+        viewScope = null
+    }
+
+    override fun close() {
+        onDetach()
     }
 
     private fun memoryInfoFlow() = flow {
@@ -104,21 +109,19 @@ class OverviewActionsViewExt {
     }.flowOn(Dispatchers.Default)
 
     private fun readMemoryInfo(): String {
-        val ctx = appContext ?: return ""
         memInfoReader.readMemInfo()
         val total = memInfoReader.totalSize
         val kernelFree = memInfoReader.freeSize + memInfoReader.cachedSize
         val backgroundProcMem = computeBackgroundProcessMemory()
         val available = (kernelFree + backgroundProcMem).coerceAtMost(total)
-        val availableStr = Formatter.formatShortFileSize(ctx, available)
-        val totalStr = Formatter.formatShortFileSize(ctx, total)
-        return ctx.getString(R.string.overview_memory_usage, availableStr, totalStr)
+        val availableStr = Formatter.formatShortFileSize(appContext, available)
+        val totalStr = Formatter.formatShortFileSize(appContext, total)
+        return appContext.getString(R.string.overview_memory_usage, availableStr, totalStr)
     }
 
     private fun computeBackgroundProcessMemory(): Long {
-        val am = activityManager ?: return 0L
         val processes = try {
-            am.runningAppProcesses
+            activityManager.runningAppProcesses
         } catch (e: SecurityException) {
             Log.w(TAG, "runningAppProcesses denied", e)
             return 0L
@@ -126,7 +129,7 @@ class OverviewActionsViewExt {
         if (processes.isEmpty()) return 0L
 
         val services = try {
-            am.getRunningServices(MAX_SERVICES)
+            activityManager.getRunningServices(MAX_SERVICES)
         } catch (e: SecurityException) {
             Log.w(TAG, "getRunningServices denied", e)
             null

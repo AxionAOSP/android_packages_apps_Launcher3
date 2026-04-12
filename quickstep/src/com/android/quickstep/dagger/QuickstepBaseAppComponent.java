@@ -49,6 +49,7 @@ import com.android.quickstep.logging.SettingsChangeLogger;
 import com.android.quickstep.util.AsyncClockEventDelegate;
 import com.android.quickstep.util.ContextualSearchHapticManager;
 import com.android.quickstep.util.ContextualSearchStateManager;
+import com.android.quickstep.views.OverviewActionsViewExt;
 import com.android.quickstep.views.RecentsDismissUtils;
 import com.android.quickstep.window.RecentsWindowManager;
 import com.android.quickstep.window.RecentsWindowTracker;
@@ -96,6 +97,8 @@ public interface QuickstepBaseAppComponent extends LauncherBaseAppComponent {
     PerDisplayRepository<FallbackWindowInterface> getFallbackWindowInterfaceRepository();
 
     RecentsModel getRecentsModel();
+
+    OverviewActionsViewExt getOverviewActionsViewExt();
 
     RecentsDismissUtils.Factory getRecentsDismissUtilsFactory();
 
