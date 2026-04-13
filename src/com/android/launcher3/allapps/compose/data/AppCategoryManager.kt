@@ -4,6 +4,7 @@ import android.content.Context
 import android.content.SharedPreferences
 import com.android.launcher3.LauncherFiles
 import kotlinx.coroutines.flow.*
+import org.json.JSONArray
 import org.json.JSONObject
 
 class AppCategoryManager(context: Context) {
@@ -18,10 +19,14 @@ class AppCategoryManager(context: Context) {
     private val _customCategories = MutableStateFlow(loadCustomCategories())
     val customCategories: StateFlow<Map<Int, String>> = _customCategories.asStateFlow()
 
+    private val _categoryOrder = MutableStateFlow(loadCategoryOrder())
+    val categoryOrder: StateFlow<List<Int>> = _categoryOrder.asStateFlow()
+
     private val prefsListener = SharedPreferences.OnSharedPreferenceChangeListener { _, key ->
         when (key) {
             PREF_OVERRIDES -> _overrides.value = loadOverrides()
             PREF_CUSTOM_CATEGORIES -> _customCategories.value = loadCustomCategories()
+            PREF_CATEGORY_ORDER -> _categoryOrder.value = loadCategoryOrder()
         }
     }
 
@@ -124,9 +129,31 @@ class AppCategoryManager(context: Context) {
         _customCategories.value = updated
     }
 
+    private fun loadCategoryOrder(): List<Int> {
+        val json = prefs.getString(PREF_CATEGORY_ORDER, "[]") ?: "[]"
+        return try {
+            val arr = JSONArray(json)
+            List(arr.length()) { arr.getInt(it) }
+        } catch (e: Exception) {
+            emptyList()
+        }
+    }
+
+    private fun saveCategoryOrder(order: List<Int>) {
+        val arr = JSONArray()
+        order.forEach { arr.put(it) }
+        prefs.edit().putString(PREF_CATEGORY_ORDER, arr.toString()).apply()
+    }
+
+    fun setCategoryOrder(order: List<Int>) {
+        saveCategoryOrder(order)
+        _categoryOrder.value = order
+    }
+
     companion object {
         private const val PREF_OVERRIDES = "app_category_overrides"
         private const val PREF_CUSTOM_CATEGORIES = "custom_app_categories"
+        private const val PREF_CATEGORY_ORDER = "category_order"
         const val CUSTOM_ID_START = 100
     }
 }

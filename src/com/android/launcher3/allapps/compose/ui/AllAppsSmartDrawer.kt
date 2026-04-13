@@ -35,7 +35,11 @@ import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 
 
 import android.content.Context
+import android.view.HapticFeedbackConstants
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.spring
 import androidx.compose.foundation.*
+import androidx.compose.foundation.gestures.detectDragGesturesAfterLongPress
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.grid.*
@@ -49,12 +53,17 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.*
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.nativeCanvas
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.*
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.zIndex
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.android.launcher3.R
 import com.android.launcher3.allapps.compose.data.AllAppsIconProvider
@@ -146,14 +155,66 @@ internal fun AllAppsCategoriesView(
         }
     }
 
+    var wasFullyClosed by remember { mutableStateOf(true) }
+    LaunchedEffect(Unit) {
+        snapshotFlow { transitionProgressProvider() }.collect { progress ->
+            if (progress == 0f) {
+                wasFullyClosed = true
+            } else if (wasFullyClosed && progress > 0f) {
+                wasFullyClosed = false
+                gridState.scrollToItem(0)
+            }
+        }
+    }
+
     val currentExpandedCategory by rememberUpdatedState(expandedCategory)
 
+    val categoryOrder by categoryManager.categoryOrder.collectAsStateWithLifecycle()
     val topCards = remember(categories) { categories.filter { it.id == -4 || it.id == -2 } }
-    val gridCards = remember(categories) { categories.filter { it.id != -4 && it.id != -2 } }
+    var draggedId by remember { mutableStateOf<Int?>(null) }
+    var dragTotal by remember { mutableStateOf(Offset.Zero) }
+    var gridSlotDelta by remember { mutableStateOf(Offset.Zero) }
+    var hasDragged by remember { mutableStateOf(false) }
+    val isDragging = draggedId != null
+    val view = LocalView.current
+
+    LaunchedEffect(isDragging) {
+        interactions.controller?.let {
+            if (isDragging) {
+                it.canScrollUp = true
+                it.canScrollDown = false
+            } else {
+                it.canScrollUp = gridState.canScrollBackward
+                it.canScrollDown = gridState.canScrollForward
+            }
+        }
+    }
+
+    val sortedGridCards = remember(categories, categoryOrder) {
+        val base = categories.filter { it.id != -4 && it.id != -2 }
+        if (categoryOrder.isEmpty()) base
+        else {
+            val orderMap = categoryOrder.withIndex().associate { (i, id) -> id to i }
+            base.sortedBy { orderMap[it.id] ?: Int.MAX_VALUE }
+        }
+    }
+
+    val gridCards = remember { mutableStateListOf<AppCategory>() }
+    LaunchedEffect(sortedGridCards) {
+        if (!isDragging) {
+            gridCards.clear()
+            gridCards.addAll(sortedGridCards)
+        }
+    }
+    if (gridCards.isEmpty() && sortedGridCards.isNotEmpty()) {
+        gridCards.clear()
+        gridCards.addAll(sortedGridCards)
+    }
 
     LazyVerticalGrid(
         columns = GridCells.Adaptive(minSize = 160.dp),
         state = gridState,
+        userScrollEnabled = !isDragging,
         contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 72.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp),
         horizontalArrangement = Arrangement.spacedBy(12.dp),
@@ -176,15 +237,106 @@ internal fun AllAppsCategoriesView(
         }
         items(count = gridCards.size, key = { gridCards[it].id }) { index ->
             val cat = gridCards[index]
-            CategoryFolder(
-                category = cat,
-                onClick = {
-                    internalExpandedCategory = cat
-                    onExpandedCategoryChange(cat)
-                },
-                onLongClick = if (cat.isCustom) {{ onCustomFolderAction(cat) }} else null,
-                isScrollingProvider = isScrollingProvider
-            )
+            val isDraggedItem = draggedId == cat.id
+            Box(
+                modifier = Modifier
+                    .zIndex(if (isDraggedItem) 1f else 0f)
+                    .graphicsLayer {
+                        if (isDraggedItem) {
+                            translationX = dragTotal.x - gridSlotDelta.x
+                            translationY = dragTotal.y - gridSlotDelta.y
+                            scaleX = 1.08f
+                            scaleY = 1.08f
+                            shadowElevation = 16f
+                            alpha = 0.92f
+                        }
+                    }
+                    .animateItem(
+                        placementSpec = if (isDraggedItem) null
+                            else spring(stiffness = Spring.StiffnessMediumLow)
+                    )
+                    .pointerInput(cat.id) {
+                        detectDragGesturesAfterLongPress(
+                            onDragStart = {
+                                draggedId = cat.id
+                                dragTotal = Offset.Zero
+                                gridSlotDelta = Offset.Zero
+                                hasDragged = false
+                                view.performHapticFeedback(HapticFeedbackConstants.LONG_PRESS)
+                            },
+                            onDrag = { change, offset ->
+                                change.consume()
+                                dragTotal += offset
+                                hasDragged = true
+                                val currentIdx = gridCards.indexOfFirst { it.id == cat.id }
+                                if (currentIdx < 0) return@detectDragGesturesAfterLongPress
+                                val layoutInfo = gridState.layoutInfo
+                                val topCardsCount = topCards.size
+                                val draggedItem = layoutInfo.visibleItemsInfo
+                                    .firstOrNull { it.index == currentIdx + topCardsCount }
+                                    ?: return@detectDragGesturesAfterLongPress
+                                val visualCenter = Offset(
+                                    draggedItem.offset.x + draggedItem.size.width / 2f + dragTotal.x - gridSlotDelta.x,
+                                    draggedItem.offset.y + draggedItem.size.height / 2f + dragTotal.y - gridSlotDelta.y
+                                )
+                                var targetIdx = currentIdx
+                                for (item in layoutInfo.visibleItemsInfo) {
+                                    val gridIdx = item.index - topCardsCount
+                                    if (gridIdx < 0 || gridIdx >= gridCards.size || gridIdx == currentIdx) continue
+                                    val itemCenterX = item.offset.x + item.size.width / 2f
+                                    val itemCenterY = item.offset.y + item.size.height / 2f
+                                    val dx = (visualCenter.x - itemCenterX).toDouble()
+                                    val dy = (visualCenter.y - itemCenterY).toDouble()
+                                    if (dx * dx + dy * dy < (item.size.width * 0.4f).let { r -> r * r }.toDouble()) {
+                                        targetIdx = gridIdx
+                                        break
+                                    }
+                                }
+                                if (targetIdx != currentIdx) {
+                                    val targetItem = layoutInfo.visibleItemsInfo
+                                        .firstOrNull { it.index == targetIdx + topCardsCount }
+                                    if (targetItem != null) {
+                                        gridSlotDelta += Offset(
+                                            (targetItem.offset.x - draggedItem.offset.x).toFloat(),
+                                            (targetItem.offset.y - draggedItem.offset.y).toFloat()
+                                        )
+                                    }
+                                    gridCards.add(targetIdx, gridCards.removeAt(currentIdx))
+                                    view.performHapticFeedback(HapticFeedbackConstants.CLOCK_TICK)
+                                }
+                            },
+                            onDragEnd = {
+                                if (!hasDragged && cat.isCustom) {
+                                    onCustomFolderAction(cat)
+                                }
+                                if (hasDragged) {
+                                    categoryManager.setCategoryOrder(gridCards.map { it.id })
+                                }
+                                draggedId = null
+                                dragTotal = Offset.Zero
+                                gridSlotDelta = Offset.Zero
+                                hasDragged = false
+                            },
+                            onDragCancel = {
+                                draggedId = null
+                                dragTotal = Offset.Zero
+                                gridSlotDelta = Offset.Zero
+                                hasDragged = false
+                            }
+                        )
+                    }
+            ) {
+                CategoryFolder(
+                    category = cat,
+                    onClick = {
+                        if (!isDragging) {
+                            internalExpandedCategory = cat
+                            onExpandedCategoryChange(cat)
+                        }
+                    },
+                    isScrollingProvider = isScrollingProvider
+                )
+            }
         }
     }
 
