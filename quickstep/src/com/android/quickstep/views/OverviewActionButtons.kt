@@ -121,7 +121,6 @@ private fun OverviewActionButtonsContent(state: OverviewActionsState) {
     ) {
         Row(
             modifier = Modifier
-                .fillMaxWidth()
                 .height(buttonSize),
             horizontalArrangement = Arrangement.spacedBy(buttonSpacing, Alignment.CenterHorizontally),
             verticalAlignment = Alignment.CenterVertically
@@ -159,9 +158,7 @@ private fun OverviewActionButtonsContent(state: OverviewActionsState) {
                     contentDescRes = R.string.action_freeform,
                     onClick = { state.onFreeform?.run() },
                     containerColor = containerColor,
-                    contentColor = contentColor,
-                    enabled = state.freeformVisible,
-                    modifier = Modifier.alpha(if (state.freeformVisible) 1f else 0f)
+                    contentColor = contentColor
                 )
             }
             if (state.splitVisible) {
