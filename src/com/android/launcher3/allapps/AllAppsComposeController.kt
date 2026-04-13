@@ -93,13 +93,15 @@ class AllAppsComposeController @Inject constructor(
     val viewModel = AllAppsComposeViewModel(allAppsStore, activityContext as Context).also { vm ->
         val dp = activityContext.deviceProfile
         val profile = dp.allAppsProfile
-        vm.onConfigChanged(dp.numShownAllAppsColumns, profile.iconSizePx, profile.cellWidthPx, profile.cellHeightPx)
+        vm.onConfigChanged(dp.numShownAllAppsColumns, profile.iconSizePx, profile.cellWidthPx, profile.cellHeightPx, dp.deviceProperties.isTablet)
     }
 
     val callbacks: AllAppsComposeCallbacks = createCallbacks()
 
     var transitionProgress by mutableFloatStateOf(0f)
         internal set
+
+    var backProgress by mutableFloatStateOf(0f)
 
     private val _predictedApps = MutableStateFlow<List<ItemInfo>>(emptyList())
     var predictedApps: List<ItemInfo>
@@ -257,6 +259,7 @@ class AllAppsComposeController @Inject constructor(
             profile.iconSizePx,
             profile.cellWidthPx,
             profile.cellHeightPx,
+            dp.deviceProperties.isTablet,
             configUpdate.uiMode
         )
     }
@@ -517,6 +520,7 @@ class AllAppsComposeController @Inject constructor(
         val iconSizePx: Int = 0,
         val cellWidthPx: Int = 0,
         val cellHeightPx: Int = 0,
+        val isTablet: Boolean = false,
         val uiMode: Int = 0
     )
 

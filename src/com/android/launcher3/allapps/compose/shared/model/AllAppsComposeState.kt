@@ -26,6 +26,7 @@ data class AllAppsComposeState(
     val iconSizePx: Int = 0,
     val cellWidthPx: Int = 0,
     val cellHeightPx: Int = 0,
+    val isTablet: Boolean = false,
     val showLabels: Boolean = true,
     val showPredictions: Boolean = true,
     val sectionIndices: Map<String, Int> = emptyMap(),

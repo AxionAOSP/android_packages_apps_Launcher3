@@ -32,6 +32,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.CompositingStrategy
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.input.pointer.PointerEventTimeoutCancellationException
@@ -275,6 +276,7 @@ fun AllAppsComposeGrid(
                 .graphicsLayer {
                     this.clip = true
                     this.shape = scrollClipShape
+                    this.compositingStrategy = CompositingStrategy.Offscreen
                 }
                 .verticalScroll(scrollState, enabled = isScrollEnabled)
                 .padding(contentPadding)

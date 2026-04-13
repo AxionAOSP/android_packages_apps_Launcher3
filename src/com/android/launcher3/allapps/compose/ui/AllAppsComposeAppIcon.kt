@@ -165,7 +165,9 @@ fun AllAppsComposeAppIcon(
             .then(heightModifier)
             .width(cellWidth)
             .onGloballyPositioned { coords ->
-                layoutCoords.column = coords
+                if (!isScrollingProvider()) {
+                    layoutCoords.column = coords
+                }
             }
             .pointerInput(Unit) {
                 awaitEachGesture {

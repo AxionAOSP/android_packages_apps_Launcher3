@@ -46,6 +46,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 private const val TAG = "AllAppsComposeVM"
+private const val TABLET_MAX_COLUMNS = 6
 
 class AllAppsComposeViewModel(
     allAppsStore: AllAppsStore,
@@ -221,12 +222,14 @@ class AllAppsComposeViewModel(
         }
     }
 
-    fun onConfigChanged(columns: Int, iconSizePx: Int, cellWidthPx: Int, cellHeightPx: Int) {
+    fun onConfigChanged(columns: Int, iconSizePx: Int, cellWidthPx: Int, cellHeightPx: Int, isTablet: Boolean = false) {
+        val effectiveColumns = if (isTablet) columns.coerceAtMost(TABLET_MAX_COLUMNS) else columns
         _state.update { it.copy(
-            numColumns = columns,
+            numColumns = effectiveColumns,
             iconSizePx = iconSizePx,
             cellWidthPx = cellWidthPx,
-            cellHeightPx = cellHeightPx
+            cellHeightPx = cellHeightPx,
+            isTablet = isTablet
         ) }
         rebuildState()
     }

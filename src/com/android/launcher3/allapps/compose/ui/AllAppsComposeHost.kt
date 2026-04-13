@@ -72,7 +72,8 @@ fun AllAppsComposeHost(
                         config.columns,
                         config.iconSizePx,
                         config.cellWidthPx,
-                        config.cellHeightPx
+                        config.cellHeightPx,
+                        config.isTablet
                     )
                 }
                 if (config.uiMode > 0) {

@@ -358,12 +358,41 @@ fun AllAppsComposeContent(
         }
 
         val drawerBaseBg = drawerBaseBackgroundColor()
-        val radiusDp = 12.dp
-        val sheetShape = RoundedCornerShape(topStart = radiusDp, topEnd = radiusDp)
+        val isTablet = state.isTablet
+        val sheetShape = if (isTablet) {
+            RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp)
+        } else {
+            RoundedCornerShape(topStart = 12.dp, topEnd = 12.dp)
+        }
+
+        val tabletScrimColor = remember {
+            dynamicDarkColorScheme(context).surfaceContainer.copy(alpha = 0.55f)
+        }
+
+        if (isTablet && controller.backProgress == 0f) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .graphicsLayer {
+                        val progress = transitionProgressProvider()
+                        alpha = if (progress < 0.7f) 0f
+                              else ((progress - 0.7f) / (0.3f)).coerceIn(0f, 1f)
+                    }
+                    .drawBehind { drawRect(tabletScrimColor) }
+            )
+        }
 
         Box(
-            modifier = Modifier
-                .fillMaxSize()
+            modifier = (if (isTablet) {
+                Modifier
+                    .fillMaxWidth(0.75f)
+                    .fillMaxHeight()
+                    .align(Alignment.TopCenter)
+                    .statusBarsPadding()
+                    .padding(top = 12.dp)
+            } else {
+                Modifier.fillMaxSize()
+            })
                 .graphicsLayer {
                     val progress = transitionProgressProvider()
                     alpha = if (progress < 0.7f) 0f
@@ -371,7 +400,7 @@ fun AllAppsComposeContent(
                 }
                 .clip(sheetShape)
                 .background(drawerBaseBg)
-                .statusBarsPadding()
+                .then(if (!isTablet) Modifier.statusBarsPadding() else Modifier)
         ) {
                 if (state.isLoading) {
                     Box(
@@ -386,7 +415,9 @@ fun AllAppsComposeContent(
                 } else {
                 SceneTransitionLayout(
                     state = sceneLayoutState,
-                    modifier = Modifier.fillMaxSize().navigationBarsPadding().padding(bottom = 32.dp).clipToBounds()
+                    modifier = Modifier.fillMaxSize().navigationBarsPadding()
+                        .padding(bottom = 32.dp, top = if (isTablet) 16.dp else 0.dp)
+                        .clipToBounds()
                 ) {
                     scene(AllAppsScenes.Drawer) {
                         Box(modifier = Modifier.element(AllAppsElements.DrawerRoot).fillMaxSize()) {

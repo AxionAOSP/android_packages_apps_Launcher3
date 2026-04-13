@@ -261,9 +261,14 @@ public class AllAppsTransitionController
                 && mLauncher.getAppsView().getNavBarScrimHeight() > 0;
         int flags = hasScrim ? mNavScrimFlag : 0;
         if (mLauncher.getAppsView().isUsingCompose() && progress < NAV_BAR_COLOR_FORCE_UPDATE_THRESHOLD) {
-            int surfaceColor = mLauncher.getColor(R.color.materialColorSurfaceContainer);
-            boolean isLight = ColorUtils.calculateLuminance(surfaceColor) >= 0.5;
-            flags |= isLight ? FLAG_LIGHT_STATUS : FLAG_DARK_STATUS;
+            boolean isTablet = mLauncher.getDeviceProfile().getDeviceProperties().isTablet();
+            if (isTablet) {
+                flags |= FLAG_DARK_STATUS;
+            } else {
+                int surfaceColor = mLauncher.getColor(R.color.materialColorSurfaceContainer);
+                boolean isLight = ColorUtils.calculateLuminance(surfaceColor) >= 0.5;
+                flags |= isLight ? FLAG_LIGHT_STATUS : FLAG_DARK_STATUS;
+            }
         }
         mLauncher.getSystemUiController().updateUiState(UI_STATE_ALL_APPS, flags);
     }
@@ -321,11 +326,19 @@ public class AllAppsTransitionController
                 * (1 - backProgress);
 
         mAllAppScale.updateValue(scaleProgress);
+        if (mLauncher.getAppsView().isUsingCompose()) {
+            mLauncher.getActivityComponent().getAllAppsComposeController()
+                    .setBackProgress(backProgress);
+        }
     }
 
     private void onScaleProgressChanged() {
         final float scaleProgress = mAllAppScale.value;
         SCALE_PROPERTY.set(mLauncher.getAppsView(), scaleProgress);
+        if (scaleProgress >= 1f && mLauncher.getAppsView().isUsingCompose()) {
+            mLauncher.getActivityComponent().getAllAppsComposeController()
+                    .setBackProgress(0f);
+        }
 
         if (mShouldScaleHeader || !mShouldShowAllAppsOnSheet) {
             mLauncher.getScrimView().setScrimHeaderScale(scaleProgress);
