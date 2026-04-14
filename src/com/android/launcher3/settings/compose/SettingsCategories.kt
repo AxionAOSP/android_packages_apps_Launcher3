@@ -238,7 +238,7 @@ fun HomeScreenSettings(viewModel: SettingsState, context: Context) {
 
             if (searchWidgetOptions.isNotEmpty()) {
                 ListPreference(
-                    title = "Search Provider",
+                    title = stringResource(R.search_provider_title),
                     summary = if (selectedProvider == "none") "None"
                               else searchWidgetOptions.find { it.first == selectedProvider }?.second
                                   ?: searchWidgetOptions.firstOrNull()?.second
@@ -457,56 +457,56 @@ fun SearchSettingsPage(context: Context) {
     PreferenceGroup(title = stringResource(R.string.settings_section_providers)) {
         item {
             SwitchPreference(
-                title = "Contacts",
-                summary = "Search your contacts",
+                title = stringResource(R.string.pref_contacts_title),
+                summary = stringResource(R.string.pref_contacts_summary),
                 checked = preferences.searchContacts,
                 onCheckedChange = { searchManager.setSearchPreference(PreferenceKeys.SEARCH_CONTACTS, it) }
             )
         }
         item {
             SwitchPreference(
-                title = "Messages",
-                summary = "Search your SMS messages",
+                title = stringResource(R.string.pref_messages_title),
+                summary = stringResource(R.string.pref_messages_summary),
                 checked = preferences.searchMessages,
                 onCheckedChange = { searchManager.setSearchPreference(PreferenceKeys.SEARCH_MESSAGES, it) }
             )
         }
         item {
             SwitchPreference(
-                title = "Files",
-                summary = "Search local files",
+                title = stringResource(R.string.pref_files_title),
+                summary = stringResource(R.string.pref_files_summary),
                 checked = preferences.searchFiles,
                 onCheckedChange = { searchManager.setSearchPreference(PreferenceKeys.SEARCH_FILES, it) }
             )
         }
         item {
             SwitchPreference(
-                title = "Photos",
-                summary = "Search device photos",
+                title = stringResource(R.string.pref_photos_title),
+                summary = stringResource(R.string.pref_photos_summary),
                 checked = preferences.searchPhotos,
                 onCheckedChange = { searchManager.setSearchPreference(PreferenceKeys.SEARCH_PHOTOS, it) }
             )
         }
         item {
             SwitchPreference(
-                title = "Calendar",
-                summary = "Search calendar events",
+                title = stringResource(R.string.pref_calendar_title),
+                summary = stringResource(R.string.pref_calendar_summary),
                 checked = preferences.searchCalendar,
                 onCheckedChange = { searchManager.setSearchPreference(PreferenceKeys.SEARCH_CALENDAR, it) }
             )
         }
         item {
             SwitchPreference(
-                title = "Settings",
-                summary = "Search system settings",
+                title = stringResource(R.string.pref_settings_title),
+                summary = stringResource(R.string.pref_settings_summary),
                 checked = preferences.searchSettings,
                 onCheckedChange = { searchManager.setSearchPreference(PreferenceKeys.SEARCH_SETTINGS, it) }
             )
         }
         item {
             SwitchPreference(
-                title = "Web Search",
-                summary = "Allow web search actions",
+                title = stringResource(R.string.pref_web_title),
+                summary = stringResource(R.string.pref_web_summary),
                 checked = preferences.searchWeb,
                 onCheckedChange = { searchManager.setSearchPreference(PreferenceKeys.SEARCH_WEB, it) }
             )

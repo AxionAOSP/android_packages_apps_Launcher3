@@ -1,0 +1,122 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Pulse Settings -->
+    <string name="pulse_settings_title">设置</string>
+    <string name="pulse_settings_brand_subtitle">启动器设置</string>
+
+    <!-- Settings categories -->
+    <string name="settings_category_general">通用</string>
+    <string name="settings_category_general_summary">图标，通知点</string>
+    <string name="settings_category_home">主屏幕</string>
+    <string name="settings_category_home_summary">布局，标签，图标</string>
+    <string name="settings_category_drawer">应用抽屉</string>
+    <string name="settings_category_drawer_summary">布局，隐藏应用，图标</string>
+    <string name="settings_category_search">搜索</string>
+    <string name="settings_category_search_summary">搜索提供程序</string>
+    <string name="settings_category_gestures">手势</string>
+    <string name="settings_category_gestures_summary">点按和滑动</string>
+    <string name="settings_category_about">关于</string>
+    <string name="settings_category_about_summary">Pulse 启动器</string>
+    <string name="settings_category_behavior">行为</string>
+    <string name="settings_category_privacy">隐私</string>
+
+    <!-- General settings sections -->
+    <string name="settings_section_icons">图标</string>
+    <string name="settings_section_display">显示</string>
+    <string name="settings_section_layout">布局</string>
+    <string name="settings_section_labels">标签</string>
+    <string name="settings_section_style">样式</string>
+    <string name="settings_section_providers">提供程序</string>
+
+    <string name="search_provider_title">搜索提供商</string>
+
+    <!-- Preference strings -->
+    <string name="pref_themed_icons_global_title">启用主题图标</string>
+    <string name="pref_themed_icons_global_summary">在整个启动器中使用单色主题图标</string>
+    <string name="pref_themed_icons_drawer_title">主题图标</string>
+    <string name="pref_themed_icons_drawer_summary">将主题图标应用到应用抽屉</string>
+    <string name="pref_disable_wallpaper_zoom_title">禁用壁纸缩放</string>
+    <string name="pref_disable_wallpaper_zoom_summary">防止切换状态时壁纸缩放</string>
+    <string name="pref_all_apps_opacity_title">背景透明度</string>
+    <string name="pref_all_apps_opacity_summary">调整应用抽屉背景的透明程度</string>
+    <string name="icon_size_slider_summary">相对于默认大小的缩放比例</string>
+    <string name="icon_size_home">主屏幕</string>
+    <string name="icon_size_drawer">应用抽屉</string>
+    <string name="pref_landscape_mode_title">横屏模式</string>
+    <string name="pref_landscape_mode_summary">主屏幕始终使用横屏模式</string>
+
+    <!-- App drawer predictions -->
+    <string name="all_apps_suggestions_title">应用建议</string>
+    <string name="all_apps_suggestions_summary">在抽屉顶部显示预测的应用</string>
+
+    <!-- Pin to top -->
+    <string name="action_pin_to_top">固定到顶部</string>
+    <string name="action_unpin">取消固定</string>
+
+    <!-- Custom folders -->
+    <string name="action_add_to_folder">添加到文件夹</string>
+    <string name="action_remove_from_folder">从文件夹中移除</string>
+    <string name="action_new_folder">新建文件夹</string>
+
+    <!-- Double tap to sleep -->
+    <string name="pref_sleep_gesture_title">双击熄屏</string>
+    <string name="pref_sleep_gesture_summary">双击空白区域关闭屏幕</string>
+
+    <!-- Recents category -->
+    <string name="settings_category_recents">最近任务</string>
+    <string name="settings_category_recents_summary">概览操作</string>
+    <string name="pref_recents_buttons_category">操作按钮</string>
+    <string name="pref_recents_show_lock_title">锁定应用</string>
+    <string name="pref_recents_show_lock_summary">防止清除当前任务</string>
+    <string name="pref_recents_show_screenshot_title">截图</string>
+    <string name="pref_recents_show_screenshot_summary">截取当前任务画面</string>
+    <string name="pref_recents_show_select_text_title">选择文字</string>
+    <string name="pref_recents_show_select_text_summary">从当前任务中选取文字</string>
+    <string name="pref_recents_show_freeform_title">自由窗口</string>
+    <string name="pref_recents_show_freeform_summary">在自由窗口中打开当前任务</string>
+    <string name="pref_recents_show_clear_all_title">全部清除</string>
+    <string name="pref_recents_show_clear_all_summary">清除所有最近任务</string>
+    <string name="pref_recents_show_memory_info_title">内存信息</string>
+    <string name="pref_recents_show_memory_info_summary">在概览中显示可用内存</string>
+    <string name="overview_memory_usage">可用内存 %1$s | %2$s</string>
+
+    <!-- Launcher blur -->
+    <string name="pref_launcher_blur_category">启动器模糊</string>
+    <string name="pref_launcher_blur_title">启用启动器模糊</string>
+    <string name="pref_launcher_blur_summary">模糊启动器界面背后的壁纸</string>
+    <string name="pref_launcher_blur_radius_title">模糊半径</string>
+    <string name="pref_launcher_blur_radius_summary">最大模糊强度</string>
+    <string name="pref_launcher_blur_radius_pixels">%1$d 像素</string>
+
+    <!-- Contacts -->
+    <string name="pref_contacts_title">联系人</string>
+    <string name="pref_contacts_summary">搜索你的联系人</string>
+    <string name="pref_messages_title">信息</string>
+    <string name="pref_messages_summary">搜索你的短信</string>
+    <string name="pref_files_title">文件</string>
+    <string name="pref_files_summary">搜索本地文件</string>
+    <string name="pref_photos_title">照片</string>
+    <string name="pref_photos_summary">搜索设备照片</string>
+    <string name="pref_calendar_title">日历</string>
+    <string name="pref_calendar_summary">搜索日历事件</string>
+    <string name="pref_settings_title">设置</string>
+    <string name="pref_settings_summary">搜索系统设置</string>
+    <string name="pref_web_title">网页搜索</string>
+    <string name="pref_web_summary">允许网页搜索操作</string>
+
+    <!-- Gesture navigation handle burn-in protection -->
+    <string name="pref_nav_handle_burn_in_category">导航手柄</string>
+    <string name="pref_nav_handle_burn_in_title">防烧屏保护</string>
+    <string name="pref_nav_handle_burn_in_summary">缓慢移动手势手柄以减少OLED烧屏</string>
+    <string name="pref_nav_handle_burn_in_interval_title">移动间隔</string>
+    <string name="pref_nav_handle_burn_in_interval_summary">手柄移动到新位置的频率</string>
+    <string name="pref_nav_handle_burn_in_interval_seconds">%1$d 秒</string>
+
+    <!-- About -->
+    <string name="about_version">版本</string>
+    <string name="about_based_on">基于 Launcher3</string>
+    <string name="about_contributors">贡献者</string>
+    <string name="about_github">GitHub</string>
+    <string name="about_translate">翻译</string>
+    <string name="about_donate">捐赠</string>
+</resources>
