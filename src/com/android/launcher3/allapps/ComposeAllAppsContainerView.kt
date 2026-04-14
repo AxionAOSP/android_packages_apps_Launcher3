@@ -108,7 +108,7 @@ class ComposeAllAppsContainerView @JvmOverloads constructor(
     }
 
     override fun onDetachedFromWindow() {
-        Log.d(TAG, "onDetachedFromWindow", Throwable())
+        Log.d(TAG, "onDetachedFromWindow")
         super.onDetachedFromWindow()
         controller.detachContainer()
     }

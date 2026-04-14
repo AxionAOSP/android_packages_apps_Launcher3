@@ -31,6 +31,7 @@ import com.android.launcher3.util.SettingsCache
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
+import kotlinx.coroutines.flow.distinctUntilChanged
 
 class AllAppsRepository(
     private val allAppsStore: AllAppsStore,
@@ -46,7 +47,7 @@ class AllAppsRepository(
         allAppsStore.addUpdateListener(listener)
         trySend(buildAppsData())
         awaitClose { allAppsStore.removeUpdateListener(listener) }
-    }
+    }.distinctUntilChanged()
 
     val preferences: Flow<DrawerPreferences> = callbackFlow {
         val prefs = context.getSharedPreferences(
@@ -60,7 +61,7 @@ class AllAppsRepository(
         prefs.registerOnSharedPreferenceChangeListener(listener)
         trySend(readPreferences(prefs))
         awaitClose { prefs.unregisterOnSharedPreferenceChangeListener(listener) }
-    }
+    }.distinctUntilChanged()
 
     private fun buildAppsData(): AppsData {
         val allApps = allAppsStore.getApps()?.toList() ?: emptyList()

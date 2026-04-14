@@ -169,7 +169,7 @@ class AllAppsComposeController @Inject constructor(
         privateManager: PrivateProfileManager,
         workManager: WorkProfileManager
     ) {
-        Log.d(TAG, "attachContainer: container=${container.javaClass.simpleName}, cv=$cv", Throwable())
+        Log.d(TAG, "attachContainer: container=${container.javaClass.simpleName}, cv=$cv")
         this.container = container
         composeView = cv
         privateProfileManager = privateManager
@@ -178,7 +178,7 @@ class AllAppsComposeController @Inject constructor(
     }
 
     fun attachTaskbarContainer(container: ViewGroup, cv: AxComposeView) {
-        Log.d(TAG, "attachTaskbarContainer: container=${container.javaClass.simpleName}, cv=$cv", Throwable())
+        Log.d(TAG, "attachTaskbarContainer: container=${container.javaClass.simpleName}, cv=$cv")
         this.container = container
         composeView = cv
         updateConfig(activityContext.deviceProfile)
@@ -186,7 +186,7 @@ class AllAppsComposeController @Inject constructor(
     }
 
     fun detachContainer() {
-        Log.d(TAG, "detachContainer: composeView=$composeView", Throwable())
+        Log.d(TAG, "detachContainer: composeView=$composeView")
         registerBackIntercept(false)
         launcher?.removeOnDeviceProfileChangeListener(this)
         showFolderPickerHandler = null
@@ -231,7 +231,7 @@ class AllAppsComposeController @Inject constructor(
     }
 
     override fun onDeviceProfileChanged(dp: DeviceProfile) {
-        Log.d(TAG, "onDeviceProfileChanged: composeView=$composeView", Throwable())
+        Log.d(TAG, "onDeviceProfileChanged: composeView=$composeView")
         (container as? ComposeAllAppsContainerView)?.onProfileChanged(dp)
         updateConfig(dp)
         resetState()
@@ -240,7 +240,7 @@ class AllAppsComposeController @Inject constructor(
     }
 
     fun onUiModeChanged() {
-        Log.d(TAG, "onUiModeChanged: composeView=$composeView, configUpdate=$configUpdate", Throwable())
+        Log.d(TAG, "onUiModeChanged: composeView=$composeView, configUpdate=$configUpdate")
         configUpdate = configUpdate.copy(uiMode = configUpdate.uiMode + 1)
     }
 

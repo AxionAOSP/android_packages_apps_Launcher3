@@ -216,7 +216,7 @@ internal fun PrivateSpaceFullPage(
                     item(key = "private_add_app") {
                         val iconSizeDp = with(LocalDensity.current) { state.iconSizePx.toDp() }
                         val cellHeightDp = with(LocalDensity.current) { state.cellHeightPx.toDp() }
-                        Box(
+                        Column(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .height(cellHeightDp)
@@ -224,37 +224,35 @@ internal fun PrivateSpaceFullPage(
                                     onLaunch()
                                     callbacks.onPrivateSpaceInstallAppClicked()
                                 },
-                            contentAlignment = Alignment.TopCenter
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.Center
                         ) {
-                            Column(
-                                horizontalAlignment = Alignment.CenterHorizontally
+                            Box(
+                                modifier = Modifier
+                                    .size(iconSizeDp)
+                                    .clip(CircleShape)
+                                    .background(MaterialTheme.colorScheme.surfaceContainerHigh),
+                                contentAlignment = Alignment.Center
                             ) {
-                                Spacer(modifier = Modifier.height(4.dp))
-                                Box(
+                                Icon(
+                                    imageVector = Icons.Default.Add,
+                                    contentDescription = stringResource(R.string.ps_add_app_button),
+                                    tint = MaterialTheme.colorScheme.onSurface,
+                                    modifier = Modifier.size(28.dp)
+                                )
+                            }
+                            if (state.showLabels) {
+                                Text(
+                                    text = stringResource(R.string.ps_add_app_short),
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = LocalDrawerContentColor.current.copy(alpha = 0.7f),
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis,
+                                    textAlign = TextAlign.Center,
                                     modifier = Modifier
-                                        .size(iconSizeDp)
-                                        .clip(CircleShape)
-                                        .background(MaterialTheme.colorScheme.surfaceContainerHigh),
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    Icon(
-                                        imageVector = Icons.Default.Add,
-                                        contentDescription = stringResource(R.string.ps_add_app_button),
-                                        tint = MaterialTheme.colorScheme.onSurface,
-                                        modifier = Modifier.size(28.dp)
-                                    )
-                                }
-                                if (state.showLabels) {
-                                    Text(
-                                        text = stringResource(R.string.ps_add_app_short),
-                                        style = MaterialTheme.typography.bodySmall,
-                                        color = LocalDrawerContentColor.current.copy(alpha = 0.7f),
-                                        maxLines = 1,
-                                        overflow = TextOverflow.Ellipsis,
-                                        textAlign = TextAlign.Center,
-                                        modifier = Modifier.padding(top = 4.dp)
-                                    )
-                                }
+                                        .width(iconSizeDp)
+                                        .padding(top = 4.dp)
+                                )
                             }
                         }
                     }

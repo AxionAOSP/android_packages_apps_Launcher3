@@ -81,8 +81,9 @@ class AllAppsComposeViewModel(
     private var pendingIconRefresh = false
 
     private fun observeData() {
-        Log.d(TAG, "observeData: registering AllAppsStore listener, current scope active=${viewModelScope.isActive}", Throwable())
+        Log.d(TAG, "observeData: registering AllAppsStore listener, current scope active=${viewModelScope.isActive}")
         repository.apps.onEach { data ->
+            if (data == latestAppsData) return@onEach
             Log.d(TAG, "apps update: personal=${data.personalApps.size} work=${data.workApps.size} private=${data.privateApps.size}")
             latestAppsData = data
             AllAppsIconProvider.getInstance(context).clearCache()
@@ -108,7 +109,7 @@ class AllAppsComposeViewModel(
         updateJob?.cancel()
         updateJob = viewModelScope.launch {
             val data = latestAppsData
-            Log.d(TAG, "rebuildState: personal=${data.personalApps.size} work=${data.workApps.size} private=${data.privateApps.size} iconSizePx=${_state.value.iconSizePx}", Throwable())
+            Log.d(TAG, "rebuildState: personal=${data.personalApps.size} work=${data.workApps.size} private=${data.privateApps.size} iconSizePx=${_state.value.iconSizePx}")
             if (data.personalApps.isEmpty() && data.workApps.isEmpty() && data.privateApps.isEmpty()) {
                 Log.d(TAG, "rebuildState: no apps, setting isLoading=false and returning")
                 _state.update { it.copy(isLoading = false) }
@@ -245,7 +246,7 @@ class AllAppsComposeViewModel(
     }
 
     fun onUiModeChanged() {
-        Log.d(TAG, "onUiModeChanged: latestAppsData.personal=${latestAppsData.personalApps.size} isLoading=${_state.value.isLoading} iconSizePx=${_state.value.iconSizePx} scopeActive=${viewModelScope.isActive}", Throwable())
+        Log.d(TAG, "onUiModeChanged: latestAppsData.personal=${latestAppsData.personalApps.size} isLoading=${_state.value.isLoading} iconSizePx=${_state.value.iconSizePx} scopeActive=${viewModelScope.isActive}")
         AllAppsIconProvider.getInstance(context).clearCache()
         pendingIconRefresh = true
         rebuildState()
@@ -266,7 +267,7 @@ class AllAppsComposeViewModel(
     }
 
     fun reinitialize() {
-        Log.d(TAG, "reinitialize: scopeActive=${viewModelScope.isActive} latestApps=${latestAppsData.personalApps.size}", Throwable())
+        Log.d(TAG, "reinitialize: scopeActive=${viewModelScope.isActive} latestApps=${latestAppsData.personalApps.size}")
         if (!viewModelScope.isActive) {
             viewModelScope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
             observeData()
