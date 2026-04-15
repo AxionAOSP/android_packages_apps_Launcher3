@@ -40,6 +40,7 @@ import androidx.annotation.Nullable;
 import androidx.annotation.VisibleForTesting;
 
 import com.android.app.animation.Interpolators;
+import com.android.internal.util.BoostHelper;
 import com.android.axion.compose.preferences.SettingsFlow;
 import com.android.axion.compose.preferences.SettingsType;
 import com.android.launcher3.Flags;
@@ -281,6 +282,11 @@ public class BaseDepthController {
             return;
         }
         mCurrentBlur = newBlur;
+        if (previousBlur == 0 && newBlur > 0) {
+            BoostHelper.gpuBoost(true);
+        } else if (previousBlur > 0 && newBlur == 0) {
+            BoostHelper.gpuBoost(false);
+        }
         Log.v(TAG, "Applying blur: " + mCurrentBlur + " to " + blurSurface + " applyImmediately: "
                 + applyImmediately);
 
