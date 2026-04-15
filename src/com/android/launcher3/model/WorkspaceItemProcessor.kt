@@ -389,8 +389,13 @@ class WorkspaceItemProcessor(
             c.applyCommonProperties(info)
             info.intent = intent
             info.rank = c.rank
-            info.spanX = 1
-            info.spanY = 1
+            if (c.container == Favorites.CONTAINER_DESKTOP) {
+                info.spanX = c.spanX.coerceAtLeast(1)
+                info.spanY = c.spanY.coerceAtLeast(1)
+            } else {
+                info.spanX = 1
+                info.spanY = 1
+            }
             info.runtimeStatusFlags = info.runtimeStatusFlags or disabledState
             if (isSafeMode && !appInfoWrapper.isSystem()) {
                 info.runtimeStatusFlags =
