@@ -283,9 +283,9 @@ public class BaseDepthController {
         }
         mCurrentBlur = newBlur;
         if (previousBlur == 0 && newBlur > 0) {
-            BoostHelper.gpuBoost(true);
+            BoostHelper.shadeBoost(true);
         } else if (previousBlur > 0 && newBlur == 0) {
-            BoostHelper.gpuBoost(false);
+            BoostHelper.shadeBoost(false);
         }
         Log.v(TAG, "Applying blur: " + mCurrentBlur + " to " + blurSurface + " applyImmediately: "
                 + applyImmediately);
