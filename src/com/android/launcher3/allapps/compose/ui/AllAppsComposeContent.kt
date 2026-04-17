@@ -180,8 +180,14 @@ fun AllAppsComposeContent(
     
     val currentExpanded by rememberUpdatedState(allAppsExpanded)
 
+    var isOpening by remember { mutableStateOf(true) }
+    var lastProgress by remember { mutableFloatStateOf(0f) }
+
     LaunchedEffect(Unit) {
         snapshotFlow { transitionProgressProvider() }.collect { progress ->
+            if (progress > lastProgress + 0.001f) isOpening = true
+            else if (progress < lastProgress - 0.001f) isOpening = false
+            lastProgress = progress
             if (currentExpanded && progress == 1f) {
                 if (!isLaunching) {
                     searchQuery = ""
@@ -375,8 +381,14 @@ fun AllAppsComposeContent(
                     .fillMaxSize()
                     .graphicsLayer {
                         val progress = transitionProgressProvider()
-                        alpha = if (progress < 0.7f) 0f
-                              else ((progress - 0.7f) / (0.3f)).coerceIn(0f, 1f)
+                        alpha = if (isOpening) {
+                            EmphasizedDecelerateEasing.transform(
+                                ((progress - 0.333f) / 0.5f).coerceIn(0f, 1f)
+                            )
+                        } else {
+                            if (progress < 0.7f) 0f
+                            else ((progress - 0.7f) / 0.3f).coerceIn(0f, 1f)
+                        }
                     }
                     .drawBehind { drawRect(tabletScrimColor) }
             )
@@ -395,8 +407,14 @@ fun AllAppsComposeContent(
             })
                 .graphicsLayer {
                     val progress = transitionProgressProvider()
-                    alpha = if (progress < 0.7f) 0f
-                          else ((progress - 0.7f) / (0.3f)).coerceIn(0f, 1f)
+                    alpha = if (isOpening) {
+                        EmphasizedDecelerateEasing.transform(
+                            ((progress - 0.333f) / 0.5f).coerceIn(0f, 1f)
+                        )
+                    } else {
+                        if (progress < 0.7f) 0f
+                        else ((progress - 0.7f) / 0.3f).coerceIn(0f, 1f)
+                    }
                 }
                 .clip(sheetShape)
                 .background(drawerBaseBg)
