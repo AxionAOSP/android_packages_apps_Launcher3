@@ -31,8 +31,32 @@ import com.android.launcher3.testing.shared.TestProtocol;
 
 public class AccessibilityManagerCompat {
 
+    private static volatile AccessibilityManager sCachedManager;
+    private static volatile boolean sCachedEnabled;
+    private static volatile boolean sCachedTouchExploration;
+
     public static boolean isAccessibilityEnabled(Context context) {
-        return getManager(context).isEnabled();
+        ensureCache(context);
+        return sCachedEnabled;
+    }
+
+    public static boolean isTouchExplorationEnabled(Context context) {
+        ensureCache(context);
+        return sCachedTouchExploration;
+    }
+
+    private static void ensureCache(Context context) {
+        if (sCachedManager != null) return;
+        synchronized (AccessibilityManagerCompat.class) {
+            if (sCachedManager != null) return;
+            AccessibilityManager am = (AccessibilityManager) context.getApplicationContext()
+                    .getSystemService(Context.ACCESSIBILITY_SERVICE);
+            sCachedEnabled = am.isEnabled();
+            sCachedTouchExploration = am.isTouchExplorationEnabled();
+            am.addAccessibilityStateChangeListener(enabled -> sCachedEnabled = enabled);
+            am.addTouchExplorationStateChangeListener(enabled -> sCachedTouchExploration = enabled);
+            sCachedManager = am;
+        }
     }
 
     public static boolean isObservedEventType(Context context, int eventType) {
@@ -59,7 +83,8 @@ public class AccessibilityManagerCompat {
     }
 
     private static AccessibilityManager getManager(Context context) {
-        return (AccessibilityManager) context.getSystemService(Context.ACCESSIBILITY_SERVICE);
+        ensureCache(context);
+        return sCachedManager;
     }
 
     public static void sendStateEventToTest(Context context, int stateOrdinal) {

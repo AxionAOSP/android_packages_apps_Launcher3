@@ -87,6 +87,11 @@ class ComposeAllAppsContainerView @JvmOverloads constructor(
         controller.updateConfig(mActivityContext.deviceProfile)
         cv.setContent { controller.Content() }
 
+        importantForAutofill = View.IMPORTANT_FOR_AUTOFILL_NO_EXCLUDE_DESCENDANTS
+        importantForContentCapture = View.IMPORTANT_FOR_CONTENT_CAPTURE_NO_EXCLUDE_DESCENDANTS
+        cv.importantForAutofill = View.IMPORTANT_FOR_AUTOFILL_NO_EXCLUDE_DESCENDANTS
+        cv.importantForContentCapture = View.IMPORTANT_FOR_CONTENT_CAPTURE_NO_EXCLUDE_DESCENDANTS
+
         mSearchContainer = inflateSearchBar()
         mSearchContainer.visibility = GONE
         mSearchUiManager = mSearchContainer as SearchUiManager

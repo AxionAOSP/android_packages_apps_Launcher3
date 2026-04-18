@@ -24,6 +24,7 @@ import static com.android.launcher3.LauncherAnimUtils.VIEW_TRANSLATE_X;
 import static com.android.launcher3.LauncherAnimUtils.VIEW_TRANSLATE_Y;
 import static com.android.launcher3.Utilities.mapRange;
 import static com.android.launcher3.anim.AnimatorListeners.forEndCallback;
+import static com.android.launcher3.compat.AccessibilityManagerCompat.isTouchExplorationEnabled;
 import static com.android.launcher3.compat.AccessibilityManagerCompat.sendCustomAccessibilityEvent;
 
 import android.animation.Animator;
@@ -39,7 +40,6 @@ import android.view.KeyEvent;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.accessibility.AccessibilityEvent;
-import android.view.accessibility.AccessibilityManager;
 import android.view.animation.Interpolator;
 
 import androidx.annotation.Nullable;
@@ -150,9 +150,7 @@ public class DragLayer extends BaseDragLayer<Launcher> implements LauncherOverla
         if (!(topView instanceof Folder)) {
             return false;
         } else {
-            AccessibilityManager accessibilityManager = (AccessibilityManager)
-                    getContext().getSystemService(Context.ACCESSIBILITY_SERVICE);
-            if (accessibilityManager.isTouchExplorationEnabled()) {
+            if (isTouchExplorationEnabled(getContext())) {
                 Folder currentFolder = (Folder) topView;
                 final int action = ev.getAction();
                 boolean isOverFolderOrSearchBar;
