@@ -77,6 +77,11 @@ fun AllAppsComposeAppIcon(
 
     val iconDrawable = AllAppsIconProvider.rememberAppIcon(appInfo, effectiveIconSizePx)
 
+    remember(iconDrawable, effectiveIconSizePx) {
+        iconDrawable.setBounds(0, 0, effectiveIconSizePx, effectiveIconSizePx)
+        Unit
+    }
+
     val layoutCoords = remember { LayoutCoordsHolder() }
 
     fun getScreenOffset(): Offset {
@@ -100,6 +105,16 @@ fun AllAppsComposeAppIcon(
     }
 
     val controller = LocalAllAppsInteractions.current.controller
+
+    val componentNameForHide = appInfo.componentName
+    val isHiddenState = remember(componentNameForHide, sectionId, controller) {
+        derivedStateOf {
+            val ctrl = controller ?: return@derivedStateOf false
+            ctrl.hiddenIconComponent != null
+                && ctrl.hiddenIconComponent == componentNameForHide
+                && ctrl.hiddenIconSection == sectionId
+        }
+    }
 
     fun configureSharedHostView(): ComposeAppIconView {
         val ctrl = controller ?: return ComposeAppIconView(context)
@@ -250,22 +265,16 @@ fun AllAppsComposeAppIcon(
     ) {
         val iconSizeDp = with(density) { effectiveIconSizePx.toDp() }
 
-        val componentName = appInfo.componentName
-
         Box(
             modifier = Modifier
                 .size(iconSizeDp)
                 .onGloballyPositioned { coords ->
-                    layoutCoords.icon = coords
+                    if (!isScrollingProvider()) {
+                        layoutCoords.icon = coords
+                    }
                 }
                 .drawBehind {
-                    val hiddenComp = controller?.hiddenIconComponent
-                    val hiddenSect = controller?.hiddenIconSection
-                    val isHidden = hiddenComp != null
-                        && hiddenComp == componentName
-                        && hiddenSect == sectionId
-                    if (!isHidden) {
-                        iconDrawable.setBounds(0, 0, size.width.toInt(), size.height.toInt())
+                    if (!isHiddenState.value) {
                         iconDrawable.draw(drawContext.canvas.nativeCanvas)
                     }
                 }

@@ -609,7 +609,11 @@ private fun CanvasGridRow(
             .padding(padding)
             .onGloballyPositioned { coords ->
                 rowCoords.column = coords
-                measuredRowWidth.floatValue = coords.size.width.toFloat()
+                val w = coords.size.width.toFloat()
+                if (measuredRowWidth.floatValue != w) {
+                    measuredRowWidth.floatValue = w
+                }
+                if (isScrollingProvider()) return@onGloballyPositioned
                 controller?.let { ctrl ->
                     val comp = ctrl.lastLaunchedComponent ?: return@let
                     if (ctrl.lastLaunchedSection != sectionId) return@let
