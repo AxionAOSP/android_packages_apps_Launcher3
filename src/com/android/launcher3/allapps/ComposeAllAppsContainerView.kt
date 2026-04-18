@@ -92,6 +92,9 @@ class ComposeAllAppsContainerView @JvmOverloads constructor(
         cv.importantForAutofill = View.IMPORTANT_FOR_AUTOFILL_NO_EXCLUDE_DESCENDANTS
         cv.importantForContentCapture = View.IMPORTANT_FOR_CONTENT_CAPTURE_NO_EXCLUDE_DESCENDANTS
 
+        setRequestedFrameRate(View.REQUESTED_FRAME_RATE_CATEGORY_HIGH)
+        cv.setRequestedFrameRate(View.REQUESTED_FRAME_RATE_CATEGORY_HIGH)
+
         mSearchContainer = inflateSearchBar()
         mSearchContainer.visibility = GONE
         mSearchUiManager = mSearchContainer as SearchUiManager
