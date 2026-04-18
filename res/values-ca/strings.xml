@@ -509,6 +509,8 @@
     <string name="ps_settings_content_description">Private space settings</string>
     <!-- Label for unlock button on private space veil -->
     <string name="ps_unlock_button">Unlock</string>
+    <string name="ps_swipe_hint">Swipe for Private space</string>
+    <string name="ps_swipe_hint_dismiss">Entesos</string>
     <string name="folder_delete_title">Delete \"%1$s\"?</string>
     <string name="folder_delete_message">%1$d apps will return to their default categories.</string>
     <string name="folder_delete_confirm">Elimina</string>
