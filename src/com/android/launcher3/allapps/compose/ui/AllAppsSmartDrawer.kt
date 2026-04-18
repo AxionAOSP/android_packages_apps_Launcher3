@@ -22,13 +22,6 @@
 
 package com.android.launcher3.allapps.compose.ui
 
-import androidx.compose.animation.AnimatedContent
-import androidx.compose.animation.core.tween
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.slideInHorizontally
-import androidx.compose.animation.slideOutHorizontally
-import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
@@ -649,42 +642,46 @@ internal fun SmartDrawerSceneContent(
     ) {
         Column(modifier = Modifier.fillMaxSize()) {
             if (state.hasWorkApps) {
-                PersonalWorkTabs(
+                ProfileTabsPager(
                     selectedTab = selectedProfileTab,
                     onTabSelected = onProfileTabSelected,
-                    modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp)
+                    modifier = Modifier.weight(1f),
+                    tabsModifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
+                    personalContent = {
+                        AllAppsCategoriesView(
+                            state = state,
+                            categoryManager = categoryManager,
+                            expandedCategory = expandedCategory,
+                            onExpandedCategoryChange = onExpandedCategoryChange,
+                            onCustomFolderAction = onCustomFolderAction,
+                            transitionProgressProvider = transitionProgressProvider,
+                            dismissRequest = dismissRequest,
+                            onDismissRequestChange = onDismissRequestChange,
+                            modifier = Modifier.fillMaxSize()
+                        )
+                    },
+                    workContent = {
+                        WorkTabContent(
+                            state = state, workItems = workItems, workSections = workSections,
+                            onPauseWork = { callbacks.onWorkProfileToggle(false) },
+                            onResumeWork = { callbacks.onWorkProfileToggle(true) },
+                            transitionProgressProvider = transitionProgressProvider,
+                            openCounter = openCounter
+                        )
+                    }
                 )
-            }
-            AnimatedContent(
-                targetState = selectedProfileTab,
-                transitionSpec = {
-                    val direction = if (targetState > initialState) 1 else -1
-                    (fadeIn(tween(250, easing = EmphasizedDecelerateEasing)) + slideInHorizontally(tween(300, easing = EmphasizedDecelerateEasing)) { it / 6 * direction })
-                        .togetherWith(fadeOut(tween(150, easing = EmphasizedAccelerateEasing)) + slideOutHorizontally(tween(200, easing = EmphasizedAccelerateEasing)) { -it / 6 * direction })
-                },
-                modifier = Modifier.weight(1f),
-                label = "smart_drawer_tab"
-            ) { tab ->
-                when (tab) {
-                    TAB_WORK -> WorkTabContent(
-                        state = state, workItems = workItems, workSections = workSections,
-                        onPauseWork = { callbacks.onWorkProfileToggle(false) },
-                        onResumeWork = { callbacks.onWorkProfileToggle(true) },
-                        transitionProgressProvider = transitionProgressProvider,
-                        openCounter = openCounter
-                    )
-                    else -> AllAppsCategoriesView(
-                        state = state,
-                        categoryManager = categoryManager,
-                        expandedCategory = expandedCategory,
-                        onExpandedCategoryChange = onExpandedCategoryChange,
-                        onCustomFolderAction = onCustomFolderAction,
-                        transitionProgressProvider = transitionProgressProvider,
-                        dismissRequest = dismissRequest,
-                        onDismissRequestChange = onDismissRequestChange,
-                        modifier = Modifier.fillMaxSize()
-                    )
-                }
+            } else {
+                AllAppsCategoriesView(
+                    state = state,
+                    categoryManager = categoryManager,
+                    expandedCategory = expandedCategory,
+                    onExpandedCategoryChange = onExpandedCategoryChange,
+                    onCustomFolderAction = onCustomFolderAction,
+                    transitionProgressProvider = transitionProgressProvider,
+                    dismissRequest = dismissRequest,
+                    onDismissRequestChange = onDismissRequestChange,
+                    modifier = Modifier.weight(1f).fillMaxSize()
+                )
             }
         }
     }

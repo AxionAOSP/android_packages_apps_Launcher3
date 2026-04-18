@@ -24,6 +24,7 @@ package com.android.launcher3.allapps.compose.ui
 
 import android.content.Context
 import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -41,6 +42,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -83,55 +85,66 @@ internal const val TAB_WORK = 1
 internal fun PersonalWorkTabs(
     selectedTab: Int,
     onTabSelected: (Int) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    pillFractionProvider: (() -> Float)? = null
 ) {
     val motionScheme = MaterialTheme.motionScheme
+    val animatedPill by animateFloatAsState(
+        targetValue = selectedTab.coerceIn(0, 1).toFloat(),
+        animationSpec = motionScheme.defaultSpatialSpec(),
+        label = "pill_offset"
+    )
+    val pillOffsetFractionProvider: () -> Float = pillFractionProvider ?: { animatedPill }
 
-    Row(
+    Box(
         modifier = modifier
             .fillMaxWidth()
             .padding(vertical = 8.dp)
             .height(44.dp)
             .clip(RoundedCornerShape(50))
-            .background(MaterialTheme.colorScheme.surfaceBright),
-        verticalAlignment = Alignment.CenterVertically
+            .background(MaterialTheme.colorScheme.surfaceBright)
     ) {
-        listOf(
-            TAB_PERSONAL to R.string.all_apps_personal_tab,
-            TAB_WORK to R.string.all_apps_work_tab
-        ).forEach { (tab, labelRes) ->
-            val selected = selectedTab == tab
-            val bgColor by animateColorAsState(
-                targetValue = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceBright,
-                animationSpec = motionScheme.fastEffectsSpec(),
-                label = "tabBg_$tab"
-            )
-            val textColor by animateColorAsState(
-                targetValue = if (selected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface,
-                animationSpec = motionScheme.fastEffectsSpec(),
-                label = "tabText_$tab"
-            )
-
-            Box(
-                modifier = Modifier
-                    .weight(1f)
-                    .fillMaxHeight()
-                    .clip(RoundedCornerShape(50))
-                    .background(bgColor)
-                    .clickable(
-                        indication = null,
-                        interactionSource = remember { MutableInteractionSource() }
-                    ) {
-                        onTabSelected(tab)
-                    },
-                contentAlignment = Alignment.Center
-            ) {
-                Text(
-                    text = stringResource(labelRes),
-                    style = MaterialTheme.typography.labelLarge,
-                    fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium,
-                    color = textColor
+        Box(
+            modifier = Modifier
+                .fillMaxWidth(0.5f)
+                .fillMaxHeight()
+                .graphicsLayer { translationX = pillOffsetFractionProvider().coerceIn(0f, 1f) * size.width }
+                .clip(RoundedCornerShape(50))
+                .background(MaterialTheme.colorScheme.primary)
+        )
+        Row(
+            modifier = Modifier.fillMaxSize(),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            listOf(
+                TAB_PERSONAL to R.string.all_apps_personal_tab,
+                TAB_WORK to R.string.all_apps_work_tab
+            ).forEach { (tab, labelRes) ->
+                val selected = selectedTab == tab
+                val textColor by animateColorAsState(
+                    targetValue = if (selected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface,
+                    animationSpec = motionScheme.fastEffectsSpec(),
+                    label = "tabText_$tab"
                 )
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxHeight()
+                        .clickable(
+                            indication = null,
+                            interactionSource = remember { MutableInteractionSource() }
+                        ) {
+                            onTabSelected(tab)
+                        },
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = stringResource(labelRes),
+                        style = MaterialTheme.typography.labelLarge,
+                        fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium,
+                        color = textColor
+                    )
+                }
             }
         }
     }

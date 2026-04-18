@@ -22,43 +22,69 @@
 
 package com.android.launcher3.allapps.compose.ui
 
-import androidx.compose.animation.AnimatedContent
+import android.provider.Settings
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.tween
+import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
-import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.PagerDefaults
 import androidx.compose.foundation.pager.PagerSnapDistance
 import androidx.compose.foundation.pager.rememberPagerState
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import com.android.launcher3.R
 import com.android.launcher3.allapps.compose.data.AppCategoryManager
 import com.android.launcher3.allapps.compose.shared.model.AllAppsComposeCallbacks
 import com.android.launcher3.allapps.compose.shared.model.AllAppsComposeItem
 import com.android.launcher3.allapps.compose.shared.model.AllAppsComposeState
+import com.android.launcher3.allapps.compose.shared.model.AllAppsComposeState.Companion.TAB_PERSONAL
 import com.android.launcher3.allapps.compose.shared.model.AllAppsComposeState.Companion.TAB_WORK
 import com.android.launcher3.allapps.compose.shared.model.AppCategory
 import kotlinx.coroutines.launch
+
+private const val SETTING_PRIVATE_SPACE_HINT_DISMISSED = "axion_private_space_swipe_hint_dismissed"
 
 @Composable
 internal fun DrawerSceneContent(
@@ -95,43 +121,110 @@ internal fun DrawerSceneContent(
     ) {
         Column(modifier = Modifier.fillMaxSize()) {
             if (state.hasWorkApps) {
-                PersonalWorkTabs(
+                ProfileTabsPager(
                     selectedTab = selectedProfileTab,
                     onTabSelected = onProfileTabSelected,
-                    modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp)
+                    modifier = Modifier.weight(1f),
+                    tabsModifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
+                    personalContent = {
+                        AllAppsComposeGrid(
+                            items = items, sections = sections,
+                            numColumns = state.numColumns, iconSizePx = state.iconSizePx,
+                            cellWidthPx = state.cellWidthPx, cellHeightPx = state.cellHeightPx,
+                            showLabels = state.showLabels,
+                            onFolderClick = { onExpandedCategoryChange(it) },
+                            onFolderLongClick = { if (it.isCustom) onCustomFolderAction(it) },
+                            transitionProgressProvider = transitionProgressProvider,
+                            keyPrefix = "personal", recompositionKey = openCounter,
+                            modifier = Modifier.fillMaxSize(),
+                            contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 0.dp, bottom = 72.dp)
+                        )
+                    },
+                    workContent = {
+                        WorkTabContent(
+                            state = state, workItems = workItems, workSections = workSections,
+                            onPauseWork = { callbacks.onWorkProfileToggle(false) },
+                            onResumeWork = { callbacks.onWorkProfileToggle(true) },
+                            transitionProgressProvider = transitionProgressProvider,
+                            openCounter = openCounter
+                        )
+                    }
+                )
+            } else {
+                AllAppsComposeGrid(
+                    items = items, sections = sections,
+                    numColumns = state.numColumns, iconSizePx = state.iconSizePx,
+                    cellWidthPx = state.cellWidthPx, cellHeightPx = state.cellHeightPx,
+                    showLabels = state.showLabels,
+                    onFolderClick = { onExpandedCategoryChange(it) },
+                    onFolderLongClick = { if (it.isCustom) onCustomFolderAction(it) },
+                    transitionProgressProvider = transitionProgressProvider,
+                    keyPrefix = "personal", recompositionKey = openCounter,
+                    modifier = Modifier.weight(1f).fillMaxSize(),
+                    contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 0.dp, bottom = 72.dp)
                 )
             }
-            AnimatedContent(
-                targetState = selectedProfileTab,
-                transitionSpec = {
-                    val direction = if (targetState > initialState) 1 else -1
-                    (fadeIn(tween(250, easing = EmphasizedDecelerateEasing)) + slideInHorizontally(tween(300, easing = EmphasizedDecelerateEasing)) { it / 6 * direction })
-                        .togetherWith(fadeOut(tween(150, easing = EmphasizedAccelerateEasing)) + slideOutHorizontally(tween(200, easing = EmphasizedAccelerateEasing)) { -it / 6 * direction })
-                },
-                modifier = Modifier.weight(1f),
-                label = "drawer_tab"
-            ) { tab ->
-                when (tab) {
-                    TAB_WORK -> WorkTabContent(
-                        state = state, workItems = workItems, workSections = workSections,
-                        onPauseWork = { callbacks.onWorkProfileToggle(false) },
-                        onResumeWork = { callbacks.onWorkProfileToggle(true) },
-                        transitionProgressProvider = transitionProgressProvider,
-                        openCounter = openCounter
-                    )
-                    else -> AllAppsComposeGrid(
-                        items = items, sections = sections,
-                        numColumns = state.numColumns, iconSizePx = state.iconSizePx,
-                        cellWidthPx = state.cellWidthPx, cellHeightPx = state.cellHeightPx,
-                        showLabels = state.showLabels,
-                        onFolderClick = { onExpandedCategoryChange(it) },
-                        onFolderLongClick = { if (it.isCustom) onCustomFolderAction(it) },
-                        transitionProgressProvider = transitionProgressProvider,
-                        keyPrefix = "personal", recompositionKey = openCounter,
-                        modifier = Modifier.fillMaxSize(),
-                        contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 0.dp, bottom = 72.dp)
-                    )
+        }
+    }
+}
+
+@Composable
+internal fun ProfileTabsPager(
+    selectedTab: Int,
+    onTabSelected: (Int) -> Unit,
+    personalContent: @Composable () -> Unit,
+    workContent: @Composable () -> Unit,
+    modifier: Modifier = Modifier,
+    tabsModifier: Modifier = Modifier
+) {
+    val pagerState = rememberPagerState(
+        initialPage = selectedTab.coerceIn(TAB_PERSONAL, TAB_WORK),
+        pageCount = { 2 }
+    )
+    val scope = rememberCoroutineScope()
+
+    LaunchedEffect(selectedTab) {
+        if (pagerState.currentPage != selectedTab && selectedTab in TAB_PERSONAL..TAB_WORK) {
+            pagerState.animateScrollToPage(selectedTab)
+        }
+    }
+
+    LaunchedEffect(pagerState) {
+        snapshotFlow { pagerState.settledPage }.collect { page ->
+            if (page != selectedTab && page in TAB_PERSONAL..TAB_WORK) {
+                onTabSelected(page)
+            }
+        }
+    }
+
+    val flingBehavior = PagerDefaults.flingBehavior(
+        state = pagerState,
+        pagerSnapDistance = PagerSnapDistance.atMost(1),
+        snapPositionalThreshold = 0.4f
+    )
+
+    Column(modifier = modifier) {
+        PersonalWorkTabs(
+            selectedTab = pagerState.currentPage,
+            onTabSelected = { tab ->
+                if (tab in TAB_PERSONAL..TAB_WORK && pagerState.currentPage != tab) {
+                    scope.launch { pagerState.animateScrollToPage(tab) }
                 }
+            },
+            modifier = tabsModifier,
+            pillFractionProvider = {
+                pagerState.currentPage + pagerState.currentPageOffsetFraction
+            }
+        )
+        HorizontalPager(
+            state = pagerState,
+            modifier = Modifier.weight(1f).fillMaxSize(),
+            beyondViewportPageCount = 1,
+            flingBehavior = flingBehavior
+        ) { page ->
+            when (page) {
+                TAB_WORK -> workContent()
+                else -> personalContent()
             }
         }
     }
@@ -163,12 +256,6 @@ internal fun DrawerPagerWrapper(
         }
     }
 
-    LaunchedEffect(allAppsExpanded) {
-        if (!allAppsExpanded && showPrivateSpacePage && pagerState.currentPage != defaultPage) {
-            pagerState.scrollToPage(defaultPage)
-        }
-    }
-
     val pagerScope = rememberCoroutineScope()
     val isOnPrivateSpacePage = pagerReady && showPrivateSpacePage && pagerState.settledPage == 0
 
@@ -180,39 +267,132 @@ internal fun DrawerPagerWrapper(
     val pagerFlingBehavior = PagerDefaults.flingBehavior(
         state = pagerState,
         pagerSnapDistance = PagerSnapDistance.atMost(1),
-        snapPositionalThreshold = 0.6f
+        snapPositionalThreshold = 0.5f
     )
 
     val isPagerSwiping = pagerState.isScrollInProgress
 
     CompositionLocalProvider(LocalPagerSwiping provides isPagerSwiping) {
-        HorizontalPager(
-            state = pagerState,
-            modifier = Modifier.fillMaxSize(),
-            beyondViewportPageCount = 1,
-            flingBehavior = pagerFlingBehavior
-        ) { page ->
-            if (showPrivateSpacePage && page == 0) {
-                Box(modifier = Modifier.fillMaxSize()) {
-                    PrivateSpaceFullPage(
-                        state = state, callbacks = callbacks,
-                        onLaunch = onLaunch,
-                        modifier = Modifier.fillMaxSize()
-                    )
-                    if (state.isPrivateSpaceLocked) {
-                        val scrollProgress = if (showPrivateSpacePage && pagerState.currentPage <= 1) {
-                            (1f - pagerState.currentPageOffsetFraction).coerceIn(0f, 1f)
-                                .let { if (pagerState.currentPage == 0) 1f else it }
-                        } else 0f
-                        PrivateSpaceVeil(
-                            progress = scrollProgress,
-                            onUnlockClick = { callbacks.onPrivateSpaceClicked(true) },
+        Box(modifier = Modifier.fillMaxSize()) {
+            HorizontalPager(
+                state = pagerState,
+                modifier = Modifier.fillMaxSize(),
+                beyondViewportPageCount = 1,
+                flingBehavior = pagerFlingBehavior
+            ) { page ->
+                if (showPrivateSpacePage && page == 0) {
+                    Box(modifier = Modifier.fillMaxSize()) {
+                        PrivateSpaceFullPage(
+                            state = state, callbacks = callbacks,
+                            onLaunch = onLaunch,
+                            isActive = pagerState.settledPage == 0,
                             modifier = Modifier.fillMaxSize()
                         )
+                        if (state.isPrivateSpaceLocked) {
+                            val scrollProgress = if (showPrivateSpacePage && pagerState.currentPage <= 1) {
+                                (1f - pagerState.currentPageOffsetFraction).coerceIn(0f, 1f)
+                                    .let { if (pagerState.currentPage == 0) 1f else it }
+                            } else 0f
+                            PrivateSpaceVeil(
+                                progress = scrollProgress,
+                                onUnlockClick = { callbacks.onPrivateSpaceClicked(true) },
+                                modifier = Modifier.fillMaxSize()
+                            )
+                        }
+                    }
+                } else {
+                    content()
+                }
+            }
+
+            if (showPrivateSpacePage) {
+                val context = LocalContext.current
+                val resolver = remember { context.contentResolver }
+                var hintDismissed by remember {
+                    mutableStateOf(Settings.Secure.getInt(resolver, SETTING_PRIVATE_SPACE_HINT_DISMISSED, 0) == 1)
+                }
+                LaunchedEffect(pagerState, hintDismissed) {
+                    if (hintDismissed) return@LaunchedEffect
+                    var hasVisitedMain = false
+                    snapshotFlow { pagerState.settledPage }.collect { page ->
+                        if (page == 1) {
+                            hasVisitedMain = true
+                        } else if (page == 0 && hasVisitedMain) {
+                            hintDismissed = true
+                            Settings.Secure.putInt(resolver, SETTING_PRIVATE_SPACE_HINT_DISMISSED, 1)
+                        }
                     }
                 }
-            } else {
-                content()
+                val isOnMainPage by remember {
+                    derivedStateOf { pagerState.settledPage == 1 && !pagerState.isScrollInProgress }
+                }
+                if (!hintDismissed) {
+                    PrivateSpaceSwipeHint(
+                        visible = isOnMainPage,
+                        onDismiss = {
+                            hintDismissed = true
+                            Settings.Secure.putInt(resolver, SETTING_PRIVATE_SPACE_HINT_DISMISSED, 1)
+                        },
+                        modifier = Modifier
+                            .align(Alignment.CenterStart)
+                            .padding(start = 8.dp)
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun PrivateSpaceSwipeHint(
+    visible: Boolean,
+    onDismiss: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val infiniteTransition = rememberInfiniteTransition(label = "ps_hint_pulse")
+    val pulseOffset by infiniteTransition.animateFloat(
+        initialValue = 0f,
+        targetValue = -6f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(700, easing = FastOutSlowInEasing),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "ps_hint_offset"
+    )
+    val density = LocalDensity.current
+
+    AnimatedVisibility(
+        visible = visible,
+        enter = fadeIn(tween(300)) + slideInHorizontally(tween(300)) { -it },
+        exit = fadeOut(tween(200)) + slideOutHorizontally(tween(200)) { -it },
+        modifier = modifier
+    ) {
+        Surface(
+            shape = RoundedCornerShape(50),
+            color = MaterialTheme.colorScheme.primaryContainer,
+            tonalElevation = 2.dp,
+            shadowElevation = 6.dp,
+            onClick = onDismiss,
+            modifier = Modifier.graphicsLayer {
+                translationX = with(density) { pulseOffset.dp.toPx() }
+            }
+        ) {
+            Row(
+                modifier = Modifier.padding(start = 8.dp, end = 14.dp, top = 8.dp, bottom = 8.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(6.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.AutoMirrored.Filled.KeyboardArrowLeft,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.onPrimaryContainer,
+                    modifier = Modifier.size(20.dp)
+                )
+                Text(
+                    text = stringResource(R.string.ps_swipe_hint),
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.onPrimaryContainer
+                )
             }
         }
     }

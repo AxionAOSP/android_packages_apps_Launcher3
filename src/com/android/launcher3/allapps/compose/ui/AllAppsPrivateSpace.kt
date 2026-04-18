@@ -60,7 +60,10 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -147,11 +150,24 @@ internal fun PrivateSpaceFullPage(
     state: AllAppsComposeState,
     callbacks: AllAppsComposeCallbacks,
     onLaunch: () -> Unit = {},
+    isActive: Boolean = true,
     modifier: Modifier = Modifier
 ) {
     CompositionLocalProvider(LocalSectionId provides "private") {
     val interactions = LocalAllAppsInteractions.current
     val gridState = rememberLazyGridState()
+
+    val canScrollBack by remember { derivedStateOf { gridState.canScrollBackward } }
+    val canScrollFwd by remember { derivedStateOf { gridState.canScrollForward } }
+
+    LaunchedEffect(isActive, canScrollBack, canScrollFwd) {
+        if (isActive) {
+            interactions.controller?.let {
+                it.canScrollUp = true
+                it.canScrollDown = canScrollFwd
+            }
+        }
+    }
 
     Column(
         modifier = modifier

@@ -203,7 +203,6 @@ fun AllAppsComposeContent(
                 callbacks.onSearchQueryChanged("")
                 searchManager.clear()
                 expandedCategory = null
-                callbacks.onTabSelected(TAB_PERSONAL)
                 showPrivateSpaceScreen = false
             }
         }
@@ -313,7 +312,6 @@ fun AllAppsComposeContent(
         val sceneScope = rememberCoroutineScope()
         LaunchedEffect(targetScene) {
             val currentScene = sceneLayoutState.transitionState.currentScene
-            val transitions = sceneLayoutState.currentTransitions
             if (currentScene != targetScene) {
                 sceneLayoutState.setTargetScene(targetScene, this)
             }
