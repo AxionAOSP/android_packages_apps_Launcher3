@@ -56,6 +56,6 @@ class EditModeState(id: Int) : LauncherState(id, StatsLogManager.LAUNCHER_STATE_
     }
 
     override fun onLeavingState(launcher: Launcher?, toState: LauncherState?) {
-        // cleanup any changes to workspace
+        launcher?.multiSelectController?.clearSelection()
     }
 }

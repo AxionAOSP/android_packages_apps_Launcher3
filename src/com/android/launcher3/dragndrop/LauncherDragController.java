@@ -25,11 +25,15 @@ import static com.android.launcher3.LauncherState.NORMAL;
 import static com.android.launcher3.util.Executors.MAIN_EXECUTOR;
 
 import android.content.res.Resources;
+import android.graphics.Color;
 import android.graphics.Rect;
 import android.graphics.drawable.Drawable;
+import android.view.Gravity;
 import android.view.HapticFeedbackConstants;
 import android.view.MotionEvent;
 import android.view.View;
+import android.widget.FrameLayout;
+import android.widget.TextView;
 
 import androidx.annotation.Nullable;
 
@@ -38,11 +42,15 @@ import com.android.launcher3.DragSource;
 import com.android.launcher3.DropTarget;
 import com.android.launcher3.DropTarget.DragObject;
 import com.android.launcher3.Launcher;
+import com.android.launcher3.LauncherState;
 import com.android.launcher3.R;
 import com.android.launcher3.Utilities;
 import com.android.launcher3.accessibility.DragViewStateAnnouncer;
 import com.android.launcher3.dragndrop.DragOptions.PreDragCondition;
 import com.android.launcher3.model.data.ItemInfo;
+import com.android.launcher3.util.IntSet;
+import com.android.launcher3.util.ItemInfoMatcher;
+import com.android.launcher3.util.MultiSelectController;
 import com.android.launcher3.util.TouchUtil;
 import com.android.launcher3.widget.util.WidgetDragScaleUtils;
 
@@ -123,6 +131,19 @@ public class LauncherDragController extends DragController<Launcher> {
         mDragObject = new DropTarget.DragObject(mActivity.getApplicationContext());
         mDragObject.originalView = originalView;
 
+        if (mActivity.isInState(LauncherState.EDIT_MODE) && mActivity.getMultiSelectController().isSelected(dragInfo)) {
+            mDragObject.multiDragInfo.addAll(mActivity.getMultiSelectController().getSelectedItems());
+            if (!mDragObject.multiDragInfo.contains(dragInfo)) {
+                mDragObject.multiDragInfo.add(dragInfo);
+            }
+            for (ItemInfo info : mDragObject.multiDragInfo) {
+                View targetView = mActivity.getWorkspace().getFirstMatch(ItemInfoMatcher.ofItemIds(IntSet.wrap(info.id)));
+                if (targetView != null) {
+                    targetView.setVisibility(View.INVISIBLE);
+                }
+            }
+        }
+
         mIsInPreDrag = mOptions.preDragCondition != null
                 && !mOptions.preDragCondition.shouldStartDrag(0);
 
@@ -153,6 +174,19 @@ public class LauncherDragController extends DragController<Launcher> {
                         initialDragViewScale,
                         dragViewScaleOnDrop,
                         scalePx);
+
+        if (!mDragObject.multiDragInfo.isEmpty()) {
+            TextView badge = new TextView(mActivity);
+            badge.setBackgroundResource(R.drawable.bg_widgets_full_sheet);
+            badge.setTextColor(Color.WHITE);
+            badge.setText(String.valueOf(mDragObject.multiDragInfo.size()));
+            badge.setGravity(Gravity.CENTER);
+            badge.setElevation(dragView.getElevation() + 1);
+            int size = mActivity.getResources().getDimensionPixelSize(R.dimen.drag_view_badge_size);
+            FrameLayout.LayoutParams lp = new FrameLayout.LayoutParams(size, size);
+            lp.gravity = Gravity.BOTTOM | Gravity.END;
+            dragView.addView(badge, lp);
+        }
 
         dragView.setItemInfo(dragInfo);
         mDragObject.dragComplete = false;
@@ -276,6 +310,19 @@ public class LauncherDragController extends DragController<Launcher> {
         mActivity.getDragLayer().mapCoordInSelfToDescendant(mActivity.getWorkspace(),
                 dropCoordinates);
         return mActivity.getWorkspace();
+    }
+
+    @Override
+    protected void callOnDragEnd() {
+        super.callOnDragEnd();
+        if (mDragObject != null && !mDragObject.dragComplete && !mDragObject.multiDragInfo.isEmpty()) {
+            for (ItemInfo info : mDragObject.multiDragInfo) {
+                View targetView = mActivity.getWorkspace().getFirstMatch(ItemInfoMatcher.ofItemIds(IntSet.wrap(info.id)));
+                if (targetView != null) {
+                    targetView.setVisibility(VISIBLE);
+                }
+            }
+        }
     }
 
     /**

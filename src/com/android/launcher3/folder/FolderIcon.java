@@ -56,6 +56,7 @@ import com.android.launcher3.CheckLongPressHelper;
 import com.android.launcher3.DeviceProfile;
 import com.android.launcher3.DropTarget.DragObject;
 import com.android.launcher3.Launcher;
+import com.android.launcher3.LauncherState;
 import com.android.launcher3.LauncherSettings;
 import com.android.launcher3.OnAlarmListener;
 import com.android.launcher3.popup.PopupContainer;
@@ -73,6 +74,7 @@ import com.android.launcher3.dragndrop.DragLayer;
 import com.android.launcher3.dragndrop.DragOptions;
 import com.android.launcher3.dragndrop.DragView;
 import com.android.launcher3.dragndrop.DraggableView;
+import com.android.launcher3.graphics.SelectionIndicatorRenderer;
 import com.android.launcher3.graphics.ThemeManager;
 import com.android.launcher3.icons.DotRenderer;
 import com.android.launcher3.logger.LauncherAtom.FromState;
@@ -174,6 +176,8 @@ public class FolderIcon extends FrameLayout implements FloatingIconViewCompanion
     public FolderIcon(Context context) {
         this(context, null);
     }
+
+    private SelectionIndicatorRenderer mSelectionRenderer;
 
     public FolderIcon(Context context, AttributeSet attrs) {
         super(context, attrs);
@@ -666,6 +670,17 @@ public class FolderIcon extends FrameLayout implements FloatingIconViewCompanion
         }
 
         drawDot(canvas);
+
+        if (mActivity instanceof Launcher launcher && (launcher.isInState(LauncherState.EDIT_MODE)
+                || launcher.getMultiSelectController().getSelectedCount() > 0)) {
+            if (mSelectionRenderer == null) {
+                mSelectionRenderer = new SelectionIndicatorRenderer(getContext());
+            }
+            boolean isSelected = launcher.getMultiSelectController().isSelected((ItemInfo) getTag());
+            Rect iconBounds = new Rect();
+            mBackground.getBounds(iconBounds);
+            mSelectionRenderer.draw(canvas, iconBounds, isSelected);
+        }
     }
 
     private void drawCoverText(Canvas canvas) {

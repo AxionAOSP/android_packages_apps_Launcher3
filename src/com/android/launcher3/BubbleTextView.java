@@ -86,6 +86,7 @@ import androidx.core.view.accessibility.AccessibilityNodeInfoCompat;
 
 import com.android.launcher3.InvariantDeviceProfile;
 import com.android.launcher3.LauncherAppState;
+import com.android.launcher3.LauncherState;
 import com.android.launcher3.LauncherSettings;
 import com.android.launcher3.accessibility.BaseAccessibilityDelegate;
 import com.android.launcher3.dot.DotInfo;
@@ -93,6 +94,7 @@ import com.android.launcher3.dragndrop.DragOptions.PreDragCondition;
 import com.android.launcher3.dragndrop.DraggableView;
 import com.android.launcher3.folder.FolderIcon;
 import com.android.launcher3.graphics.PreloadIconDelegate;
+import com.android.launcher3.graphics.SelectionIndicatorRenderer;
 import com.android.launcher3.graphics.ThemeManager;
 import com.android.launcher3.icons.BaseIconFactory;
 import com.android.launcher3.icons.BitmapInfo;
@@ -194,6 +196,8 @@ public class BubbleTextView extends TextView implements ItemInfoUpdateReceiver,
     private boolean mCenterVertically;
 
     protected int mDisplay;
+
+    private SelectionIndicatorRenderer mSelectionRenderer;
 
     private final CheckLongPressHelper mLongPressHelper;
 
@@ -867,6 +871,17 @@ public class BubbleTextView extends TextView implements ItemInfoUpdateReceiver,
         super.onDraw(canvas);
         drawDotIfNecessary(canvas);
         drawRunningAppIndicatorIfNecessary(canvas);
+
+        if (mActivity instanceof Launcher launcher && (launcher.isInState(LauncherState.EDIT_MODE) 
+                || launcher.getMultiSelectController().getSelectedCount() > 0)) {
+            if (mSelectionRenderer == null) {
+                mSelectionRenderer = new SelectionIndicatorRenderer(getContext());
+            }
+            boolean isSelected = launcher.getMultiSelectController().isSelected((ItemInfo) getTag());
+            Rect iconBounds = new Rect();
+            getIconBounds(iconBounds);
+            mSelectionRenderer.draw(canvas, iconBounds, isSelected);
+        }
     }
 
     /**

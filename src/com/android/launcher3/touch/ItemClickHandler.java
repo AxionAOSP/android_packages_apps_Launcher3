@@ -45,6 +45,7 @@ import com.android.launcher3.BuildConfig;
 import com.android.launcher3.Flags;
 import com.android.launcher3.InvariantDeviceProfile;
 import com.android.launcher3.Launcher;
+import com.android.launcher3.LauncherState;
 import com.android.launcher3.LauncherSettings;
 import com.android.launcher3.R;
 import com.android.launcher3.apppairs.AppPairIcon;
@@ -67,6 +68,7 @@ import com.android.launcher3.testing.TestLogging;
 import com.android.launcher3.testing.shared.TestProtocol;
 import com.android.launcher3.util.ApiWrapper;
 import com.android.launcher3.util.ItemInfoMatcher;
+import com.android.launcher3.util.MultiSelectController;
 import com.android.launcher3.views.FloatingIconView;
 import com.android.launcher3.widget.LauncherAppWidgetProviderInfo;
 import com.android.launcher3.widget.PendingAppWidgetHostView;
@@ -97,6 +99,14 @@ public class ItemClickHandler {
 
         Launcher launcher = Launcher.getLauncher(v.getContext());
         if (!launcher.getWorkspace().isFinishedSwitchingState()) return;
+
+        if (launcher.isInState(LauncherState.EDIT_MODE)) {
+            if (v.getTag() instanceof ItemInfo info) {
+                launcher.getMultiSelectController().toggleSelection(info);
+                v.invalidate();
+            }
+            return;
+        }
 
         Object tag = v.getTag();
         if (tag instanceof WorkspaceItemInfo) {

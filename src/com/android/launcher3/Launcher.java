@@ -236,6 +236,7 @@ import com.android.launcher3.util.IntSet;
 import com.android.launcher3.util.ItemInflater;
 import com.android.launcher3.util.KeyboardShortcutsDelegate;
 import com.android.launcher3.util.LauncherBindableItemsContainer;
+import com.android.launcher3.util.MultiSelectController;
 import com.android.launcher3.util.PackageUserKey;
 import com.android.launcher3.util.PendingRequestArgs;
 import com.android.launcher3.util.PluginManagerWrapper;
@@ -314,6 +315,12 @@ public class Launcher extends StatefulActivity<LauncherState>
 
     private static final String EXCLUDE_CLOSE_WIDGET_PICKER =
             "launcher.extra.EXCLUDE_CLOSE_WIDGET_PICKER";
+
+    private final MultiSelectController mMultiSelectController = new MultiSelectController();
+
+    public MultiSelectController getMultiSelectController() {
+        return mMultiSelectController;
+    }
 
     private StateManager<LauncherState, Launcher> mStateManager;
 
@@ -2669,8 +2676,8 @@ public class Launcher extends StatefulActivity<LauncherState>
      public void collectStateHandlers(List<StateHandler<LauncherState>> out) {
         out.add(getAllAppsController());
         out.add(getWorkspace());
+        out.add(findViewById(R.id.edit_mode_toolbar));
     }
-
     public TouchController[] createTouchControllers() {
         return new TouchController[] {getDragController(), new AllAppsSwipeController(this)};
     }
