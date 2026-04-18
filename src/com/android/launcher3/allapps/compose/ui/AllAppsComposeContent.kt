@@ -155,7 +155,7 @@ fun AllAppsComposeContent(
             .collectLatest { (query, s) ->
                 if (query.isNotEmpty()) {
                     isSearchPending = true
-                    delay(800)
+                    delay(600)
                 }
                 val searchableApps = s.apps + s.pinnedApps + s.workApps +
                     if (!s.isPrivateSpaceLocked) s.privateApps else emptyList()
