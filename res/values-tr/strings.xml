@@ -509,6 +509,8 @@
     <string name="ps_settings_content_description">Özel alan ayarları</string>
     <!-- Label for unlock button on private space veil -->
     <string name="ps_unlock_button">Kilidi aç</string>
+    <string name="ps_swipe_hint">Swipe for Private space</string>
+    <string name="ps_swipe_hint_dismiss">Anladım</string>
     <string name="folder_delete_title">\"%1$s\" silinsin mi?</string>
     <string name="folder_delete_message">%1$d uygulama varsayılan kategorilerine dönecek.</string>
     <string name="folder_delete_confirm">Sil</string>
