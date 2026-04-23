@@ -4,13 +4,13 @@
         <hotseatSpec
             launcher:dimensionType="height"
             launcher:maxAvailableSize="840dp">
-            <hotseatQsbSpace launcher:fixedSize="24dp"/>
+            <hotseatQsbSpace launcher:fixedSize="16dp"/>
             <edgePadding launcher:fixedSize="31dp"/>
         </hotseatSpec>
         <hotseatSpec
             launcher:dimensionType="height"
             launcher:maxAvailableSize="9999dp">
-            <hotseatQsbSpace launcher:fixedSize="24dp"/>
+            <hotseatQsbSpace launcher:fixedSize="16dp"/>
             <edgePadding launcher:fixedSize="31dp"/>
         </hotseatSpec>
     </specs>
@@ -18,7 +18,7 @@
         <hotseatSpec
             launcher:dimensionType="height"
             launcher:maxAvailableSize="9999dp">
-            <hotseatQsbSpace launcher:fixedSize="24dp"/>
+            <hotseatQsbSpace launcher:fixedSize="16dp"/>
             <edgePadding launcher:fixedSize="18dp"/>
         </hotseatSpec>
     </specs>
