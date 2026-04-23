@@ -195,8 +195,13 @@ class ScalingWorkspaceRevealAnim(
                 )
             val blurAnimator = ValueAnimator.ofFloat(1f, 0f)
             blurAnimator.setInterpolator(BLUR_INTERPOLATOR)
+            var lastBlurRadius = -1
             blurAnimator.addUpdateListener {
-                applyBlur(maxBlurRadius * blurAnimator.animatedValue as Float)
+                val blurRadius = (maxBlurRadius * blurAnimator.animatedValue as Float).toInt()
+                if (Math.abs(lastBlurRadius - blurRadius) >= 4) {
+                    applyBlur(blurRadius.toFloat())
+                    lastBlurRadius = blurRadius
+                }
             }
             animation.add(blurAnimator)
 
@@ -247,9 +252,9 @@ class ScalingWorkspaceRevealAnim(
             }
         }
 
-        // Needed to avoid text artefacts during the scale animation.
-        workspace.setLayerType(View.LAYER_TYPE_HARDWARE, null)
-        hotseat.setLayerType(View.LAYER_TYPE_HARDWARE, null)
+        // Avoid hardware layers on large containers during transition to prevent UI stalls.
+        // workspace.setLayerType(View.LAYER_TYPE_HARDWARE, null)
+        // hotseat.setLayerType(View.LAYER_TYPE_HARDWARE, null)
         animation.addListener(
             object : AnimatorListenerAdapter() {
                 override fun onAnimationCancel(animation: Animator) {
@@ -285,8 +290,8 @@ class ScalingWorkspaceRevealAnim(
                         )
                     }
 
-                    workspace.setLayerType(View.LAYER_TYPE_NONE, null)
-                    hotseat.setLayerType(View.LAYER_TYPE_NONE, null)
+                    // workspace.setLayerType(View.LAYER_TYPE_NONE, null)
+                    // hotseat.setLayerType(View.LAYER_TYPE_NONE, null)
 
                     // Reset the cached animations.
                     Animations.setOngoingAnimation(workspace, animation = null)

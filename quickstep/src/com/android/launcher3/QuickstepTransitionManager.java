@@ -128,6 +128,7 @@ import androidx.core.graphics.ColorUtils;
 import com.android.app.animation.Animations;
 import com.android.app.animation.Interpolators;
 import com.android.internal.jank.Cuj;
+import com.android.internal.util.BoostHelper;
 import com.android.internal.util.LatencyTracker;
 import com.android.launcher3.DeviceProfile.OnDeviceProfileChangeListener;
 import com.android.launcher3.LauncherAnimationRunner.RemoteAnimationFactory;
@@ -550,6 +551,20 @@ public class QuickstepTransitionManager implements OnDeviceProfileChangeListener
                 }
             });
         }
+
+        anim.addListener(new AnimatorListenerAdapter() {
+            @Override
+            public void onAnimationStart(Animator animation) {
+                BoostHelper.gpuBoost(true);
+                BoostHelper.onAnimation(BoostHelper.Animation.START);
+            }
+
+            @Override
+            public void onAnimationEnd(Animator animation) {
+                BoostHelper.gpuBoost(false);
+                BoostHelper.onAnimation(BoostHelper.Animation.END);
+            }
+        });
     }
 
     private void composeWidgetLaunchAnimator(
@@ -641,7 +656,6 @@ public class QuickstepTransitionManager implements OnDeviceProfileChangeListener
             ObjectAnimator alpha = ObjectAnimator.ofFloat(appsView, View.ALPHA, alphas);
             alpha.setDuration(CONTENT_ALPHA_DURATION);
             alpha.setInterpolator(LINEAR);
-            appsView.setLayerType(View.LAYER_TYPE_HARDWARE, null);
             alpha.addListener(new AnimatorListenerAdapter() {
                 @Override
                 public void onAnimationEnd(Animator animation) {
@@ -683,8 +697,6 @@ public class QuickstepTransitionManager implements OnDeviceProfileChangeListener
             }
 
             viewsToAnimate.forEach(view -> {
-                view.setLayerType(View.LAYER_TYPE_HARDWARE, null);
-
                 // Start the animation from the current value, instead of assuming the views are
                 // in their resting state, so interrupted animations merge seamlessly.
                 // TODO(b/367591368): ideally these animations would be refactored to be
@@ -708,7 +720,6 @@ public class QuickstepTransitionManager implements OnDeviceProfileChangeListener
             endListener = () -> {
                 viewsToAnimate.forEach(view -> {
                     SCALE_PROPERTY.set(view, 1f);
-                    view.setLayerType(View.LAYER_TYPE_NONE, null);
 
                     // Reset the cached animation.
                     Animations.Companion.setOngoingAnimation(view, null /* animation */);
@@ -1550,6 +1561,9 @@ public class QuickstepTransitionManager implements OnDeviceProfileChangeListener
         FloatingWidgetView floatingWidget = null;
         RectF targetRect = new RectF();
 
+        BoostHelper.compositionBoost(500);
+        BoostHelper.gpuBoost(true);
+
         RemoteAnimationTarget runningTaskTarget = null;
         boolean isTransluscent = false;
         for (RemoteAnimationTarget target : targets) {
@@ -1656,6 +1670,12 @@ public class QuickstepTransitionManager implements OnDeviceProfileChangeListener
         }
 
         // Use a fixed velocity to start the animation.
+        anim.addAnimatorListener(new AnimatorListenerAdapter() {
+            @Override
+            public void onAnimationEnd(Animator animation) {
+                BoostHelper.gpuBoost(false);
+            }
+        });
         animation.addListener(new AnimatorListenerAdapter() {
             @Override
             public void onAnimationStart(Animator animation) {
@@ -1837,7 +1857,21 @@ public class QuickstepTransitionManager implements OnDeviceProfileChangeListener
             }
         }
 
-        AnimatorSet anim = new AnimatorSet();
+        final AnimatorSet anim = new AnimatorSet();
+        anim.addListener(new AnimatorListenerAdapter() {
+            @Override
+            public void onAnimationStart(Animator animation) {
+                BoostHelper.onAnimation(BoostHelper.Animation.START);
+                BoostHelper.gpuBoost(true);
+                BoostHelper.compositionBoost(400);
+            }
+
+            @Override
+            public void onAnimationEnd(Animator animation) {
+                BoostHelper.onAnimation(BoostHelper.Animation.END);
+                BoostHelper.gpuBoost(false);
+            }
+        });
         RectFSpringAnim rectFSpringAnim = null;
 
         final boolean launcherIsForceInvisibleOrOpening = mLauncher.isForceInvisible()
@@ -1847,6 +1881,7 @@ public class QuickstepTransitionManager implements OnDeviceProfileChangeListener
                 && launcherIsForceInvisibleOrOpening)
                 || mLauncher.getWorkspace().isOverlayShown()
                 || shouldPlayFallbackClosingAnimation(appTargets);
+
 
         boolean playWorkspaceReveal = true;
         boolean skipAllAppsScale = false;
@@ -1874,8 +1909,16 @@ public class QuickstepTransitionManager implements OnDeviceProfileChangeListener
 
         AnimatorListenerAdapter endListener = new AnimatorListenerAdapter() {
             @Override
+            public void onAnimationStart(Animator animation) {
+                BoostHelper.gpuBoost(true);
+                BoostHelper.onAnimation(BoostHelper.Animation.START);
+            }
+
+            @Override
             public void onAnimationEnd(Animator animation) {
                 super.onAnimationEnd(animation);
+                BoostHelper.gpuBoost(false);
+                BoostHelper.onAnimation(BoostHelper.Animation.END);
                 AccessibilityManagerCompat.sendTestProtocolEventToTest(
                         mLauncher, WALLPAPER_OPEN_ANIMATION_FINISHED_MESSAGE);
             }
@@ -2319,7 +2362,7 @@ public class QuickstepTransitionManager implements OnDeviceProfileChangeListener
             final DeviceProfile profile = mLauncher.getDeviceProfile();
             final int rotation = profile.getDeviceProperties().getRotationHint();
             final int widthPx = profile.getDeviceProperties().getWidthPx();
-            final int heightPx = profile.getDeviceProperties().getWidthPx();
+            final int heightPx = profile.getDeviceProperties().getHeightPx();
 
             final int rotationDelta = toLauncher
                     ? android.util.RotationUtils.deltaRotation(taskRotation, rotation)
@@ -2355,6 +2398,7 @@ public class QuickstepTransitionManager implements OnDeviceProfileChangeListener
         private final Rect mWindowStartBounds = new Rect();
         private final Rect mWindowOriginalBounds = new Rect();
 
+        private float mLastCornerRadius = -1f;
         private final Rect mTmpRect = new Rect();
 
         /**
@@ -2444,8 +2488,13 @@ public class QuickstepTransitionManager implements OnDeviceProfileChangeListener
 
                     builder.setMatrix(mMatrix)
                             .setWindowCrop(mTmpRect)
-                            .setAlpha(getWindowAlpha(progress))
-                            .setCornerRadius(getCornerRadius(progress) / scale);
+                            .setAlpha(getWindowAlpha(progress));
+
+                    float cornerRadius = getCornerRadius(progress) / scale;
+                    if (Math.abs(mLastCornerRadius - cornerRadius) >= 4f || progress >= 1f) {
+                        builder.setCornerRadius(cornerRadius);
+                        mLastCornerRadius = cornerRadius;
+                    }
                 } else if (target.mode == MODE_OPENING) {
                     mMatrix.setTranslate(mTmpPos.x, mTmpPos.y);
                     builder.setMatrix(mMatrix)

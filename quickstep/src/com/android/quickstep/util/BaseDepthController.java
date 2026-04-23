@@ -53,6 +53,7 @@ import com.android.launcher3.statemanager.StateManager;
 import com.android.launcher3.uioverrides.QuickstepLauncher;
 import com.android.launcher3.util.MultiPropertyFactory;
 import com.android.launcher3.util.MultiPropertyFactory.MultiProperty;
+import com.android.launcher3.util.Executors;
 import com.android.systemui.shared.system.BlurUtils;
 
 /**
@@ -140,6 +141,8 @@ public class BaseDepthController {
 
     private final SettingsFlow mBlurSettingsFlow;
     private final ContentObserver mBlurSettingsObserver;
+
+    private float mLastWallpaperZoom = -1f;
 
     private void updateMaxBlurRadius() {
         boolean enabled =
@@ -242,10 +245,14 @@ public class BaseDepthController {
         float depth = mDepth;
         IBinder windowToken = mLauncher.getRootView().getWindowToken();
         if (windowToken != null) {
-            if (LauncherPrefs.get(mLauncher).get(LauncherPrefs.DISABLE_WALLPAPER_ZOOM)) {
-                mWallpaperManager.setWallpaperZoomOut(windowToken, 0f);
-            } else {
-                mWallpaperManager.setWallpaperZoomOut(windowToken, depth);
+            float zoom = LauncherPrefs.get(mLauncher).get(LauncherPrefs.DISABLE_WALLPAPER_ZOOM)
+                    ? 0f : depth;
+            if (Math.abs(mLastWallpaperZoom - zoom) >= 0.03f || (zoom == 0f && mLastWallpaperZoom != 0f) || (zoom == 1f && mLastWallpaperZoom != 1f)) {
+                final float finalZoom = zoom;
+                Executors.UI_HELPER_EXECUTOR.execute(() -> {
+                    mWallpaperManager.setWallpaperZoomOut(windowToken, finalZoom);
+                });
+                mLastWallpaperZoom = zoom;
             }
         }
 
