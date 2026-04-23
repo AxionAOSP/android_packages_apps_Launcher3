@@ -280,13 +280,6 @@ public abstract class BaseAllAppsAdapter
                                     privateProfileManager.getReadyToAnimate())
                                 && privateProfileManager.getCurrentState() == STATE_ENABLED
                                 ? 0 : 1);
-                        Log.d(TAG, "onBindViewHolder: "
-                                + "isPrivateSpaceItem: " + isPrivateSpaceItem
-                        + " isStateTransitioning: " + privateProfileManager.isStateTransitioning()
-                        + " isScrolling: " + privateProfileManager.isScrolling()
-                        + " readyToAnimate: " + privateProfileManager.getReadyToAnimate()
-                        + " currentState: " + privateProfileManager.getCurrentState()
-                        + " currentAlpha: " + icon.getAlpha());
                     }
                     // Views can still be bounded before the app list is updated hence showing icons
                     // after collapsing.

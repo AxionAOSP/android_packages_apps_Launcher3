@@ -47,6 +47,7 @@ import com.android.launcher3.logging.StatsLogManager;
 import com.android.launcher3.states.StateAnimationConfig;
 import com.android.launcher3.util.FlingBlockCheck;
 import com.android.launcher3.util.TouchController;
+import com.android.internal.util.BoostHelper;
 
 /**
  * TouchController for handling state changes
@@ -193,6 +194,9 @@ public abstract class AbstractStateChangeTouchController
 
     @Override
     public void onDragStart(boolean start, float startDisplacement) {
+        BoostHelper.onAnimation(BoostHelper.Animation.START);
+        BoostHelper.gpuBoost(true);
+        BoostHelper.onScrollEvent(BoostHelper.Scroll.VERTICAL);
         mStartState = mLauncher.getStateManager().getState();
         mIsLogContainerSet = false;
 
@@ -298,6 +302,9 @@ public abstract class AbstractStateChangeTouchController
             velocity = -velocity;
         }
         boolean fling = mDetector.isFling(velocity);
+        if (fling) {
+            BoostHelper.flingBoost(true);
+        }
 
         boolean blockedFling = fling && mFlingBlockCheck.isBlocked();
         if (blockedFling) {
@@ -443,6 +450,9 @@ public abstract class AbstractStateChangeTouchController
     }
 
     protected void clearState() {
+        BoostHelper.onAnimation(BoostHelper.Animation.END);
+        BoostHelper.gpuBoost(false);
+        BoostHelper.flingBoost(false);
         cancelAnimationControllers();
         mGoingBetweenStates = true;
         mDetector.finishedScrolling();

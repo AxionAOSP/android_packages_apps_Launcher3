@@ -42,6 +42,7 @@ import com.android.launcher3.states.StateAnimationConfig;
 import com.android.launcher3.states.StateAnimationConfig.AnimationFlags;
 import com.android.launcher3.states.StateAnimationConfig.AnimationPropertyFlags;
 import com.android.launcher3.util.StateManagerProtoLogProxy;
+import com.android.internal.util.BoostHelper;
 
 import java.io.PrintWriter;
 import java.util.ArrayList;
@@ -416,6 +417,8 @@ public class StateManager<S extends BaseState<S>, T extends StatefulContainer<S>
     }
 
     private void onStateTransitionStart(S state) {
+        BoostHelper.onAnimation(BoostHelper.Animation.START);
+        BoostHelper.gpuBoost(true);
         mState = state;
         if (mLauncherUiState != null && mState instanceof LauncherState launcherState) {
             mLauncherUiState.setLauncherState(launcherState);
@@ -430,6 +433,8 @@ public class StateManager<S extends BaseState<S>, T extends StatefulContainer<S>
     }
 
     private void onStateTransitionEnd(S state) {
+        BoostHelper.onAnimation(BoostHelper.Animation.END);
+        BoostHelper.gpuBoost(false);
         // Only change the stable states after the transitions have finished
         if (state != mCurrentStableState) {
             mLastStableState = state.getHistoryForState(mCurrentStableState);

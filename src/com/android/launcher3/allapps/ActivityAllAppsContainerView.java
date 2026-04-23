@@ -447,15 +447,6 @@ public class ActivityAllAppsContainerView<T extends Context & ActivityContext>
     private void updateViewAlpha(View view, float alpha) {
         if (view == null) return;
         view.setAlpha(alpha);
-        if (alpha > 0f && alpha < 1f) {
-            if (view.getLayerType() != View.LAYER_TYPE_HARDWARE) {
-                view.setLayerType(View.LAYER_TYPE_HARDWARE, null);
-            }
-        } else {
-            if (view.getLayerType() != View.LAYER_TYPE_NONE) {
-                view.setLayerType(View.LAYER_TYPE_NONE, null);
-            }
-        }
     }
     protected void animateToSearchState(boolean goingToSearch, long durationMs) {
         if (!mSearchTransitionController.isRunning() && goingToSearch == isSearching()) {
@@ -1560,14 +1551,12 @@ public class ActivityAllAppsContainerView<T extends Context & ActivityContext>
             mHeaderPaint.setColor(bottomSheetBackgroundColor);
             mHeaderPaint.setAlpha((int) (bottomSheetBackgroundAlpha * 255 * mTransitionProgress));
 
-            mTmpRectF.set(
-                    leftWithScale,
-                    topWithScale,
-                    rightWithScale,
-                    bottomWithOffset);
-            mTmpPath.reset();
-            mTmpPath.addRoundRect(mTmpRectF, mBottomSheetCornerRadii, Direction.CW);
-            canvas.drawPath(mTmpPath, mHeaderPaint);
+            float radius = mBottomSheetCornerRadii[0];
+            canvas.save();
+            canvas.clipRect(leftWithScale, topWithScale, rightWithScale, bottomWithOffset);
+            mTmpRectF.set(leftWithScale, topWithScale, rightWithScale, bottomWithOffset + radius);
+            canvas.drawRoundRect(mTmpRectF, radius, radius, mHeaderPaint);
+            canvas.restore();
 
             // When the background panel is blurred (or fallback), we don't add header protection.
             // TODO (b/414671116): Apply header protection whenever search bar is focused.
@@ -1606,14 +1595,12 @@ public class ActivityAllAppsContainerView<T extends Context & ActivityContext>
         if (hasBottomSheet) {
             // Start adding header protection if search bar or tabs will attach to the top.
             if (!isSearchBarFloating() || mUsingTabs) {
-                mTmpRectF.set(
-                        leftWithScale,
-                        topWithScale,
-                        rightWithScale,
-                        headerBottomWithScaleOnTablet);
-                mTmpPath.reset();
-                mTmpPath.addRoundRect(mTmpRectF, mBottomSheetCornerRadii, Direction.CW);
-                canvas.drawPath(mTmpPath, mHeaderPaint);
+                float radius = mBottomSheetCornerRadii[0];
+                canvas.save();
+                canvas.clipRect(leftWithScale, topWithScale, rightWithScale, headerBottomWithScaleOnTablet);
+                mTmpRectF.set(leftWithScale, topWithScale, rightWithScale, headerBottomWithScaleOnTablet + radius);
+                canvas.drawRoundRect(mTmpRectF, radius, radius, mHeaderPaint);
+                canvas.restore();
             }
         } else {
             canvas.drawRect(0, 0, canvas.getWidth(), headerBottomWithScaleOnPhone, mHeaderPaint);

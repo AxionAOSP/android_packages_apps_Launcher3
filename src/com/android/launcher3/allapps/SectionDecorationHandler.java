@@ -120,11 +120,39 @@ public class SectionDecorationHandler {
     }
 
     protected void onDraw(Canvas canvas) {
-        mTmpPath.reset();
         mTmpRect.set(mBounds.left + mFillSpacing,
                 mBounds.top + mFillSpacing,
                 mBounds.right - mFillSpacing,
                 mBounds.bottom - mFillSpacing);
+        float radius = mCornerGroupRadius;
+
+        if (mIsTopLeftRound && mIsTopRightRound && mIsBottomLeftRound && mIsBottomRightRound) {
+            canvas.drawRoundRect(mTmpRect, radius, radius, mPaint);
+            return;
+        }
+
+        if (mIsTopLeftRound && mIsTopRightRound && !mIsBottomLeftRound && !mIsBottomRightRound) {
+            canvas.save();
+            canvas.clipRect(mTmpRect);
+            canvas.drawRoundRect(mTmpRect.left, mTmpRect.top, mTmpRect.right, mTmpRect.bottom + radius, radius, radius, mPaint);
+            canvas.restore();
+            return;
+        }
+
+        if (!mIsTopLeftRound && !mIsTopRightRound && mIsBottomLeftRound && mIsBottomRightRound) {
+            canvas.save();
+            canvas.clipRect(mTmpRect);
+            canvas.drawRoundRect(mTmpRect.left, mTmpRect.top - radius, mTmpRect.right, mTmpRect.bottom, radius, radius, mPaint);
+            canvas.restore();
+            return;
+        }
+
+        if (!mIsTopLeftRound && !mIsTopRightRound && !mIsBottomLeftRound && !mIsBottomRightRound) {
+            canvas.drawRect(mTmpRect, mPaint);
+            return;
+        }
+
+        mTmpPath.reset();
         mTmpPath.addRoundRect(mTmpRect, mCorners, Path.Direction.CW);
         canvas.drawPath(mTmpPath, mPaint);
     }
