@@ -15,6 +15,7 @@
  */
 package com.android.quickstep.util
 
+import android.app.AxSandboxManager.AppLockState
 import android.content.Context
 import android.os.IBinder
 import android.os.RemoteException
@@ -93,7 +94,8 @@ class AxAppLockerHelper private constructor() {
 
         val manager = getSandboxManager() ?: return false
         return try {
-            val locked = manager.isAppLocked(packageName)
+            val locked = AppLockState.fromOrdinal(manager.getAppLockState(packageName))
+                .hasAppLock()
             appLockCache[packageName] = locked
             locked
         } catch (e: RemoteException) {
@@ -104,7 +106,8 @@ class AxAppLockerHelper private constructor() {
 
     fun isAppLockedWithoutCache(packageName: String): Boolean {
         return try {
-            getSandboxManager()?.isAppLocked(packageName) ?: false
+            val ordinal = getSandboxManager()?.getAppLockState(packageName) ?: return false
+            AppLockState.fromOrdinal(ordinal).hasAppLock()
         } catch (e: RemoteException) {
             Log.w(TAG, "RemoteException in isAppLockedWithoutCache: ${e.message}")
             false
