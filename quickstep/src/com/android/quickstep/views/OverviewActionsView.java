@@ -230,6 +230,12 @@ public class OverviewActionsView<T extends OverlayUICallbacks> extends FrameLayo
         mExt.onDetach();
     }
 
+    @Override
+    public void onVisibilityAggregated(boolean isVisible) {
+        super.onVisibilityAggregated(isVisible);
+        mExt.setVisible(isVisible);
+    }
+
     /**
      * Set listener for callbacks on action button taps.
      *

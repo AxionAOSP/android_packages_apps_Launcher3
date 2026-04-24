@@ -37,6 +37,8 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.flatMapLatest
@@ -56,6 +58,7 @@ class OverviewActionsViewExt @Inject constructor(
     private val activityManager = appContext.getSystemService(ActivityManager::class.java)!!
     private val settingsFlow = SettingsFlow(appContext.contentResolver, SettingsType.SECURE)
     private val memInfoReader = MemInfoReader()
+    private val visibleFlow = MutableStateFlow(false)
     private var viewScope: CoroutineScope? = null
 
     init {
@@ -83,16 +86,25 @@ class OverviewActionsViewExt @Inject constructor(
             .onEach { state.showClearAll = it }
             .launchIn(scope)
 
-        settingsFlow.observeBoolean(KEY_SHOW_MEMORY_INFO, default = true)
-            .flatMapLatest { enabled ->
-                if (enabled) memoryInfoFlow() else emptyFlow<String>().onStart { emit("") }
+        combine(
+            settingsFlow.observeBoolean(KEY_SHOW_MEMORY_INFO, default = true),
+            visibleFlow,
+        ) { enabled, visible -> enabled && visible }
+            .distinctUntilChanged()
+            .flatMapLatest { active ->
+                if (active) memoryInfoFlow() else emptyFlow<String>().onStart { emit("") }
             }
             .distinctUntilChanged()
             .onEach { state.memoryInfo = it }
             .launchIn(scope)
     }
 
+    fun setVisible(visible: Boolean) {
+        visibleFlow.value = visible
+    }
+
     fun onDetach() {
+        visibleFlow.value = false
         viewScope?.cancel()
         viewScope = null
     }
