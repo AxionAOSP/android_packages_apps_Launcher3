@@ -322,7 +322,7 @@ constructor(@ApplicationContext private val encryptedContext: Context) {
         val FIXED_LANDSCAPE_MODE = backedUpItem(SettingsActivity.FIXED_LANDSCAPE_MODE, false)
 
         @JvmField
-        val DISABLE_WALLPAPER_ZOOM = backedUpItem("pref_disable_wallpaper_zoom", false)
+        val DISABLE_WALLPAPER_ZOOM = backedUpItem("pref_disable_wallpaper_zoom", true)
         @JvmField val SEARCH_SHOW_WEB_ACTIONS = backedUpItem("pref_search_show_web_actions", true)
         @JvmField val SEARCH_SHOW_IN_APP_SEARCH = backedUpItem("pref_search_show_in_app_search", true)
         @JvmField
