@@ -557,13 +557,13 @@ public class QuickstepTransitionManager implements OnDeviceProfileChangeListener
         anim.addListener(new AnimatorListenerAdapter() {
             @Override
             public void onAnimationStart(Animator animation) {
-                BoostHelper.gpuBoost(true);
+                BoostHelper.onEarlyWakeup(true, 0);
                 BoostHelper.onAnimation(BoostHelper.Animation.START);
             }
 
             @Override
             public void onAnimationEnd(Animator animation) {
-                BoostHelper.gpuBoost(false);
+                BoostHelper.onEarlyWakeup(false, 0);
                 BoostHelper.onAnimation(BoostHelper.Animation.END);
             }
         });
@@ -1575,7 +1575,7 @@ public class QuickstepTransitionManager implements OnDeviceProfileChangeListener
         RectF targetRect = new RectF();
 
         BoostHelper.compositionBoost(500);
-        BoostHelper.gpuBoost(true);
+        BoostHelper.onEarlyWakeup(true, 0);
 
         RemoteAnimationTarget runningTaskTarget = null;
         boolean isTransluscent = false;
@@ -1686,7 +1686,7 @@ public class QuickstepTransitionManager implements OnDeviceProfileChangeListener
         anim.addAnimatorListener(new AnimatorListenerAdapter() {
             @Override
             public void onAnimationEnd(Animator animation) {
-                BoostHelper.gpuBoost(false);
+                BoostHelper.onEarlyWakeup(false, 0);
             }
         });
         animation.addListener(new AnimatorListenerAdapter() {
@@ -1875,14 +1875,14 @@ public class QuickstepTransitionManager implements OnDeviceProfileChangeListener
             @Override
             public void onAnimationStart(Animator animation) {
                 BoostHelper.onAnimation(BoostHelper.Animation.START);
-                BoostHelper.gpuBoost(true);
+                BoostHelper.onEarlyWakeup(true, 0);
                 BoostHelper.compositionBoost(400);
             }
 
             @Override
             public void onAnimationEnd(Animator animation) {
                 BoostHelper.onAnimation(BoostHelper.Animation.END);
-                BoostHelper.gpuBoost(false);
+                BoostHelper.onEarlyWakeup(false, 0);
             }
         });
         RectFSpringAnim rectFSpringAnim = null;
@@ -1923,14 +1923,14 @@ public class QuickstepTransitionManager implements OnDeviceProfileChangeListener
         AnimatorListenerAdapter endListener = new AnimatorListenerAdapter() {
             @Override
             public void onAnimationStart(Animator animation) {
-                BoostHelper.gpuBoost(true);
+                BoostHelper.onEarlyWakeup(true, 0);
                 BoostHelper.onAnimation(BoostHelper.Animation.START);
             }
 
             @Override
             public void onAnimationEnd(Animator animation) {
                 super.onAnimationEnd(animation);
-                BoostHelper.gpuBoost(false);
+                BoostHelper.onEarlyWakeup(false, 0);
                 BoostHelper.onAnimation(BoostHelper.Animation.END);
                 AccessibilityManagerCompat.sendTestProtocolEventToTest(
                         mLauncher, WALLPAPER_OPEN_ANIMATION_FINISHED_MESSAGE);

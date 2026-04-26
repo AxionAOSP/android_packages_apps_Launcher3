@@ -74,6 +74,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import com.android.internal.util.BoostHelper
 import com.android.launcher3.R
 import com.android.launcher3.allapps.compose.shared.model.AllAppsComposeCallbacks
 import com.android.launcher3.allapps.compose.shared.model.AllAppsComposeState
@@ -159,6 +160,16 @@ internal fun PrivateSpaceFullPage(
 
     val canScrollBack by remember { derivedStateOf { gridState.canScrollBackward } }
     val canScrollFwd by remember { derivedStateOf { gridState.canScrollForward } }
+    val isScrollInProgress by remember { derivedStateOf { gridState.isScrollInProgress } }
+
+    LaunchedEffect(isScrollInProgress) {
+        if (isScrollInProgress) {
+            BoostHelper.onScrollEvent(BoostHelper.Scroll.VERTICAL)
+            BoostHelper.onEarlyWakeup(true, 0)
+        } else {
+            BoostHelper.onEarlyWakeup(false, 0)
+        }
+    }
 
     LaunchedEffect(isActive, canScrollBack, canScrollFwd) {
         if (isActive) {

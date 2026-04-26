@@ -3,6 +3,7 @@
 package com.android.launcher3.allapps.compose.ui
 
 import androidx.compose.foundation.ExperimentalFoundationApi
+import com.android.internal.util.BoostHelper
 import com.android.launcher3.allapps.compose.data.AllAppsIconProvider
 import com.android.launcher3.allapps.compose.shared.model.AllAppsComposeItem
 import com.android.launcher3.allapps.compose.shared.model.AppCategory
@@ -261,6 +262,15 @@ fun AllAppsComposeGrid(
     val cardBg = surfaceEffectColor()
 
     val isScrollingProvider = remember<() -> Boolean> { { scrollState.isScrollInProgress } }
+
+    LaunchedEffect(scrollState.isScrollInProgress) {
+        if (scrollState.isScrollInProgress) {
+            BoostHelper.onScrollEvent(BoostHelper.Scroll.VERTICAL)
+            BoostHelper.onEarlyWakeup(true, 0)
+        } else {
+            BoostHelper.onEarlyWakeup(false, 0)
+        }
+    }
 
     val scrollClipRadius = 32.dp
     val scrollClipShape = RoundedCornerShape(topStart = scrollClipRadius, topEnd = scrollClipRadius)

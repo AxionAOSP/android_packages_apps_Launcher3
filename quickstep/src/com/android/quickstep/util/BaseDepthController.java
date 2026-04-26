@@ -354,8 +354,10 @@ public class BaseDepthController {
             Trace.instantForTrack(TRACE_TAG_APP, TAG, "notifyRendererForGpuLoadUp");
             mLauncher.getRootView().getViewRootImpl().notifyRendererForGpuLoadUp("applyBlur");
             transaction.setEarlyWakeupStart(mEarlyWakeupInfo);
+            BoostHelper.onEarlyWakeup(true, 0);
         } else {
             transaction.setEarlyWakeupEnd(mEarlyWakeupInfo);
+            BoostHelper.onEarlyWakeup(false, 0);
         }
         mInEarlyWakeUp = start;
     }

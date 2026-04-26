@@ -90,6 +90,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.android.internal.util.BoostHelper
 import com.android.launcher3.R
 import com.android.launcher3.allapps.compose.data.AppCategoryManager
 import com.android.launcher3.allapps.compose.data.PinnedAppsManager
@@ -111,6 +112,15 @@ internal fun ExpandedFolderContent(
     val canScrollDown by remember { derivedStateOf { gridState.canScrollForward } }
     val isScrollInProgress by remember { derivedStateOf { gridState.isScrollInProgress } }
     val isScrollingProvider = remember<() -> Boolean> { { gridState.isScrollInProgress } }
+
+    LaunchedEffect(isScrollInProgress) {
+        if (isScrollInProgress) {
+            BoostHelper.onScrollEvent(BoostHelper.Scroll.VERTICAL)
+            BoostHelper.onEarlyWakeup(true, 0)
+        } else {
+            BoostHelper.onEarlyWakeup(false, 0)
+        }
+    }
 
     LaunchedEffect(canScrollUp, canScrollDown) {
         interactions.controller?.let {

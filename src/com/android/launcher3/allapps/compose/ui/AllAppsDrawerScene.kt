@@ -74,6 +74,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import com.android.internal.util.BoostHelper
 import com.android.launcher3.R
 import com.android.launcher3.allapps.compose.data.AppCategoryManager
 import com.android.launcher3.allapps.compose.shared.model.AllAppsComposeCallbacks
@@ -271,6 +272,14 @@ internal fun DrawerPagerWrapper(
     )
 
     val isPagerSwiping = pagerState.isScrollInProgress
+
+    LaunchedEffect(isPagerSwiping) {
+        if (isPagerSwiping) {
+            BoostHelper.onEarlyWakeup(true, 0)
+        } else {
+            BoostHelper.onEarlyWakeup(false, 0)
+        }
+    }
 
     CompositionLocalProvider(LocalPagerSwiping provides isPagerSwiping) {
         Box(modifier = Modifier.fillMaxSize()) {

@@ -58,6 +58,7 @@ import androidx.compose.ui.unit.*
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.zIndex
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.android.internal.util.BoostHelper
 import com.android.launcher3.R
 import com.android.launcher3.allapps.compose.data.AllAppsIconProvider
 import com.android.launcher3.allapps.compose.data.AppCategoryManager
@@ -119,6 +120,15 @@ internal fun AllAppsCategoriesView(
 
     val isScrollInProgress by remember { derivedStateOf { gridState.isScrollInProgress } }
     val isScrollingProvider = remember<() -> Boolean> { { gridState.isScrollInProgress } }
+
+    LaunchedEffect(isScrollInProgress) {
+        if (isScrollInProgress) {
+            BoostHelper.onScrollEvent(BoostHelper.Scroll.VERTICAL)
+            BoostHelper.onEarlyWakeup(true, 0)
+        } else {
+            BoostHelper.onEarlyWakeup(false, 0)
+        }
+    }
 
     LaunchedEffect(expandedCategory) {
         interactions.controller?.let {

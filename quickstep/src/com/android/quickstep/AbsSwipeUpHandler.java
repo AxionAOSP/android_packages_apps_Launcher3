@@ -161,6 +161,7 @@ import com.android.quickstep.util.SurfaceTransactionApplier;
 import com.android.quickstep.util.SwipePipToHomeAnimator;
 import com.android.quickstep.util.TaskViewSimulator;
 import com.android.quickstep.util.TransformParams;
+import com.android.internal.util.BoostHelper;
 import com.android.quickstep.util.TransitionSmoothHelper;
 import com.android.quickstep.views.DesktopTaskView;
 import com.android.quickstep.views.RecentsView;
@@ -2270,6 +2271,7 @@ public abstract class AbsSwipeUpHandler<
             @Override
             public void onAnimationStart(Animator animation) {
                 super.onAnimationStart(animation);
+                BoostHelper.onEarlyWakeup(true, 0);
                 runningTaskView = mRecentsView == null ? null : mRecentsView.getRunningTaskView();
 
                 if (runningTaskView != null) {
@@ -2280,6 +2282,7 @@ public abstract class AbsSwipeUpHandler<
             @Override
             public void onAnimationEnd(Animator animation) {
                 super.onAnimationEnd(animation);
+                BoostHelper.onEarlyWakeup(false, 0);
                 final View taskView = runningTaskView;
                 runningTaskView = null;
                 if (mRecentsView != null) {

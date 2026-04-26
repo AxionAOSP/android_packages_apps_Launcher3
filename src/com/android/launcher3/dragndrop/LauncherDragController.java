@@ -33,6 +33,7 @@ import android.view.View;
 
 import androidx.annotation.Nullable;
 
+import com.android.internal.util.BoostHelper;
 import com.android.launcher3.AbstractFloatingView;
 import com.android.launcher3.DragSource;
 import com.android.launcher3.DropTarget;
@@ -77,6 +78,7 @@ public class LauncherDragController extends DragController<Launcher> {
             float initialDragViewScale,
             float dragViewScaleOnDrop,
             DragOptions options) {
+        BoostHelper.compositionBoost(500);
         if (PROFILE_DRAWING_DURING_DRAG) {
             android.os.Debug.startMethodTracing("Launcher");
         }

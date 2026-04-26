@@ -195,7 +195,7 @@ public abstract class AbstractStateChangeTouchController
     @Override
     public void onDragStart(boolean start, float startDisplacement) {
         BoostHelper.onAnimation(BoostHelper.Animation.START);
-        BoostHelper.gpuBoost(true);
+        BoostHelper.onEarlyWakeup(true, 0);
         BoostHelper.onScrollEvent(BoostHelper.Scroll.VERTICAL);
         mStartState = mLauncher.getStateManager().getState();
         mIsLogContainerSet = false;
@@ -451,7 +451,7 @@ public abstract class AbstractStateChangeTouchController
 
     protected void clearState() {
         BoostHelper.onAnimation(BoostHelper.Animation.END);
-        BoostHelper.gpuBoost(false);
+        BoostHelper.onEarlyWakeup(false, 0);
         BoostHelper.flingBoost(false);
         cancelAnimationControllers();
         mGoingBetweenStates = true;

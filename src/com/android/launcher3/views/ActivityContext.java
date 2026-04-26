@@ -79,6 +79,7 @@ import com.android.launcher3.dragndrop.DragController;
 import com.android.launcher3.folder.FolderIcon;
 import com.android.launcher3.logger.LauncherAtom;
 import com.android.launcher3.logging.InstanceId;
+import com.android.internal.util.BoostHelper;
 import com.android.launcher3.logging.InstanceIdSequence;
 import com.android.launcher3.logging.StatsLogManager;
 import com.android.launcher3.model.ModelWriter;
@@ -520,6 +521,7 @@ public interface ActivityContext extends SavedStateRegistryOwner {
             intent.setSourceBounds(Utilities.getViewBounds(v));
         }
         try {
+            BoostHelper.systemThreadBoost(Process.myTid(), 600);
             if (isShortcut) {
                 String id = ((WorkspaceItemInfo) item).getDeepShortcutId();
                 String packageName = intent.getPackage();
