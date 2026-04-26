@@ -146,7 +146,7 @@ public class BaseDepthController {
 
     private void updateMaxBlurRadius() {
         boolean enabled =
-                mBlurSettingsFlow.getInt(SETTING_KEY_LAUNCHER_BLUR_ENABLED, 1) != 0;
+                mBlurSettingsFlow.getInt(SETTING_KEY_LAUNCHER_BLUR_ENABLED, 0) != 0;
         mMaxBlurRadius = enabled
                 ? mBlurSettingsFlow.getInt(
                         SETTING_KEY_LAUNCHER_BLUR_RADIUS, DEFAULT_LAUNCHER_BLUR_RADIUS)
