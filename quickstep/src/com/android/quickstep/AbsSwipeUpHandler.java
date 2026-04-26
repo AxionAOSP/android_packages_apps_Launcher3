@@ -161,6 +161,7 @@ import com.android.quickstep.util.SurfaceTransactionApplier;
 import com.android.quickstep.util.SwipePipToHomeAnimator;
 import com.android.quickstep.util.TaskViewSimulator;
 import com.android.quickstep.util.TransformParams;
+import com.android.quickstep.util.TransitionSmoothHelper;
 import com.android.quickstep.views.DesktopTaskView;
 import com.android.quickstep.views.RecentsView;
 import com.android.quickstep.views.RecentsViewContainer;
@@ -2435,6 +2436,7 @@ public abstract class AbsSwipeUpHandler<
         TaskStackChangeListeners.getInstance().unregisterTaskStackListener(
                 mActivityRestartListener);
         mTaskSnapshotCache.clear();
+        TransitionSmoothHelper.setInRecents(false);
 
         for (LifecycleTracker tracker:
                 LauncherComponentProvider.get(mContext).getLifecycleTrackers()) {

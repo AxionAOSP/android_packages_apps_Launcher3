@@ -34,6 +34,7 @@ import androidx.annotation.BinderThread;
 import androidx.annotation.Nullable;
 import androidx.annotation.UiThread;
 
+import com.android.quickstep.util.TransitionSmoothHelper;
 import com.android.systemui.animation.RemoteAnimationDelegate;
 import com.android.systemui.animation.RemoteAnimationRunnerCompat;
 
@@ -121,6 +122,7 @@ public class LauncherAnimationRunner extends RemoteAnimationRunnerCompat {
         postAsyncCallback(mHandler, () -> {
             finishExistingAnimation();
             getFactory().onAnimationCancelled();
+            TransitionSmoothHelper.clear();
         });
     }
 
