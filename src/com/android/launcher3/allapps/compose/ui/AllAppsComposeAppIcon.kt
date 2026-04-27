@@ -184,7 +184,7 @@ fun AllAppsComposeAppIcon(
                     layoutCoords.column = coords
                 }
             }
-            .pointerInput(Unit) {
+            .pointerInput(appInfo, sectionId) {
                 awaitEachGesture {
                     val down = awaitFirstDown(requireUnconsumed = false)
                     if (isScrollingProvider() || isPagerSwiping) return@awaitEachGesture
