@@ -74,6 +74,7 @@ import com.android.launcher3.model.data.ItemInfo
 import com.android.launcher3.popup.PopupContainerWithArrow
 import com.android.launcher3.util.ApiWrapper
 import com.android.launcher3.views.ActivityContext
+import com.android.launcher3.views.BaseDragLayer
 import com.android.launcher3.views.FloatingIconView
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -151,13 +152,23 @@ class AllAppsComposeController @Inject constructor(
     fun getSharedHostView(): ComposeAppIconView {
         val existing = sharedHostView
         if (existing != null) return existing
-        val c = container
+        val c = launcher?.dragLayer
+            ?: container
             ?: launcher?.getAppsView() as? ViewGroup
             ?: throw IllegalStateException("No container available for shared host view")
         val hostView = ComposeAppIconView(c.context)
         hostView.controller = this
         hostView.visibility = View.INVISIBLE
-        c.addView(hostView, RelativeLayout.LayoutParams(1, 1))
+        hostView.layoutDirection = View.LAYOUT_DIRECTION_LTR
+        val lp = if (c is BaseDragLayer<*>) {
+            BaseDragLayer.LayoutParams(1, 1).apply {
+                customPosition = true
+                ignoreInsets = true
+            }
+        } else {
+            RelativeLayout.LayoutParams(1, 1)
+        }
+        c.addView(hostView, lp)
         sharedHostView = hostView
         return hostView
     }
@@ -268,13 +279,52 @@ class AllAppsComposeController @Inject constructor(
         val hv = sharedHostView ?: return
         val parentLoc = IntArray(2)
         (hv.parent as? View)?.getLocationOnScreen(parentLoc)
-        val lp = hv.layoutParams as? RelativeLayout.LayoutParams ?: return
-        lp.leftMargin = (screenBounds.left - parentLoc[0]).toInt()
-        lp.topMargin = (screenBounds.top - parentLoc[1]).toInt()
-        hv.layoutParams = lp
-        val left = lp.leftMargin
-        val top = lp.topMargin
+        val iconSize = hv.getIconSizePx()
+        val left = (screenBounds.left - parentLoc[0]).toInt()
+        val top = (screenBounds.top - parentLoc[1]).toInt()
+        when (val lp = hv.layoutParams) {
+            is BaseDragLayer.LayoutParams -> {
+                lp.width = iconSize
+                lp.height = iconSize
+                lp.x = left
+                lp.y = top
+                lp.customPosition = true
+                lp.ignoreInsets = true
+                hv.layoutParams = lp
+            }
+            is RelativeLayout.LayoutParams -> {
+                lp.width = iconSize
+                lp.height = iconSize
+                lp.leftMargin = left
+                lp.topMargin = top
+                lp.rightMargin = 0
+                lp.marginStart = left
+                lp.marginEnd = 0
+                hv.layoutParams = lp
+            }
+            else -> return
+        }
+        hv.measure(
+            View.MeasureSpec.makeMeasureSpec(iconSize, View.MeasureSpec.EXACTLY),
+            View.MeasureSpec.makeMeasureSpec(iconSize, View.MeasureSpec.EXACTLY)
+        )
         hv.layout(left, top, left + hv.getIconSizePx(), top + hv.getIconSizePx())
+    }
+
+    fun onComposeIconPositioned(
+        componentName: ComponentName?,
+        sectionId: String?,
+        screenBounds: RectF,
+        iconSizePx: Int
+    ) {
+        if (componentName == null) return
+        val matchesHiddenIcon =
+            hiddenIconComponent == componentName && hiddenIconSection == sectionId
+        val matchesLaunchedIcon =
+            lastLaunchedComponent == componentName && lastLaunchedSection == sectionId
+        if (!matchesHiddenIcon && !matchesLaunchedIcon) return
+        sharedHostView?.setIconSizePx(iconSizePx)
+        repositionHostView(screenBounds)
     }
 
     fun clearLaunchedState() {

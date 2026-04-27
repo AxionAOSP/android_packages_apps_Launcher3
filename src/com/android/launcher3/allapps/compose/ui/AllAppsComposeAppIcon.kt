@@ -6,8 +6,6 @@ import com.android.launcher3.allapps.compose.ui.view.ComposeAppIconView
 import android.graphics.Rect
 import android.graphics.RectF
 import android.view.HapticFeedbackConstants
-import android.view.View
-import android.widget.RelativeLayout
 import androidx.compose.foundation.*
 import androidx.compose.foundation.gestures.*
 import androidx.compose.foundation.layout.*
@@ -24,7 +22,6 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.android.launcher3.model.data.AppInfo
-import com.android.launcher3.Launcher
 import com.android.launcher3.views.ActivityContext
 import com.android.launcher3.allapps.compose.shared.model.ComposeIconInfo
 
@@ -89,11 +86,7 @@ fun AllAppsComposeAppIcon(
         return Offset(windowLocCache[0].toFloat(), windowLocCache[1].toFloat())
     }
 
-    fun getIconBoundsOnScreen(): RectF {
-        val coords = layoutCoords.icon
-        if (coords == null || !coords.isAttached) {
-            return RectF(0f, 0f, effectiveIconSizePx.toFloat(), effectiveIconSizePx.toFloat())
-        }
+    fun toScreenRect(coords: LayoutCoordinates): RectF {
         val boundsInWindow = coords.boundsInWindow()
         val screenOffset = getScreenOffset()
         return RectF(
@@ -102,6 +95,14 @@ fun AllAppsComposeAppIcon(
             boundsInWindow.right + screenOffset.x,
             boundsInWindow.bottom + screenOffset.y
         )
+    }
+
+    fun getIconBoundsOnScreen(): RectF {
+        val coords = layoutCoords.icon
+        if (coords == null || !coords.isAttached) {
+            return RectF(0f, 0f, effectiveIconSizePx.toFloat(), effectiveIconSizePx.toFloat())
+        }
+        return toScreenRect(coords)
     }
 
     val controller = LocalAllAppsInteractions.current.controller
@@ -128,27 +129,7 @@ fun AllAppsComposeAppIcon(
         hostView.setIconSizePx(effectiveIconSizePx)
         hostView.applyDotState(activityContext.getDotInfoForItem(appInfo), false)
 
-        val iconBounds = getIconBoundsOnScreen()
-        val parentLoc = IntArray(2)
-        (hostView.parent as? View)?.getLocationOnScreen(parentLoc)
-
-        val lp = hostView.layoutParams as? RelativeLayout.LayoutParams
-        if (lp != null) {
-            lp.width = effectiveIconSizePx
-            lp.height = effectiveIconSizePx
-            lp.leftMargin = (iconBounds.left - parentLoc[0]).toInt()
-            lp.topMargin = (iconBounds.top - parentLoc[1]).toInt()
-            hostView.layoutParams = lp
-        }
-
-        hostView.measure(
-            View.MeasureSpec.makeMeasureSpec(effectiveIconSizePx, View.MeasureSpec.EXACTLY),
-            View.MeasureSpec.makeMeasureSpec(effectiveIconSizePx, View.MeasureSpec.EXACTLY)
-        )
-        val left = (iconBounds.left - parentLoc[0]).toInt()
-        val top = (iconBounds.top - parentLoc[1]).toInt()
-        hostView.layout(left, top, left + effectiveIconSizePx, top + effectiveIconSizePx)
-
+        ctrl.repositionHostView(getIconBoundsOnScreen())
         hostView.translationX = 0f
         hostView.translationY = 0f
 
@@ -271,6 +252,12 @@ fun AllAppsComposeAppIcon(
                 .onGloballyPositioned { coords ->
                     if (!isScrollingProvider()) {
                         layoutCoords.icon = coords
+                        controller?.onComposeIconPositioned(
+                            appInfo.componentName,
+                            sectionId,
+                            toScreenRect(coords),
+                            effectiveIconSizePx
+                        )
                     }
                 }
                 .drawBehind {
