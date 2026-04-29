@@ -26,13 +26,16 @@ import com.android.axion.compose.preferences.SettingsFlow
 import com.android.axion.compose.preferences.SettingsType
 import com.android.internal.util.MemInfoReader
 import com.android.launcher3.R
+import com.android.launcher3.concurrent.annotations.ThreadPoolContext
+import com.android.launcher3.concurrent.annotations.UiContext
 import com.android.launcher3.dagger.ApplicationContext
 import com.android.launcher3.dagger.LauncherAppSingleton
 import com.android.launcher3.util.DaggerSingletonTracker
 import com.android.launcher3.util.SafeCloseable
+import com.android.quickstep.util.TransitionSmoothHelper
 import javax.inject.Inject
+import kotlin.coroutines.CoroutineContext
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.delay
@@ -52,24 +55,21 @@ import kotlinx.coroutines.flow.onStart
 @LauncherAppSingleton
 class OverviewActionsViewExt @Inject constructor(
     @ApplicationContext private val appContext: Context,
+    @UiContext private val uiContext: CoroutineContext,
+    @ThreadPoolContext private val backgroundContext: CoroutineContext,
     lifecycleTracker: DaggerSingletonTracker,
 ) : SafeCloseable {
 
     private val activityManager = appContext.getSystemService(ActivityManager::class.java)!!
     private val settingsFlow = SettingsFlow(appContext.contentResolver, SettingsType.SECURE)
     private val memInfoReader = MemInfoReader()
-    private val visibleFlow = MutableStateFlow(false)
-    private var viewScope: CoroutineScope? = null
+    private var scope: CoroutineScope = CoroutineScope(uiContext + SupervisorJob())
 
     init {
         lifecycleTracker.addCloseable(this)
     }
 
     fun onAttach(state: OverviewActionsState) {
-        if (viewScope != null) return
-        val scope = CoroutineScope(Dispatchers.Main + SupervisorJob())
-        viewScope = scope
-
         settingsFlow.observeBoolean(KEY_SHOW_LOCK, default = true)
             .onEach { state.showLock = it }
             .launchIn(scope)
@@ -85,11 +85,7 @@ class OverviewActionsViewExt @Inject constructor(
         settingsFlow.observeBoolean(KEY_SHOW_CLEAR_ALL, default = true)
             .onEach { state.showClearAll = it }
             .launchIn(scope)
-
-        combine(
-            settingsFlow.observeBoolean(KEY_SHOW_MEMORY_INFO, default = true),
-            visibleFlow,
-        ) { enabled, visible -> enabled && visible }
+        settingsFlow.observeBoolean(KEY_SHOW_MEMORY_INFO, default = true)
             .distinctUntilChanged()
             .flatMapLatest { active ->
                 if (active) memoryInfoFlow() else emptyFlow<String>().onStart { emit("") }
@@ -99,14 +95,8 @@ class OverviewActionsViewExt @Inject constructor(
             .launchIn(scope)
     }
 
-    fun setVisible(visible: Boolean) {
-        visibleFlow.value = visible
-    }
-
     fun onDetach() {
-        visibleFlow.value = false
-        viewScope?.cancel()
-        viewScope = null
+        scope.cancel()
     }
 
     override fun close() {
@@ -118,7 +108,7 @@ class OverviewActionsViewExt @Inject constructor(
             emit(readMemoryInfo())
             delay(MEMORY_REFRESH_INTERVAL_MS)
         }
-    }.flowOn(Dispatchers.Default)
+    }.flowOn(backgroundContext)
 
     private fun readMemoryInfo(): String {
         memInfoReader.readMemInfo()
@@ -226,7 +216,7 @@ class OverviewActionsViewExt @Inject constructor(
         const val KEY_SHOW_CLEAR_ALL = "pulse_recents_show_clear_all"
         const val KEY_SHOW_MEMORY_INFO = "pulse_recents_show_memory_info"
 
-        private const val MEMORY_REFRESH_INTERVAL_MS = 2000L
+        private const val MEMORY_REFRESH_INTERVAL_MS = 5000L
         private const val MAX_SERVICES = 100
         private const val TAG = "OverviewActionsViewExt"
     }
