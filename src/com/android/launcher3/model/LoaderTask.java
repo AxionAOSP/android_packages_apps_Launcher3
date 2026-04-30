@@ -56,7 +56,7 @@ import androidx.annotation.WorkerThread;
 
 import com.android.launcher3.Flags;
 import com.android.launcher3.InvariantDeviceProfile;
-import com.android.internal.util.BoostHelper;
+import android.app.AxBoostFwk;
 import com.android.launcher3.LauncherModel;
 import com.android.launcher3.LauncherPrefs;
 import com.android.launcher3.Utilities;
@@ -393,7 +393,7 @@ public class LoaderTask implements Runnable {
 
         TraceHelper.INSTANCE.beginSection(TAG);
         MODEL_EXECUTOR.elevatePriority(CALLER_LOADER_TASK);
-        BoostHelper.launcherItemsLoadingBoost(0L);
+        AxBoostFwk.acquireHint(AxBoostFwk.OP_MISC_LAUNCHER_LOAD, -1L);
         LoaderMemoryLogger memoryLogger = new LoaderMemoryLogger();
         mIsRestoreFromBackup =
                 LauncherPrefs.get(mContext).get(IS_FIRST_LOAD_AFTER_RESTORE);
@@ -421,7 +421,7 @@ public class LoaderTask implements Runnable {
             throw e;
         }
         MODEL_EXECUTOR.restorePriority(CALLER_LOADER_TASK);
-        BoostHelper.launcherItemsLoadingBoost(-1L);
+        AxBoostFwk.acquireHint(AxBoostFwk.OP_MISC_LAUNCHER_LOAD, 0L);
         TraceHelper.INSTANCE.endSection();
     }
 

@@ -129,7 +129,7 @@ import androidx.core.graphics.ColorUtils;
 import com.android.app.animation.Animations;
 import com.android.app.animation.Interpolators;
 import com.android.internal.jank.Cuj;
-import com.android.internal.util.BoostHelper;
+import android.app.AxBoostFwk;
 import com.android.internal.util.LatencyTracker;
 import com.android.internal.util.ScrollOptimizer;
 import com.android.launcher3.DeviceProfile.OnDeviceProfileChangeListener;
@@ -559,14 +559,14 @@ public class QuickstepTransitionManager implements OnDeviceProfileChangeListener
         anim.addListener(new AnimatorListenerAdapter() {
             @Override
             public void onAnimationStart(Animator animation) {
-                BoostHelper.onEarlyWakeup(true, 0);
-                BoostHelper.onAnimation(BoostHelper.Animation.START);
+                AxBoostFwk.acquireHint(AxBoostFwk.OP_LAUNCH_ACT_SWITCH, -1L);
+                AxBoostFwk.acquireHint(AxBoostFwk.OP_RENDER_EARLY_WAKEUP, 0);
             }
 
             @Override
             public void onAnimationEnd(Animator animation) {
-                BoostHelper.onEarlyWakeup(false, 0);
-                BoostHelper.onAnimation(BoostHelper.Animation.END);
+                AxBoostFwk.acquireHint(AxBoostFwk.OP_EXIT_ANIM_BOOST, -1L);
+                AxBoostFwk.acquireHint(AxBoostFwk.OP_RENDER_EARLY_WAKEUP, 0L);
             }
         });
     }
@@ -1578,8 +1578,8 @@ public class QuickstepTransitionManager implements OnDeviceProfileChangeListener
         FloatingWidgetView floatingWidget = null;
         RectF targetRect = new RectF();
 
-        BoostHelper.compositionBoost(500);
-        BoostHelper.onEarlyWakeup(true, 0);
+        AxBoostFwk.acquireHint(AxBoostFwk.OP_RENDER_TRANSITION, 500);
+        AxBoostFwk.acquireHint(AxBoostFwk.OP_RENDER_EARLY_WAKEUP, 0);
 
         RemoteAnimationTarget runningTaskTarget = null;
         boolean isTransluscent = false;
@@ -1692,7 +1692,7 @@ public class QuickstepTransitionManager implements OnDeviceProfileChangeListener
         anim.addAnimatorListener(new AnimatorListenerAdapter() {
             @Override
             public void onAnimationEnd(Animator animation) {
-                BoostHelper.onEarlyWakeup(false, 0);
+                AxBoostFwk.acquireHint(AxBoostFwk.OP_RENDER_EARLY_WAKEUP, 0L);
             }
         });
         animation.addListener(new AnimatorListenerAdapter() {
@@ -1880,15 +1880,15 @@ public class QuickstepTransitionManager implements OnDeviceProfileChangeListener
         anim.addListener(new AnimatorListenerAdapter() {
             @Override
             public void onAnimationStart(Animator animation) {
-                BoostHelper.onAnimation(BoostHelper.Animation.START);
-                BoostHelper.onEarlyWakeup(true, 0);
-                BoostHelper.compositionBoost(400);
+                AxBoostFwk.acquireHint(AxBoostFwk.OP_LAUNCH_ACT_SWITCH, -1L);
+                AxBoostFwk.acquireHint(AxBoostFwk.OP_RENDER_EARLY_WAKEUP, 0);
+                AxBoostFwk.acquireHint(AxBoostFwk.OP_RENDER_TRANSITION, 400);
             }
 
             @Override
             public void onAnimationEnd(Animator animation) {
-                BoostHelper.onAnimation(BoostHelper.Animation.END);
-                BoostHelper.onEarlyWakeup(false, 0);
+                AxBoostFwk.acquireHint(AxBoostFwk.OP_EXIT_ANIM_BOOST, -1L);
+                AxBoostFwk.acquireHint(AxBoostFwk.OP_RENDER_EARLY_WAKEUP, 0L);
             }
         });
         RectFSpringAnim rectFSpringAnim = null;
@@ -1929,15 +1929,15 @@ public class QuickstepTransitionManager implements OnDeviceProfileChangeListener
         AnimatorListenerAdapter endListener = new AnimatorListenerAdapter() {
             @Override
             public void onAnimationStart(Animator animation) {
-                BoostHelper.onEarlyWakeup(true, 0);
-                BoostHelper.onAnimation(BoostHelper.Animation.START);
+                AxBoostFwk.acquireHint(AxBoostFwk.OP_RENDER_EARLY_WAKEUP, 0);
+                AxBoostFwk.acquireHint(AxBoostFwk.OP_LAUNCH_ACT_SWITCH, -1L);
             }
 
             @Override
             public void onAnimationEnd(Animator animation) {
                 super.onAnimationEnd(animation);
-                BoostHelper.onEarlyWakeup(false, 0);
-                BoostHelper.onAnimation(BoostHelper.Animation.END);
+                AxBoostFwk.acquireHint(AxBoostFwk.OP_RENDER_EARLY_WAKEUP, 0L);
+                AxBoostFwk.acquireHint(AxBoostFwk.OP_EXIT_ANIM_BOOST, -1L);
                 AccessibilityManagerCompat.sendTestProtocolEventToTest(
                         mLauncher, WALLPAPER_OPEN_ANIMATION_FINISHED_MESSAGE);
             }

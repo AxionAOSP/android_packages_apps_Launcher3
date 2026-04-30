@@ -47,7 +47,7 @@ import com.android.launcher3.logging.StatsLogManager;
 import com.android.launcher3.states.StateAnimationConfig;
 import com.android.launcher3.util.FlingBlockCheck;
 import com.android.launcher3.util.TouchController;
-import com.android.internal.util.BoostHelper;
+import android.app.AxBoostFwk;
 
 /**
  * TouchController for handling state changes
@@ -194,9 +194,9 @@ public abstract class AbstractStateChangeTouchController
 
     @Override
     public void onDragStart(boolean start, float startDisplacement) {
-        BoostHelper.onAnimation(BoostHelper.Animation.START);
-        BoostHelper.onEarlyWakeup(true, 0);
-        BoostHelper.onScrollEvent(BoostHelper.Scroll.VERTICAL);
+        AxBoostFwk.acquireHint(AxBoostFwk.OP_LAUNCH_ACT_SWITCH, -1L);
+        AxBoostFwk.acquireHint(AxBoostFwk.OP_RENDER_EARLY_WAKEUP, 0);
+        AxBoostFwk.acquireHint(AxBoostFwk.OP_SCROLL_VERTICAL, -1L);
         mStartState = mLauncher.getStateManager().getState();
         mIsLogContainerSet = false;
 
@@ -303,7 +303,7 @@ public abstract class AbstractStateChangeTouchController
         }
         boolean fling = mDetector.isFling(velocity);
         if (fling) {
-            BoostHelper.flingBoost(true);
+            AxBoostFwk.acquireHint(AxBoostFwk.OP_SCROLL_BOOST, -1L);
         }
 
         boolean blockedFling = fling && mFlingBlockCheck.isBlocked();
@@ -450,9 +450,9 @@ public abstract class AbstractStateChangeTouchController
     }
 
     protected void clearState() {
-        BoostHelper.onAnimation(BoostHelper.Animation.END);
-        BoostHelper.onEarlyWakeup(false, 0);
-        BoostHelper.flingBoost(false);
+        AxBoostFwk.acquireHint(AxBoostFwk.OP_EXIT_ANIM_BOOST, -1L);
+        AxBoostFwk.acquireHint(AxBoostFwk.OP_RENDER_EARLY_WAKEUP, 0L);
+        AxBoostFwk.acquireHint(AxBoostFwk.OP_SCROLL_BOOST, 0L);
         cancelAnimationControllers();
         mGoingBetweenStates = true;
         mDetector.finishedScrolling();

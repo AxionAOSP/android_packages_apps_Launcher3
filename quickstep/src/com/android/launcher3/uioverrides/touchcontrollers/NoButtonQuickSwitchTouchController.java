@@ -68,7 +68,7 @@ import android.view.animation.Interpolator;
 import android.window.DesktopModeFlags;
 
 import com.android.internal.jank.Cuj;
-import com.android.internal.util.BoostHelper;
+import android.app.AxBoostFwk;
 import com.android.launcher3.LauncherState;
 import com.android.launcher3.R;
 import com.android.launcher3.Utilities;
@@ -199,7 +199,7 @@ public class NoButtonQuickSwitchTouchController implements TouchController,
 
     @Override
     public void onDragStart(boolean start) {
-        BoostHelper.onEarlyWakeup(true, 0);
+        AxBoostFwk.acquireHint(AxBoostFwk.OP_RENDER_EARLY_WAKEUP, 0);
         mMotionPauseDetector.clear();
         mMotionPauseDetector.setIsTrackpadGesture(mIsTrackpadSwipe);
         if (start) {
@@ -341,7 +341,7 @@ public class NoButtonQuickSwitchTouchController implements TouchController,
 
     @Override
     public void onDragEnd(PointF velocity) {
-        BoostHelper.onEarlyWakeup(false, 0);
+        AxBoostFwk.acquireHint(AxBoostFwk.OP_RENDER_EARLY_WAKEUP, 0L);
         boolean horizontalFling = mSwipeDetector.isFling(velocity.x);
         boolean verticalFling = mSwipeDetector.isFling(velocity.y);
         boolean noFling = !horizontalFling && !verticalFling;

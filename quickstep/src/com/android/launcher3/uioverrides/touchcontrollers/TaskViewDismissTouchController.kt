@@ -21,7 +21,7 @@ import android.view.MotionEvent
 import androidx.dynamicanimation.animation.SpringAnimation
 import com.android.app.animation.Interpolators.DECELERATE
 import com.android.app.animation.Interpolators.LINEAR
-import com.android.internal.util.BoostHelper
+import android.app.AxBoostFwk
 import com.android.launcher3.AbstractFloatingView
 import com.android.launcher3.R
 import com.android.launcher3.Utilities.EDGE_NAV_BAR
@@ -232,7 +232,7 @@ CONTAINER : StatefulContainer<T> {
     }
 
     override fun onDragStart(start: Boolean, startDisplacement: Float) {
-        BoostHelper.onEarlyWakeup(true, 0)
+        AxBoostFwk.acquireHint(AxBoostFwk.OP_RENDER_EARLY_WAKEUP, 0)
         val taskBeingDragged = taskBeingDragged ?: return
         debugLog(TAG, "Handling touch event.")
 
@@ -317,7 +317,7 @@ CONTAINER : StatefulContainer<T> {
     }
 
     override fun onDragEnd(velocity: Float) {
-        BoostHelper.onEarlyWakeup(false, 0)
+        AxBoostFwk.acquireHint(AxBoostFwk.OP_RENDER_EARLY_WAKEUP, 0L)
         val taskBeingDragged = taskBeingDragged ?: return
         taskDragDisplacementValue?.dispose()
         taskBeingDragged.isBeingDraggedForDismissal = false

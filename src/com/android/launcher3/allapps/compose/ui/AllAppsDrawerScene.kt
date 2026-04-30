@@ -74,7 +74,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import com.android.internal.util.BoostHelper
+import android.app.AxBoostFwk
 import com.android.launcher3.R
 import com.android.launcher3.allapps.compose.data.AppCategoryManager
 import com.android.launcher3.allapps.compose.shared.model.AllAppsComposeCallbacks
@@ -275,9 +275,9 @@ internal fun DrawerPagerWrapper(
 
     LaunchedEffect(isPagerSwiping) {
         if (isPagerSwiping) {
-            BoostHelper.onEarlyWakeup(true, 0)
+            AxBoostFwk.acquireHint(AxBoostFwk.OP_RENDER_EARLY_WAKEUP, 0)
         } else {
-            BoostHelper.onEarlyWakeup(false, 0)
+            AxBoostFwk.acquireHint(AxBoostFwk.OP_RENDER_EARLY_WAKEUP, 0L)
         }
     }
 

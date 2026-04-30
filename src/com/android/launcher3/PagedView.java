@@ -52,7 +52,7 @@ import android.widget.ScrollView;
 
 import androidx.annotation.Nullable;
 
-import com.android.internal.util.BoostHelper;
+import android.app.AxBoostFwk;
 import com.android.launcher3.compat.AccessibilityManagerCompat;
 import com.android.launcher3.config.FeatureFlags;
 import com.android.launcher3.pageindicators.PageIndicator;
@@ -1703,7 +1703,7 @@ public abstract class PagedView<T extends View & PageIndicator> extends ViewGrou
     }
 
     protected boolean snapToPageWithVelocity(int whichPage, int velocity) {
-        BoostHelper.compositionBoost(300);
+        AxBoostFwk.acquireHint(AxBoostFwk.OP_RENDER_TRANSITION, 300);
         whichPage = validateNewPage(whichPage);
         int halfScreenSize = mOrientationHandler.getMeasuredSize(this) / 2;
 

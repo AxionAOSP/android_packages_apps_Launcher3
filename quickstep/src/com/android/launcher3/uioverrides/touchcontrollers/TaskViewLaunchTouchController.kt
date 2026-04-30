@@ -20,7 +20,7 @@ import android.content.Context
 import android.graphics.Rect
 import android.view.MotionEvent
 import com.android.app.animation.Interpolators.ZOOM_IN
-import com.android.internal.util.BoostHelper
+import android.app.AxBoostFwk
 import com.android.launcher3.AbstractFloatingView
 import com.android.launcher3.LauncherAnimUtils
 import com.android.launcher3.Utilities.EDGE_NAV_BAR
@@ -158,7 +158,7 @@ CONTAINER : RecentsViewContainer {
     }
 
     override fun onDragStart(start: Boolean, startDisplacement: Float) {
-        BoostHelper.onEarlyWakeup(true, 0)
+        AxBoostFwk.acquireHint(AxBoostFwk.OP_RENDER_EARLY_WAKEUP, 0)
         val taskBeingDragged = taskBeingDragged ?: return
         debugLog(TAG, "Handling touch event.")
 
@@ -189,7 +189,7 @@ CONTAINER : RecentsViewContainer {
     }
 
     override fun onDragEnd(velocity: Float) {
-        BoostHelper.onEarlyWakeup(false, 0)
+        AxBoostFwk.acquireHint(AxBoostFwk.OP_RENDER_EARLY_WAKEUP, 0L)
         val playbackController = playbackController ?: return
 
         val isBeyondLaunchThreshold =

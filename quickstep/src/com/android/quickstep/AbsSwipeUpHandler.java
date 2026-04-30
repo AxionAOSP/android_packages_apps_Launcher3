@@ -73,6 +73,7 @@ import android.animation.AnimatorListenerAdapter;
 import android.animation.AnimatorSet;
 import android.animation.ValueAnimator;
 import android.app.ActivityManager;
+import android.app.AxBoostFwk;
 import android.app.TaskInfo;
 import android.app.WindowConfiguration;
 import android.content.Context;
@@ -161,7 +162,6 @@ import com.android.quickstep.util.SurfaceTransactionApplier;
 import com.android.quickstep.util.SwipePipToHomeAnimator;
 import com.android.quickstep.util.TaskViewSimulator;
 import com.android.quickstep.util.TransformParams;
-import com.android.internal.util.BoostHelper;
 import com.android.quickstep.util.TransitionSmoothHelper;
 import com.android.quickstep.views.DesktopTaskView;
 import com.android.quickstep.views.RecentsView;
@@ -2271,7 +2271,7 @@ public abstract class AbsSwipeUpHandler<
             @Override
             public void onAnimationStart(Animator animation) {
                 super.onAnimationStart(animation);
-                BoostHelper.onEarlyWakeup(true, 0);
+                AxBoostFwk.acquireHint(AxBoostFwk.OP_RENDER_EARLY_WAKEUP, 0);
                 runningTaskView = mRecentsView == null ? null : mRecentsView.getRunningTaskView();
 
                 if (runningTaskView != null) {
@@ -2282,7 +2282,7 @@ public abstract class AbsSwipeUpHandler<
             @Override
             public void onAnimationEnd(Animator animation) {
                 super.onAnimationEnd(animation);
-                BoostHelper.onEarlyWakeup(false, 0);
+                AxBoostFwk.acquireHint(AxBoostFwk.OP_RENDER_EARLY_WAKEUP, 0L);
                 final View taskView = runningTaskView;
                 runningTaskView = null;
                 if (mRecentsView != null) {

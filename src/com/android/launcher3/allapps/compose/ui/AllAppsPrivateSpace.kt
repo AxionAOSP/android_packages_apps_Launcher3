@@ -74,7 +74,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import com.android.internal.util.BoostHelper
+import android.app.AxBoostFwk
 import com.android.launcher3.R
 import com.android.launcher3.allapps.compose.shared.model.AllAppsComposeCallbacks
 import com.android.launcher3.allapps.compose.shared.model.AllAppsComposeState
@@ -164,10 +164,10 @@ internal fun PrivateSpaceFullPage(
 
     LaunchedEffect(isScrollInProgress) {
         if (isScrollInProgress) {
-            BoostHelper.onScrollEvent(BoostHelper.Scroll.VERTICAL)
-            BoostHelper.onEarlyWakeup(true, 0)
+            AxBoostFwk.acquireHint(AxBoostFwk.OP_SCROLL_VERTICAL, -1L)
+            AxBoostFwk.acquireHint(AxBoostFwk.OP_RENDER_EARLY_WAKEUP, 0)
         } else {
-            BoostHelper.onEarlyWakeup(false, 0)
+            AxBoostFwk.acquireHint(AxBoostFwk.OP_RENDER_EARLY_WAKEUP, 0L)
         }
     }
 

@@ -40,7 +40,7 @@ import androidx.annotation.Nullable;
 import androidx.annotation.VisibleForTesting;
 
 import com.android.app.animation.Interpolators;
-import com.android.internal.util.BoostHelper;
+import android.app.AxBoostFwk;
 import com.android.axion.compose.preferences.SettingsFlow;
 import com.android.axion.compose.preferences.SettingsType;
 import com.android.launcher3.Flags;
@@ -290,9 +290,9 @@ public class BaseDepthController {
         }
         mCurrentBlur = newBlur;
         if (previousBlur == 0 && newBlur > 0) {
-            BoostHelper.shadeBoost(true);
+            AxBoostFwk.acquireHint(AxBoostFwk.OP_SHADE, -1L);
         } else if (previousBlur > 0 && newBlur == 0) {
-            BoostHelper.shadeBoost(false);
+            AxBoostFwk.acquireHint(AxBoostFwk.OP_SHADE, 0L);
         }
         Log.v(TAG, "Applying blur: " + mCurrentBlur + " to " + blurSurface + " applyImmediately: "
                 + applyImmediately);
@@ -354,10 +354,10 @@ public class BaseDepthController {
             Trace.instantForTrack(TRACE_TAG_APP, TAG, "notifyRendererForGpuLoadUp");
             mLauncher.getRootView().getViewRootImpl().notifyRendererForGpuLoadUp("applyBlur");
             transaction.setEarlyWakeupStart(mEarlyWakeupInfo);
-            BoostHelper.onEarlyWakeup(true, 0);
+            AxBoostFwk.acquireHint(AxBoostFwk.OP_RENDER_EARLY_WAKEUP, 0);
         } else {
             transaction.setEarlyWakeupEnd(mEarlyWakeupInfo);
-            BoostHelper.onEarlyWakeup(false, 0);
+            AxBoostFwk.acquireHint(AxBoostFwk.OP_RENDER_EARLY_WAKEUP, 0L);
         }
         mInEarlyWakeUp = start;
     }

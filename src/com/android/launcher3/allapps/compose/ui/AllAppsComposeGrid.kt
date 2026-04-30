@@ -3,7 +3,7 @@
 package com.android.launcher3.allapps.compose.ui
 
 import androidx.compose.foundation.ExperimentalFoundationApi
-import com.android.internal.util.BoostHelper
+import android.app.AxBoostFwk
 import com.android.launcher3.allapps.compose.data.AllAppsIconProvider
 import com.android.launcher3.allapps.compose.shared.model.AllAppsComposeItem
 import com.android.launcher3.allapps.compose.shared.model.AppCategory
@@ -246,10 +246,10 @@ fun AllAppsComposeGrid(
 
     LaunchedEffect(scrollState.isScrollInProgress) {
         if (scrollState.isScrollInProgress) {
-            BoostHelper.onScrollEvent(BoostHelper.Scroll.VERTICAL)
-            BoostHelper.onEarlyWakeup(true, 0)
+            AxBoostFwk.acquireHint(AxBoostFwk.OP_SCROLL_VERTICAL, -1L)
+            AxBoostFwk.acquireHint(AxBoostFwk.OP_RENDER_EARLY_WAKEUP, 0)
         } else {
-            BoostHelper.onEarlyWakeup(false, 0)
+            AxBoostFwk.acquireHint(AxBoostFwk.OP_RENDER_EARLY_WAKEUP, 0L)
         }
     }
 
