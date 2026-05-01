@@ -98,6 +98,7 @@ import android.window.IRemoteTransitionFinishedCallback;
 import android.window.TransitionInfo;
 import android.os.SystemProperties;
 import android.os.UserHandle;
+import android.view.Choreographer;
 import android.provider.Settings;
 import android.util.Log;
 import android.util.Pair;
@@ -130,6 +131,7 @@ import com.android.app.animation.Interpolators;
 import com.android.internal.jank.Cuj;
 import com.android.internal.util.BoostHelper;
 import com.android.internal.util.LatencyTracker;
+import com.android.internal.util.ScrollOptimizer;
 import com.android.launcher3.DeviceProfile.OnDeviceProfileChangeListener;
 import com.android.launcher3.LauncherAnimationRunner.RemoteAnimationFactory;
 import com.android.launcher3.anim.AnimationSuccessListener;
@@ -866,7 +868,9 @@ public class QuickstepTransitionManager implements OnDeviceProfileChangeListener
                 if (taskbarInteractor != null) {
                     taskbarInteractor.showEduOnAppLaunch();
                 }
-                openingTargets.release();
+                RemoteAnimationTargets targets = openingTargets;
+                ScrollOptimizer.postFrameCallbackDelay(
+                        Choreographer.getInstance(), targets::release, 0);
             }
 
             private boolean shouldShowEduOnAppLaunch() {
@@ -1606,7 +1610,9 @@ public class QuickstepTransitionManager implements OnDeviceProfileChangeListener
                     true /* hideOriginal */, targetRect, false /* isOpening */);
             if (targetRect.left == 0 && targetRect.top == 0
                     && targetRect.width() <= 0 && targetRect.height() <= 0) {
-                floatingIconView.fastFinish();
+                FloatingIconView fiv = floatingIconView;
+                ScrollOptimizer.postFrameCallbackDelay(
+                        Choreographer.getInstance(), fiv::fastFinish, 0);
                 floatingIconView = null;
                 targetRect.set(getDefaultWindowTargetRect());
             }
