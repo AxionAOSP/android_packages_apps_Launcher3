@@ -150,7 +150,7 @@
     <!-- Accessibility label on the widget preview that on click (if add button is showing) hides the button to add widget to the home screen. [CHAR_LIMIT=none] -->
     <string name="widget_cell_tap_to_hide_add_button_label">Hide add button</string>
     <!-- Text on the button that adds a widget to the home screen. [CHAR_LIMIT=15] -->
-    <string name="widget_add_button_label">Add</string>
+    <string name="widget_add_button_label">הוספה</string>
     <!-- Accessibility content description for the button that adds a widget to the home screen. The
          placeholder text is the widget name. [CHAR_LIMIT=none] -->
     <string name="widget_add_button_content_description">Add <xliff:g id="widget_name" example="Calendar month view">%1$s</xliff:g> widget</string>
@@ -342,19 +342,19 @@
     <!-- Title for Notification dots setting. Tapping this will link to the system Notifications settings screen where the user can turn off notification dots globally. [CHAR LIMIT=50] -->
     <string name="notification_dots_title">Notification dots</string>
     <!-- Text to indicate that the system notification dots setting is on [CHAR LIMIT=100] -->
-    <string name="notification_dots_desc_on">On</string>
+    <string name="notification_dots_desc_on">מופעלות</string>
     <!-- Text to indicate that the system notification dots setting is off [CHAR LIMIT=100] -->
-    <string name="notification_dots_desc_off">Off</string>
+    <string name="notification_dots_desc_off">כבויות</string>
     <!-- Title for the dialog shown when the app does not has notification access, explaining the requirement for notification access [CHAR LIMIT=50] -->
-    <string name="title_missing_notification_access">Notification access needed</string>
+    <string name="title_missing_notification_access">נחוצה הרשאת גישה להתראות</string>
     <!-- Message explaining to the user that the notification access is required by the app for showing 'Notification dots' [CHAR LIMIT=NONE] -->
     <string name="msg_missing_notification_access">To show Notification Dots, turn on app notifications for <xliff:g id="name" example="My App">%1$s</xliff:g></string>
     <!-- Button text in the confirmation dialog which would take the user to the system settings [CHAR LIMIT=50] -->
-    <string name="title_change_settings">Change settings</string>
+    <string name="title_change_settings">לשינוי ההגדרות</string>
     <!-- Summary for Notification dots setting. Tapping this will link enable/disable notification dots feature on the home screen. [CHAR LIMIT=50] -->
     <string name="notification_dots_service_title">Show notification dots</string>
     <!-- Title for Developer Options setting. [CHAR LIMIT=50] -->
-    <string name="developer_options_title">Developer Options</string>
+    <string name="developer_options_title">אפשרויות למפתחים</string>
     <!-- Label for the setting that allows the automatic placement of launcher shortcuts for applications and games installed on the device [CHAR LIMIT=60] -->
     <string name="auto_add_shortcuts_label">Add app icons to home screen</string>
     <!-- Text description of the setting that allows the automatic placement of launcher shortcuts for applications and games installed on the device [CHAR LIMIT=NONE] -->
@@ -495,16 +495,16 @@
     <!-- Description for Private Space Settings button -->
     <string name="ps_container_settings">Private Space Settings</string>
     <!-- Description for Private Space Unlock button -->
-    <string name="ps_container_unlock_button_content_description">Private, unlocked.</string>
+    <string name="ps_container_unlock_button_content_description">פרטי, פתוח.</string>
     <!-- Description for Private Space Lock button -->
-    <string name="ps_container_lock_button_content_description">Private, locked.</string>
-    <string name="ps_container_lock_title">Lock</string>
+    <string name="ps_container_lock_button_content_description">פרטי, נעול.</string>
+    <string name="ps_container_lock_title">נעילה</string>
     <!-- Description for Private Space Transition button -->
     <string name="ps_container_transition">Private Space Transitioning</string>
     <!-- Title for Private Space install app icon -->
     <string name="ps_add_button_label">התקנה</string>
     <!-- Title for Private Space app icon to add files and more to Private Space -->
-    <string name="ps_app_label_override">Add</string>
+    <string name="ps_app_label_override">הוספה</string>
     <!-- Content description for install app icon -->
     <string name="ps_add_button_content_description">Install apps to Private Space</string>
     <string name="ps_app_content_description">Add files and more to Private Space</string>
@@ -515,7 +515,7 @@
     <!-- Label for add app button in private space -->
     <string name="ps_add_app_button">Add app</string>
     <!-- Short label for add app grid icon in private space -->
-    <string name="ps_add_app_short">Add</string>
+    <string name="ps_add_app_short">הוספה</string>
     <!-- Content description for private space settings button -->
     <string name="ps_settings_content_description">הגדרות מרחב פרטי</string>
     <!-- Label for unlock button on private space veil -->
