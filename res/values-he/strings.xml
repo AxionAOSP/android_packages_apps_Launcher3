@@ -233,15 +233,15 @@
     <string name="custom_icon_back">חזרה</string>
     <string name="custom_icon_search_hint">חיפוש סמלים</string>
     <string name="custom_icon_no_search_results">אין סמלים שתואמים לחיפוש שלך</string>
-    <string name="action_customize_icon">Customize icons</string>
-    <string name="icon_pack_picker_title">Customize icons</string>
+    <string name="action_customize_icon">התאמה אישית של הסמלים</string>
+    <string name="icon_pack_picker_title">התאמה אישית של הסמלים</string>
     <string name="icon_pack_picker_default">Default</string>
     <string name="icon_pack_picker_reset">Reset to default</string>
     <string name="icon_pack_title">ערכת סמלים</string>
-    <string name="themed_icons_card_title">Themed Icons</string>
-    <string name="themed_icons_description">Monochrome icons that adapt to your colors</string>
-    <string name="icon_shape_title">Icon Shape</string>
-    <string name="themed_icon_pack_title">Themed Icon Pack</string>
+    <string name="themed_icons_card_title">סמלים מסוגננים</string>
+    <string name="themed_icons_description">סמלים מונוכרומטיים שמשתנים לפי צבעי הנושא</string>
+    <string name="icon_shape_title">צורת סמל</string>
+    <string name="themed_icon_pack_title">ערכת סמלים מסוגננת</string>
     <string name="themed_icon_pack_none">ללא</string>
     <string name="folder_style_picker_title">סגנון תיקייה</string>
     <string name="folder_style_quadrant">Quadrant</string>
@@ -288,7 +288,7 @@
         }
     </string>
     <!-- content description for hotseat items -->
-    <string name="hotseat_prediction_content_description">Predicted app: <xliff:g id="title" example="Chrome">%1$s</xliff:g></string>
+    <string name="hotseat_prediction_content_description">יישום מוצע: <xliff:g id="title" example="Chrome">%1$s</xliff:g></string>
     <!-- The format string for default page scroll text [CHAR_LIMIT=none] -->
     <string name="default_scroll_format">Page %1$d of %2$d</string>
     <!-- The format string for Workspace page scroll text [CHAR_LIMIT=none] -->
@@ -509,11 +509,11 @@
     <string name="ps_add_button_content_description">Install apps to Private Space</string>
     <string name="ps_app_content_description">Add files and more to Private Space</string>
     <!-- Label for private apps section in private space page -->
-    <string name="ps_private_apps_label">Private apps</string>
+    <string name="ps_private_apps_label">אפליקציות פרטיות</string>
     <!-- Label shown when there are no private apps -->
-    <string name="ps_no_private_apps">No private apps</string>
+    <string name="ps_no_private_apps">אין אפליקציות פרטיות</string>
     <!-- Label for add app button in private space -->
-    <string name="ps_add_app_button">Add app</string>
+    <string name="ps_add_app_button">הוספת אפליקציה</string>
     <!-- Short label for add app grid icon in private space -->
     <string name="ps_add_app_short">הוספה</string>
     <!-- Content description for private space settings button -->
