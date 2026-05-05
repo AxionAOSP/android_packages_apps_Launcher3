@@ -42,7 +42,7 @@
     <string name="recent_task_option_aspect_ratio">Change aspect ratio</string>
     <string name="split_app_info_accessibility">App info for %1$s</string>
     <string name="split_app_usage_settings">Usage settings for %1$s</string>
-    <string name="close_task_accessibility">Close %1$s</string>
+    <string name="close_task_accessibility">סגירת %1$s</string>
     <!-- Title for an option to open a new window for a given app   -->
     <string name="new_window_option_taskbar">New Window</string>
     <!-- Title for an option to manage open windows for a given app   -->
@@ -150,40 +150,40 @@
     <!-- Accessibility label on the widget preview that on click (if add button is showing) hides the button to add widget to the home screen. [CHAR_LIMIT=none] -->
     <string name="widget_cell_tap_to_hide_add_button_label">Hide add button</string>
     <!-- Text on the button that adds a widget to the home screen. [CHAR_LIMIT=15] -->
-    <string name="widget_add_button_label">Add</string>
+    <string name="widget_add_button_label">הוספה</string>
     <!-- Accessibility content description for the button that adds a widget to the home screen. The
          placeholder text is the widget name. [CHAR_LIMIT=none] -->
     <string name="widget_add_button_content_description">Add <xliff:g id="widget_name" example="Calendar month view">%1$s</xliff:g> widget</string>
     <!-- Text on the button that enables users to expand the widgets list to see all widget apps besides the default ones displayed. [CHAR_LIMIT=15] -->
-    <string name="widgets_list_expand_button_label">Show all</string>
+    <string name="widgets_list_expand_button_label">להציג הכול</string>
     <!-- Accessibility content description for the button that enables users to expand the widgets list to see all widget apps besides the default ones displayed. [CHAR_LIMIT=none]  -->
     <string name="widgets_list_expand_button_content_description">Show all widgets</string>
     <!-- Accessibility announcement to indicate to the users that widgets list is now expanded -->
-    <string name="widgets_list_expanded">Showing all widgets</string>
+    <string name="widgets_list_expanded">כל הווידג׳טים מוצגים</string>
     <!-- Text on an educational tip on widget informing users that they can change widget settings.
          [CHAR_LIMIT=NONE] -->
-    <string name="reconfigurable_widget_education_tip">Tap to change widget settings</string>
+    <string name="reconfigurable_widget_education_tip">יש להקיש כדי לשנות את הגדרות הווידג׳ט</string>
     <!-- Spoken text for screen readers. This text is for an icon that lets the user change a
          widget's settings. [CHAR_LIMIT=50] -->
-    <string name="widget_reconfigure_button_content_description">Change widget settings</string>
+    <string name="widget_reconfigure_button_content_description">שינוי הגדרות הווידג׳ט</string>
     <!-- All Apps -->
     <!-- Search bar text in the apps view. [CHAR_LIMIT=50] -->
-    <string name="all_apps_search_bar_hint">Search apps</string>
+    <string name="all_apps_search_bar_hint">חיפוש אפליקציות</string>
     <!-- Loading apps text. [CHAR_LIMIT=50] -->
-    <string name="all_apps_loading_message">Loading apps&#8230;</string>
+    <string name="all_apps_loading_message">האפליקציות נטענות&#8230;</string>
     <!-- No-search-results text. [CHAR_LIMIT=50] -->
-    <string name="all_apps_no_search_results">No apps found matching \"<xliff:g id="query" example="Android">%1$s</xliff:g>\"</string>
+    <string name="all_apps_no_search_results">לא נמצאו אפליקציות התואמות לערך \"<xliff:g id="query" example="Android">%1$s</xliff:g>\"</string>
     <!-- Label for an icon representing any generic app. [CHAR_LIMIT=50] -->
-    <string name="label_application">App</string>
+    <string name="label_application">אפליקציה</string>
     <!-- Label for the header text of the All Apps section in All Apps view, used to separate Predicted Apps and Actions section from All Apps section. [CHAR_LIMIT=50] -->
-    <string name="all_apps_label">All apps</string>
-    <string name="all_apps_list_label">Apps list</string>
+    <string name="all_apps_label">כל האפליקציות</string>
+    <string name="all_apps_list_label">רשימת אפליקציות</string>
     <!-- Popup items -->
     <!-- Text to display as the header above notifications. [CHAR_LIMIT=30] -->
-    <string name="notifications_header">Notifications</string>
+    <string name="notifications_header">התראות</string>
     <!-- Drag and drop -->
     <!-- Message to tell the user to press and hold on a shortcut to add it [CHAR_LIMIT=50] -->
-    <string name="long_press_shortcut_to_add">Touch &amp; hold to move a shortcut.</string>
+    <string name="long_press_shortcut_to_add">יש לגעת ולהחזיק בשביל להזיז קיצור דרך.</string>
     <!-- Accessibility spoken hint message in deep shortcut menu, which allows user to add a shortcut. Custom action is the label for additional accessibility actions available in this mode [CHAR_LIMIT=200] -->
     <string name="long_accessible_way_to_add_shortcut">Double-tap &amp; hold to move a shortcut or use custom actions.</string>
     <!-- Error message when a user can't add more apps, widgets, or shortcuts to a Home screen. -->
@@ -191,64 +191,64 @@
     <!-- Error message when user has filled the hotseat -->
     <string name="hotseat_out_of_space">No more room in the Favorites tray</string>
     <!-- All applications label -->
-    <string name="all_apps_button_label">Apps list</string>
-    <string name="all_apps_search_results">Search results</string>
-    <string name="all_apps_button_personal_label">Personal apps list</string>
-    <string name="all_apps_button_work_label">Work apps list</string>
+    <string name="all_apps_button_label">רשימת אפליקציות</string>
+    <string name="all_apps_search_results">תוצאות החיפוש</string>
+    <string name="all_apps_button_personal_label">רשימת אפליקציות אישיות</string>
+    <string name="all_apps_button_work_label">רשימת אפליקציות לעבודה</string>
     <!-- System shortcuts -->
     <!-- Label for remove drop target (from the homescreen only).
          May appear next to uninstall_drop_target_label [CHAR_LIMIT=20] -->
-    <string name="remove_drop_target_label">Remove</string>
+    <string name="remove_drop_target_label">הסרה</string>
     <!-- Label for uninstall drop target (from the device).
          May appear next to remove_drop_target_label [CHAR_LIMIT=20]-->
-    <string name="uninstall_drop_target_label">Uninstall</string>
+    <string name="uninstall_drop_target_label">הסרת התקנה</string>
     <!-- Label for app info drop target. [CHAR_LIMIT=20] -->
-    <string name="app_info_drop_target_label">App info</string>
+    <string name="app_info_drop_target_label">פרטי אפליקציה</string>
     <!-- Label for install to private profile shortcut label. [CHAR_LIMIT=20] -->
-    <string name="install_private_system_shortcut_label">Install in private</string>
+    <string name="install_private_system_shortcut_label">התקנה במרחב הפרטי</string>
     <!-- Label for uninstall app private profile shortcut.-->
-    <string name="uninstall_private_system_shortcut_label">Uninstall app</string>
+    <string name="uninstall_private_system_shortcut_label">הסרת אפליקציה</string>
     <!-- Label for install drop target. [CHAR_LIMIT=20] -->
-    <string name="install_drop_target_label">Install</string>
+    <string name="install_drop_target_label">התקנה</string>
     <!-- Label for dismiss prediction. -->
-    <string name="dismiss_prediction_label">Don\'t suggest app</string>
+    <string name="dismiss_prediction_label">לא להציע את האפליקציה</string>
     <!-- Label for pinning predicted app. -->
     <string name="pin_prediction">Pin Prediction</string>
     <!-- Label for bubbling a launcher item. [CHAR_LIMIT=20] -->
-    <string name="bubble">Bubble</string>
+    <string name="bubble">בועה</string>
     <!-- Label for widget settings shows in the long press menu for widgets. [CHAR_LIMIT=20] -->
-    <string name="widget_settings">Settings</string>
+    <string name="widget_settings">הגדרות</string>
     <!-- Label for pinning an item to the taskbar. [CHAR_LIMIT=20] -->
-    <string name="pin_to_taskbar">Pin to Taskbar</string>
+    <string name="pin_to_taskbar">הצמדה לשורת המשימות</string>
     <!-- Label for unpinning an item from the taskbar. [CHAR_LIMIT=20] -->
-    <string name="unpin_from_taskbar">Unpin from Taskbar</string>
-    <string name="action_enlarge">Enlarge</string>
+    <string name="unpin_from_taskbar">ביטול הצמדה לשורת המשימות</string>
+    <string name="action_enlarge">הגדלה</string>
     <string name="action_minimize">Minimize</string>
-    <string name="action_customize_folder">Customize</string>
-    <string name="custom_icon_shortcut_label">Change icon</string>
-    <string name="custom_icon_picker_title">Select icon pack</string>
-    <string name="custom_icon_no_packs">No icon packs installed</string>
-    <string name="custom_icon_no_drawables">No icons found in this pack</string>
+    <string name="action_customize_folder">התאמה אישית</string>
+    <string name="custom_icon_shortcut_label">שינוי סמל</string>
+    <string name="custom_icon_picker_title">בחירת ערכת סמלים</string>
+    <string name="custom_icon_no_packs">לא מותקנות ערכות סמלים</string>
+    <string name="custom_icon_no_drawables">לא נמצאו סמלים בערכה זו</string>
     <string name="custom_icon_reset">Reset to default</string>
-    <string name="custom_icon_back">Back</string>
-    <string name="custom_icon_search_hint">Search icons</string>
-    <string name="custom_icon_no_search_results">No icons match your search</string>
-    <string name="action_customize_icon">Customize icons</string>
-    <string name="icon_pack_picker_title">Customize icons</string>
+    <string name="custom_icon_back">חזרה</string>
+    <string name="custom_icon_search_hint">חיפוש סמלים</string>
+    <string name="custom_icon_no_search_results">אין סמלים שתואמים לחיפוש שלך</string>
+    <string name="action_customize_icon">התאמה אישית של הסמלים</string>
+    <string name="icon_pack_picker_title">התאמה אישית של הסמלים</string>
     <string name="icon_pack_picker_default">Default</string>
     <string name="icon_pack_picker_reset">Reset to default</string>
-    <string name="icon_pack_title">Icon Pack</string>
-    <string name="themed_icons_card_title">Themed Icons</string>
-    <string name="themed_icons_description">Monochrome icons that adapt to your colors</string>
-    <string name="icon_shape_title">Icon Shape</string>
-    <string name="themed_icon_pack_title">Themed Icon Pack</string>
-    <string name="themed_icon_pack_none">None</string>
-    <string name="folder_style_picker_title">Folder Style</string>
+    <string name="icon_pack_title">ערכת סמלים</string>
+    <string name="themed_icons_card_title">סמלים מסוגננים</string>
+    <string name="themed_icons_description">סמלים מונוכרומטיים שמשתנים לפי צבעי הנושא</string>
+    <string name="icon_shape_title">צורת סמל</string>
+    <string name="themed_icon_pack_title">ערכת סמלים מסוגננת</string>
+    <string name="themed_icon_pack_none">ללא</string>
+    <string name="folder_style_picker_title">סגנון תיקייה</string>
     <string name="folder_style_quadrant">Quadrant</string>
-    <string name="folder_style_grid">Grid</string>
-    <string name="folder_style_circle">Circle</string>
-    <string name="folder_style_cover">Cover</string>
-    <string name="folder_cover_text_hint">Emoji</string>
+    <string name="folder_style_grid">רשת</string>
+    <string name="folder_style_circle">עיגול</string>
+    <string name="folder_style_cover">עטיפה</string>
+    <string name="folder_cover_text_hint">אמוג׳י</string>
     <!-- Permissions: -->
     <!-- Permission short label -->
     <string name="permlab_install_shortcut">install shortcuts</string>
@@ -267,15 +267,15 @@
         shortcuts in home.</string>
     <!-- Widgets: -->
     <!-- Error text that lets a user know that the widget can't load. -->
-    <string name="gadget_error_text">Can\'t load widget</string>
+    <string name="gadget_error_text">לא ניתן לטעון וידג׳ט</string>
     <!-- Button text. This button lets a user change a widget's settings. -->
-    <string name="gadget_setup_text">Widget settings</string>
+    <string name="gadget_setup_text">הגדרות וידג׳ט</string>
     <!-- Instructional text to encourage a user to finish setting up the widget. -->
-    <string name="gadget_complete_setup_text">Tap to finish setup</string>
+    <string name="gadget_complete_setup_text">יש להקיש לסיום ההגדרה</string>
     <!-- Text to inform the user that they can't uninstall a system application -->
-    <string name="uninstall_system_app_text">This is a system app and can\'t be uninstalled.</string>
+    <string name="uninstall_system_app_text">זוהי אפליקציית מערכת ולא ניתן להסיר את התקנתה.</string>
     <!-- Default folder title -->
-    <string name="folder_hint_text">Edit Name</string>
+    <string name="folder_hint_text">עריכת שם</string>
     <string name="paginate_left">Paginate left</string>
     <string name="paginate_right">Paginate right</string>
     <!-- Accessibility -->
@@ -288,7 +288,7 @@
         }
     </string>
     <!-- content description for hotseat items -->
-    <string name="hotseat_prediction_content_description">Predicted app: <xliff:g id="title" example="Chrome">%1$s</xliff:g></string>
+    <string name="hotseat_prediction_content_description">יישום מוצע: <xliff:g id="title" example="Chrome">%1$s</xliff:g></string>
     <!-- The format string for default page scroll text [CHAR_LIMIT=none] -->
     <string name="default_scroll_format">Page %1$d of %2$d</string>
     <!-- The format string for Workspace page scroll text [CHAR_LIMIT=none] -->
@@ -342,19 +342,19 @@
     <!-- Title for Notification dots setting. Tapping this will link to the system Notifications settings screen where the user can turn off notification dots globally. [CHAR LIMIT=50] -->
     <string name="notification_dots_title">Notification dots</string>
     <!-- Text to indicate that the system notification dots setting is on [CHAR LIMIT=100] -->
-    <string name="notification_dots_desc_on">On</string>
+    <string name="notification_dots_desc_on">מופעלות</string>
     <!-- Text to indicate that the system notification dots setting is off [CHAR LIMIT=100] -->
-    <string name="notification_dots_desc_off">Off</string>
+    <string name="notification_dots_desc_off">כבויות</string>
     <!-- Title for the dialog shown when the app does not has notification access, explaining the requirement for notification access [CHAR LIMIT=50] -->
-    <string name="title_missing_notification_access">Notification access needed</string>
+    <string name="title_missing_notification_access">נחוצה הרשאת גישה להתראות</string>
     <!-- Message explaining to the user that the notification access is required by the app for showing 'Notification dots' [CHAR LIMIT=NONE] -->
     <string name="msg_missing_notification_access">To show Notification Dots, turn on app notifications for <xliff:g id="name" example="My App">%1$s</xliff:g></string>
     <!-- Button text in the confirmation dialog which would take the user to the system settings [CHAR LIMIT=50] -->
-    <string name="title_change_settings">Change settings</string>
+    <string name="title_change_settings">לשינוי ההגדרות</string>
     <!-- Summary for Notification dots setting. Tapping this will link enable/disable notification dots feature on the home screen. [CHAR LIMIT=50] -->
     <string name="notification_dots_service_title">Show notification dots</string>
     <!-- Title for Developer Options setting. [CHAR LIMIT=50] -->
-    <string name="developer_options_title">Developer Options</string>
+    <string name="developer_options_title">אפשרויות למפתחים</string>
     <!-- Label for the setting that allows the automatic placement of launcher shortcuts for applications and games installed on the device [CHAR LIMIT=60] -->
     <string name="auto_add_shortcuts_label">Add app icons to home screen</string>
     <!-- Text description of the setting that allows the automatic placement of launcher shortcuts for applications and games installed on the device [CHAR LIMIT=NONE] -->
@@ -362,11 +362,11 @@
     <!-- Label on an icon that references an uninstalled package, for which we have no information about when it might be installed. [CHAR_LIMIT=15] -->
     <string name="package_state_unknown">Unknown</string>
     <!-- Button for abandoned promises dialog, to removes this abandoned promise icon. -->
-    <string name="abandoned_clean_this">Remove</string>
+    <string name="abandoned_clean_this">הסרה</string>
     <!-- Button for abandoned promise dialog, to search in the market for the missing package. -->
     <string name="abandoned_search">Search</string>
     <!-- Title for abandoned promise dialog. -->
-    <string name="abandoned_promises_title">This app is not installed</string>
+    <string name="abandoned_promises_title">אפליקציה זו אינה מותקנת</string>
     <!-- Explanation for abandoned promise dialog. "The first 'it' refers to the shortcut icon.
     The second "it" refers to the app. -->
     <string name="abandoned_promise_explanation">The app for this icon isn\'t installed.
@@ -388,12 +388,12 @@
     <!-- Message shown on the alert dialog prompting the user to update the application -->
     <string name="dialog_update_message">The app for this icon isn\'t updated. You can update manually to re-enable this shortcut, or remove the icon.</string>
     <!-- Message for the update button in the alert dialog, will bring the user to market -->
-    <string name="dialog_update">Update</string>
+    <string name="dialog_update">עדכון</string>
     <!-- Message for the remove button in the alert dialog -->
-    <string name="dialog_remove">Remove</string>
+    <string name="dialog_remove">הסרה</string>
     <!-- Strings for widgets & more in the popup container/bottom sheet -->
     <!-- Accessibility title for the popup containing a list of widgets. [CHAR_LIMIT=50] -->
-    <string name="widgets_list">Widgets list</string>
+    <string name="widgets_list">רשימת וידג׳טים</string>
     <!-- Text announced by accessibility when the popup containing the list of widgets is closed. [CHAR_LIMIT=100] -->
     <string name="widgets_list_closed">Widgets list closed</string>
     <!-- Strings for accessibility actions -->
@@ -478,7 +478,7 @@
     <!-- button string shown pause work profile [CHAR LIMIT=28] -->
     <string name="work_apps_pause_btn_text">Pause work apps</string>
     <!-- button string shown enable work profile -->
-    <string name="work_apps_enable_btn_text">Unpause</string>
+    <string name="work_apps_enable_btn_text">ביטול השהיה</string>
     <!-- Label for the work profile scheduler button in the work profile screen. [CHAR_LIMIT=40] -->
     <string name="work_scheduler_button_content_description">Work apps schedule</string>
     <!-- A hint shown in launcher settings develop options filter box -->
@@ -495,51 +495,51 @@
     <!-- Description for Private Space Settings button -->
     <string name="ps_container_settings">Private Space Settings</string>
     <!-- Description for Private Space Unlock button -->
-    <string name="ps_container_unlock_button_content_description">Private, unlocked.</string>
+    <string name="ps_container_unlock_button_content_description">פרטי, פתוח.</string>
     <!-- Description for Private Space Lock button -->
-    <string name="ps_container_lock_button_content_description">Private, locked.</string>
-    <string name="ps_container_lock_title">Lock</string>
+    <string name="ps_container_lock_button_content_description">פרטי, נעול.</string>
+    <string name="ps_container_lock_title">נעילה</string>
     <!-- Description for Private Space Transition button -->
     <string name="ps_container_transition">Private Space Transitioning</string>
     <!-- Title for Private Space install app icon -->
-    <string name="ps_add_button_label">Install</string>
+    <string name="ps_add_button_label">התקנה</string>
     <!-- Title for Private Space app icon to add files and more to Private Space -->
-    <string name="ps_app_label_override">Add</string>
+    <string name="ps_app_label_override">הוספה</string>
     <!-- Content description for install app icon -->
     <string name="ps_add_button_content_description">Install apps to Private Space</string>
     <string name="ps_app_content_description">Add files and more to Private Space</string>
     <!-- Label for private apps section in private space page -->
-    <string name="ps_private_apps_label">Private apps</string>
+    <string name="ps_private_apps_label">אפליקציות פרטיות</string>
     <!-- Label shown when there are no private apps -->
-    <string name="ps_no_private_apps">No private apps</string>
+    <string name="ps_no_private_apps">אין אפליקציות פרטיות</string>
     <!-- Label for add app button in private space -->
-    <string name="ps_add_app_button">Add app</string>
+    <string name="ps_add_app_button">הוספת אפליקציה</string>
     <!-- Short label for add app grid icon in private space -->
-    <string name="ps_add_app_short">Add</string>
+    <string name="ps_add_app_short">הוספה</string>
     <!-- Content description for private space settings button -->
-    <string name="ps_settings_content_description">Private space settings</string>
+    <string name="ps_settings_content_description">הגדרות מרחב פרטי</string>
     <!-- Label for unlock button on private space veil -->
     <string name="ps_unlock_button">Unlock</string>
     <string name="ps_swipe_hint">Swipe for Private space</string>
     <string name="ps_swipe_hint_dismiss">Got it</string>
-    <string name="folder_delete_title">Delete \"%1$s\"?</string>
-    <string name="folder_delete_message">%1$d apps will return to their default categories.</string>
+    <string name="folder_delete_title">למחוק את \"%1$s\"?</string>
+    <string name="folder_delete_message">%1$d יישומים ישויכו בחזרה לקטגוריות ברירת המחדל שלהם.</string>
     <string name="folder_delete_confirm">Delete</string>
-    <string name="folder_add_title">Add to folder</string>
-    <string name="folder_name_hint">Folder name</string>
-    <string name="folder_create_button">Create</string>
-    <string name="folder_new_button">New folder</string>
-    <string name="folder_remove_button">Remove from folder</string>
-    <string name="folder_rename_title">Rename folder</string>
-    <string name="folder_rename_confirm">Rename</string>
+    <string name="folder_add_title">הוספה לתיקייה</string>
+    <string name="folder_name_hint">שם תיקייה</string>
+    <string name="folder_create_button">יצירה</string>
+    <string name="folder_new_button">תיקייה חדשה</string>
+    <string name="folder_remove_button">הסרה מהתיקייה</string>
+    <string name="folder_rename_title">שינוי שם התיקייה</string>
+    <string name="folder_rename_confirm">שינוי שם</string>
     <string name="folder_selected_description">Selected</string>
-    <string name="action_cancel">Cancel</string>
-    <string name="action_back">Back</string>
+    <string name="action_cancel">ביטול</string>
+    <string name="action_back">חזרה</string>
     <!-- Strings for icon shapes -->
     <!-- label for circle shape option in customization picker -->
-    <string name="circle_shape_title">Circle</string>
+    <string name="circle_shape_title">עיגול</string>
     <!-- label for square shape option in customization picker -->
-    <string name="square_shape_title">Square</string>
+    <string name="square_shape_title">ריבוע</string>
     <!-- label for 4-sided cookie option shape in customization picker -->
     <string name="four_sided_cookie_shape_title">4-sided cookie</string>
     <!-- label for 7-sided cookie option shape in customization picker -->

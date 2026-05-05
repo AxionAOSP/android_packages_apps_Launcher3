@@ -240,7 +240,7 @@
     <string name="themed_icons_description">Monochrome icons that adapt to your colors</string>
     <string name="icon_shape_title">Icon Shape</string>
     <string name="themed_icon_pack_title">Themed Icon Pack</string>
-    <string name="themed_icon_pack_none">None</string>
+    <string name="themed_icon_pack_none">Нічого</string>
     <string name="folder_style_picker_title">Стиль тек</string>
     <string name="folder_style_quadrant">Квадрант</string>
     <string name="folder_style_grid">Сітка</string>
