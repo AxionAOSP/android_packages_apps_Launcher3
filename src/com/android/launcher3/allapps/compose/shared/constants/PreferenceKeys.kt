@@ -4,6 +4,7 @@ object PreferenceKeys {
     const val DRAWER_SHOW_LABELS = "pref_drawer_show_labels"
     const val ALL_APPS_PREDICTIONS = "pref_all_apps_predictions"
     const val DRAWER_LAYOUT_MODE = "pref_drawer_layout_mode"
+    const val DRAWER_SEARCH_BAR_POSITION = "pref_drawer_search_bar_position"
     const val ALLAPPS_THEMED_ICONS = "pref_allapps_themed_icons"
 
     const val SEARCH_CONTACTS = "pref_search_contacts"
@@ -17,5 +18,7 @@ object PreferenceKeys {
     const val SEARCH_SHOW_IN_APP_SEARCH = "pref_search_show_in_app_search"
     const val SEARCH_HISTORY = "pref_search_history"
     const val WORK_EDU_DISMISSED = "pref_work_edu_dismissed"
-}
 
+    const val SEARCH_BAR_POSITION_TOP = "top"
+    const val SEARCH_BAR_POSITION_BOTTOM = "bottom"
+}

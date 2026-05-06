@@ -82,6 +82,7 @@ internal fun AllAppsCategoriesView(
     transitionProgressProvider: () -> Float,
     dismissRequest: Boolean,
     onDismissRequestChange: (Boolean) -> Unit,
+    isSearchBarAtTop: Boolean,
     modifier: Modifier = Modifier
 ) {
     val interactions = LocalAllAppsInteractions.current
@@ -218,7 +219,12 @@ internal fun AllAppsCategoriesView(
         columns = GridCells.Adaptive(minSize = 160.dp),
         state = gridState,
         userScrollEnabled = !isDragging,
-        contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 72.dp),
+        contentPadding = PaddingValues(
+            start = 16.dp,
+            end = 16.dp,
+            top = if (isSearchBarAtTop) 0.dp else 8.dp,
+            bottom = if (isSearchBarAtTop) 0.dp else 72.dp
+        ),
         verticalArrangement = Arrangement.spacedBy(12.dp),
         horizontalArrangement = Arrangement.spacedBy(12.dp),
         modifier = modifier.fillMaxSize()
@@ -637,10 +643,13 @@ internal fun SmartDrawerSceneContent(
     onDismissRequestChange: (Boolean) -> Unit,
     openCounter: Int,
     allAppsExpanded: Boolean,
+    isOpening: Boolean = false,
+    reopenTrigger: Int = 0,
     isOnPrivateSpacePagerPage: Boolean,
     onPrivateSpacePagerChanged: (Boolean) -> Unit,
     onPagerBackAction: ((() -> Unit)?) -> Unit,
-    onLaunch: () -> Unit
+    onLaunch: () -> Unit,
+    isSearchBarAtTop: Boolean
 ) {
     DrawerPagerWrapper(
         state = state,
@@ -648,7 +657,8 @@ internal fun SmartDrawerSceneContent(
         allAppsExpanded = allAppsExpanded,
         onPrivateSpacePagerChanged = onPrivateSpacePagerChanged,
         onPagerBackAction = onPagerBackAction,
-        onLaunch = onLaunch
+        onLaunch = onLaunch,
+        isSearchBarAtTop = isSearchBarAtTop
     ) {
         Column(modifier = Modifier.fillMaxSize()) {
             if (state.hasWorkApps) {
@@ -667,6 +677,7 @@ internal fun SmartDrawerSceneContent(
                             transitionProgressProvider = transitionProgressProvider,
                             dismissRequest = dismissRequest,
                             onDismissRequestChange = onDismissRequestChange,
+                            isSearchBarAtTop = isSearchBarAtTop,
                             modifier = Modifier.fillMaxSize()
                         )
                     },
@@ -676,7 +687,10 @@ internal fun SmartDrawerSceneContent(
                             onPauseWork = { callbacks.onWorkProfileToggle(false) },
                             onResumeWork = { callbacks.onWorkProfileToggle(true) },
                             transitionProgressProvider = transitionProgressProvider,
-                            openCounter = openCounter
+                            openCounter = openCounter,
+                            isSearchBarAtTop = isSearchBarAtTop,
+                            isOpening = isOpening,
+                            reopenTrigger = reopenTrigger
                         )
                     }
                 )
@@ -690,6 +704,7 @@ internal fun SmartDrawerSceneContent(
                     transitionProgressProvider = transitionProgressProvider,
                     dismissRequest = dismissRequest,
                     onDismissRequestChange = onDismissRequestChange,
+                    isSearchBarAtTop = isSearchBarAtTop,
                     modifier = Modifier.weight(1f).fillMaxSize()
                 )
             }

@@ -21,7 +21,7 @@ import android.content.Context
 import android.content.res.Configuration
 import android.graphics.Canvas
 import android.graphics.Color
-import android.graphics.Path
+
 import android.graphics.Rect
 import android.os.UserHandle
 import android.util.AttributeSet
@@ -244,17 +244,25 @@ class ComposeAllAppsContainerView @JvmOverloads constructor(
         val right = left + panel.width
 
         mHeaderPaint.color = bottomSheetBackgroundColor
-        mHeaderPaint.alpha = (mHeaderPaint.alpha * mTransitionProgress).toInt()
+        mHeaderPaint.alpha = (Color.alpha(bottomSheetBackgroundColor) * mTransitionProgress).toInt()
 
-        mTmpRectF.set(
-            left + horizontalScaleOffset,
-            topNoScale + verticalScaleOffset,
-            right - horizontalScaleOffset,
-            (panel.bottom + bottomOffsetPx).toFloat()
-        )
-        mTmpPath.reset()
-        mTmpPath.addRoundRect(mTmpRectF, mBottomSheetCornerRadii, Path.Direction.CW)
-        canvas.drawPath(mTmpPath, mHeaderPaint)
+        val l = left + horizontalScaleOffset
+        val t = topNoScale + verticalScaleOffset
+        val b = (panel.bottom + bottomOffsetPx).toFloat()
+        val r = right - horizontalScaleOffset
+
+        val cornerRadius = mBottomSheetCornerRadii[0]
+        if (cornerRadius > 0f) {
+            canvas.save()
+            mTmpRectF.set(l, t, r, b)
+            canvas.clipRect(mTmpRectF)
+            mTmpRectF.set(l, t, r, b + cornerRadius)
+            canvas.drawRoundRect(mTmpRectF, cornerRadius, cornerRadius, mHeaderPaint)
+            canvas.restore()
+        } else {
+            mTmpRectF.set(l, t, r, b)
+            canvas.drawRect(mTmpRectF, mHeaderPaint)
+        }
     }
 
     override fun getComposeIconForClose(packageName: String, user: UserHandle): View? =

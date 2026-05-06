@@ -14,6 +14,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.*
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.input.pointer.*
 import androidx.compose.ui.layout.*
@@ -190,6 +191,7 @@ fun AllAppsComposeAppIcon(
                         try {
                             var dragStarted = false
                             var lastScreenPos = Offset.Zero
+                            val screenOffset = getScreenOffset()
 
                             do {
                                 val event = awaitPointerEvent()
@@ -198,7 +200,6 @@ fun AllAppsComposeAppIcon(
 
                                 lastScreenPos = change.position.let { pos ->
                                     val coords = layoutCoords.column
-                                    val screenOffset = getScreenOffset()
                                     if (coords != null && coords.isAttached) {
                                         val windowPos = coords.localToWindow(pos)
                                         Offset(
@@ -249,15 +250,24 @@ fun AllAppsComposeAppIcon(
         Box(
             modifier = Modifier
                 .size(iconSizeDp)
+                .graphicsLayer(alpha = 1f)
                 .onGloballyPositioned { coords ->
                     if (!isScrollingProvider()) {
                         layoutCoords.icon = coords
-                        controller?.onComposeIconPositioned(
-                            appInfo.componentName,
-                            sectionId,
-                            toScreenRect(coords),
-                            effectiveIconSizePx
-                        )
+                        val ctrl = controller
+                        val comp = appInfo.componentName
+                        if (ctrl != null && (
+                                (ctrl.hiddenIconComponent == comp && ctrl.hiddenIconSection == sectionId) ||
+                                (ctrl.lastLaunchedComponent == comp && ctrl.lastLaunchedSection == sectionId)
+                            )
+                        ) {
+                            ctrl.onComposeIconPositioned(
+                                comp,
+                                sectionId,
+                                toScreenRect(coords),
+                                effectiveIconSizePx
+                            )
+                        }
                     }
                 }
                 .drawBehind {

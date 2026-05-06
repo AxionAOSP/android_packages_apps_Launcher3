@@ -115,6 +115,9 @@ fun AllAppsComposeContent(
         LauncherPrefs.DRAWER_LAYOUT_MODE.get(it).let { m -> if (m == "default") "dynamic" else m }
     }
     val isSmartLayout = drawerLayoutMode == "smart"
+    val isSearchBarAtTop = rememberPreference(PreferenceKeys.DRAWER_SEARCH_BAR_POSITION) {
+        LauncherPrefs.DRAWER_SEARCH_BAR_POSITION.get(it) == PreferenceKeys.SEARCH_BAR_POSITION_TOP
+    }
 
     var isLaunching by remember { mutableStateOf(false) }
     var folderPickerTarget by remember { mutableStateOf<String?>(null) }
@@ -181,12 +184,14 @@ fun AllAppsComposeContent(
     val currentExpanded by rememberUpdatedState(allAppsExpanded)
 
     var isOpening by remember { mutableStateOf(true) }
-    var lastProgress by remember { mutableFloatStateOf(0f) }
+    var reopenTrigger by remember { mutableIntStateOf(0) }
 
     LaunchedEffect(Unit) {
+        var lastProgress = transitionProgressProvider()
         snapshotFlow { transitionProgressProvider() }.collect { progress ->
-            if (progress > lastProgress + 0.001f) isOpening = true
-            else if (progress < lastProgress - 0.001f) isOpening = false
+            if (progress > lastProgress + TRANSITION_DIRECTION_EPSILON) isOpening = true
+            else if (progress < lastProgress - TRANSITION_DIRECTION_EPSILON) isOpening = false
+            if (lastProgress == 0f && progress > 0f) reopenTrigger++
             lastProgress = progress
             if (currentExpanded && progress == 1f) {
                 if (!isLaunching) {
@@ -378,15 +383,7 @@ fun AllAppsComposeContent(
                 modifier = Modifier
                     .fillMaxSize()
                     .graphicsLayer {
-                        val progress = transitionProgressProvider()
-                        alpha = if (isOpening) {
-                            EmphasizedDecelerateEasing.transform(
-                                ((progress - 0.333f) / 0.5f).coerceIn(0f, 1f)
-                            )
-                        } else {
-                            if (progress < 0.7f) 0f
-                            else ((progress - 0.7f) / 0.3f).coerceIn(0f, 1f)
-                        }
+                        alpha = drawerContainerAlpha(transitionProgressProvider(), isOpening)
                     }
                     .drawBehind { drawRect(tabletScrimColor) }
             )
@@ -404,15 +401,7 @@ fun AllAppsComposeContent(
                 Modifier.fillMaxSize()
             })
                 .graphicsLayer {
-                    val progress = transitionProgressProvider()
-                    alpha = if (isOpening) {
-                        EmphasizedDecelerateEasing.transform(
-                            ((progress - 0.333f) / 0.5f).coerceIn(0f, 1f)
-                        )
-                    } else {
-                        if (progress < 0.7f) 0f
-                        else ((progress - 0.7f) / 0.3f).coerceIn(0f, 1f)
-                    }
+                    alpha = drawerContainerAlpha(transitionProgressProvider(), isOpening)
                 }
                 .clip(sheetShape)
                 .background(drawerBaseBg)
@@ -420,7 +409,10 @@ fun AllAppsComposeContent(
         ) {
                 if (state.isLoading) {
                     Box(
-                        modifier = Modifier.fillMaxSize().navigationBarsPadding().padding(bottom = 32.dp),
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .then(if (isSearchBarAtTop) Modifier else Modifier.navigationBarsPadding())
+                            .padding(bottom = if (isSearchBarAtTop) 0.dp else 32.dp),
                         contentAlignment = Alignment.Center
                     ) {
                         LoadingIndicator(
@@ -431,8 +423,12 @@ fun AllAppsComposeContent(
                 } else {
                 SceneTransitionLayout(
                     state = sceneLayoutState,
-                    modifier = Modifier.fillMaxSize().navigationBarsPadding()
-                        .padding(bottom = 32.dp, top = if (isTablet) 16.dp else 0.dp)
+                    modifier = Modifier.fillMaxSize()
+                        .then(if (isSearchBarAtTop) Modifier else Modifier.navigationBarsPadding())
+                        .padding(
+                            bottom = if (isSearchBarAtTop) 0.dp else 32.dp,
+                            top = allAppsSceneTopPadding(isSearchBarAtTop, isTablet)
+                        )
                         .clipToBounds()
                 ) {
                     scene(AllAppsScenes.Drawer) {
@@ -462,10 +458,13 @@ fun AllAppsComposeContent(
                             onDismissRequestChange = { dismissRequest = it },
                             openCounter = openCounter,
                             allAppsExpanded = allAppsExpanded,
+                            isOpening = isOpening,
+                            reopenTrigger = reopenTrigger,
                             isOnPrivateSpacePagerPage = isOnPrivateSpacePagerPage,
                             onPrivateSpacePagerChanged = { isOnPrivateSpacePagerPage = it },
                             onPagerBackAction = { pagerBackAction = it },
-                            onLaunch = { isLaunching = true }
+                            onLaunch = { isLaunching = true },
+                            isSearchBarAtTop = isSearchBarAtTop
                         )
                         }
                     }
@@ -495,10 +494,13 @@ fun AllAppsComposeContent(
                             onDismissRequestChange = { dismissRequest = it },
                             openCounter = openCounter,
                             allAppsExpanded = allAppsExpanded,
+                            isOpening = isOpening,
+                            reopenTrigger = reopenTrigger,
                             isOnPrivateSpacePagerPage = isOnPrivateSpacePagerPage,
                             onPrivateSpacePagerChanged = { isOnPrivateSpacePagerPage = it },
                             onPagerBackAction = { pagerBackAction = it },
-                            onLaunch = { isLaunching = true }
+                            onLaunch = { isLaunching = true },
+                            isSearchBarAtTop = isSearchBarAtTop
                         )
                         }
                     }
@@ -516,7 +518,8 @@ fun AllAppsComposeContent(
                                         callbacks.onFolderExpandedChanged(false)
                                     },
                                     iconSizePx = state.iconSizePx,
-                                    cellHeightPx = state.cellHeightPx
+                                    cellHeightPx = state.cellHeightPx,
+                                    isSearchBarAtTop = isSearchBarAtTop
                                 )
                             }
                         }
@@ -547,7 +550,16 @@ fun AllAppsComposeContent(
                                     ) { pending ->
                                     if (pending) {
                                         Box(
-                                            modifier = Modifier.fillMaxSize().navigationBarsPadding().padding(bottom = 96.dp),
+                                            modifier = Modifier
+                                                .fillMaxSize()
+                                                .then(
+                                                    if (isSearchBarAtTop) {
+                                                        Modifier
+                                                    } else {
+                                                        Modifier.navigationBarsPadding()
+                                                    }
+                                                )
+                                                .padding(allAppsSearchScenePadding(isSearchBarAtTop)),
                                             contentAlignment = Alignment.Center
                                         ) {
                                             LoadingIndicator(
@@ -677,7 +689,9 @@ fun AllAppsComposeContent(
                                         suggestedApps = state.predictedApps.ifEmpty { state.apps.take(10) },
                                         activeQuery = searchQuery,
                                         topResultComponent = topSearchResult?.appInfo?.componentName?.flattenToString(),
-                                        modifier = Modifier.fillMaxSize()
+                                        modifier = Modifier
+                                            .fillMaxSize()
+                                            .padding(allAppsSearchScenePadding(isSearchBarAtTop))
                                     )
                                     }
                         }
@@ -713,10 +727,21 @@ fun AllAppsComposeContent(
                         }
                     },
                     hasTopResult = topSearchResult != null,
+                    containerColor = if (isSearchBarAtTop) {
+                        surfaceEffectColor()
+                    } else {
+                        MaterialTheme.colorScheme.surfaceContainerHighest
+                    },
+                    applyBottomInsets = !isSearchBarAtTop,
                     modifier = Modifier
-                        .align(Alignment.BottomCenter)
+                        .align(if (isSearchBarAtTop) Alignment.TopCenter else Alignment.BottomCenter)
                         .fillMaxWidth()
-                        .padding(start = 16.dp, end = 16.dp, bottom = 8.dp)
+                        .padding(
+                            start = 16.dp,
+                            end = 16.dp,
+                            top = if (isSearchBarAtTop) TopSearchBarOuterPadding else 0.dp,
+                            bottom = if (isSearchBarAtTop) 0.dp else 8.dp
+                        )
                 )
             }
     }

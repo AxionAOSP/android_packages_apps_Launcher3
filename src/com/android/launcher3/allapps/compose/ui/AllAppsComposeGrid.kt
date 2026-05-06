@@ -7,13 +7,10 @@ import android.app.AxBoostFwk
 import com.android.launcher3.allapps.compose.data.AllAppsIconProvider
 import com.android.launcher3.allapps.compose.shared.model.AllAppsComposeItem
 import com.android.launcher3.allapps.compose.shared.model.AppCategory
-import com.android.launcher3.allapps.compose.shared.model.ComposeIconInfo
-import com.android.launcher3.allapps.compose.ui.view.ComposeAppIconView
 
 import android.content.res.Configuration
 import android.graphics.Paint
 import android.view.HapticFeedbackConstants
-import android.view.View
 import androidx.compose.foundation.*
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
@@ -59,7 +56,7 @@ private sealed interface GridCellItem {
 
     data class App(val appInfo: AppInfo) : GridCellItem {
         override val stableKey: Any
-            get() = appInfo.componentName?.flattenToString() ?: appInfo.hashCode()
+            get() = appInfo.componentName ?: appInfo
     }
 
     data class Folder(val category: AppCategory) : GridCellItem {
@@ -181,6 +178,8 @@ fun AllAppsComposeGrid(
     onFolderClick: ((AppCategory) -> Unit)? = null,
     onFolderLongClick: ((AppCategory) -> Unit)? = null,
     transitionProgressProvider: () -> Float = { 1f },
+    isOpening: Boolean = false,
+    reopenTrigger: Int = 0,
     keyPrefix: String = "main",
     recompositionKey: Int = 0,
     modifier: Modifier = Modifier,
@@ -197,8 +196,6 @@ fun AllAppsComposeGrid(
             interactions.controller?.isLongPressing = isLongPressed
         }
     }
-    var wasFullyClosed by remember { mutableStateOf(true) }
-
     LaunchedEffect(effectiveColumns) {
         scrollState.scrollTo(0)
         interactions.controller?.let {
@@ -225,14 +222,9 @@ fun AllAppsComposeGrid(
         }
     }
 
-    LaunchedEffect(Unit) {
-        snapshotFlow { transitionProgressProvider() }.collect { progress ->
-            if (progress == 0f) {
-                wasFullyClosed = true
-            } else if (wasFullyClosed && progress > 0f) {
-                wasFullyClosed = false
-                scrollState.scrollTo(0)
-            }
+    LaunchedEffect(reopenTrigger) {
+        if (reopenTrigger > 0) {
+            scrollState.scrollTo(0)
         }
     }
 
@@ -260,13 +252,11 @@ fun AllAppsComposeGrid(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .graphicsLayer {
-                    this.clip = true
-                    this.shape = scrollClipShape
-                }
+                .graphicsLayer(clip = true, shape = scrollClipShape)
                 .verticalScroll(scrollState, enabled = isScrollEnabled)
                 .padding(contentPadding)
         ) {
+            var staggerRowIndex = 0
             gridItems.forEach { gridItem ->
                 val itemKey = when (gridItem) {
                     is LazyGridItem.PrivateSpace -> "private_header"
@@ -299,8 +289,12 @@ fun AllAppsComposeGrid(
                                 isScrollingProvider = isScrollingProvider,
                                 onLongPressStatusChanged = onLongPressStatusChanged,
                                 onFolderClick = onFolderClick,
-                                onFolderLongClick = onFolderLongClick
+                                onFolderLongClick = onFolderLongClick,
+                                transitionProgressProvider = transitionProgressProvider,
+                                rowIndex = staggerRowIndex,
+                                isOpening = isOpening
                             )
+                            staggerRowIndex++
                         }
                     }
                 }
@@ -361,11 +355,12 @@ private fun AllAppsGridRow(
     isScrollingProvider: () -> Boolean,
     onLongPressStatusChanged: (Boolean) -> Unit,
     onFolderClick: ((AppCategory) -> Unit)?,
-    onFolderLongClick: ((AppCategory) -> Unit)?
+    onFolderLongClick: ((AppCategory) -> Unit)?,
+    transitionProgressProvider: () -> Float,
+    rowIndex: Int,
+    isOpening: Boolean
 ) {
     val interactions = LocalAllAppsInteractions.current
-    val controller = interactions.controller
-    val density = LocalDensity.current
 
     val shape = when (position) {
         RowPosition.ONLY -> ShapeOnly
@@ -396,6 +391,15 @@ private fun AllAppsGridRow(
                     val item = rowItems.getOrNull(index)
                     key(item?.stableKey ?: "empty_$index") {
                         if (item != null) {
+                            val cellModifier = Modifier
+                                .weight(1f)
+                                .graphicsLayer {
+                                    alpha = contentStaggerAlpha(
+                                        progress = transitionProgressProvider(),
+                                        rowIndex = rowIndex,
+                                        isOpening = isOpening
+                                    )
+                                }
                             when (item) {
                                 is GridCellItem.App -> {
                                     AllAppsComposeAppIcon(
@@ -411,7 +415,7 @@ private fun AllAppsGridRow(
                                         onDragEnd = interactions.onAppDragEnd,
                                         onLongPressStatusChanged = onLongPressStatusChanged,
                                         isScrollingProvider = isScrollingProvider,
-                                        modifier = Modifier.weight(1f)
+                                        modifier = cellModifier
                                     )
                                 }
                                 is GridCellItem.Folder -> {
@@ -424,7 +428,7 @@ private fun AllAppsGridRow(
                                         onClick = { onFolderClick?.invoke(it) },
                                         onLongClick = { onFolderLongClick?.invoke(it) },
                                         isScrollingProvider = isScrollingProvider,
-                                        modifier = Modifier.weight(1f)
+                                        modifier = cellModifier
                                     )
                                 }
                             }
@@ -543,5 +547,3 @@ private fun AllAppsComposeFolderIcon(
         }
     }
 }
-
-

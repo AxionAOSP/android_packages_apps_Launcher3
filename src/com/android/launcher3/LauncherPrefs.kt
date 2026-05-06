@@ -259,6 +259,8 @@ constructor(@ApplicationContext private val encryptedContext: Context) {
         @JvmField val WORKSPACE_ICON_SCALE = backedUpItem("pref_workspace_icon_scale", 1.0f)
         @JvmField val ALLAPPS_ICON_SCALE = backedUpItem("pref_allapps_icon_scale", 1.0f)
         @JvmField val DRAWER_LAYOUT_MODE = backedUpItem("pref_drawer_layout_mode", "dynamic")
+        @JvmField val DRAWER_SEARCH_BAR_POSITION =
+            backedUpItem("pref_drawer_search_bar_position", "bottom")
         @JvmField val ALL_APPS_BG_OPACITY = backedUpItem("pref_all_apps_bg_opacity", 255)
         @JvmField val SHOW_ALLAPPS_PREDICTIONS = backedUpItem("pref_all_apps_predictions", true)
         @JvmField val WORK_EDU_STEP = backedUpItem("showed_work_profile_edu", 0)

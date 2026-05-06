@@ -159,6 +159,9 @@ internal fun WorkTabContent(
     onResumeWork: () -> Unit,
     transitionProgressProvider: () -> Float,
     openCounter: Int,
+    isSearchBarAtTop: Boolean,
+    isOpening: Boolean = false,
+    reopenTrigger: Int = 0,
     modifier: Modifier = Modifier
 ) {
     if (state.isWorkProfilePaused) {
@@ -186,14 +189,15 @@ internal fun WorkTabContent(
                     onFolderClick = {},
                     onFolderLongClick = {},
                     transitionProgressProvider = transitionProgressProvider,
+                    isOpening = isOpening,
+                    reopenTrigger = reopenTrigger,
                     keyPrefix = "work",
                     recompositionKey = openCounter,
                     modifier = Modifier.weight(1f),
                     contentPadding = PaddingValues(
                         start = 16.dp,
                         end = 16.dp,
-                        top = 0.dp,
-                        bottom = 96.dp
+                        bottom = if (isSearchBarAtTop) 0.dp else 96.dp
                     )
                 )
             }

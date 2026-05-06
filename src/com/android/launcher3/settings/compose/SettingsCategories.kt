@@ -320,6 +320,25 @@ fun AppDrawerSettings(viewModel: SettingsState) {
 
     PreferenceGroup(title = stringResource(R.string.settings_section_style)) {
         item {
+            val searchBarPosition by viewModel.drawerSearchBarPosition.collectAsState()
+            ListPreference(
+                title = stringResource(R.string.drawer_search_bar_position_title),
+                summary = when (searchBarPosition) {
+                    PreferenceKeys.SEARCH_BAR_POSITION_TOP ->
+                        stringResource(R.string.drawer_search_bar_position_top)
+                    else -> stringResource(R.string.drawer_search_bar_position_bottom)
+                },
+                options = listOf(
+                    PreferenceKeys.SEARCH_BAR_POSITION_BOTTOM to
+                        stringResource(R.string.drawer_search_bar_position_bottom),
+                    PreferenceKeys.SEARCH_BAR_POSITION_TOP to
+                        stringResource(R.string.drawer_search_bar_position_top)
+                ),
+                value = searchBarPosition,
+                onValueChange = { viewModel.setDrawerSearchBarPosition(it) }
+            )
+        }
+        item {
             OpacitySliderPreference(viewModel)
         }
     }

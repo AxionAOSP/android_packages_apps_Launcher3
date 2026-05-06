@@ -152,6 +152,7 @@ internal fun PrivateSpaceFullPage(
     callbacks: AllAppsComposeCallbacks,
     onLaunch: () -> Unit = {},
     isActive: Boolean = true,
+    isSearchBarAtTop: Boolean,
     modifier: Modifier = Modifier
 ) {
     CompositionLocalProvider(LocalSectionId provides "private") {
@@ -230,7 +231,9 @@ internal fun PrivateSpaceFullPage(
                 LazyVerticalGrid(
                     columns = GridCells.Fixed(state.numColumns),
                     state = gridState,
-                    contentPadding = PaddingValues(bottom = 72.dp),
+                    contentPadding = PaddingValues(
+                        bottom = if (isSearchBarAtTop) 0.dp else 72.dp
+                    ),
                     verticalArrangement = Arrangement.spacedBy(8.dp),
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                     modifier = Modifier

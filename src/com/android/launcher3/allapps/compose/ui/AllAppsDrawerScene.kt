@@ -38,7 +38,6 @@ import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -106,10 +105,13 @@ internal fun DrawerSceneContent(
     onDismissRequestChange: (Boolean) -> Unit,
     openCounter: Int,
     allAppsExpanded: Boolean,
+    isOpening: Boolean = false,
+    reopenTrigger: Int = 0,
     isOnPrivateSpacePagerPage: Boolean,
     onPrivateSpacePagerChanged: (Boolean) -> Unit,
     onPagerBackAction: ((() -> Unit)?) -> Unit,
-    onLaunch: () -> Unit
+    onLaunch: () -> Unit,
+    isSearchBarAtTop: Boolean
 ) {
     val interactions = LocalAllAppsInteractions.current
     DrawerPagerWrapper(
@@ -118,7 +120,8 @@ internal fun DrawerSceneContent(
         allAppsExpanded = allAppsExpanded,
         onPrivateSpacePagerChanged = onPrivateSpacePagerChanged,
         onPagerBackAction = onPagerBackAction,
-        onLaunch = onLaunch
+        onLaunch = onLaunch,
+        isSearchBarAtTop = isSearchBarAtTop
     ) {
         Column(modifier = Modifier.fillMaxSize()) {
             if (state.hasWorkApps) {
@@ -136,9 +139,10 @@ internal fun DrawerSceneContent(
                             onFolderClick = { onExpandedCategoryChange(it) },
                             onFolderLongClick = { if (it.isCustom) onCustomFolderAction(it) },
                             transitionProgressProvider = transitionProgressProvider,
+                            isOpening = isOpening, reopenTrigger = reopenTrigger,
                             keyPrefix = "personal", recompositionKey = openCounter,
                             modifier = Modifier.fillMaxSize(),
-                            contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 0.dp, bottom = 72.dp)
+                            contentPadding = allAppsSceneContentPadding(isSearchBarAtTop)
                         )
                     },
                     workContent = {
@@ -147,7 +151,10 @@ internal fun DrawerSceneContent(
                             onPauseWork = { callbacks.onWorkProfileToggle(false) },
                             onResumeWork = { callbacks.onWorkProfileToggle(true) },
                             transitionProgressProvider = transitionProgressProvider,
-                            openCounter = openCounter
+                            openCounter = openCounter,
+                            isSearchBarAtTop = isSearchBarAtTop,
+                            isOpening = isOpening,
+                            reopenTrigger = reopenTrigger
                         )
                     }
                 )
@@ -160,9 +167,10 @@ internal fun DrawerSceneContent(
                     onFolderClick = { onExpandedCategoryChange(it) },
                     onFolderLongClick = { if (it.isCustom) onCustomFolderAction(it) },
                     transitionProgressProvider = transitionProgressProvider,
+                    isOpening = isOpening, reopenTrigger = reopenTrigger,
                     keyPrefix = "personal", recompositionKey = openCounter,
                     modifier = Modifier.weight(1f).fillMaxSize(),
-                    contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 0.dp, bottom = 72.dp)
+                    contentPadding = allAppsSceneContentPadding(isSearchBarAtTop)
                 )
             }
         }
@@ -239,6 +247,7 @@ internal fun DrawerPagerWrapper(
     onPrivateSpacePagerChanged: (Boolean) -> Unit,
     onPagerBackAction: ((() -> Unit)?) -> Unit,
     onLaunch: () -> Unit,
+    isSearchBarAtTop: Boolean,
     content: @Composable () -> Unit
 ) {
     val showPrivateSpacePage = state.hasPrivateApps && !state.isPrivateSpaceHidden
@@ -295,6 +304,7 @@ internal fun DrawerPagerWrapper(
                             state = state, callbacks = callbacks,
                             onLaunch = onLaunch,
                             isActive = pagerState.settledPage == 0,
+                            isSearchBarAtTop = isSearchBarAtTop,
                             modifier = Modifier.fillMaxSize()
                         )
                         if (state.isPrivateSpaceLocked) {

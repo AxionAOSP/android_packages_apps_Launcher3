@@ -103,7 +103,8 @@ internal fun ExpandedFolderContent(
     category: AppCategory,
     onDismiss: () -> Unit,
     iconSizePx: Int,
-    cellHeightPx: Int
+    cellHeightPx: Int,
+    isSearchBarAtTop: Boolean
 ) {
     CompositionLocalProvider(LocalSectionId provides "folder_${category.id}") {
     val interactions = LocalAllAppsInteractions.current
@@ -161,7 +162,12 @@ internal fun ExpandedFolderContent(
         LazyVerticalGrid(
             columns = GridCells.Fixed(4),
             state = gridState,
-            contentPadding = PaddingValues(start = 24.dp, end = 24.dp, top = 16.dp, bottom = 72.dp),
+            contentPadding = PaddingValues(
+                start = 24.dp,
+                end = 24.dp,
+                top = if (isSearchBarAtTop) 0.dp else 16.dp,
+                bottom = if (isSearchBarAtTop) 0.dp else 72.dp
+            ),
             verticalArrangement = Arrangement.spacedBy(16.dp),
             horizontalArrangement = Arrangement.spacedBy(16.dp),
             modifier = Modifier.fillMaxSize().weight(1f)

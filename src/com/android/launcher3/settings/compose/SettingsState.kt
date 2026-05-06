@@ -76,6 +76,10 @@ class SettingsState(private val context: Context) : ViewModel(), LauncherPrefCha
     )
     val drawerLayoutMode: StateFlow<String> = _drawerLayoutMode.asStateFlow()
 
+    private val _drawerSearchBarPosition =
+        MutableStateFlow(launcherPrefs.get(LauncherPrefs.DRAWER_SEARCH_BAR_POSITION))
+    val drawerSearchBarPosition: StateFlow<String> = _drawerSearchBarPosition.asStateFlow()
+
     private val _workspaceIconScale = MutableStateFlow(launcherPrefs.get(LauncherPrefs.WORKSPACE_ICON_SCALE))
     val workspaceIconScale: StateFlow<Float> = _workspaceIconScale.asStateFlow()
 
@@ -101,6 +105,7 @@ class SettingsState(private val context: Context) : ViewModel(), LauncherPrefCha
             LauncherPrefs.SHOW_DESKTOP_LABELS,
             LauncherPrefs.SHOW_DRAWER_LABELS,
             LauncherPrefs.DRAWER_LAYOUT_MODE,
+            LauncherPrefs.DRAWER_SEARCH_BAR_POSITION,
             LauncherPrefs.WORKSPACE_ICON_SCALE,
             LauncherPrefs.ALLAPPS_ICON_SCALE,
             LauncherPrefs.ALL_APPS_BG_OPACITY,
@@ -131,6 +136,8 @@ class SettingsState(private val context: Context) : ViewModel(), LauncherPrefCha
                 val mode = launcherPrefs.get(LauncherPrefs.DRAWER_LAYOUT_MODE)
                 _drawerLayoutMode.value = if (mode == "default") "dynamic" else mode
             }
+            LauncherPrefs.DRAWER_SEARCH_BAR_POSITION.sharedPrefKey ->
+                _drawerSearchBarPosition.value = launcherPrefs.get(LauncherPrefs.DRAWER_SEARCH_BAR_POSITION)
             LauncherPrefs.WORKSPACE_ICON_SCALE.sharedPrefKey -> _workspaceIconScale.value = launcherPrefs.get(LauncherPrefs.WORKSPACE_ICON_SCALE)
             LauncherPrefs.ALLAPPS_ICON_SCALE.sharedPrefKey -> _allAppsIconScale.value = launcherPrefs.get(LauncherPrefs.ALLAPPS_ICON_SCALE)
             LauncherPrefs.ALL_APPS_BG_OPACITY.sharedPrefKey -> _allAppsBgOpacity.value = launcherPrefs.get(LauncherPrefs.ALL_APPS_BG_OPACITY)
@@ -163,6 +170,10 @@ class SettingsState(private val context: Context) : ViewModel(), LauncherPrefCha
         launcherPrefs.put(LauncherPrefs.DRAWER_LAYOUT_MODE, mode)
     }
 
+    fun setDrawerSearchBarPosition(position: String) {
+        launcherPrefs.put(LauncherPrefs.DRAWER_SEARCH_BAR_POSITION, position)
+    }
+
     override fun onCleared() {
         super.onCleared()
         launcherPrefs.removeListener(this,
@@ -174,6 +185,7 @@ class SettingsState(private val context: Context) : ViewModel(), LauncherPrefCha
             LauncherPrefs.SHOW_DESKTOP_LABELS,
             LauncherPrefs.SHOW_DRAWER_LABELS,
             LauncherPrefs.DRAWER_LAYOUT_MODE,
+            LauncherPrefs.DRAWER_SEARCH_BAR_POSITION,
             LauncherPrefs.WORKSPACE_ICON_SCALE,
             LauncherPrefs.ALLAPPS_ICON_SCALE,
             LauncherPrefs.ALL_APPS_BG_OPACITY,

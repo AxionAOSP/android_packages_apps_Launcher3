@@ -47,6 +47,7 @@ import kotlinx.coroutines.withContext
 
 private const val TAG = "AllAppsComposeVM"
 private const val TABLET_MAX_COLUMNS = 6
+private const val ALL_APPS_EXPANDED_PROGRESS_THRESHOLD = 0.999f
 
 class AllAppsComposeViewModel(
     allAppsStore: AllAppsStore,
@@ -236,7 +237,7 @@ class AllAppsComposeViewModel(
     }
 
     fun setTransitionProgress(progress: Float) {
-        val expanded = progress == 1f
+        val expanded = progress >= ALL_APPS_EXPANDED_PROGRESS_THRESHOLD
         if (allAppsExpanded.value != expanded) {
             _allAppsExpanded.value = expanded
             if (expanded) {

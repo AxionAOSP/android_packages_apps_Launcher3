@@ -17,6 +17,7 @@ import androidx.compose.ui.*
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.TextStyle
@@ -35,7 +36,9 @@ fun AllAppsComposeSearchBar(
     shouldAutoFocus: Boolean = false,
     focusTrigger: Int = 0,
     onSearchSubmit: (String) -> Unit = {},
-    hasTopResult: Boolean = false
+    hasTopResult: Boolean = false,
+    containerColor: Color = MaterialTheme.colorScheme.surfaceContainerHighest,
+    applyBottomInsets: Boolean = true
 ) {
     val focusRequester = remember { FocusRequester() }
     val rowInteractionSource = remember { MutableInteractionSource() }
@@ -47,16 +50,15 @@ fun AllAppsComposeSearchBar(
     }
 
     Box(
-        modifier = modifier
-            .fillMaxWidth()
-            .navigationBarsPadding()
-            .imePadding()
+        modifier = modifier.fillMaxWidth()
+            .then(if (applyBottomInsets) Modifier.navigationBarsPadding().imePadding() else Modifier)
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
+                .heightIn(min = TopSearchBarHeight)
                 .clip(CircleShape)
-                .background(MaterialTheme.colorScheme.surfaceContainerHighest)
+                .background(containerColor)
                 .clickable(
                     interactionSource = rowInteractionSource,
                     indication = null,
