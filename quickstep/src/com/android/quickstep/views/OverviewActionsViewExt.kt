@@ -32,7 +32,6 @@ import com.android.launcher3.dagger.ApplicationContext
 import com.android.launcher3.dagger.LauncherAppSingleton
 import com.android.launcher3.util.DaggerSingletonTracker
 import com.android.launcher3.util.SafeCloseable
-import com.android.quickstep.util.TransitionSmoothHelper
 import javax.inject.Inject
 import kotlin.coroutines.CoroutineContext
 import kotlinx.coroutines.CoroutineScope

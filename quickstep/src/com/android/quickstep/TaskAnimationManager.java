@@ -53,7 +53,6 @@ import com.android.quickstep.dagger.QuickstepBaseAppComponent;
 import com.android.quickstep.util.ActiveGestureLog;
 import com.android.quickstep.util.ActiveGestureProtoLogProxy;
 import com.android.quickstep.util.SystemUiFlagUtils;
-import com.android.quickstep.util.TransitionSmoothHelper;
 import com.android.quickstep.views.RecentsView;
 import com.android.quickstep.views.RecentsViewContainer;
 import com.android.quickstep.window.RecentsWindowManager;
@@ -461,7 +460,6 @@ public class TaskAnimationManager implements RecentsAnimationCallbacks.RecentsAn
                     options, mCallbacks, false /* useSyntheticRecentsTransition */, null,
                     mDisplayId);
         }
-        TransitionSmoothHelper.setInRecents(true);
         if (mRecentsAnimationStartPending) {
             MAIN_EXECUTOR.getHandler().postDelayed(
                     recentsAnimationStartTimeoutCallback, RECENTS_ANIMATION_START_TIMEOUT_MS);

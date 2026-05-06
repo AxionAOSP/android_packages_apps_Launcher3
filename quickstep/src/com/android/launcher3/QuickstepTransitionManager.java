@@ -160,7 +160,6 @@ import com.android.quickstep.util.AnimatorBackState;
 import com.android.quickstep.util.BackAnimState;
 import com.android.quickstep.util.CrossDisplayMoveTransition;
 import com.android.quickstep.util.MultiValueUpdateListener;
-import com.android.quickstep.util.TransitionSmoothHelper;
 import com.android.quickstep.util.RectFSpringAnim;
 import com.android.quickstep.util.RectFSpringAnim.DefaultSpringConfig;
 import com.android.quickstep.util.RectFSpringAnim.TaskbarHotseatSpringConfig;
@@ -355,7 +354,6 @@ public class QuickstepTransitionManager implements OnDeviceProfileChangeListener
         @Override
         public void startAnimation(IBinder token, TransitionInfo info, SurfaceControl.Transaction t,
                 IRemoteTransitionFinishedCallback finishCallback) throws RemoteException {
-            TransitionSmoothHelper.buildFinishTransaction(info, t);
             startCrossDisplayMoveAnimation(info, t, finishCallback);
         }
     }
@@ -1047,10 +1045,6 @@ public class QuickstepTransitionManager implements OnDeviceProfileChangeListener
                                 .setAlpha(1f - mIconAlpha.value)
                                 .setCornerRadius(mWindowRadius.value)
                                 .setShadowRadius(mShadowRadius.value);
-                        if (target.taskInfo != null) {
-                            TransitionSmoothHelper.putData(target.taskInfo.taskId,
-                                    matrix, crop, mWindowRadius.value);
-                        }
                     } else if (target.mode == MODE_CLOSING) {
                         if (target.localBounds != null) {
                             tmpPos.set(target.localBounds.left, target.localBounds.top);
@@ -1158,9 +1152,7 @@ public class QuickstepTransitionManager implements OnDeviceProfileChangeListener
                 openingTargets.release();
             }
         });
-        floatingView.setFastFinishRunnable(() -> {
-            if (!TransitionSmoothHelper.inRecents()) animatorSet.end();
-        });
+        floatingView.setFastFinishRunnable(animatorSet::end);
 
         appAnimator.addUpdateListener(new MultiValueUpdateListener() {
             float mAppWindowScale = 1;
@@ -1223,11 +1215,6 @@ public class QuickstepTransitionManager implements OnDeviceProfileChangeListener
                                 .setWindowCrop(appWindowCrop)
                                 .setAlpha(mPreviewAlpha.value)
                                 .setCornerRadius(mWindowRadius.value / mAppWindowScale);
-                        if (target.taskInfo != null) {
-                            TransitionSmoothHelper.putData(target.taskInfo.taskId,
-                                    matrix, appWindowCrop,
-                                    mWindowRadius.value / mAppWindowScale);
-                        }
                     }
                 }
 
@@ -2045,29 +2032,17 @@ public class QuickstepTransitionManager implements OnDeviceProfileChangeListener
                     new RectF(getWindowTargetBounds(appTargets, getRotationChange(appTargets)));
 
             final RectF resolveRectF = new RectF(windowTargetBounds);
-            float resolvedCornerRadius = QuickStepContract.getWindowCornerRadius(mLauncher);
             for (RemoteAnimationTarget t : appTargets) {
                 if (t.mode == MODE_CLOSING) {
                     transferRectToTargetCoordinate(
                             t, windowTargetBounds, true, resolveRectF);
-                    if (t.taskInfo != null) {
-                        TransitionSmoothHelper.TransitionData data =
-                                TransitionSmoothHelper.getData(t.taskInfo.taskId);
-                        if (data != null && data.getMatrix() != null
-                                && data.getWindowCrop() != null) {
-                            RectF mapped = new RectF(data.getWindowCrop());
-                            data.getMatrix().mapRect(mapped);
-                            resolveRectF.set(mapped);
-                            resolvedCornerRadius = data.getCornerRadius();
-                        }
-                    }
                     break;
                 }
             }
 
             BackAnimState bankAnimState = createWallpaperOpenAnimations(
                     appTargets, wallpaperTargets, nonAppTargets, resolveRectF,
-                    resolvedCornerRadius,
+                    QuickStepContract.getWindowCornerRadius(mLauncher),
                     false /* fromPredictiveBack */);
 
             TaskViewUtils.createSplitAuxiliarySurfacesAnimator(nonAppTargets, false, null);
@@ -2095,7 +2070,6 @@ public class QuickstepTransitionManager implements OnDeviceProfileChangeListener
                 RemoteAnimationTarget[] wallpaperTargets,
                 RemoteAnimationTarget[] nonAppTargets,
                 LauncherAnimationRunner.AnimationResult result) {
-            TransitionSmoothHelper.clear();
             AnimatorSet anim = new AnimatorSet();
             boolean launcherClosing =
                     launcherIsATargetWithMode(appTargets, MODE_CLOSING);

@@ -220,7 +220,6 @@ import com.android.quickstep.util.SplitTask;
 import com.android.quickstep.util.SplitToWorkspaceController;
 import com.android.quickstep.util.SplitWithKeyboardShortcutController;
 import com.android.quickstep.util.TISBindHelper;
-import com.android.quickstep.util.TransitionSmoothHelper;
 import com.android.quickstep.util.unfold.LauncherUnfoldTransitionController;
 import com.android.quickstep.util.unfold.ProxyUnfoldTransitionProvider;
 import com.android.quickstep.views.FloatingTaskView;
@@ -230,7 +229,6 @@ import com.android.quickstep.views.RecentsViewContainer;
 import com.android.quickstep.views.TaskView;
 import com.android.quickstep.window.RecentsWindowFlags;
 import com.android.quickstep.window.RecentsWindowManager;
-import com.android.systemui.animation.RemoteAnimationRunnerCompat;
 import com.android.systemui.animation.back.FlingOnBackAnimationCallback;
 import com.android.systemui.plugins.shared.LauncherOverlayManager;
 import com.android.systemui.shared.recents.model.Task;
@@ -855,8 +853,6 @@ public class QuickstepLauncher extends Launcher implements RecentsViewContainer,
             mPendingSplitSelectInfo = ObjectWrapper.unwrap(
                     savedInstanceState.getIBinder(PENDING_SPLIT_SELECT_INFO));
         }
-        RemoteAnimationRunnerCompat.setSmoothTransitionHook(
-                TransitionSmoothHelper::buildStartTransaction);
         initUnfoldTransitionProgressProvider();
         mViewCapture = ViewCaptureFactory.getInstance(this).startCapture(getWindow());
         getWindow().addPrivateFlags(PRIVATE_FLAG_OPTIMIZE_MEASURE);
