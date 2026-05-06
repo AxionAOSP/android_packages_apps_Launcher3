@@ -79,7 +79,7 @@ fun GeneralSettings(viewModel: SettingsState, context: Context) {
 private fun LauncherBlurSettings() {
     val (blurEnabled, setBlurEnabled) = rememberSecureSettingBooleanState(
         key = "pulse_launcher_blur_enabled",
-        defaultValue = true,
+        defaultValue = false,
     )
     val (blurRadius, setBlurRadius) = rememberSecureSettingIntState(
         key = "pulse_launcher_blur_radius",
