@@ -51,6 +51,9 @@ import static com.android.launcher3.BaseActivity.INVISIBLE_BY_PENDING_FLAGS;
 import static com.android.launcher3.BaseActivity.PENDING_INVISIBLE_BY_WALLPAPER_ANIMATION;
 import static com.android.launcher3.Flags.refactorTaskbarUiState;
 import static com.android.launcher3.Flags.syncAppLaunchWithTaskbarStash;
+import static com.android.launcher3.LauncherAnimUtils.HOTSEAT_SCALE_PROPERTY_FACTORY;
+import static com.android.launcher3.LauncherAnimUtils.SCALE_INDEX_REVEAL_ANIM;
+import static com.android.launcher3.LauncherAnimUtils.WORKSPACE_SCALE_PROPERTY_FACTORY;
 import static com.android.launcher3.LauncherAnimUtils.SCALE_PROPERTY;
 import static com.android.launcher3.LauncherState.ALL_APPS;
 import static com.android.launcher3.LauncherState.BACKGROUND_APP;
@@ -147,6 +150,7 @@ import com.android.launcher3.testing.shared.ResourceUtils;
 import com.android.launcher3.touch.PagedOrientationHandler;
 import com.android.launcher3.uioverrides.QuickstepLauncher;
 import com.android.launcher3.util.ActivityOptionsWrapper;
+import com.android.launcher3.util.DynamicResource;
 import com.android.launcher3.util.RunnableList;
 import com.android.launcher3.util.StableViewInfo;
 import com.android.launcher3.views.FloatingIconView;
@@ -165,6 +169,7 @@ import com.android.quickstep.util.RectFSpringAnim.DefaultSpringConfig;
 import com.android.quickstep.util.RectFSpringAnim.TaskbarHotseatSpringConfig;
 import com.android.quickstep.util.ScalingWorkspaceRevealAnim;
 import com.android.quickstep.util.SurfaceTransaction;
+import com.android.quickstep.util.SystemUiFlagUtils;
 import com.android.quickstep.util.SurfaceTransaction.SurfaceProperties;
 import com.android.quickstep.util.SurfaceTransactionApplier;
 import com.android.quickstep.util.TaskRestartedDuringLaunchListener;
@@ -179,6 +184,7 @@ import com.android.systemui.animation.RemoteAnimationRunnerCompat;
 import com.android.systemui.animation.RemoteTransitionDelegate;
 import com.android.systemui.shared.system.BlurUtils;
 import com.android.systemui.shared.system.InteractionJankMonitorWrapper;
+import com.android.systemui.shared.system.smartspace.ILauncherUnlockAnimationController;
 import com.android.systemui.shared.system.QuickStepContract;
 import com.android.wm.shell.shared.desktopmode.DesktopModeStatus;
 import com.android.wm.shell.startingsurface.IStartingWindowListener;
@@ -242,6 +248,8 @@ public class QuickstepTransitionManager implements OnDeviceProfileChangeListener
 
     private static final int MAX_NUM_TASKS = 5;
 
+    private static final long KEYGUARD_UNLOCK_REVEAL_START_DELAY_MS = 220;
+
     // Cross-fade duration between App Widget and App when launching from widget.
     private static final int WIDGET_CROSSFADE_DURATION_MILLIS = 125;
 
@@ -297,6 +305,38 @@ public class QuickstepTransitionManager implements OnDeviceProfileChangeListener
     private final Interpolator mOpeningInterpolator;
 
     private final SystemUiProxy mSystemUiProxy;
+    private final ILauncherUnlockAnimationController mLauncherUnlockAnimationController =
+            new ILauncherUnlockAnimationController.Stub() {
+                @Override
+                public void prepareForUnlock(boolean animateSmartspace,
+                        Rect lockscreenSmartspaceBounds, int selectedPage) {
+                    runOnMainSync(QuickstepTransitionManager.this::prepareWorkspaceUnlockReveal);
+                }
+
+                @Override
+                public void setUnlockAmount(float amount, boolean forceIfAnimating) {
+                    MAIN_EXECUTOR.execute(() -> {
+                        if (mKeyguardUnlockAnimator == null || forceIfAnimating) {
+                            setWorkspaceUnlockRevealAmount(amount);
+                        }
+                    });
+                }
+
+                @Override
+                public void playUnlockAnimation(boolean unlocked, long duration, long startDelay) {
+                    MAIN_EXECUTOR.execute(() -> playWorkspaceUnlockReveal(unlocked, startDelay));
+                }
+
+                @Override
+                public void setSmartspaceSelectedPage(int selectedPage) { }
+
+                @Override
+                public void setSmartspaceVisibility(int visibility) { }
+
+                @Override
+                public void dispatchSmartspaceStateToSysui() { }
+            };
+    private AnimatorSet mKeyguardUnlockAnimator;
 
     public QuickstepTransitionManager(QuickstepLauncher launcher) {
         mLauncher = launcher;
@@ -313,6 +353,8 @@ public class QuickstepTransitionManager implements OnDeviceProfileChangeListener
 
         mLauncher.addOnDeviceProfileChangeListener(this);
         mSystemUiProxy = SystemUiProxy.INSTANCE.get(mLauncher);
+        mSystemUiProxy.setLauncherUnlockAnimationController(
+                mLauncher.getComponentName().getClassName(), mLauncherUnlockAnimationController);
 
         if (ENABLE_SHELL_STARTING_SURFACE) {
             mTaskStartParams = new LinkedHashMap<>(MAX_NUM_TASKS) {
@@ -1392,6 +1434,8 @@ public class QuickstepTransitionManager implements OnDeviceProfileChangeListener
         unregisterRemoteAnimations();
         unregisterRemoteTransitions();
         mLauncher.removeOnDeviceProfileChangeListener(this);
+        cancelWorkspaceUnlockReveal();
+        mSystemUiProxy.setLauncherUnlockAnimationController(null, null);
         SystemUiProxy.INSTANCE.get(mLauncher).setStartingWindowListener(null);
         if (BuildConfig.IS_STUDIO_BUILD && !mRegisteredTaskStackChangeListener.isEmpty()) {
             Log.e(TAG, "IllegalState: Failed to run onEndCallback created from"
@@ -1981,6 +2025,80 @@ public class QuickstepTransitionManager implements OnDeviceProfileChangeListener
         }
 
         return new AnimatorBackState(rectFSpringAnim, anim);
+    }
+
+    public void onScreenOnChanged(boolean isOn) {
+        if (isOn && SystemUiFlagUtils.isLocked(mSystemUiProxy.getLastSystemUiStateFlags())) {
+            prepareWorkspaceUnlockReveal();
+        } else if (!isOn) {
+            cancelWorkspaceUnlockReveal();
+        }
+    }
+
+    private void prepareWorkspaceUnlockReveal() {
+        cancelWorkspaceUnlockReveal(false /* resetViews */);
+        setWorkspaceUnlockRevealAmount(0f);
+    }
+
+    private void playWorkspaceUnlockReveal(boolean unlocked, long startDelay) {
+        if (!unlocked) {
+            prepareWorkspaceUnlockReveal();
+            return;
+        }
+
+        setWorkspaceUnlockRevealAmount(0f);
+        mKeyguardUnlockAnimator = new WorkspaceRevealAnim(mLauncher, false /* animateOverviewScrim */,
+                false /* animateDepth */).getAnimators();
+        mKeyguardUnlockAnimator.setStartDelay(startDelay + KEYGUARD_UNLOCK_REVEAL_START_DELAY_MS);
+        mKeyguardUnlockAnimator.addListener(new AnimatorListenerAdapter() {
+            @Override
+            public void onAnimationStart(Animator animation) {
+                setWorkspaceUnlockRevealAmount(0f);
+            }
+
+            @Override
+            public void onAnimationEnd(Animator animation) {
+                mKeyguardUnlockAnimator = null;
+                setWorkspaceUnlockRevealAmount(1f);
+            }
+        });
+        mKeyguardUnlockAnimator.start();
+    }
+
+    private void cancelWorkspaceUnlockReveal() {
+        cancelWorkspaceUnlockReveal(true /* resetViews */);
+    }
+
+    private void cancelWorkspaceUnlockReveal(boolean resetViews) {
+        if (mKeyguardUnlockAnimator != null) {
+            AnimatorSet keyguardUnlockAnimator = mKeyguardUnlockAnimator;
+            mKeyguardUnlockAnimator = null;
+            keyguardUnlockAnimator.cancel();
+        }
+        if (resetViews) {
+            setWorkspaceUnlockRevealAmount(1f);
+        }
+    }
+
+    private void setWorkspaceUnlockRevealAmount(float amount) {
+        Workspace<?> workspace = mLauncher.getWorkspace();
+        Hotseat hotseat = mLauncher.getHotseat();
+        workspace.setPivotToScaleWithSelf(hotseat);
+        float scaleStart = DynamicResource.provider(mLauncher)
+                .getFloat(R.dimen.swipe_up_scale_start);
+        float scale = scaleStart + (1f - scaleStart) * amount;
+        WORKSPACE_SCALE_PROPERTY_FACTORY.get(SCALE_INDEX_REVEAL_ANIM).set(workspace, scale);
+        HOTSEAT_SCALE_PROPERTY_FACTORY.get(SCALE_INDEX_REVEAL_ANIM).set(hotseat, scale);
+        workspace.setAlpha(amount);
+        hotseat.setAlpha(amount);
+    }
+
+    private void runOnMainSync(Runnable runnable) {
+        try {
+            MAIN_EXECUTOR.submit(runnable).get();
+        } catch (Exception e) {
+            Log.e(TAG, "Failed to run launcher unlock animation step", e);
+        }
     }
 
     /** Get animation duration for taskbar for going to home. */

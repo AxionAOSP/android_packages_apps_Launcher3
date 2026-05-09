@@ -66,6 +66,11 @@ public class WorkspaceRevealAnim {
     private final AnimatorSet mAnimators = new AnimatorSet();
 
     public WorkspaceRevealAnim(Launcher launcher, boolean animateOverviewScrim) {
+        this(launcher, animateOverviewScrim, true /* animateDepth */);
+    }
+
+    public WorkspaceRevealAnim(
+            Launcher launcher, boolean animateOverviewScrim, boolean animateDepth) {
         prepareToAnimate(launcher, animateOverviewScrim);
 
         ResourceProvider rp = DynamicResource.provider(launcher);
@@ -87,7 +92,7 @@ public class WorkspaceRevealAnim {
         }
 
         // Add depth controller animation.
-        if (launcher instanceof QuickstepLauncher) {
+        if (animateDepth && launcher instanceof QuickstepLauncher) {
             PendingAnimation depthBuilder = new PendingAnimation(DURATION_MS);
             DepthController depth = ((QuickstepLauncher) launcher).getDepthController();
             depth.setStateWithAnimation(NORMAL, new StateAnimationConfig(), depthBuilder);
