@@ -282,6 +282,7 @@ public class FallbackRecentsView<CONTAINER_TYPE extends Context & RecentsViewCon
         }
         boolean isOverlayEnabled = finalState == DEFAULT || finalState == MODAL_TASK;
         setOverlayEnabled(isOverlayEnabled);
+        getActionsView().setOverviewVisible(finalState.isRecentsViewVisible());
         setFreezeViewVisibility(false);
         if (finalState != MODAL_TASK) {
             setOverviewSelectEnabled(false);

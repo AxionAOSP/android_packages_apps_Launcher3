@@ -63,9 +63,14 @@ class OverviewActionsViewExt @Inject constructor(
     private val settingsFlow = SettingsFlow(appContext.contentResolver, SettingsType.SECURE)
     private val memInfoReader = MemInfoReader()
     private var scope: CoroutineScope = CoroutineScope(uiContext + SupervisorJob())
+    private val overviewVisible = MutableStateFlow(false)
 
     init {
         lifecycleTracker.addCloseable(this)
+    }
+
+    fun setOverviewVisible(visible: Boolean) {
+        overviewVisible.value = visible
     }
 
     fun onAttach(state: OverviewActionsState) {
@@ -84,7 +89,10 @@ class OverviewActionsViewExt @Inject constructor(
         settingsFlow.observeBoolean(KEY_SHOW_CLEAR_ALL, default = true)
             .onEach { state.showClearAll = it }
             .launchIn(scope)
-        settingsFlow.observeBoolean(KEY_SHOW_MEMORY_INFO, default = true)
+        combine(
+            settingsFlow.observeBoolean(KEY_SHOW_MEMORY_INFO, default = true),
+            overviewVisible
+        ) { settingEnabled, visible -> settingEnabled && visible }
             .distinctUntilChanged()
             .flatMapLatest { active ->
                 if (active) memoryInfoFlow() else emptyFlow<String>().onStart { emit("") }

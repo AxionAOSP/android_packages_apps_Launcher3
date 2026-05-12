@@ -173,6 +173,7 @@ public class LauncherRecentsView extends RecentsView<QuickstepLauncher, Launcher
         }
         boolean isOverlayEnabled = finalState == OVERVIEW || finalState == OVERVIEW_MODAL_TASK;
         setOverlayEnabled(isOverlayEnabled);
+        getActionsView().setOverviewVisible(finalState.isRecentsViewVisible);
         setFreezeViewVisibility(false);
         if (finalState != OVERVIEW_MODAL_TASK) {
             setOverviewSelectEnabled(false);
