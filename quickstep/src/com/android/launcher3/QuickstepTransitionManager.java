@@ -1935,6 +1935,7 @@ public class QuickstepTransitionManager implements OnDeviceProfileChangeListener
 
         boolean playWorkspaceReveal = true;
         boolean skipAllAppsScale = false;
+        cancelWorkspaceUnlockReveal();
         if (!playFallBackAnimation) {
             rectFSpringAnim = getClosingWindowAnimators(
                     anim, appTargets, launcherView, new PointF(), startRect,
@@ -2030,7 +2031,7 @@ public class QuickstepTransitionManager implements OnDeviceProfileChangeListener
     public void onScreenOnChanged(boolean isOn) {
         if (isOn && SystemUiFlagUtils.isLocked(mSystemUiProxy.getLastSystemUiStateFlags())) {
             prepareWorkspaceUnlockReveal();
-        } else if (!isOn) {
+        } else {
             cancelWorkspaceUnlockReveal();
         }
     }

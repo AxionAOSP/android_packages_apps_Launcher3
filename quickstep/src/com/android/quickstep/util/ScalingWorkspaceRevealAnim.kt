@@ -35,6 +35,7 @@ import com.android.app.animation.Interpolators.EMPHASIZED
 import com.android.app.animation.Interpolators.LINEAR
 import com.android.launcher3.Flags
 import com.android.launcher3.LauncherAnimUtils.HOTSEAT_SCALE_PROPERTY_FACTORY
+import com.android.launcher3.LauncherAnimUtils.SCALE_INDEX_REVEAL_ANIM
 import com.android.launcher3.LauncherAnimUtils.SCALE_INDEX_WORKSPACE_STATE
 import com.android.launcher3.LauncherAnimUtils.VIEW_ALPHA
 import com.android.launcher3.LauncherAnimUtils.WORKSPACE_SCALE_PROPERTY_FACTORY
@@ -116,6 +117,9 @@ class ScalingWorkspaceRevealAnim(
 
         val workspace = launcher.workspace
         val hotseat = launcher.hotseat
+
+        WORKSPACE_SCALE_PROPERTY_FACTORY[SCALE_INDEX_REVEAL_ANIM].set(workspace, 1f)
+        HOTSEAT_SCALE_PROPERTY_FACTORY[SCALE_INDEX_REVEAL_ANIM].set(hotseat, 1f)
 
         // Interrupt the current animation, if any.
         Animations.cancelOngoingAnimation(workspace)
