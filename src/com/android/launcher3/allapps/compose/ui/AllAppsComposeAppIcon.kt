@@ -14,7 +14,6 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.*
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.input.pointer.*
 import androidx.compose.ui.layout.*
@@ -250,7 +249,6 @@ fun AllAppsComposeAppIcon(
         Box(
             modifier = Modifier
                 .size(iconSizeDp)
-                .graphicsLayer(alpha = 1f)
                 .onGloballyPositioned { coords ->
                     if (!isScrollingProvider()) {
                         layoutCoords.icon = coords

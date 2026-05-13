@@ -374,9 +374,7 @@ fun AllAppsComposeContent(
             RoundedCornerShape(topStart = 12.dp, topEnd = 12.dp)
         }
 
-        val tabletScrimColor = remember {
-            dynamicDarkColorScheme(context).surfaceContainer.copy(alpha = 0.55f)
-        }
+        val tabletScrimColor = MaterialTheme.colorScheme.surfaceContainer.copy(alpha = 0.4f)
 
         if (isTablet && controller.backProgress == 0f) {
             Box(

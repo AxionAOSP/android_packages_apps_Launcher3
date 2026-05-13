@@ -249,52 +249,56 @@ fun AllAppsComposeGrid(
     val scrollClipShape = RoundedCornerShape(topStart = scrollClipRadius, topEnd = scrollClipRadius)
 
     Box(modifier = modifier.fillMaxSize()) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .graphicsLayer(clip = true, shape = scrollClipShape)
-                .verticalScroll(scrollState, enabled = isScrollEnabled)
-                .padding(contentPadding)
-        ) {
-            var staggerRowIndex = 0
-            gridItems.forEach { gridItem ->
-                val itemKey = when (gridItem) {
-                    is LazyGridItem.PrivateSpace -> "private_header"
-                    is LazyGridItem.EmptySearch -> "empty_search"
-                    is LazyGridItem.SectionSpacer -> "spacer_${gridItem.sectionId}"
-                    is LazyGridItem.GridRow -> "row_${gridItem.sectionId}_${gridItem.rowIndex}"
-                }
-                key(itemKey) {
-                    when (gridItem) {
-                        is LazyGridItem.PrivateSpace -> {
-                            PrivateSpaceHeaderItem(isExpanded = gridItem.isExpanded)
-                        }
-                        is LazyGridItem.EmptySearch -> {
-                            EmptySearchResultItem()
-                        }
-                        is LazyGridItem.SectionSpacer -> {
-                            Spacer(modifier = Modifier.height(8.dp))
-                        }
-                        is LazyGridItem.GridRow -> {
-                            AllAppsGridRow(
-                                rowItems = gridItem.rowItems,
-                                sectionId = gridItem.sectionId,
-                                position = gridItem.position,
-                                effectiveColumns = effectiveColumns,
-                                showLabels = showLabels,
-                                iconSizePx = iconSizePx,
-                                cellWidthPx = cellWidthPx,
-                                cellHeightPx = cellHeightPx,
-                                cardBg = cardBg,
-                                isScrollingProvider = isScrollingProvider,
-                                onLongPressStatusChanged = onLongPressStatusChanged,
-                                onFolderClick = onFolderClick,
-                                onFolderLongClick = onFolderLongClick,
-                                transitionProgressProvider = transitionProgressProvider,
-                                rowIndex = staggerRowIndex,
-                                isOpening = isOpening
-                            )
-                            staggerRowIndex++
+        CompositionLocalProvider(LocalOverscrollConfiguration provides null) {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .graphicsLayer(clip = true, shape = scrollClipShape)
+                    .verticalScroll(scrollState, enabled = isScrollEnabled)
+                    .padding(contentPadding)
+            ) {
+                var staggerRowIndex = 0
+                gridItems.forEach { gridItem ->
+                    val itemKey = when (gridItem) {
+                        is LazyGridItem.PrivateSpace -> "${keyPrefix}_private_header"
+                        is LazyGridItem.EmptySearch -> "${keyPrefix}_empty_search"
+                        is LazyGridItem.SectionSpacer ->
+                            "${keyPrefix}_spacer_${gridItem.sectionId}"
+                        is LazyGridItem.GridRow ->
+                            "${keyPrefix}_row_${gridItem.sectionId}_${gridItem.rowIndex}"
+                    }
+                    key(itemKey) {
+                        when (gridItem) {
+                            is LazyGridItem.PrivateSpace -> {
+                                PrivateSpaceHeaderItem(isExpanded = gridItem.isExpanded)
+                            }
+                            is LazyGridItem.EmptySearch -> {
+                                EmptySearchResultItem()
+                            }
+                            is LazyGridItem.SectionSpacer -> {
+                                Spacer(modifier = Modifier.height(8.dp))
+                            }
+                            is LazyGridItem.GridRow -> {
+                                AllAppsGridRow(
+                                    rowItems = gridItem.rowItems,
+                                    sectionId = gridItem.sectionId,
+                                    position = gridItem.position,
+                                    effectiveColumns = effectiveColumns,
+                                    showLabels = showLabels,
+                                    iconSizePx = iconSizePx,
+                                    cellWidthPx = cellWidthPx,
+                                    cellHeightPx = cellHeightPx,
+                                    cardBg = cardBg,
+                                    isScrollingProvider = isScrollingProvider,
+                                    onLongPressStatusChanged = onLongPressStatusChanged,
+                                    onFolderClick = onFolderClick,
+                                    onFolderLongClick = onFolderLongClick,
+                                    transitionProgressProvider = transitionProgressProvider,
+                                    rowIndex = staggerRowIndex,
+                                    isOpening = isOpening
+                                )
+                                staggerRowIndex++
+                            }
                         }
                     }
                 }
@@ -361,6 +365,11 @@ private fun AllAppsGridRow(
     isOpening: Boolean
 ) {
     val interactions = LocalAllAppsInteractions.current
+    val rowAlpha = contentStaggerAlpha(
+        progress = transitionProgressProvider(),
+        rowIndex = rowIndex,
+        isOpening = isOpening
+    )
 
     val shape = when (position) {
         RowPosition.ONLY -> ShapeOnly
@@ -377,7 +386,11 @@ private fun AllAppsGridRow(
 
     CompositionLocalProvider(LocalSectionId provides sectionId) {
         Surface(
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier
+                .fillMaxWidth()
+                .then(
+                    if (rowAlpha < 0.999f) Modifier.graphicsLayer(alpha = rowAlpha) else Modifier
+                ),
             shape = shape,
             color = cardBg
         ) {
@@ -391,15 +404,7 @@ private fun AllAppsGridRow(
                     val item = rowItems.getOrNull(index)
                     key(item?.stableKey ?: "empty_$index") {
                         if (item != null) {
-                            val cellModifier = Modifier
-                                .weight(1f)
-                                .graphicsLayer {
-                                    alpha = contentStaggerAlpha(
-                                        progress = transitionProgressProvider(),
-                                        rowIndex = rowIndex,
-                                        isOpening = isOpening
-                                    )
-                                }
+                            val cellModifier = Modifier.weight(1f)
                             when (item) {
                                 is GridCellItem.App -> {
                                     AllAppsComposeAppIcon(
@@ -472,6 +477,14 @@ private fun AllAppsComposeFolderIcon(
         (folderBgColor.green * 255).toInt(),
         (folderBgColor.blue * 255).toInt()
     )
+    val folderBgPaint = remember(folderBgArgb) {
+        Paint(Paint.ANTI_ALIAS_FLAG).apply { color = folderBgArgb }
+    }
+    val miniIcons = remember(category.apps, miniIconSizePx, uiMode, iconConfig.themed) {
+        category.apps.take(4).map { app ->
+            iconProvider.getIcon(app, miniIconSizePx, uiMode, iconConfig.themed)
+        }
+    }
 
     val iconSizeDp = with(density) { iconSizePx.toDp() }
     val heightModifier = if (cellHeightPx > 0) {
@@ -510,18 +523,14 @@ private fun AllAppsComposeFolderIcon(
                 .drawBehind {
                     val size = iconSizePx
                     val nativeCanvas = drawContext.canvas.nativeCanvas
-                    val bgPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply { color = folderBgArgb }
                     nativeCanvas.drawRoundRect(
                         0f, 0f, size.toFloat(), size.toFloat(),
-                        folderCornerPx, folderCornerPx, bgPaint
+                        folderCornerPx, folderCornerPx, folderBgPaint
                     )
-                    val minis = category.apps.take(4).map { app ->
-                        iconProvider.getIcon(app, miniIconSizePx, uiMode, iconConfig.themed)
-                    }
                     val gridSize = miniIconSizePx * 2f + miniGapPx
                     val gridLeft = (size - gridSize) / 2f
                     val gridTop = (size - gridSize) / 2f
-                    minis.forEachIndexed { mi, miniDrawable ->
+                    miniIcons.forEachIndexed { mi, miniDrawable ->
                         val col = mi % 2
                         val row = mi / 2
                         val mx = (gridLeft + col * (miniIconSizePx + miniGapPx)).toInt()
