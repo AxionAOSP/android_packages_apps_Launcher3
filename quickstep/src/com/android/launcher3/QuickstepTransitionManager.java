@@ -248,8 +248,6 @@ public class QuickstepTransitionManager implements OnDeviceProfileChangeListener
 
     private static final int MAX_NUM_TASKS = 5;
 
-    private static final long KEYGUARD_UNLOCK_REVEAL_START_DELAY_MS = 220;
-
     // Cross-fade duration between App Widget and App when launching from widget.
     private static final int WIDGET_CROSSFADE_DURATION_MILLIS = 125;
 
@@ -2050,7 +2048,7 @@ public class QuickstepTransitionManager implements OnDeviceProfileChangeListener
         setWorkspaceUnlockRevealAmount(0f);
         mKeyguardUnlockAnimator = new WorkspaceRevealAnim(mLauncher, false /* animateOverviewScrim */,
                 false /* animateDepth */).getAnimators();
-        mKeyguardUnlockAnimator.setStartDelay(startDelay + KEYGUARD_UNLOCK_REVEAL_START_DELAY_MS);
+        mKeyguardUnlockAnimator.setStartDelay(startDelay);
         mKeyguardUnlockAnimator.addListener(new AnimatorListenerAdapter() {
             @Override
             public void onAnimationStart(Animator animation) {
