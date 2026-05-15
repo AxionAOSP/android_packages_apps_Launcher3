@@ -244,6 +244,7 @@ interface ShapeDelegate {
         AnimatorListenerAdapter(), AnimatorUpdateListener where T : View, T : ClipPathView {
 
         private var oldOutlineProvider: ViewOutlineProvider? = null
+        private var clearClipPathOnEnd = true
         val path = Path()
 
         override fun onAnimationStart(animation: Animator) {
@@ -257,7 +258,9 @@ interface ShapeDelegate {
         override fun onAnimationEnd(animation: Animator) {
             target.apply {
                 translationZ = 0f
-                setClipPath(null)
+                if (clearClipPathOnEnd) {
+                    setClipPath(null)
+                }
                 outlineProvider = oldOutlineProvider
             }
         }
@@ -271,6 +274,7 @@ interface ShapeDelegate {
         fun toAnim(isReversed: Boolean) =
             (if (isReversed) ValueAnimator.ofFloat(1f, 0f) else ValueAnimator.ofFloat(0f, 1f))
                 .also {
+                    clearClipPathOnEnd = !isReversed
                     it.addListener(this)
                     it.addUpdateListener(this)
                 }

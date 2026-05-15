@@ -41,7 +41,7 @@ data class IconAnimationData(
 ) {
 
     companion object Factory {
-        private const val ICON_DELAY_INCREMENT = 5
+        private const val OPEN_ICON_DELAY_INCREMENT = 5
 
         /**
          * Animates the icons within the folder. Icons start at the Preview Icon scale and then are
@@ -63,7 +63,6 @@ data class IconAnimationData(
             val layoutRule = folderIcon.layoutRule
 
             // We delay the animation of each icon from top left to bottom right
-            var iconDelay = if (isOpening) 0 else (numItemsOnPage * ICON_DELAY_INCREMENT)
             val iconDataList = mutableListOf<IconAnimationData>()
 
             for (i in 0..<numItemsOnPage) {
@@ -73,11 +72,24 @@ data class IconAnimationData(
                 iconLayoutParams.isLockedToGrid = true
                 shortcutsAndWidgets?.setupLp(currentIcon)
 
-                // Match scale of icons in the preview of the items on the first page.
-                val previewIconScale = layoutRule.scaleForItem(numItemsOnPage, page)
-                val previewIconSize = layoutRule.iconSize * previewIconScale
                 val baseIconSize = getBubbleTextView(currentIcon).iconSize.toFloat()
-                val iconScale = previewIconSize / baseIconSize
+                val previewIndex = itemsInPreview.indexOf(currentIcon)
+                val isPreviewIcon = previewIndex >= 0
+                val iconScale =
+                    if (isPreviewIcon) {
+                        val previewLayoutCount =
+                            if (page == 0) itemsInPreview.size else folderIcon.maxPreviewItems
+                        folderIcon.previewItemManager.computePreviewItemDrawingParams(
+                            previewIndex,
+                            previewLayoutCount,
+                            mTmpParams,
+                        )
+                        layoutRule.iconSize * mTmpParams.scale / baseIconSize
+                    } else {
+                        layoutRule.iconSize *
+                            layoutRule.scaleForItem(numItemsOnPage, page) /
+                            baseIconSize
+                    }
 
                 // Scale when folder closed
                 val initialIconScale = iconScale / folderAnimationData.folderScale
@@ -96,8 +108,11 @@ data class IconAnimationData(
                     } else {
                         numItemsOnPage
                     }
-                // Match positions of the icons in the folder with their positions in the preview
-                layoutRule.computeSpringAnimationItemParams(i, pageLayoutCount, page, mTmpParams)
+                // Match preview icons to the exact FolderIcon preview layout for the active
+                // style. Non-preview icons still collapse toward the content grid while fading.
+                if (!isPreviewIcon) {
+                    layoutRule.computeSpringAnimationItemParams(i, pageLayoutCount, page, mTmpParams)
+                }
 
                 // The PreviewLayoutRule assumes that the icon size takes up the entire width so we
                 // offset by the actual size.
@@ -115,6 +130,7 @@ data class IconAnimationData(
                         .toInt()
                 val xDistance = (iconPositionX - iconLayoutParams.x).toFloat()
                 val yDistance = (iconPositionY - iconLayoutParams.y).toFloat()
+                val iconDelay = if (isOpening) i * OPEN_ICON_DELAY_INCREMENT else 0
 
                 iconDataList.add(
                     IconAnimationData(
@@ -127,11 +143,6 @@ data class IconAnimationData(
                         isOpening = isOpening,
                     )
                 )
-                if (isOpening) {
-                    iconDelay += ICON_DELAY_INCREMENT
-                } else {
-                    iconDelay -= ICON_DELAY_INCREMENT
-                }
             }
             return iconDataList
         }

@@ -67,6 +67,7 @@ public class FolderAnimationManager implements FolderAnimationCreator {
 
     private static final float EXTRA_FOLDER_REVEAL_RADIUS_PERCENTAGE = 0.125F;
     private static final int FOLDER_NAME_ALPHA_DURATION = 32;
+    private static final int CONTENT_ALPHA_OUT_DURATION = 96;
     private static final int LARGE_FOLDER_FOOTER_DURATION = 128;
 
     private Folder mFolder;
@@ -168,6 +169,7 @@ public class FolderAnimationManager implements FolderAnimationCreator {
 
         final float finalScale = 1f;
         float scale = mIsOpening ? initialScale : finalScale;
+        mFolder.setAlpha(1f);
         mFolder.setPivotX(0);
         mFolder.setPivotY(0);
 
@@ -222,11 +224,11 @@ public class FolderAnimationManager implements FolderAnimationCreator {
                 new PropertyResetListener<>(TEXT_ALPHA_PROPERTY, 1f);
         for (View icon : mFolder.getItemsOnPage(mFolder.mContent.getCurrentPage())) {
             BubbleTextView titleText = getBubbleTextView(icon);
-            if (mIsOpening) {
-                titleText.setTextVisibility(false);
-            }
+            titleText.setTextVisibility(false);
             ObjectAnimator anim = titleText.createTextAlphaAnimator(mIsOpening);
-            anim.addListener(colorResetListener);
+            if (mIsOpening) {
+                anim.addListener(colorResetListener);
+            }
             play(a, anim);
         }
 
@@ -244,6 +246,17 @@ public class FolderAnimationManager implements FolderAnimationCreator {
         } else if (isCoverStyle) {
             mFolder.mContent.setAlpha(mIsOpening ? 1f : 0f);
             mFolder.mFooter.setAlpha(mIsOpening ? 1f : 0f);
+        }
+        if (!mIsOpening) {
+            mFolder.mContent.setAlpha(1f);
+            Animator contentFade = getAnimator(mFolder.mContent, View.ALPHA, 0f, 1f);
+            contentFade.addListener(new AnimatorListenerAdapter() {
+                @Override
+                public void onAnimationEnd(Animator animation) {
+                    mFolder.mContent.setAlpha(0f);
+                }
+            });
+            play(a, contentFade, 0, CONTENT_ALPHA_OUT_DURATION);
         }
 
         final int footerAlphaDuration;
@@ -346,15 +359,17 @@ public class FolderAnimationManager implements FolderAnimationCreator {
             @Override
             public void onAnimationEnd(Animator animation) {
                 super.onAnimationEnd(animation);
-                mFolder.setTranslationX(0.0f);
-                mFolder.setTranslationY(0.0f);
-                mFolder.setTranslationZ(0.0f);
-                mFolder.mContent.setScaleX(1f);
-                mFolder.mContent.setScaleY(1f);
-                mFolder.mFooter.setScaleX(1f);
-                mFolder.mFooter.setScaleY(1f);
-                mFolder.mFooter.setTranslationX(0f);
-                mFolder.getFolderName().setAlpha(1f);
+                if (mIsOpening) {
+                    mFolder.setTranslationX(0.0f);
+                    mFolder.setTranslationY(0.0f);
+                    mFolder.setTranslationZ(0.0f);
+                    mFolder.mContent.setScaleX(1f);
+                    mFolder.mContent.setScaleY(1f);
+                    mFolder.mFooter.setScaleX(1f);
+                    mFolder.mFooter.setScaleY(1f);
+                    mFolder.mFooter.setTranslationX(0f);
+                    mFolder.getFolderName().setAlpha(1f);
+                }
 
                 mFolder.setClipChildren(mFolderClipChildren);
                 mFolder.setClipToPadding(mFolderClipToPadding);
@@ -481,10 +496,12 @@ public class FolderAnimationManager implements FolderAnimationCreator {
                 @Override
                 public void onAnimationEnd(Animator animation) {
                     super.onAnimationEnd(animation);
-                    v.setTranslationX(0.0f);
-                    v.setTranslationY(0.0f);
-                    v.setScaleX(1f);
-                    v.setScaleY(1f);
+                    if (mIsOpening) {
+                        v.setTranslationX(0.0f);
+                        v.setTranslationY(0.0f);
+                        v.setScaleX(1f);
+                        v.setScaleY(1f);
+                    }
                 }
             });
         }

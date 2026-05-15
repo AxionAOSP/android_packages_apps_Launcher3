@@ -953,6 +953,9 @@ public class Folder extends AbstractFloatingView implements ClipPathView, DragSo
             @Override
             public void onAnimationStart(Animator animation) {
                 setWindowInsetsAnimationCallback(null);
+                mFolderIcon.setVisibility(View.VISIBLE);
+                mFolderIcon.setIconVisible(false);
+                mFolderIcon.mFolderName.setTextVisibility(false);
                 mIsAnimatingClosed = true;
             }
 
@@ -988,15 +991,21 @@ public class Folder extends AbstractFloatingView implements ClipPathView, DragSo
         if (parent != null) {
             parent.removeView(this);
         }
+        resetAnimationProperties();
         mActivityContext.getDragController().removeDropTarget(this);
         clearFocus();
         if (mFolderIcon != null) {
             mFolderIcon.setVisibility(View.VISIBLE);
+            if (wasAnimated) {
+                mFolderIcon.getPreviewItemManager().preparePreviewRevealAnimation();
+            }
             mFolderIcon.setIconVisible(true);
             mFolderIcon.mFolderName.setTextVisibility(true);
             if (wasAnimated) {
                 mFolderIcon.animateBgShadowAndStroke();
                 mFolderIcon.onFolderClose(mContent.getCurrentPage());
+                mFolderIcon.post(() ->
+                        mFolderIcon.getPreviewItemManager().startPreviewRevealAnimation());
                 if (mFolderIcon.hasDot()) {
                     mFolderIcon.animateDotScale(0f, 1f);
                 }
@@ -1021,6 +1030,32 @@ public class Folder extends AbstractFloatingView implements ClipPathView, DragSo
         clearDragInfo();
         setState(STATE_CLOSED);
         mContent.setCurrentPage(0);
+    }
+
+    private void resetAnimationProperties() {
+        setTranslationX(0f);
+        setTranslationY(0f);
+        setTranslationZ(0f);
+        setAlpha(1f);
+        setClipPath(null);
+        mContent.setClipPath(null);
+        mContent.setAlpha(1f);
+        mContent.setScaleX(1f);
+        mContent.setScaleY(1f);
+        mFooter.setScaleX(1f);
+        mFooter.setScaleY(1f);
+        mFooter.setTranslationX(0f);
+        mFooter.setTranslationY(0f);
+        mFooter.setAlpha(1f);
+        mFolderName.setAlpha(1f);
+
+        for (View icon : getItemsOnPage(mContent.getCurrentPage())) {
+            icon.setTranslationX(0f);
+            icon.setTranslationY(0f);
+            icon.setScaleX(1f);
+            icon.setScaleY(1f);
+            icon.setAlpha(1f);
+        }
     }
 
     @Override

@@ -40,6 +40,7 @@ import android.graphics.drawable.Drawable;
 import android.util.FloatProperty;
 import android.util.Log;
 import android.view.View;
+import android.view.animation.AnimationUtils;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.VisibleForTesting;
@@ -68,6 +69,9 @@ import java.util.function.Predicate;
 public class PreviewItemManager {
 
     private static final String TAG = "PreviewItemManager";
+    private static final int PREVIEW_REVEAL_DURATION = 280;
+    private static final float PREVIEW_REVEAL_STAGGER = 0.08f;
+    private static final float PREVIEW_REVEAL_START_SCALE = 0.72f;
 
     private static final FloatProperty<PreviewItemManager> CURRENT_PAGE_ITEMS_TRANS_X =
             new FloatProperty<PreviewItemManager>("currentPageItemsTransX") {
@@ -82,11 +86,26 @@ public class PreviewItemManager {
                     return manager.mCurrentPageItemsTransX;
                 }
             };
+    private static final FloatProperty<PreviewItemManager> PREVIEW_REVEAL_PROGRESS =
+            new FloatProperty<PreviewItemManager>("previewRevealProgress") {
+                @Override
+                public void setValue(PreviewItemManager manager, float v) {
+                    manager.mPreviewRevealProgress = v;
+                    manager.onParamsChanged();
+                }
+
+                @Override
+                public Float get(PreviewItemManager manager) {
+                    return manager.mPreviewRevealProgress;
+                }
+            };
 
     private final Context mContext;
     private final FolderIcon mIcon;
     @VisibleForTesting
     public final int mIconSize;
+    private float mPreviewRevealProgress = 1f;
+    private Animator mPreviewRevealAnimator;
 
     // These variables are all associated with the drawing of the preview; they are stored
     // as member variables for shared usage and to avoid computation on each frame
@@ -259,7 +278,7 @@ public class PreviewItemManager {
         if (mIcon.getFolderStyle() == LauncherSettings.Favorites.FOLDER_STYLE_CIRCLE
                 && indicatorIndex == 6 && params.size() == 6) {
             computePreviewItemDrawingParams(6, 7, mSynthesizedDotParams);
-            drawIndicatorDots(canvas, mSynthesizedDotParams, offset);
+            drawIndicatorDots(canvas, mSynthesizedDotParams, offset, getRevealProgress(6));
         }
 
         // The first item should be drawn last (ie. on top of later items)
@@ -268,10 +287,12 @@ public class PreviewItemManager {
             if (!p.hidden) {
                 // Exiting param should always be clipped.
                 boolean isExiting = p.index == EXIT_INDEX;
+                float revealProgress = getRevealProgress(i);
                 if (indicatorIndex >= 0 && p.index == indicatorIndex) {
-                    drawIndicatorDots(canvas, p, offset);
+                    drawIndicatorDots(canvas, p, offset, revealProgress);
                 } else {
-                    drawPreviewItem(canvas, p, offset, isExiting | shouldClipPath, clipPath);
+                    drawPreviewItem(canvas, p, offset, isExiting | shouldClipPath, clipPath,
+                            revealProgress);
                 }
             }
         }
@@ -305,6 +326,37 @@ public class PreviewItemManager {
         mIcon.invalidate();
     }
 
+    void startPreviewRevealAnimation() {
+        if (mPreviewRevealAnimator != null) {
+            mPreviewRevealAnimator.cancel();
+        }
+        preparePreviewRevealAnimation();
+        mPreviewRevealAnimator = ObjectAnimator.ofFloat(this, PREVIEW_REVEAL_PROGRESS, 0f, 1f);
+        mPreviewRevealAnimator.setDuration(PREVIEW_REVEAL_DURATION);
+        mPreviewRevealAnimator.setInterpolator(AnimationUtils.loadInterpolator(
+                mContext, android.R.interpolator.fast_out_slow_in));
+        mPreviewRevealAnimator.addListener(new AnimatorListenerAdapter() {
+            @Override
+            public void onAnimationEnd(Animator animation) {
+                mPreviewRevealProgress = 1f;
+                mPreviewRevealAnimator = null;
+                onParamsChanged();
+            }
+        });
+        mPreviewRevealAnimator.start();
+    }
+
+    void preparePreviewRevealAnimation() {
+        mPreviewRevealProgress = 0f;
+        onParamsChanged();
+    }
+
+    private float getRevealProgress(int index) {
+        float progress = (mPreviewRevealProgress - index * PREVIEW_REVEAL_STAGGER)
+                / (1f - index * PREVIEW_REVEAL_STAGGER);
+        return Math.max(0f, Math.min(1f, progress));
+    }
+
     /**
      * Draws each preview item.
      *
@@ -313,40 +365,55 @@ public class PreviewItemManager {
      * @param clipPath       The clip path of the folder icon.
      */
     private void drawPreviewItem(Canvas canvas, PreviewItemDrawingParams params, PointF offset,
-            boolean shouldClipPath, Path clipPath) {
+            boolean shouldClipPath, Path clipPath, float revealProgress) {
         canvas.save();
         if (shouldClipPath) {
             canvas.clipPath(clipPath);
         }
-        canvas.translate(offset.x + params.transX, offset.y + params.transY);
-        canvas.scale(params.scale, params.scale);
+        float revealScale = PREVIEW_REVEAL_START_SCALE
+                + (1f - PREVIEW_REVEAL_START_SCALE) * revealProgress;
+        float finalSize = mIntrinsicIconSize * params.scale;
+        float revealOffset = finalSize * (1f - revealScale) / 2f;
+        canvas.translate(offset.x + params.transX + revealOffset,
+                offset.y + params.transY + revealOffset);
+        canvas.scale(params.scale * revealScale, params.scale * revealScale);
         Drawable d = params.drawable;
 
         if (d != null) {
+            int oldAlpha = d.getAlpha();
+            d.setAlpha(Math.round(oldAlpha * revealProgress));
             Rect bounds = d.getBounds();
             canvas.save();
             canvas.translate(-bounds.left, -bounds.top);
             canvas.scale(mIntrinsicIconSize / bounds.width(), mIntrinsicIconSize / bounds.height());
             d.draw(canvas);
             canvas.restore();
+            d.setAlpha(oldAlpha);
         }
         canvas.restore();
     }
 
-    private void drawIndicatorDots(Canvas canvas, PreviewItemDrawingParams params, PointF offset) {
+    private void drawIndicatorDots(Canvas canvas, PreviewItemDrawingParams params, PointF offset,
+            float revealProgress) {
         int style = mIcon.getFolderStyle();
 
         if (style == LauncherSettings.Favorites.FOLDER_STYLE_QUADRANT) {
-            drawQuadrantMiniIcons(canvas, params, offset);
+            drawQuadrantMiniIcons(canvas, params, offset, revealProgress);
         } else {
-            drawDotsIndicator(canvas, params, offset);
+            drawDotsIndicator(canvas, params, offset, revealProgress);
         }
     }
 
-    private void drawQuadrantMiniIcons(Canvas canvas, PreviewItemDrawingParams params, PointF offset) {
+    private void drawQuadrantMiniIcons(Canvas canvas, PreviewItemDrawingParams params, PointF offset,
+            float revealProgress) {
         canvas.save();
-        canvas.translate(offset.x + params.transX, offset.y + params.transY);
-        canvas.scale(params.scale, params.scale);
+        float revealScale = PREVIEW_REVEAL_START_SCALE
+                + (1f - PREVIEW_REVEAL_START_SCALE) * revealProgress;
+        float finalSize = mIntrinsicIconSize * params.scale;
+        float revealOffset = finalSize * (1f - revealScale) / 2f;
+        canvas.translate(offset.x + params.transX + revealOffset,
+                offset.y + params.transY + revealOffset);
+        canvas.scale(params.scale * revealScale, params.scale * revealScale);
 
         float iconSize = mIntrinsicIconSize;
         float miniIconSize = iconSize * 0.42f;
@@ -368,6 +435,7 @@ public class PreviewItemManager {
             if (icon == null) {
                 continue;
             }
+            icon.setAlpha(Math.round(255 * revealProgress));
 
             int row = drawn / 2;
             int col = drawn % 2;
@@ -385,10 +453,16 @@ public class PreviewItemManager {
         canvas.restore();
     }
 
-    private void drawDotsIndicator(Canvas canvas, PreviewItemDrawingParams params, PointF offset) {
+    private void drawDotsIndicator(Canvas canvas, PreviewItemDrawingParams params, PointF offset,
+            float revealProgress) {
         canvas.save();
-        canvas.translate(offset.x + params.transX, offset.y + params.transY);
-        canvas.scale(params.scale, params.scale);
+        float revealScale = PREVIEW_REVEAL_START_SCALE
+                + (1f - PREVIEW_REVEAL_START_SCALE) * revealProgress;
+        float finalSize = mIntrinsicIconSize * params.scale;
+        float revealOffset = finalSize * (1f - revealScale) / 2f;
+        canvas.translate(offset.x + params.transX + revealOffset,
+                offset.y + params.transY + revealOffset);
+        canvas.scale(params.scale * revealScale, params.scale * revealScale);
 
         float iconSize = mIntrinsicIconSize;
         float dotRadius = iconSize * 0.05f;
@@ -397,6 +471,7 @@ public class PreviewItemManager {
         float centerY = iconSize / 2f;
 
         mIndicatorPaint.setColor(Themes.getColorAccent(mContext));
+        mIndicatorPaint.setAlpha(Math.round(255 * revealProgress));
 
         canvas.drawCircle(centerX - spacing, centerY - spacing, dotRadius, mIndicatorPaint);
         canvas.drawCircle(centerX + spacing, centerY - spacing, dotRadius, mIndicatorPaint);

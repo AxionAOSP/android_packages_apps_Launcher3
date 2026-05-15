@@ -49,6 +49,7 @@ class FolderSpringAnimatorSet(val animatorSet: AnimatorSet) {
     companion object Factory {
         private const val LAUNCHER_SCALE = 0.975f
         private const val FOLDER_NAME_ALPHA_DURATION = 32
+        private const val CONTENT_ALPHA_OUT_DURATION = 96
         private const val LARGE_FOLDER_FOOTER_DURATION = 128
         private const val STIFFNESS_SHAPE_POSITION = 380f
         private const val DAMPING_SHAPE_POSITION = 0.8f
@@ -114,6 +115,7 @@ class FolderSpringAnimatorSet(val animatorSet: AnimatorSet) {
         private fun setupFolder(folder: Folder, folderAnimationData: FolderAnimationData) {
             folder.folderIcon.previewItemManager.recomputePreviewDrawingParams()
             folder.apply {
+                alpha = 1f
                 pivotX = 0f
                 pivotY = 0f
             }
@@ -273,6 +275,20 @@ class FolderSpringAnimatorSet(val animatorSet: AnimatorSet) {
                     property = View.ALPHA,
                     view = mFooter,
                 )
+                if (!isOpening) {
+                    val contentFade =
+                        ObjectAnimator.ofFloat(content, View.ALPHA, 1f, 0f).apply {
+                            duration = CONTENT_ALPHA_OUT_DURATION.toLong()
+                        }
+                    contentFade.addListener(
+                        object : AnimatorListenerAdapter() {
+                            override fun onAnimationEnd(animation: Animator) {
+                                folder.content.alpha = 0f
+                            }
+                        }
+                    )
+                    animatorSet.play(contentFade)
+                }
                 // Fade in the folder name, as the text can overlap the icons when grid size is
                 // small.
                 folder.folderName.alpha = if (animationData.isOpening) 0f else 1f
@@ -391,9 +407,7 @@ class FolderSpringAnimatorSet(val animatorSet: AnimatorSet) {
         ) {
             with(iconData) {
                 val titleText = getBubbleTextView(icon)
-                if (isOpening) {
-                    titleText.setTextVisibility(false)
-                }
+                titleText.setTextVisibility(false)
                 val anim =
                     titleText.createTextAlphaAnimator(isOpening).apply {
                         startDelay = (if (isOpening) iconDelay + 100 else iconDelay).toLong()
@@ -491,12 +505,14 @@ class FolderSpringAnimatorSet(val animatorSet: AnimatorSet) {
 
                 override fun onAnimationEnd(animation: Animator) {
                     super.onAnimationEnd(animation)
-                    icon.translationX = 0.0f
-                    icon.translationY = 0.0f
-                    icon.scaleX = 1f
-                    icon.scaleY = 1f
-                    if (!itemsInPreview.contains(icon)) {
-                        icon.alpha = 1f
+                    if (isOpening) {
+                        icon.translationX = 0.0f
+                        icon.translationY = 0.0f
+                        icon.scaleX = 1f
+                        icon.scaleY = 1f
+                        if (!itemsInPreview.contains(icon)) {
+                            icon.alpha = 1f
+                        }
                     }
                 }
             }
