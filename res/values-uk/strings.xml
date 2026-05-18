@@ -42,7 +42,7 @@
     <string name="recent_task_option_aspect_ratio">Змінити формат</string>
     <string name="split_app_info_accessibility">Інформація про додаток для %1$s</string>
     <string name="split_app_usage_settings">Параметри використання (%1$s)</string>
-    <string name="close_task_accessibility">Close %1$s</string>
+    <string name="close_task_accessibility">Закрити %1$s</string>
     <!-- Title for an option to open a new window for a given app   -->
     <string name="new_window_option_taskbar">Нове вікно</string>
     <!-- Title for an option to manage open windows for a given app   -->
@@ -217,29 +217,29 @@
     <!-- Label for widget settings shows in the long press menu for widgets. [CHAR_LIMIT=20] -->
     <string name="widget_settings">Налаштування</string>
     <!-- Label for pinning an item to the taskbar. [CHAR_LIMIT=20] -->
-    <string name="pin_to_taskbar">Pin to Taskbar</string>
+    <string name="pin_to_taskbar">Закріпити на панелі завдань</string>
     <!-- Label for unpinning an item from the taskbar. [CHAR_LIMIT=20] -->
-    <string name="unpin_from_taskbar">Unpin from Taskbar</string>
+    <string name="unpin_from_taskbar">Відкріпити від панелі завдань</string>
     <string name="action_enlarge">Збільшити</string>
     <string name="action_minimize">Згорнути</string>
     <string name="action_customize_folder">Налаштувати</string>
-    <string name="custom_icon_shortcut_label">Change icon</string>
-    <string name="custom_icon_picker_title">Select icon pack</string>
-    <string name="custom_icon_no_packs">No icon packs installed</string>
-    <string name="custom_icon_no_drawables">No icons found in this pack</string>
-    <string name="custom_icon_reset">Reset to default</string>
+    <string name="custom_icon_shortcut_label">Змінити іконку</string>
+    <string name="custom_icon_picker_title">Вибрати набір значків</string>
+    <string name="custom_icon_no_packs">Жодного набору значків не встановлено</string>
+    <string name="custom_icon_no_drawables">Не знайдено жодного значка в цьому наборі</string>
+    <string name="custom_icon_reset">Відновити параметри за замовчуванням</string>
     <string name="custom_icon_back">Назад</string>
-    <string name="custom_icon_search_hint">Search icons</string>
-    <string name="custom_icon_no_search_results">No icons match your search</string>
-    <string name="action_customize_icon">Customize icons</string>
-    <string name="icon_pack_picker_title">Customize icons</string>
+    <string name="custom_icon_search_hint">Пошук значків</string>
+    <string name="custom_icon_no_search_results">Немає піктограм, що відповідають вашому пошуку</string>
+    <string name="action_customize_icon">Персоналізація значків</string>
+    <string name="icon_pack_picker_title">Персоналізація значків</string>
     <string name="icon_pack_picker_default">За замовчуванням</string>
-    <string name="icon_pack_picker_reset">Reset to default</string>
-    <string name="icon_pack_title">Icon Pack</string>
-    <string name="themed_icons_card_title">Themed Icons</string>
-    <string name="themed_icons_description">Monochrome icons that adapt to your colors</string>
-    <string name="icon_shape_title">Icon Shape</string>
-    <string name="themed_icon_pack_title">Themed Icon Pack</string>
+    <string name="icon_pack_picker_reset">Відновити параметри за замовчуванням</string>
+    <string name="icon_pack_title">Набір іконок</string>
+    <string name="themed_icons_card_title">Іконки теми</string>
+    <string name="themed_icons_description">Монохромні іконки, які адаптуються до ваших кольорів</string>
+    <string name="icon_shape_title">Форма значка</string>
+    <string name="themed_icon_pack_title">Тематичний пакет значків</string>
     <string name="themed_icon_pack_none">Нічого</string>
     <string name="folder_style_picker_title">Стиль тек</string>
     <string name="folder_style_quadrant">Квадрант</string>
@@ -279,7 +279,7 @@
     <!-- The format string for when an app has a notification dot (meaning it has associated notifications). [ICU_FORMAT]-->
     <string name="dotted_app_label">{count,plural, =1{Додаток {app_name} має # сповіщення}one{Додаток {app_name} має # сповіщення}few{Додаток {app_name} має # сповіщення}many{Додаток {app_name} має # сповіщень}other{Додаток {app_name} має # сповіщення}}</string>
     <!-- content description for hotseat items -->
-    <string name="hotseat_prediction_content_description">Predicted app: <xliff:g id="title" example="Chrome">%1$s</xliff:g></string>
+    <string name="hotseat_prediction_content_description">Передбачуваний додаток: <xliff:g id="title" example="Chrome">%1$s</xliff:g></string>
     <!-- The format string for default page scroll text [CHAR_LIMIT=none] -->
     <string name="default_scroll_format">Сторінка %1$d з %2$d</string>
     <!-- The format string for Workspace page scroll text [CHAR_LIMIT=none] -->
@@ -302,11 +302,11 @@
     <!-- Folder name format when folder has less than 4 items -->
     <string name="folder_name_format_exact">Тека: <xliff:g id="name" example="Games">%1$s</xliff:g>, об’єктів: <xliff:g id="size" example="2">%2$d</xliff:g></string>
     <!-- Folder name format when folder has less than 4 items and a notification dot -->
-    <string name="folder_name_format_exact_with_dot">Folder: <xliff:g id="name" example="Games">%1$s</xliff:g>, <xliff:g id="size" example="2">%2$d</xliff:g> items, has notifications</string>
+    <string name="folder_name_format_exact_with_dot">Папка: <xliff:g id="name" example="Games">%1$s</xliff:g>, <xliff:g id="size" example="2">%2$d</xliff:g> елементів, містить сповіщення</string>
     <!-- Folder name format when folder has 4 or more items shown in preview-->
     <string name="folder_name_format_overflow">Тека: <xliff:g id="name" example="Games">%1$s</xliff:g>, об’єктів: <xliff:g id="size" example="2">%2$d</xliff:g> або більше</string>
     <!-- Folder name format when folder has 4 or more items shown in preview and a notification dot -->
-    <string name="folder_name_format_overflow_with_dot">Folder: <xliff:g id="name" example="Games">%1$s</xliff:g>, <xliff:g id="size" example="2">%2$d</xliff:g> or more items, has notifications</string>
+    <string name="folder_name_format_overflow_with_dot">Папка: <xliff:g id="name" example="Games">%1$s</xliff:g>, <xliff:g id="size" example="2">%2$d</xliff:g> або більше елементів, містить сповіщення</string>
     <!-- Accessibility announement for unnamed folders -->
     <string name="unnamed_folder">Тека без назви</string>
     <!-- App pair accessibility -->
@@ -498,29 +498,29 @@
     <string name="ps_add_button_content_description">Установити додатки в особистому просторі</string>
     <string name="ps_app_content_description">Додавайте файли й інші об’єкти в приватний простір</string>
     <!-- Label for private apps section in private space page -->
-    <string name="ps_private_apps_label">Private apps</string>
+    <string name="ps_private_apps_label">Приватні додатки</string>
     <!-- Label shown when there are no private apps -->
-    <string name="ps_no_private_apps">No private apps</string>
+    <string name="ps_no_private_apps">Немає приватних додатків</string>
     <!-- Label for add app button in private space -->
-    <string name="ps_add_app_button">Add app</string>
+    <string name="ps_add_app_button">Додати додаток</string>
     <!-- Short label for add app grid icon in private space -->
     <string name="ps_add_app_short">Додати</string>
     <!-- Content description for private space settings button -->
-    <string name="ps_settings_content_description">Private space settings</string>
+    <string name="ps_settings_content_description">Налаштування приватного простору</string>
     <!-- Label for unlock button on private space veil -->
     <string name="ps_unlock_button">Розблокувати</string>
-    <string name="ps_swipe_hint">Swipe for Private space</string>
+    <string name="ps_swipe_hint">Проведіть для приватного простору</string>
     <string name="ps_swipe_hint_dismiss">OK</string>
-    <string name="folder_delete_title">Delete \"%1$s\"?</string>
-    <string name="folder_delete_message">%1$d apps will return to their default categories.</string>
+    <string name="folder_delete_title">Видалити \"%1$s\"?</string>
+    <string name="folder_delete_message">%1$d програм повернуться до категорій за замовчуванням.</string>
     <string name="folder_delete_confirm">Видалити</string>
-    <string name="folder_add_title">Add to folder</string>
-    <string name="folder_name_hint">Folder name</string>
+    <string name="folder_add_title">Додати до папки</string>
+    <string name="folder_name_hint">Назва папки</string>
     <string name="folder_create_button">Створити</string>
-    <string name="folder_new_button">New folder</string>
-    <string name="folder_remove_button">Remove from folder</string>
-    <string name="folder_rename_title">Rename folder</string>
-    <string name="folder_rename_confirm">Rename</string>
+    <string name="folder_new_button">Нова папка</string>
+    <string name="folder_remove_button">Видалити з папки</string>
+    <string name="folder_rename_title">Перейменувати папку</string>
+    <string name="folder_rename_confirm">Перейменувати</string>
     <string name="folder_selected_description">Вибрано</string>
     <string name="action_cancel">Скасувати</string>
     <string name="action_back">Назад</string>
