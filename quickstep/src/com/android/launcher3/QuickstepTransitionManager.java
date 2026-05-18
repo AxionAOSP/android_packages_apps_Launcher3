@@ -115,7 +115,6 @@ import android.view.View;
 import android.view.ViewRootImpl;
 import android.view.ViewTreeObserver;
 import android.view.WindowManager;
-import android.view.animation.AnimationUtils;
 import android.view.animation.Interpolator;
 import android.view.animation.PathInterpolator;
 import android.window.DesktopModeFlags;
@@ -146,7 +145,6 @@ import com.android.launcher3.model.data.ItemInfo;
 import com.android.launcher3.shortcuts.DeepShortcutView;
 import com.android.launcher3.taskbar.TaskbarInteractor;
 import com.android.launcher3.taskbar.customization.TaskbarFeatureEvaluator;
-import com.android.launcher3.testing.shared.ResourceUtils;
 import com.android.launcher3.touch.PagedOrientationHandler;
 import com.android.launcher3.uioverrides.QuickstepLauncher;
 import com.android.launcher3.util.ActivityOptionsWrapper;
@@ -218,8 +216,14 @@ public class QuickstepTransitionManager implements OnDeviceProfileChangeListener
 
     public static final long APP_LAUNCH_DURATION = 500;
 
-    private static final long APP_LAUNCH_ALPHA_DURATION = 50;
-    private static final long APP_LAUNCH_ALPHA_START_DELAY = 25;
+    private static final long APP_LAUNCH_ALPHA_DURATION = 150;
+    private static final long APP_LAUNCH_ALPHA_START_DELAY = 35;
+    private static final long APP_LAUNCH_WINDOW_ALPHA_DURATION = 75;
+    private static final float OPENING_CARD_MIN_ICON_SCALE = 2.15f;
+    private static final float OPENING_CARD_MIN_SCREEN_FRACTION = 0.16f;
+    private static final float OPENING_WINDOW_REVEAL_START_PROGRESS = 0.10f;
+    private static final float OPENING_CARD_RADIUS_FACTOR = 0.50f;
+    private static final float OPENING_CARD_EDGE_MARGIN_FACTOR = 0.35f;
 
     public static final int ANIMATION_NAV_FADE_IN_DURATION = 266;
     public static final int ANIMATION_NAV_FADE_OUT_DURATION = 133;
@@ -373,10 +377,8 @@ public class QuickstepTransitionManager implements OnDeviceProfileChangeListener
             mSystemUiProxy.setStartingWindowListener(mStartingWindowListener);
         }
 
-        mOpeningXInterpolator = AnimationUtils.loadInterpolator(
-                launcher, R.interpolator.app_open_x);
-        mOpeningInterpolator = AnimationUtils.loadInterpolator(
-                launcher, R.interpolator.emphasized_interpolator);
+        mOpeningXInterpolator = new PathInterpolator(0.42f, 0f, 0.2f, 1f);
+        mOpeningInterpolator = new PathInterpolator(0.42f, 0f, 0.2f, 1f);
         mCoordinateTransfer = new RemoteAnimationCoordinateTransfer(mLauncher);
         mLatencyTracker = LatencyTracker.getInstance(launcher);
     }
@@ -874,9 +876,11 @@ public class QuickstepTransitionManager implements OnDeviceProfileChangeListener
             hasSplashScreen = false;
         }
 
-        AnimOpenProperties prop = new AnimOpenProperties(mLauncher.getResources(), mDeviceProfile,
-                windowTargetBounds, launcherIconBounds, v, dragLayerBounds[0], dragLayerBounds[1],
-                hasSplashScreen, floatingView.isDifferentFromAppIcon());
+        final boolean usesSimpleRendering = floatingView.usesSimpleRendering();
+        final boolean scaleFloatingIconToSplash = hasSplashScreen && usesSimpleRendering;
+        AnimOpenProperties prop = new AnimOpenProperties(windowTargetBounds, launcherIconBounds, v,
+                dragLayerBounds[0], dragLayerBounds[1], hasSplashScreen,
+                floatingView.isDifferentFromAppIcon(), usesSimpleRendering);
         int left = prop.cropCenterXStart - prop.cropWidthStart / 2;
         int top = prop.cropCenterYStart - prop.cropHeightStart / 2;
         int right = left + prop.cropWidthStart;
@@ -941,23 +945,36 @@ public class QuickstepTransitionManager implements OnDeviceProfileChangeListener
             }
         });
 
-        final float initialWindowRadius = supportsRoundedCornersOnWindows(mLauncher.getResources())
-                ? Math.max(crop.width(), crop.height()) / 2f
-                : 0f;
+        final float finalWindowRadius = getWindowCornerRadius(mLauncher);
+        final float initialWindowRadius = Math.max(finalWindowRadius,
+                Math.min(launcherIconBounds.width(), launcherIconBounds.height())
+                        * prop.initialWindowScale * OPENING_CARD_RADIUS_FACTOR);
         final float finalShadowRadius = appTargetsAreTranslucent ? 0 : mMaxShadowRadius;
 
         MultiValueUpdateListener listener = new MultiValueUpdateListener() {
-            FloatProp mDx = new FloatProp(0, prop.dX, mOpeningXInterpolator);
-            FloatProp mDy = new FloatProp(0, prop.dY, mOpeningInterpolator);
+            FloatProp mWindowDx = new FloatProp(prop.windowStartOffsetX, prop.dX,
+                    mOpeningXInterpolator);
+            FloatProp mWindowDy = new FloatProp(prop.windowStartOffsetY, prop.dY,
+                    mOpeningInterpolator);
+            FloatProp mFloatingIconDx = new FloatProp(0, prop.dX, mOpeningXInterpolator);
+            FloatProp mFloatingIconDy = new FloatProp(0, prop.dY, mOpeningInterpolator);
 
-            FloatProp mIconScaleToFitScreen = new FloatProp(prop.initialAppIconScale,
+            FloatProp mWindowScaleToFitScreen = new FloatProp(prop.initialWindowScale,
                     prop.finalAppIconScale, mOpeningInterpolator);
+            Interpolator mFloatingIconScaleInterpolator = clampToDuration(mOpeningInterpolator, 0,
+                    APP_LAUNCH_ALPHA_START_DELAY + APP_LAUNCH_ALPHA_DURATION,
+                    APP_LAUNCH_DURATION);
+            FloatProp mFloatingIconScale = new FloatProp(prop.initialAppIconScale,
+                    prop.initialWindowScale, mFloatingIconScaleInterpolator);
             FloatProp mIconAlpha = new FloatProp(prop.iconAlphaStart, 0f,
                     clampToDuration(LINEAR, APP_LAUNCH_ALPHA_START_DELAY, APP_LAUNCH_ALPHA_DURATION,
                             APP_LAUNCH_DURATION));
+            FloatProp mWindowAlpha = new FloatProp(1f - prop.iconAlphaStart, 1f,
+                    clampToDuration(LINEAR, 0, APP_LAUNCH_WINDOW_ALPHA_DURATION,
+                            APP_LAUNCH_DURATION));
 
-            FloatProp mWindowRadius = new FloatProp(initialWindowRadius,
-                    getWindowCornerRadius(mLauncher), mOpeningInterpolator);
+            FloatProp mWindowRadius = new FloatProp(initialWindowRadius, finalWindowRadius,
+                    mOpeningInterpolator);
             FloatProp mShadowRadius = new FloatProp(0, finalShadowRadius,
                     mOpeningInterpolator);
 
@@ -991,30 +1008,46 @@ public class QuickstepTransitionManager implements OnDeviceProfileChangeListener
                     windowTargetBounds.bottom = bottomLevel;
                     final int endHeight = bottomLevel - bounds.top;
 
-                    AnimOpenProperties prop = new AnimOpenProperties(mLauncher.getResources(),
-                            mDeviceProfile, windowTargetBounds, launcherIconBounds, v,
-                            dragLayerBounds[0], dragLayerBounds[1], hasSplashScreen,
-                            floatingView.isDifferentFromAppIcon());
+                    AnimOpenProperties prop = new AnimOpenProperties(windowTargetBounds,
+                            launcherIconBounds, v, dragLayerBounds[0], dragLayerBounds[1],
+                            hasSplashScreen,
+                            floatingView.isDifferentFromAppIcon(), usesSimpleRendering);
                     mCropRectCenterY = new FloatProp(prop.cropCenterYStart, prop.cropCenterYEnd,
                             mOpeningInterpolator);
                     mCropRectHeight = new FloatProp(prop.cropHeightStart, prop.cropHeightEnd,
                             mOpeningInterpolator);
-                    mDy = new FloatProp(0, prop.dY, mOpeningInterpolator);
-                    mIconScaleToFitScreen = new FloatProp(prop.initialAppIconScale,
+                    mWindowDx = new FloatProp(prop.windowStartOffsetX, prop.dX,
+                            mOpeningXInterpolator);
+                    mWindowDy = new FloatProp(prop.windowStartOffsetY, prop.dY,
+                            mOpeningInterpolator);
+                    mFloatingIconDx = new FloatProp(0, prop.dX, mOpeningXInterpolator);
+                    mFloatingIconDy = new FloatProp(0, prop.dY, mOpeningInterpolator);
+                    mWindowScaleToFitScreen = new FloatProp(prop.initialWindowScale,
                             prop.finalAppIconScale, mOpeningInterpolator);
+                    mFloatingIconScale = new FloatProp(prop.initialAppIconScale,
+                            prop.initialWindowScale, mFloatingIconScaleInterpolator);
                     float interpolatedPercent = mOpeningInterpolator.getInterpolation(percent);
+                    float interpolatedXPercent = mOpeningXInterpolator.getInterpolation(percent);
                     mCropRectHeight.value = Utilities.mapRange(interpolatedPercent,
                             prop.cropHeightStart, prop.cropHeightEnd);
                     mCropRectCenterY.value = Utilities.mapRange(interpolatedPercent,
                             prop.cropCenterYStart, prop.cropCenterYEnd);
-                    mDy.value = Utilities.mapRange(interpolatedPercent, 0, prop.dY);
-                    mIconScaleToFitScreen.value = Utilities.mapRange(interpolatedPercent,
-                            prop.initialAppIconScale, prop.finalAppIconScale);
+                    mWindowDx.value = Utilities.mapRange(interpolatedXPercent,
+                            prop.windowStartOffsetX, prop.dX);
+                    mWindowDy.value = Utilities.mapRange(interpolatedPercent,
+                            prop.windowStartOffsetY, prop.dY);
+                    mFloatingIconDx.value = Utilities.mapRange(interpolatedXPercent, 0, prop.dX);
+                    mFloatingIconDy.value = Utilities.mapRange(interpolatedPercent, 0, prop.dY);
+                    mWindowScaleToFitScreen.value = Utilities.mapRange(interpolatedPercent,
+                            prop.initialWindowScale, prop.finalAppIconScale);
+                    mFloatingIconScale.value = Utilities.mapRange(
+                            mFloatingIconScaleInterpolator.getInterpolation(percent),
+                            prop.initialAppIconScale, prop.initialWindowScale);
                 }
 
                 // Calculate the size of the scaled icon.
-                float iconWidth = launcherIconBounds.width() * mIconScaleToFitScreen.value;
-                float iconHeight = launcherIconBounds.height() * mIconScaleToFitScreen.value;
+                float iconWidth = launcherIconBounds.width() * mWindowScaleToFitScreen.value;
+                float iconHeight = launcherIconBounds.height() * mWindowScaleToFitScreen.value;
 
                 int left = (int) (mCropRectCenterX.value - mCropRectWidth.value / 2);
                 int top = (int) (mCropRectCenterY.value - mCropRectHeight.value / 2);
@@ -1042,24 +1075,34 @@ public class QuickstepTransitionManager implements OnDeviceProfileChangeListener
                 // Calculate the window position to match the icon position.
                 tmpRectF.set(launcherIconBounds);
                 tmpRectF.offset(dragLayerBounds[0], dragLayerBounds[1]);
-                tmpRectF.offset(mDx.value, mDy.value);
-                Utilities.scaleRectFAboutCenter(tmpRectF, mIconScaleToFitScreen.value);
+                tmpRectF.offset(mWindowDx.value, mWindowDy.value);
+                Utilities.scaleRectFAboutCenter(tmpRectF, mWindowScaleToFitScreen.value);
                 float windowTransX0 = tmpRectF.left - offsetX - crop.left * scale;
                 float windowTransY0 = tmpRectF.top - offsetY - crop.top * scale;
 
                 // Calculate the icon position.
                 floatingIconBounds.set(launcherIconBounds);
-                floatingIconBounds.offset(mDx.value, mDy.value);
-                Utilities.scaleRectFAboutCenter(floatingIconBounds, mIconScaleToFitScreen.value);
-                floatingIconBounds.left -= offsetX;
-                floatingIconBounds.top -= offsetY;
-                floatingIconBounds.right += offsetX;
-                floatingIconBounds.bottom += offsetY;
+                floatingIconBounds.offset(mFloatingIconDx.value, mFloatingIconDy.value);
+                if (scaleFloatingIconToSplash) {
+                    Utilities.scaleRectFAboutCenter(floatingIconBounds, mFloatingIconScale.value);
+                } else {
+                    Utilities.scaleRectFAboutCenter(floatingIconBounds,
+                            mWindowScaleToFitScreen.value);
+                    floatingIconBounds.left -= offsetX;
+                    floatingIconBounds.top -= offsetY;
+                    floatingIconBounds.right += offsetX;
+                    floatingIconBounds.bottom += offsetY;
+                }
 
                 if (initOnly) {
                     // For the init pass, we want full alpha since the window is not yet ready.
-                    floatingView.update(1f, floatingIconBounds, percent, 0f,
-                            mWindowRadius.value * scale, true /* isOpening */);
+                    float initialIconAlpha = scaleFloatingIconToSplash ? 0f : prop.iconAlphaStart;
+                    if (initialIconAlpha > 0f) {
+                        initialIconAlpha = 1f;
+                    }
+                    floatingView.update(initialIconAlpha, floatingIconBounds, percent,
+                            OPENING_WINDOW_REVEAL_START_PROGRESS, mWindowRadius.value,
+                            true /* isOpening */);
                     return;
                 }
 
@@ -1086,12 +1129,13 @@ public class QuickstepTransitionManager implements OnDeviceProfileChangeListener
                             matrix.postTranslate(windowTransX0, windowTransY0);
                         }
 
-                        floatingView.update(mIconAlpha.value, floatingIconBounds, percent, 0f,
-                                mWindowRadius.value * scale, true /* isOpening */);
+                        floatingView.update(mIconAlpha.value, floatingIconBounds, percent,
+                                OPENING_WINDOW_REVEAL_START_PROGRESS, mWindowRadius.value,
+                                true /* isOpening */);
                         builder.setMatrix(matrix)
                                 .setWindowCrop(crop)
-                                .setAlpha(1f - mIconAlpha.value)
-                                .setCornerRadius(mWindowRadius.value)
+                                .setAlpha(mWindowAlpha.value)
+                                .setCornerRadius(mWindowRadius.value / scale)
                                 .setShadowRadius(mShadowRadius.value);
                     } else if (target.mode == MODE_CLOSING) {
                         if (target.localBounds != null) {
@@ -2397,14 +2441,17 @@ public class QuickstepTransitionManager implements OnDeviceProfileChangeListener
         public final float dX;
         public final float dY;
 
+        public final float windowStartOffsetX;
+        public final float windowStartOffsetY;
         public final float initialAppIconScale;
+        public final float initialWindowScale;
         public final float finalAppIconScale;
 
         public final float iconAlphaStart;
 
-        AnimOpenProperties(Resources r, DeviceProfile dp, Rect windowTargetBounds,
-                RectF launcherIconBounds, View view, int dragLayerLeft, int dragLayerTop,
-                boolean hasSplashScreen, boolean hasDifferentAppIcon) {
+        AnimOpenProperties(Rect windowTargetBounds, RectF launcherIconBounds, View view,
+                int dragLayerLeft, int dragLayerTop, boolean hasSplashScreen,
+                boolean hasDifferentAppIcon, boolean usesSimpleRendering) {
             // Scale the app icon to take up the entire screen. This simplifies the math when
             // animating the app window position / scale.
             float smallestSize = Math.min(windowTargetBounds.height(), windowTargetBounds.width());
@@ -2419,6 +2466,10 @@ public class QuickstepTransitionManager implements OnDeviceProfileChangeListener
             }
 
             initialAppIconScale = iconStartScale;
+            float minSurfaceScale = smallestSize * OPENING_CARD_MIN_SCREEN_FRACTION
+                    / Math.max(1f, launcherIconBounds.width());
+            initialWindowScale = Math.max(iconStartScale,
+                    Math.max(OPENING_CARD_MIN_ICON_SCALE, minSurfaceScale));
             finalAppIconScale = Math.max(maxScaleX, maxScaleY);
 
             // Animate the app icon to the center of the window bounds in screen coordinates.
@@ -2428,22 +2479,46 @@ public class QuickstepTransitionManager implements OnDeviceProfileChangeListener
             dX = centerX - launcherIconBounds.centerX();
             dY = centerY - launcherIconBounds.centerY();
 
-            iconAlphaStart = hasSplashScreen && !hasDifferentAppIcon ? 0 : 1f;
+            float initialSurfaceWidth = launcherIconBounds.width() * initialWindowScale;
+            float initialSurfaceHeight = launcherIconBounds.height() * initialWindowScale;
+            float windowLeft = windowTargetBounds.left - dragLayerLeft;
+            float windowTop = windowTargetBounds.top - dragLayerTop;
+            float windowRight = windowTargetBounds.right - dragLayerLeft;
+            float windowBottom = windowTargetBounds.bottom - dragLayerTop;
+            float horizontalMargin = Math.min(launcherIconBounds.width()
+                            * OPENING_CARD_EDGE_MARGIN_FACTOR,
+                    Math.max(0f, (windowTargetBounds.width() - initialSurfaceWidth) / 2f));
+            float verticalMargin = Math.min(launcherIconBounds.height()
+                            * OPENING_CARD_EDGE_MARGIN_FACTOR,
+                    Math.max(0f, (windowTargetBounds.height() - initialSurfaceHeight) / 2f));
+            float startCenterX = clampStartCenter(launcherIconBounds.centerX(),
+                    windowLeft + horizontalMargin + initialSurfaceWidth / 2f,
+                    windowRight - horizontalMargin - initialSurfaceWidth / 2f, centerX);
+            float startCenterY = clampStartCenter(launcherIconBounds.centerY(),
+                    windowTop + verticalMargin + initialSurfaceHeight / 2f,
+                    windowBottom - verticalMargin - initialSurfaceHeight / 2f, centerY);
+            windowStartOffsetX = startCenterX - launcherIconBounds.centerX();
+            windowStartOffsetY = startCenterY - launcherIconBounds.centerY();
 
-            final int windowIconSize = ResourceUtils.getDimenByName("starting_surface_icon_size",
-                    r, 108);
+            iconAlphaStart = hasSplashScreen && (hasDifferentAppIcon || usesSimpleRendering)
+                    ? 1f : 0f;
 
             cropCenterXStart = windowTargetBounds.centerX();
             cropCenterYStart = windowTargetBounds.centerY();
-
-            cropWidthStart = windowIconSize;
-            cropHeightStart = windowIconSize;
 
             cropWidthEnd = windowTargetBounds.width();
             cropHeightEnd = windowTargetBounds.height();
 
             cropCenterXEnd = windowTargetBounds.centerX();
             cropCenterYEnd = windowTargetBounds.centerY();
+
+            int cropSizeStart = Math.min(cropWidthEnd, cropHeightEnd);
+            cropWidthStart = cropSizeStart;
+            cropHeightStart = cropSizeStart;
+        }
+
+        private static float clampStartCenter(float center, float min, float max, float fallback) {
+            return min <= max ? Utilities.boundToRange(center, min, max) : fallback;
         }
     }
 

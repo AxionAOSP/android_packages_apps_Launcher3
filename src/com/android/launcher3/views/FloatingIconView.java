@@ -379,7 +379,8 @@ public class FloatingIconView extends FrameLayout implements
                 (InsettableFrameLayout.LayoutParams) getLayoutParams();
         mBadge = badge;
 
-        boolean isIconPackIcon = ThemedIconSettings.isIconPackDrawable(drawable);
+        boolean isIconPackIcon = drawable != null
+                && ThemedIconSettings.isIconPackDrawable(drawable);
         boolean useSimpleRendering = isIconPackIcon
                 || ThemedIconSettings.isThemedIconsEnabled(mLauncher);
 
@@ -439,6 +440,10 @@ public class FloatingIconView extends FrameLayout implements
      */
     public boolean isDifferentFromAppIcon() {
         return mIconLoadResult == null ? false : mIconLoadResult.isThemed;
+    }
+
+    public boolean usesSimpleRendering() {
+        return mIconLoadResult != null && mIconLoadResult.usesSimpleRendering;
     }
 
     /**
@@ -623,13 +628,17 @@ public class FloatingIconView extends FrameLayout implements
 
         boolean isThemed = false;
         boolean usingCustomShape = false;
+        boolean usesSimpleRendering = (btvIcon != null
+                && ThemedIconSettings.isIconPackDrawable(btvIcon))
+                || ThemedIconSettings.isThemedIconsEnabled(l);
         if (btvIcon instanceof FastBitmapDrawable) {
             FastBitmapDrawable fastBtvIcon = (FastBitmapDrawable) btvIcon;
             isThemed = fastBtvIcon.isThemed();
             usingCustomShape = (fastBtvIcon.creationFlags & FLAG_CUSTOM_SHAPE) != 0;
         }
 
-        IconLoadResult result = new IconLoadResult(info, isThemed, usingCustomShape);
+        IconLoadResult result = new IconLoadResult(info, isThemed, usingCustomShape,
+                usesSimpleRendering);
         result.btvDrawable = btvDrawableSupplier;
 
         final long fetchIconId = sFetchIconId++;
@@ -775,6 +784,7 @@ public class FloatingIconView extends FrameLayout implements
         final ItemInfo itemInfo;
         final boolean isThemed;
         final boolean usingCustomShape;
+        final boolean usesSimpleRendering;
         Supplier<Drawable> btvDrawable;
         Drawable drawable;
         Drawable badge;
@@ -782,10 +792,12 @@ public class FloatingIconView extends FrameLayout implements
         Runnable onIconLoaded;
         boolean isIconLoaded;
 
-        IconLoadResult(ItemInfo itemInfo, boolean isThemed, boolean usingCustomShape) {
+        IconLoadResult(ItemInfo itemInfo, boolean isThemed, boolean usingCustomShape,
+                boolean usesSimpleRendering) {
             this.itemInfo = itemInfo;
             this.isThemed = isThemed;
             this.usingCustomShape = usingCustomShape;
+            this.usesSimpleRendering = usesSimpleRendering;
         }
     }
 }
