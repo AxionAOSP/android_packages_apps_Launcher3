@@ -322,7 +322,15 @@ public class QuickstepTransitionManager implements OnDeviceProfileChangeListener
 
                 @Override
                 public void playUnlockAnimation(boolean unlocked, long duration, long startDelay) {
-                    MAIN_EXECUTOR.execute(() -> playWorkspaceUnlockReveal(unlocked, startDelay));
+                    MAIN_EXECUTOR.execute(() -> playWorkspaceUnlockReveal(unlocked, startDelay,
+                            false));
+                }
+
+                @Override
+                public void playUnlockAnimationWithWallpaperDepth(boolean unlocked, long duration,
+                        long startDelay, boolean animateWallpaperDepth) {
+                    MAIN_EXECUTOR.execute(() -> playWorkspaceUnlockReveal(unlocked, startDelay,
+                            animateWallpaperDepth));
                 }
 
                 @Override
@@ -2039,7 +2047,7 @@ public class QuickstepTransitionManager implements OnDeviceProfileChangeListener
         setWorkspaceUnlockRevealAmount(0f);
     }
 
-    private void playWorkspaceUnlockReveal(boolean unlocked, long startDelay) {
+    private void playWorkspaceUnlockReveal(boolean unlocked, long startDelay, boolean animateDepth) {
         if (!unlocked) {
             prepareWorkspaceUnlockReveal();
             return;
@@ -2047,7 +2055,7 @@ public class QuickstepTransitionManager implements OnDeviceProfileChangeListener
 
         setWorkspaceUnlockRevealAmount(0f);
         mKeyguardUnlockAnimator = new WorkspaceRevealAnim(mLauncher, false /* animateOverviewScrim */,
-                false /* animateDepth */).getAnimators();
+                animateDepth).getAnimators();
         mKeyguardUnlockAnimator.setStartDelay(startDelay);
         mKeyguardUnlockAnimator.addListener(new AnimatorListenerAdapter() {
             @Override
