@@ -96,7 +96,7 @@ public class ItemClickHandler {
         if (v.getWindowToken() == null) return;
 
         Launcher launcher = Launcher.getLauncher(v.getContext());
-        if (!launcher.getWorkspace().isFinishedSwitchingState()) return;
+        if (!launcher.getWorkspace().isReadyForAppLaunch()) return;
 
         Object tag = v.getTag();
         if (tag instanceof WorkspaceItemInfo) {
@@ -376,7 +376,7 @@ public class ItemClickHandler {
         startAppShortcutOrInfoActivity(v, shortcut, launcher);
     }
 
-    private static void startAppShortcutOrInfoActivity(View v, ItemInfo item, Launcher launcher) {
+    public static void startAppShortcutOrInfoActivity(View v, ItemInfo item, Launcher launcher) {
         TestLogging.recordEvent(
                 TestProtocol.SEQUENCE_MAIN, "start: startAppShortcutOrInfoActivity");
         Intent intent = item.getIntent();

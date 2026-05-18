@@ -23,18 +23,15 @@ import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.content.pm.LauncherApps
-import android.graphics.Rect
 import android.graphics.RectF
 import android.os.SystemClock
 import android.os.UserHandle
-import android.text.TextUtils
 import android.util.Log
 import android.view.KeyEvent
 import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
 import android.widget.RelativeLayout
-import android.widget.TextView
 import android.widget.Toast
 import android.window.OnBackInvokedCallback
 import android.window.OnBackInvokedDispatcher
@@ -65,7 +62,7 @@ import com.android.launcher3.R
 import com.android.launcher3.allapps.compose.shared.model.AllAppsComposeCallbacks
 import com.android.launcher3.allapps.compose.shared.model.ComposeIconInfo
 import com.android.launcher3.allapps.compose.ui.AllAppsComposeHost
-
+import com.android.launcher3.allapps.compose.ui.AllAppsComposeLauncher
 import com.android.launcher3.allapps.compose.ui.view.ComposeAppIconView
 import com.android.launcher3.dagger.ActivityContextSingleton
 import com.android.launcher3.dragndrop.DragOptions
@@ -75,7 +72,6 @@ import com.android.launcher3.popup.PopupContainerWithArrow
 import com.android.launcher3.util.ApiWrapper
 import com.android.launcher3.views.ActivityContext
 import com.android.launcher3.views.BaseDragLayer
-import com.android.launcher3.views.FloatingIconView
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -90,6 +86,7 @@ class AllAppsComposeController @Inject constructor(
 ) : DeviceProfile.OnDeviceProfileChangeListener {
 
     private val launcher: Launcher? = activityContext as? Launcher
+    private val composeLauncher = AllAppsComposeLauncher(activityContext, allAppsStore)
 
     val viewModel = AllAppsComposeViewModel(allAppsStore, activityContext as Context).also { vm ->
         val dp = activityContext.deviceProfile
@@ -129,11 +126,12 @@ class AllAppsComposeController @Inject constructor(
     var selectedProfileTab by mutableIntStateOf(TAB_PERSONAL)
     var searchQuery by mutableStateOf("")
 
-    var lastLaunchedComposeIcon: WeakReference<View>? = null
-        private set
-    var lastLaunchedComponent: ComponentName? = null
-        private set
-    var lastLaunchedSection: String? = null
+    val lastLaunchedComposeIcon: WeakReference<View>?
+        get() = composeLauncher.lastLaunchedComposeIcon
+    val lastLaunchedComponent: ComponentName?
+        get() = composeLauncher.lastLaunchedComponent
+    val lastLaunchedSection: String?
+        get() = composeLauncher.lastLaunchedSection
 
     var hiddenIconComponent: ComponentName? by mutableStateOf(null)
     var hiddenIconSection: String? = null
@@ -198,6 +196,7 @@ class AllAppsComposeController @Inject constructor(
 
     fun detachContainer() {
         Log.d(TAG, "detachContainer: composeView=$composeView")
+        composeLauncher.clearPendingLaunch()
         registerBackIntercept(false)
         launcher?.removeOnDeviceProfileChangeListener(this)
         showFolderPickerHandler = null
@@ -328,32 +327,13 @@ class AllAppsComposeController @Inject constructor(
     }
 
     fun clearLaunchedState() {
-        lastLaunchedSection = null
-        lastLaunchedComponent = null
-        lastLaunchedComposeIcon = null
+        composeLauncher.clearLaunchedState()
     }
 
     fun getComposeView(): AxComposeView? = composeView
 
-    fun getComposeIconForClose(packageName: String, user: UserHandle): View? {
-        if (lastLaunchedSection == null) return null
-        lastLaunchedComponent?.let { comp ->
-            if (comp.packageName == packageName) {
-                lastLaunchedComposeIcon?.get()?.let { icon ->
-                    if (icon.isAttachedToWindow && hasValidComposeIconBounds(icon)) {
-                        return icon
-                    }
-                }
-            }
-        }
-        val found = allAppsStore.findIconView { v ->
-            (v is ComposeAppIconView || v is TextView) &&
-                (v.tag as? ItemInfo)?.let { info ->
-                    info.user == user && TextUtils.equals(info.targetPackage, packageName)
-                } == true
-        }
-        return found?.takeIf { hasValidComposeIconBounds(it) }
-    }
+    fun getComposeIconForClose(packageName: String, user: UserHandle): View? =
+        composeLauncher.getComposeIconForClose(packageName, user)
 
     fun showFolderPickerForApp(componentName: String) {
         showFolderPickerHandler?.invoke(componentName)
@@ -365,27 +345,11 @@ class AllAppsComposeController @Inject constructor(
 
     private fun createCallbacks() = object : AllAppsComposeCallbacks {
         override fun onAppClicked(iconInfo: ComposeIconInfo) {
-            val appInfo = iconInfo.appInfo
-            val hostView = iconInfo.hostView
-            val validBounds = hasValidComposeIconBounds(hostView)
-            launcher?.let { if (validBounds) FloatingIconView.fetchIcon(it, hostView, appInfo, true) }
-            lastLaunchedComposeIcon = if (validBounds && hostView != null) {
-                WeakReference(hostView)
-            } else null
-            lastLaunchedComponent = appInfo.componentName
-            lastLaunchedSection = (hostView as? ComposeAppIconView)?.sectionId
-            activityContext.startActivitySafely(
-                if (validBounds) hostView else null,
-                appInfo.intent,
-                appInfo
-            )
+            composeLauncher.launch(iconInfo)
         }
 
         override fun onAppClickedFromFolder(appInfo: AppInfo) {
-            lastLaunchedComposeIcon = null
-            lastLaunchedComponent = appInfo.componentName
-            launcher?.setSkipFloatingIconReturnAnimation(true)
-            activityContext.startActivitySafely(null, appInfo.intent, appInfo)
+            composeLauncher.launchWithoutIcon(appInfo)
         }
 
         override fun onAppLongClicked(iconInfo: ComposeIconInfo) {
@@ -506,16 +470,6 @@ class AllAppsComposeController @Inject constructor(
         override fun setShowFolderPickerHandler(handler: ((String) -> Unit)?) {
             showFolderPickerHandler = handler
         }
-    }
-
-    private fun hasValidComposeIconBounds(v: View?): Boolean {
-        if (v == null) return false
-        if (v !is ComposeAppIconView) return true
-        val l = launcher ?: return false
-        val bounds = RectF()
-        FloatingIconView.getLocationBoundsForView(l, v, true, bounds, Rect())
-        return bounds.width() > 0 && bounds.height() > 0
-            && (bounds.left > 0 || bounds.top > 0)
     }
 
     private fun dispatchDragEvent(action: Int, screenX: Float, screenY: Float) {

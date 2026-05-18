@@ -1207,6 +1207,11 @@ public class Workspace<T extends View & PageIndicator> extends PagedView<T>
                 || (mTransitionProgress > FINISHED_SWITCHING_STATE_TRANSITION_PROGRESS);
     }
 
+    public boolean isReadyForAppLaunch() {
+        return !mIsSwitchingState
+                || (mTransitionProgress > ALLOW_DROP_TRANSITION_PROGRESS);
+    }
+
     @Override
     public boolean dispatchUnhandledMove(View focused, int direction) {
         if (workspaceInModalState() || !isFinishedSwitchingState()) {
