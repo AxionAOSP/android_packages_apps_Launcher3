@@ -86,7 +86,7 @@ public class LauncherIconProvider extends IconProvider {
         if (info instanceof ActivityInfo) {
             ActivityInfo activityInfo = (ActivityInfo) info;
             ComponentName cn = new ComponentName(activityInfo.packageName, activityInfo.name);
-            Drawable iconPackIcon = AxIconsHelper.loadIconPackDrawable(mContext, cn, iconDpi);
+            Drawable iconPackIcon = ThemedIconSettings.loadIconPackDrawable(mContext, cn, iconDpi);
             if (iconPackIcon != null) {
                 return iconPackIcon;
             }

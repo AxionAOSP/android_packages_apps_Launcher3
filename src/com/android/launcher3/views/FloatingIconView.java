@@ -61,10 +61,10 @@ import com.android.launcher3.Utilities;
 import com.android.launcher3.dragndrop.DragLayer;
 import com.android.launcher3.folder.FolderIcon;
 import com.android.launcher3.graphics.PreloadIconDelegate;
-import com.android.launcher3.icons.AxIconsHelper;
 import com.android.launcher3.icons.FastBitmapDrawable;
 import com.android.launcher3.icons.IconNormalizer;
 import com.android.launcher3.icons.IconShape;
+import com.android.launcher3.icons.ThemedIconSettings;
 import com.android.launcher3.model.data.ItemInfo;
 import com.android.launcher3.model.data.ItemInfoWithIcon;
 import com.android.launcher3.popup.SystemShortcut;
@@ -379,9 +379,9 @@ public class FloatingIconView extends FrameLayout implements
                 (InsettableFrameLayout.LayoutParams) getLayoutParams();
         mBadge = badge;
 
-        boolean isIconPackIcon = AxIconsHelper.isIconPackDrawable(drawable);
+        boolean isIconPackIcon = ThemedIconSettings.isIconPackDrawable(drawable);
         boolean useSimpleRendering = isIconPackIcon
-                || AxIconsHelper.isAxIconsEnabled(mLauncher);
+                || ThemedIconSettings.isThemedIconsEnabled(mLauncher);
 
         if (useSimpleRendering) {
             Drawable simpleIcon = isIconPackIcon ? drawable

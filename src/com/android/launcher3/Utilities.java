@@ -83,7 +83,7 @@ import com.android.launcher3.deviceprofile.DeviceProperties;
 import com.android.launcher3.dragndrop.FolderAdaptiveIcon;
 import com.android.launcher3.graphics.ThemeManager;
 import com.android.launcher3.graphics.TintedDrawableSpan;
-import com.android.launcher3.icons.AxIconsHelper;
+import com.android.launcher3.icons.ThemedIconSettings;
 import com.android.launcher3.icons.BitmapInfo;
 import com.android.launcher3.icons.CacheableShortcutInfo;
 import com.android.launcher3.icons.IconShape;
@@ -733,8 +733,8 @@ public final class Utilities {
         if (mainIcon instanceof AdaptiveIconDrawable aid) {
             result = aid;
         } else {
-            if (AxIconsHelper.hasActiveIconPack(context)
-                    || AxIconsHelper.isIconPackDrawable(mainIcon)) {
+            if (ThemedIconSettings.hasActiveIconPack(context)
+                    || ThemedIconSettings.isIconPackDrawable(mainIcon)) {
                 return null;
             }
             // Wrap the main icon in AID
