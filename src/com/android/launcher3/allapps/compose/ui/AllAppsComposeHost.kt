@@ -17,6 +17,9 @@
 package com.android.launcher3.allapps.compose.ui
 
 import android.content.Context
+import android.database.ContentObserver
+import android.net.Uri
+import android.provider.Settings
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
@@ -33,7 +36,11 @@ import androidx.lifecycle.LifecycleEventObserver
 import com.android.launcher3.allapps.AllAppsComposeController
 import com.android.launcher3.allapps.AllAppsStore
 import com.android.launcher3.allapps.compose.shared.model.AllAppsComposeCallbacks
+import com.android.launcher3.allapps.compose.shared.model.AllAppsIconRenderState
 import com.android.launcher3.allapps.compose.ui.viewmodel.AllAppsComposeViewModel
+import com.android.launcher3.graphics.ThemeManager
+import com.android.launcher3.graphics.ThemeManager.ThemeChangeListener
+import com.android.launcher3.util.Executors.MAIN_EXECUTOR
 import kotlinx.coroutines.launch
 
 @Composable
@@ -47,6 +54,29 @@ fun AllAppsComposeHost(
     DisposableEffect(viewModel) {
         viewModel.reinitialize()
         onDispose { }
+    }
+
+    DisposableEffect(context, viewModel) {
+        val resolver = context.contentResolver
+        val observer = object : ContentObserver(MAIN_EXECUTOR.handler) {
+            override fun onChange(selfChange: Boolean, uri: Uri?) {
+                viewModel.onIconsChanged()
+            }
+        }
+        AllAppsIconRenderState.observedSecureSettings.forEach {
+            resolver.registerContentObserver(Settings.Secure.getUriFor(it), false, observer)
+        }
+        val themeManager = ThemeManager.INSTANCE.get(context)
+        val shapeCloseable = themeManager.iconShapeData.forEach(MAIN_EXECUTOR) {
+            viewModel.onIconsChanged()
+        }
+        val themeChangeListener = ThemeChangeListener { viewModel.onIconsChanged() }
+        themeManager.addChangeListener(themeChangeListener)
+        onDispose {
+            resolver.unregisterContentObserver(observer)
+            shapeCloseable.close()
+            themeManager.removeChangeListener(themeChangeListener)
+        }
     }
 
     val lifecycleOwner = LocalLifecycleOwner.current

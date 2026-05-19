@@ -1,9 +1,9 @@
 package com.android.launcher3.allapps.compose.ui
 
-import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.compositionLocalOf
 import com.android.launcher3.allapps.AllAppsComposeController
+import com.android.launcher3.allapps.compose.shared.model.AllAppsIconRenderState
 import com.android.launcher3.allapps.compose.shared.model.ComposeIconInfo
 import com.android.launcher3.model.data.AppInfo
 
@@ -32,11 +32,7 @@ class AllAppsInteractions(
     )
 }
 
-@Immutable
-data class IconConfig(val themed: Boolean = false, val version: Int = 0)
-
 val LocalAllAppsInteractions = compositionLocalOf { AllAppsInteractions() }
 val LocalPagerSwiping = compositionLocalOf { false }
-val LocalIconConfig = compositionLocalOf { IconConfig() }
+val LocalIconConfig = compositionLocalOf { AllAppsIconRenderState() }
 val LocalSectionId = compositionLocalOf { "unknown" }
-

@@ -295,7 +295,7 @@ fun AllAppsComposeContent(
         }
     }
 
-    val iconConfig = IconConfig(themed = rememberThemedIcons(), version = state.iconVersion)
+    val iconConfig = state.iconRenderState
     CompositionLocalProvider(
         LocalAllAppsInteractions provides interactions,
         LocalIconConfig provides iconConfig

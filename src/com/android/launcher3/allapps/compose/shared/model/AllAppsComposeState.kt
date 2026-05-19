@@ -30,7 +30,7 @@ data class AllAppsComposeState(
     val showLabels: Boolean = true,
     val showPredictions: Boolean = true,
     val sectionIndices: Map<String, Int> = emptyMap(),
-    val iconVersion: Int = 0
+    val iconRenderState: AllAppsIconRenderState = AllAppsIconRenderState(),
 ) {
     companion object {
         const val TAB_PERSONAL = 0
@@ -51,4 +51,3 @@ sealed class AllAppsComposeItem {
     data class FolderItem(val category: AppCategory) : AllAppsComposeItem()
     object EmptySearchResult : AllAppsComposeItem()
 }
-

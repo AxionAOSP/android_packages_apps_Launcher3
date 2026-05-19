@@ -8,7 +8,6 @@ import com.android.launcher3.allapps.compose.data.AllAppsIconProvider
 import com.android.launcher3.allapps.compose.shared.model.AllAppsComposeItem
 import com.android.launcher3.allapps.compose.shared.model.AppCategory
 
-import android.content.res.Configuration
 import android.graphics.Paint
 import android.view.HapticFeedbackConstants
 import androidx.compose.foundation.*
@@ -28,7 +27,6 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.input.pointer.PointerEventTimeoutCancellationException
 import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalView
@@ -468,7 +466,6 @@ private fun AllAppsComposeFolderIcon(
     val miniGapPx = with(density) { 2.dp.toPx() }
     val miniIconSizePx = with(density) { 20.dp.roundToPx() }
     val iconProvider = remember { AllAppsIconProvider.getInstance(context) }
-    val uiMode = LocalConfiguration.current.uiMode and Configuration.UI_MODE_NIGHT_MASK
     val iconConfig = LocalIconConfig.current
 
     val folderBgArgb = android.graphics.Color.argb(
@@ -480,9 +477,9 @@ private fun AllAppsComposeFolderIcon(
     val folderBgPaint = remember(folderBgArgb) {
         Paint(Paint.ANTI_ALIAS_FLAG).apply { color = folderBgArgb }
     }
-    val miniIcons = remember(category.apps, miniIconSizePx, uiMode, iconConfig.themed) {
+    val miniIcons = remember(category.apps, miniIconSizePx, iconConfig) {
         category.apps.take(4).map { app ->
-            iconProvider.getIcon(app, miniIconSizePx, uiMode, iconConfig.themed)
+            iconProvider.getIcon(app, miniIconSizePx, iconConfig)
         }
     }
 

@@ -18,7 +18,7 @@ package com.android.launcher3.allapps.compose.ui.viewmodel
 
 import android.content.ComponentName
 import android.content.Context
-import android.content.res.Configuration
+import android.os.Process
 import android.util.Log
 import com.android.launcher3.allapps.AllAppsStore
 import com.android.launcher3.allapps.compose.data.AllAppsIconProvider
@@ -26,10 +26,10 @@ import com.android.launcher3.allapps.compose.data.AllAppsRepository
 import com.android.launcher3.allapps.compose.data.PinnedAppsManager
 import com.android.launcher3.allapps.compose.domain.UsagePredictionInteractor
 import com.android.launcher3.allapps.compose.shared.model.AllAppsComposeState
+import com.android.launcher3.allapps.compose.shared.model.AllAppsIconRenderState
 import com.android.launcher3.model.data.AppInfo
 import com.android.launcher3.model.data.ItemInfo
 import com.android.launcher3.util.ItemInfoMatcher
-import android.os.Process
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -66,7 +66,9 @@ class AllAppsComposeViewModel(
     private var latestAppsData: AllAppsRepository.AppsData = AllAppsRepository.AppsData()
     private var latestPrefs: AllAppsRepository.DrawerPreferences = AllAppsRepository.DrawerPreferences()
 
-    private val _state = MutableStateFlow(AllAppsComposeState())
+    private val _state = MutableStateFlow(
+        AllAppsComposeState(iconRenderState = createIconRenderState(0))
+    )
     val state: StateFlow<AllAppsComposeState> = _state.asStateFlow()
 
     private val _allAppsExpanded = MutableStateFlow(false)
@@ -93,10 +95,15 @@ class AllAppsComposeViewModel(
         }.launchIn(viewModelScope)
 
         repository.preferences.onEach { prefs ->
+            val iconsChanged = prefs.themedIcons != latestPrefs.themedIcons
             latestPrefs = prefs
+            if (iconsChanged) {
+                AllAppsIconProvider.getInstance(context).clearCache()
+            }
             _state.update { it.copy(
                 showLabels = prefs.showLabels,
-                showPredictions = prefs.showPredictions
+                showPredictions = prefs.showPredictions,
+                iconRenderState = createIconRenderState(it.iconRenderState.version),
             ) }
             rebuildState()
         }.launchIn(viewModelScope)
@@ -161,27 +168,23 @@ class AllAppsComposeViewModel(
                 }
                 cachedPredictions = predictedApps
 
-                val currentIconSize = _state.value.iconSizePx
-                if (currentIconSize > 0) {
-                    val iconProvider = AllAppsIconProvider.getInstance(context)
-                    val uiMode = context.resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK
-                    val themed = latestPrefs.themedIcons
-                    iconProvider.preloadIcons(
-                        snapshotData.personalApps + snapshotData.workApps + snapshotData.privateApps,
-                        uiMode,
-                        themed,
-                        currentIconSize,
-                        (currentIconSize * 0.75).toInt()
-                    )
-                }
-
                 _state.update { current ->
                     val filteredPredictions = filterPredictionsForTab(current.currentTab, current.showPredictions)
+                    val iconStateVersion = if (iconRefresh) {
+                        current.iconRenderState.version + 1
+                    } else {
+                        current.iconRenderState.version
+                    }
                     current.copy(
                         predictedApps = filteredPredictions,
-                        iconVersion = if (iconRefresh) current.iconVersion + 1 else current.iconVersion
+                        iconRenderState = if (iconRefresh) {
+                            createIconRenderState(iconStateVersion)
+                        } else {
+                            current.iconRenderState
+                        },
                     )
                 }
+                preloadIconsForCurrentState(snapshotData)
             }
         }
     }
@@ -253,6 +256,14 @@ class AllAppsComposeViewModel(
         rebuildState()
     }
 
+    fun onIconsChanged() {
+        AllAppsIconProvider.getInstance(context).clearCache()
+        _state.update {
+            it.copy(iconRenderState = createIconRenderState(it.iconRenderState.version + 1))
+        }
+        preloadIconsForCurrentState()
+    }
+
     fun setPrivateSpaceHidden(hidden: Boolean) {
         _state.update { it.copy(isPrivateSpaceHidden = hidden) }
     }
@@ -274,5 +285,23 @@ class AllAppsComposeViewModel(
             observeData()
         }
     }
+
+    private fun preloadIconsForCurrentState(data: AllAppsRepository.AppsData = latestAppsData) {
+        val currentIconSize = _state.value.iconSizePx
+        if (currentIconSize <= 0) return
+        AllAppsIconProvider.getInstance(context).preloadIcons(
+            data.personalApps + data.workApps + data.privateApps,
+            _state.value.iconRenderState,
+            currentIconSize,
+            (currentIconSize * 0.75).toInt()
+        )
+    }
+
+    private fun createIconRenderState(version: Int) =
+        AllAppsIconRenderState.from(
+            context = context,
+            themedIconsEnabled = latestPrefs.themedIcons,
+            version = version,
+        )
 
 }

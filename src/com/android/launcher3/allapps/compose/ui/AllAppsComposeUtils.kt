@@ -35,7 +35,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import com.android.launcher3.LauncherFiles
 import com.android.launcher3.LauncherPrefs
-import com.android.launcher3.allapps.compose.shared.constants.PreferenceKeys
 import com.android.launcher3.allapps.compose.shared.model.AllAppsComposeItem
 import com.android.launcher3.allapps.compose.shared.model.AllAppsComposeState
 import com.android.launcher3.allapps.compose.shared.model.AppCategory
@@ -180,12 +179,6 @@ internal fun <T> rememberPreference(key: String, read: (Context) -> T): T {
 internal fun rememberDrawerOpacity(): Int =
     rememberPreference("pref_all_apps_bg_opacity") {
         LauncherPrefs.get(it).get(LauncherPrefs.ALL_APPS_BG_OPACITY)
-    }
-
-@Composable
-internal fun rememberThemedIcons(): Boolean =
-    rememberPreference(PreferenceKeys.ALLAPPS_THEMED_ICONS) {
-        LauncherPrefs.ALLAPPS_THEMED_ICONS.get(it)
     }
 
 @Composable
