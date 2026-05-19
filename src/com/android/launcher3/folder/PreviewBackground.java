@@ -52,6 +52,7 @@ import com.android.launcher3.Flags;
 import com.android.launcher3.LauncherSettings;
 import com.android.launcher3.R;
 import com.android.launcher3.celllayout.DelegatedCellDrawing;
+import com.android.launcher3.graphics.PathWrapper;
 import com.android.launcher3.graphics.ShapeDelegate;
 import com.android.launcher3.graphics.ThemeManager;
 import com.android.launcher3.views.ActivityContext;
@@ -76,7 +77,7 @@ public class PreviewBackground extends DelegatedCellDrawing {
     private RadialGradient mShadowShader = null;
 
     private final Matrix mShaderMatrix = new Matrix();
-    private final Path mPath = new Path();
+    private final PathWrapper mPath = new PathWrapper();
 
     private final Paint mPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
 
@@ -335,7 +336,7 @@ public class PreviewBackground extends DelegatedCellDrawing {
 
         } else {
             saveCount = canvas.save();
-            canvas.clipPath(getClipPath(), Region.Op.DIFFERENCE);
+            canvas.clipPath(getClipPath().getPath(), Region.Op.DIFFERENCE);
         }
 
         mShaderMatrix.setScale(shadowRadius, shadowRadius);
@@ -421,7 +422,7 @@ public class PreviewBackground extends DelegatedCellDrawing {
         mScale = originalScale;
     }
 
-    public Path getClipPath() {
+    public PathWrapper getClipPath() {
         mPath.reset();
         if (mFolderStyle == LauncherSettings.Favorites.FOLDER_STYLE_GRID) {
             float size = previewSize * mScale * ICON_OVERLAP_FACTOR;
@@ -429,7 +430,10 @@ public class PreviewBackground extends DelegatedCellDrawing {
             float offset = (previewSize - size) / 2;
             float left = basePreviewOffsetX + offset;
             float top = basePreviewOffsetY + offset;
-            mPath.addRoundRect(left, top, left + size, top + size, radius, radius, Path.Direction.CW);
+            mPath.getPath().addRoundRect(
+                    left, top, left + size, top + size, radius, radius, Path.Direction.CW);
+            mPath.setBounds(left, top, left + size, top + size);
+            mPath.setCornerRadius(radius);
         } else {
             float radius = getScaledRadius();
             if (!Flags.enableLauncherIconShapes()) {

@@ -25,7 +25,6 @@ import android.graphics.Path
 import android.graphics.RectF
 import android.util.Log
 import android.view.SurfaceControl
-import android.view.View
 import android.view.animation.PathInterpolator
 import androidx.core.graphics.transform
 import androidx.core.view.isVisible

@@ -27,6 +27,7 @@ import android.animation.ObjectAnimator;
 import android.animation.ValueAnimator;
 import android.content.Context;
 import android.content.res.Resources;
+import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Rect;
 import android.graphics.drawable.ColorDrawable;
@@ -45,6 +46,8 @@ import android.widget.FrameLayout;
 
 import androidx.annotation.VisibleForTesting;
 
+import com.android.axion.blur.AxBlurBackgroundRenderer;
+import com.android.axion.blur.AxBlurColors;
 import com.android.launcher3.AbstractFloatingView;
 import com.android.launcher3.InsettableFrameLayout;
 import com.android.launcher3.R;
@@ -55,6 +58,8 @@ import com.android.launcher3.util.RunnableList;
 import com.android.launcher3.util.Themes;
 import com.android.launcher3.views.ActivityContext;
 import com.android.launcher3.views.BaseDragLayer;
+
+import java.util.ArrayList;
 
 /**
  * A container for shortcuts to deep links and notifications associated with an app.
@@ -89,6 +94,13 @@ public abstract class ArrowPopup<T extends Context & ActivityContext>
     private static final int CLOSE_FADE_DURATION_U = 83;
     private static final int CLOSE_CHILD_FADE_START_DELAY_U = 150;
     private static final int CLOSE_CHILD_FADE_DURATION_U = 83;
+    private static final float[] POPUP_ALPHA_OPEN_VALUES = {0f, 1f};
+    private static final float[] POPUP_ALPHA_CLOSE_VALUES = {1f, 0f};
+    private static final float[] POPUP_SCALE_OPEN_VALUES = {0.5f, 1.02f};
+    private static final float[] POPUP_SCALE_CLOSE_VALUES = {1f, 0.5f};
+    private static final float[] POPUP_SCALE_OVERSHOOT_VALUES = {1.02f, 1f};
+    private static final PathInterpolator POPUP_OPEN_OVERSHOOT_INTERPOLATOR =
+            new PathInterpolator(0.3f, 0f, 0.33f, 1f);
 
     protected final Rect mTempRect = new Rect();
 
@@ -117,6 +129,9 @@ public abstract class ArrowPopup<T extends Context & ActivityContext>
 
     private final GradientDrawable mRoundedTop;
     private final GradientDrawable mRoundedBottom;
+    private final PopupBackgroundBlurView mPopupBackgroundBlurView;
+    private final ArrayList<Pair<Drawable, Integer>> mHiddenBlurBackgrounds = new ArrayList<>();
+    private boolean mBlurBackgroundsHidden;
 
     private RunnableList mOnCloseCallbacks = new RunnableList();
 
@@ -129,6 +144,7 @@ public abstract class ArrowPopup<T extends Context & ActivityContext>
     private final String mIterateChildrenTag;
 
     protected final int[] mColors;
+    private final int mPopupBlurOverlayColor;
 
     public ArrowPopup(Context context, AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
@@ -150,6 +166,9 @@ public abstract class ArrowPopup<T extends Context & ActivityContext>
         mArrowOffsetHorizontal = resources.getDimensionPixelSize(
                 R.dimen.popup_arrow_horizontal_center_offset) - (mArrowWidth / 2);
         mArrowPointRadius = resources.getDimensionPixelSize(R.dimen.popup_arrow_corner_radius);
+        mPopupBlurOverlayColor = AxBlurColors.surfaceContainerTint(context);
+        mPopupBackgroundBlurView = new PopupBackgroundBlurView(
+                context, resources.getDimension(R.dimen.folder_blur_radius));
 
         int smallerRadius = resources.getDimensionPixelSize(R.dimen.popup_smaller_radius);
         mRoundedTop = new GradientDrawable();
@@ -174,6 +193,69 @@ public abstract class ArrowPopup<T extends Context & ActivityContext>
         } else {
             mColors = new int[]{getContext().getColor(R.color.materialColorSurfaceContainer)};
         }
+    }
+
+    private void hidePopupBackgrounds(View view) {
+        if (view.getVisibility() != VISIBLE || view.getAlpha() <= 0f) {
+            return;
+        }
+        Drawable background = view.getBackground();
+        if (canBlurBackground(background)) {
+            hideBlurBackground(background);
+        }
+        if (view instanceof ViewGroup) {
+            ViewGroup group = (ViewGroup) view;
+            for (int i = 0; i < group.getChildCount(); i++) {
+                hidePopupBackgrounds(group.getChildAt(i));
+            }
+        }
+    }
+
+    private void hideBlurBackground(Drawable background) {
+        for (int i = 0; i < mHiddenBlurBackgrounds.size(); i++) {
+            if (mHiddenBlurBackgrounds.get(i).first == background) {
+                return;
+            }
+        }
+        mHiddenBlurBackgrounds.add(Pair.create(background, background.getAlpha()));
+        background.setAlpha(0);
+    }
+
+    private void restoreBlurBackgrounds() {
+        for (int i = mHiddenBlurBackgrounds.size() - 1; i >= 0; i--) {
+            Pair<Drawable, Integer> hiddenBackground = mHiddenBlurBackgrounds.get(i);
+            hiddenBackground.first.setAlpha(hiddenBackground.second);
+        }
+        mHiddenBlurBackgrounds.clear();
+        mBlurBackgroundsHidden = false;
+    }
+
+    private void updatePopupBackgroundsForBlur(boolean hide) {
+        if (!hide) {
+            if (mBlurBackgroundsHidden) {
+                restoreBlurBackgrounds();
+                invalidate();
+            }
+            return;
+        }
+        int hiddenCount = mHiddenBlurBackgrounds.size();
+        hidePopupBackgrounds(this);
+        if (!mBlurBackgroundsHidden || mHiddenBlurBackgrounds.size() != hiddenCount) {
+            mBlurBackgroundsHidden = true;
+            invalidate();
+        }
+    }
+
+    private boolean canBlurBackground(Drawable background) {
+        if (background instanceof GradientDrawable) {
+            GradientDrawable drawable = (GradientDrawable) background;
+            return drawable.getColor() != null
+                    && Color.alpha(drawable.getColor().getDefaultColor()) != 0;
+        }
+        if (background instanceof ColorDrawable) {
+            return Color.alpha(((ColorDrawable) background).getColor()) != 0;
+        }
+        return false;
     }
 
     public ArrowPopup(Context context, AttributeSet attrs) {
@@ -321,6 +403,7 @@ public abstract class ArrowPopup<T extends Context & ActivityContext>
     public void show() {
         setupForDisplay();
         assignMarginsAndBackgrounds(this);
+        mPopupBackgroundBlurView.syncWithPopup();
         if (shouldAddArrow()) {
             addArrow();
         }
@@ -330,8 +413,13 @@ public abstract class ArrowPopup<T extends Context & ActivityContext>
     protected void setupForDisplay() {
         setVisibility(View.INVISIBLE);
         mIsOpen = true;
-        getPopupContainer().addView(this);
+        BaseDragLayer popupContainer = getPopupContainer();
+        mPopupBackgroundBlurView.setBlurEnabled(true);
+        popupContainer.addView(mPopupBackgroundBlurView);
+        popupContainer.addView(this);
         orientAboutObject();
+        mPopupBackgroundBlurView.syncWithPopup();
+        mPopupBackgroundBlurView.invalidate();
     }
 
     private int getArrowLeft() {
@@ -346,6 +434,13 @@ public abstract class ArrowPopup<T extends Context & ActivityContext>
      */
     public void showArrow(boolean show) {
         mArrow.setVisibility(show && shouldAddArrow() ? VISIBLE : INVISIBLE);
+    }
+
+    @Override
+    protected void onDetachedFromWindow() {
+        super.onDetachedFromWindow();
+        mPopupBackgroundBlurView.clear();
+        restoreBlurBackgrounds();
     }
 
     protected void addArrow() {
@@ -540,6 +635,8 @@ public abstract class ArrowPopup<T extends Context & ActivityContext>
         if (Gravity.isVertical(mGravity)) {
             setY(dragLayer.getHeight() / 2 - getMeasuredHeight() / 2);
         }
+        mPopupBackgroundBlurView.syncWithPopup();
+        mPopupBackgroundBlurView.invalidate();
     }
 
     @Override
@@ -554,6 +651,8 @@ public abstract class ArrowPopup<T extends Context & ActivityContext>
 
     protected void animateOpen() {
         setVisibility(View.VISIBLE);
+        mPopupBackgroundBlurView.syncWithPopup();
+        mPopupBackgroundBlurView.invalidate();
         mOpenCloseAnimator = getOpenCloseAnimator(
                         true,
                         OPEN_DURATION_U,
@@ -568,8 +667,10 @@ public abstract class ArrowPopup<T extends Context & ActivityContext>
             @Override
             public void onAnimationEnd(Animator animation) {
                 setAlpha(1f);
-                announceAccessibilityChanges();
                 mOpenCloseAnimator = null;
+                mPopupBackgroundBlurView.syncWithPopup();
+                mPopupBackgroundBlurView.invalidate();
+                announceAccessibilityChanges();
             }
         });
         mOpenCloseAnimator.start();
@@ -606,6 +707,7 @@ public abstract class ArrowPopup<T extends Context & ActivityContext>
             mOpenCloseAnimator.cancel();
         }
         mIsOpen = false;
+        mPopupBackgroundBlurView.prepareCloseBlur();
 
         mOpenCloseAnimator = getOpenCloseAnimator(
                         false,
@@ -622,6 +724,8 @@ public abstract class ArrowPopup<T extends Context & ActivityContext>
             public void onAnimationEnd(Animator animation) {
                 mOpenCloseAnimator = null;
                 if (mDeferContainerRemoval) {
+                    mPopupBackgroundBlurView.clear();
+                    restoreBlurBackgrounds();
                     setVisibility(INVISIBLE);
                 } else {
                     closeComplete();
@@ -656,8 +760,8 @@ public abstract class ArrowPopup<T extends Context & ActivityContext>
 
         setPivotForOpenCloseAnimation();
 
-        float[] alphaValues = isOpening ? new float[] {0, 1} : new float[] {1, 0};
-        float[] scaleValues = isOpening ? new float[] {0.5f, 1.02f} : new float[] {1f, 0.5f};
+        float[] alphaValues = isOpening ? POPUP_ALPHA_OPEN_VALUES : POPUP_ALPHA_CLOSE_VALUES;
+        float[] scaleValues = isOpening ? POPUP_SCALE_OPEN_VALUES : POPUP_SCALE_CLOSE_VALUES;
         Animator alpha = getAnimatorOfFloat(this, View.ALPHA, fadeDuration, fadeStartDelay,
                 LINEAR, alphaValues);
         Animator arrowAlpha = getAnimatorOfFloat(mArrow, View.ALPHA, fadeDuration, fadeStartDelay,
@@ -666,17 +770,20 @@ public abstract class ArrowPopup<T extends Context & ActivityContext>
                 scaleValues);
         Animator scaleX = getAnimatorOfFloat(this, View.SCALE_X, scaleDuration, 0, interpolator,
                 scaleValues);
+        if (isOpening) {
+            addBlurFrameUpdateListener((ValueAnimator) alpha);
+            addBlurFrameUpdateListener((ValueAnimator) scaleX);
+        }
 
         final AnimatorSet animatorSet = new AnimatorSet();
         if (isOpening) {
-            float[] scaleValuesOvershoot = new float[] {1.02f, 1f};
-            PathInterpolator overshootInterpolator = new PathInterpolator(0.3f, 0, 0.33f, 1f);
             Animator overshootY = getAnimatorOfFloat(this, View.SCALE_Y,
-                    OPEN_OVERSHOOT_DURATION_U, scaleDuration, overshootInterpolator,
-                    scaleValuesOvershoot);
+                    OPEN_OVERSHOOT_DURATION_U, scaleDuration, POPUP_OPEN_OVERSHOOT_INTERPOLATOR,
+                    POPUP_SCALE_OVERSHOOT_VALUES);
             Animator overshootX = getAnimatorOfFloat(this, View.SCALE_X,
-                    OPEN_OVERSHOOT_DURATION_U, scaleDuration, overshootInterpolator,
-                    scaleValuesOvershoot);
+                    OPEN_OVERSHOOT_DURATION_U, scaleDuration, POPUP_OPEN_OVERSHOOT_INTERPOLATOR,
+                    POPUP_SCALE_OVERSHOOT_VALUES);
+            addBlurFrameUpdateListener((ValueAnimator) overshootX);
 
             animatorSet.playTogether(alpha, arrowAlpha, scaleY, scaleX, overshootX, overshootY);
         } else {
@@ -685,6 +792,10 @@ public abstract class ArrowPopup<T extends Context & ActivityContext>
 
         fadeInChildViews(this, alphaValues, childFadeStartDelay, childFadeDuration, animatorSet);
         return animatorSet;
+    }
+
+    private void addBlurFrameUpdateListener(ValueAnimator animator) {
+        animator.addUpdateListener(animation -> mPopupBackgroundBlurView.invalidate());
     }
 
     private Animator getAnimatorOfFloat(View view, Property<View, Float> property,
@@ -716,6 +827,9 @@ public abstract class ArrowPopup<T extends Context & ActivityContext>
         }
         mIsOpen = false;
         mDeferContainerRemoval = false;
+        mPopupBackgroundBlurView.clear();
+        restoreBlurBackgrounds();
+        getPopupContainer().removeView(mPopupBackgroundBlurView);
         getPopupContainer().removeView(this);
         getPopupContainer().removeView(mArrow);
         mOnCloseCallbacks.executeAllAndClear();
@@ -730,5 +844,161 @@ public abstract class ArrowPopup<T extends Context & ActivityContext>
 
     protected BaseDragLayer getPopupContainer() {
         return mActivityContext.getDragLayer();
+    }
+
+    private class PopupBackgroundBlurView extends View {
+        private final AxBlurBackgroundRenderer mBlur;
+        private boolean mBlurEnabled = true;
+
+        PopupBackgroundBlurView(Context context, float defaultRadiusPx) {
+            super(context);
+            mBlur = AxBlurBackgroundRenderer.launcher(this, defaultRadiusPx);
+            mBlur.setPreferSourceBlur(true);
+            mBlur.setRequireSourceBlur(true);
+            mBlur.setForceSourceBlurUpdate(true);
+            setWillNotDraw(false);
+            setClickable(false);
+            setFocusable(false);
+            setImportantForAccessibility(IMPORTANT_FOR_ACCESSIBILITY_NO);
+            BaseDragLayer.LayoutParams lp = new BaseDragLayer.LayoutParams(
+                    ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT);
+            lp.ignoreInsets = true;
+            setLayoutParams(lp);
+        }
+
+        @Override
+        protected void onAttachedToWindow() {
+            super.onAttachedToWindow();
+            mBlur.onAttachedToWindow();
+            syncBlurSource();
+        }
+
+        @Override
+        protected void onDetachedFromWindow() {
+            mBlur.onDetachedFromWindow();
+            super.onDetachedFromWindow();
+        }
+
+        @Override
+        protected boolean verifyDrawable(Drawable who) {
+            return mBlur.verifyDrawable(who) || super.verifyDrawable(who);
+        }
+
+        @Override
+        protected void onDraw(Canvas canvas) {
+            if (!mBlurEnabled) {
+                updatePopupBackgroundsForBlur(false);
+                return;
+            }
+            if (getVisibility() != VISIBLE || ArrowPopup.this.getVisibility() != VISIBLE
+                    || ArrowPopup.this.getWidth() <= 0
+                    || ArrowPopup.this.getHeight() <= 0
+                    || getWidth() <= 0
+                    || getHeight() <= 0) {
+                updatePopupBackgroundsForBlur(false);
+                return;
+            }
+            updatePopupBackgroundsForBlur(true);
+            boolean drewBlur = drawPopupBackgroundBlur(canvas, ArrowPopup.this);
+            updatePopupBackgroundsForBlur(drewBlur);
+        }
+
+        void syncWithPopup() {
+            if (getLayoutParams() == null) {
+                return;
+            }
+            BaseDragLayer.LayoutParams lp = (BaseDragLayer.LayoutParams) getLayoutParams();
+            boolean needsLayout = lp.width != ViewGroup.LayoutParams.MATCH_PARENT
+                    || lp.height != ViewGroup.LayoutParams.MATCH_PARENT
+                    || lp.leftMargin != 0
+                    || lp.topMargin != 0
+                    || lp.rightMargin != 0
+                    || lp.bottomMargin != 0
+                    || lp.customPosition;
+            if (needsLayout) {
+                lp.width = ViewGroup.LayoutParams.MATCH_PARENT;
+                lp.height = ViewGroup.LayoutParams.MATCH_PARENT;
+                lp.leftMargin = 0;
+                lp.topMargin = 0;
+                lp.rightMargin = 0;
+                lp.bottomMargin = 0;
+                lp.customPosition = false;
+                setLayoutParams(lp);
+            }
+            resetTransform();
+            syncBlurSource();
+            setSourceBlurUpdateSuppressed(false);
+            mBlur.refreshSourceBlur();
+        }
+
+        void setBlurEnabled(boolean enabled) {
+            mBlur.setCrossWindowBlurEnabled(true);
+            if (enabled) {
+                setSourceBlurUpdateSuppressed(false);
+            }
+            if (mBlurEnabled == enabled) {
+                return;
+            }
+            mBlurEnabled = enabled;
+            if (!enabled) {
+                mBlur.clear();
+                updatePopupBackgroundsForBlur(false);
+            }
+            invalidate();
+        }
+
+        void prepareCloseBlur() {
+            mBlurEnabled = true;
+            syncWithPopup();
+            mBlur.setCrossWindowBlurEnabled(true);
+            setSourceBlurUpdateSuppressed(true);
+            updatePopupBackgroundsForBlur(true);
+            invalidate();
+        }
+
+        private void syncBlurSource() {
+            mBlur.setSourceView(getPopupContainer());
+            mBlur.setExcludedSourceViews(ArrowPopup.this, mArrow);
+        }
+
+        private boolean drawPopupBackgroundBlur(Canvas canvas, View view) {
+            if (view.getVisibility() != VISIBLE || view.getAlpha() <= 0f) {
+                return false;
+            }
+            boolean drewBlur = false;
+            Drawable background = view.getBackground();
+            if (canBlurBackground(background)) {
+                drewBlur = mBlur.draw(canvas, view, mPopupBlurOverlayColor);
+            }
+            if (view instanceof ViewGroup) {
+                ViewGroup group = (ViewGroup) view;
+                for (int i = 0; i < group.getChildCount(); i++) {
+                    drewBlur |= drawPopupBackgroundBlur(canvas, group.getChildAt(i));
+                }
+            }
+            return drewBlur;
+        }
+
+        void clear() {
+            mBlurEnabled = true;
+            mBlur.setCrossWindowBlurEnabled(true);
+            setSourceBlurUpdateSuppressed(false);
+            mBlur.clear();
+            updatePopupBackgroundsForBlur(false);
+            invalidate();
+        }
+
+        private void resetTransform() {
+            setX(0f);
+            setY(0f);
+            setPivotX(0f);
+            setPivotY(0f);
+            setScaleX(1f);
+            setScaleY(1f);
+        }
+
+        private void setSourceBlurUpdateSuppressed(boolean suppress) {
+            mBlur.setSourceBlurUpdateSuppressed(suppress);
+        }
     }
 }

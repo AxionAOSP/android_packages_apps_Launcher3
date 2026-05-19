@@ -1,6 +1,5 @@
 package com.android.launcher3.allapps.compose.ui
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
@@ -10,6 +9,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Clear
+import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -23,7 +23,12 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.material.icons.filled.MoreVert
+import com.android.axion.blur.AxBlurSurfaceDefaults
+import com.android.axion.blur.axBlurBackground
+import com.android.axion.blur.rememberAxBlurEnabled
+import com.android.axion.blur.shared.model.AxBackdropBlurSettingsSpec
+
+private const val MAX_DRAWER_OPACITY = 255
 
 @Composable
 fun AllAppsComposeSearchBar(
@@ -42,6 +47,13 @@ fun AllAppsComposeSearchBar(
 ) {
     val focusRequester = remember { FocusRequester() }
     val rowInteractionSource = remember { MutableInteractionSource() }
+    val drawerOpacity = rememberDrawerOpacity().coerceIn(0, MAX_DRAWER_OPACITY)
+    val blurSettingsSpec = remember { AxBackdropBlurSettingsSpec.launcher() }
+    val blurEnabled = rememberAxBlurEnabled(blurSettingsSpec) && drawerOpacity < MAX_DRAWER_OPACITY
+    val drawerAlpha = drawerOpacity / MAX_DRAWER_OPACITY.toFloat()
+    val blurFallbackColor = AxBlurSurfaceDefaults.surfaceColor(drawerAlpha)
+    val backgroundColor = if (blurEnabled) blurFallbackColor else containerColor
+    val tintColor = AxBlurSurfaceDefaults.tintColor(drawerAlpha)
 
     LaunchedEffect(focusTrigger) {
         if (shouldAutoFocus && focusTrigger > 0) {
@@ -58,7 +70,12 @@ fun AllAppsComposeSearchBar(
                 .fillMaxWidth()
                 .heightIn(min = TopSearchBarHeight)
                 .clip(CircleShape)
-                .background(containerColor)
+                .axBlurBackground(
+                    enabled = blurEnabled,
+                    fallbackColor = backgroundColor,
+                    tintColor = tintColor,
+                    settingsSpec = blurSettingsSpec,
+                )
                 .clickable(
                     interactionSource = rowInteractionSource,
                     indication = null,
@@ -134,4 +151,3 @@ fun AllAppsComposeSearchBar(
         }
     }
 }
-

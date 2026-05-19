@@ -160,10 +160,12 @@ public class FolderAdaptiveIcon extends AdaptiveIconDrawable {
         foregroundCanvas.restore();
 
         // Draw background
-        backgroundCanvas.save();
-        backgroundCanvas.translate(previewShiftX, previewShiftY);
-        icon.getFolderBackground().drawBackground(backgroundCanvas);
-        backgroundCanvas.restore();
+        if (!icon.usesBlurredBackground()) {
+            backgroundCanvas.save();
+            backgroundCanvas.translate(previewShiftX, previewShiftY);
+            icon.getFolderBackground().drawBackground(backgroundCanvas);
+            backgroundCanvas.restore();
+        }
     }
 
     @Override

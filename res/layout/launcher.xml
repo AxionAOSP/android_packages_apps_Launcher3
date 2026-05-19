@@ -92,6 +92,13 @@
             android:id="@+id/drop_target_bar"
             layout="@layout/drop_target_bar" />
 
+        <com.android.launcher3.views.BlurredSnapshotView
+            android:id="@+id/blurred_snapshot_view"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            launcher:layout_ignoreInsets="true"
+            android:visibility="invisible" />
+
         <com.android.launcher3.views.ScrimView
             android:layout_width="match_parent"
             android:layout_height="match_parent"

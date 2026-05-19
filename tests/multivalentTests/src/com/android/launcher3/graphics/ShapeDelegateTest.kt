@@ -161,8 +161,8 @@ class ShapeDelegateTest {
 
         var currentClip: Path? = null
 
-        override fun setClipPath(clipPath: Path?) {
-            currentClip = clipPath
+        override fun setClipPath(clipPath: PathWrapper?) {
+            currentClip = clipPath?.path
         }
     }
 

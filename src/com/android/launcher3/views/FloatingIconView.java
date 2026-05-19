@@ -610,7 +610,13 @@ public class FloatingIconView extends FrameLayout implements
             renderNode.setPosition(0, 0, r.width(), r.height());
             Canvas canvas = renderNode.beginRecording();
             canvas.translate(-r.left, -r.top);
-            folderIcon.draw(canvas);
+            if (folderIcon.usesBlurredBackground()) {
+                folderIcon.getPreviewItemManager().recomputePreviewDrawingParams();
+                folderIcon.getPreviewItemManager().draw(canvas);
+                folderIcon.drawDot(canvas);
+            } else {
+                folderIcon.draw(canvas);
+            }
             renderNode.endRecording();
             Bitmap b = HardwareRenderer.createHardwareBitmap(renderNode, r.width(), r.height());
 

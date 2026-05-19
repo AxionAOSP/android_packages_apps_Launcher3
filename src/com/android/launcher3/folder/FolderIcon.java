@@ -49,6 +49,8 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.android.app.animation.Interpolators;
+import com.android.axion.blur.AxBlurBackgroundRenderer;
+import com.android.axion.blur.AxBlurColors;
 import com.android.launcher3.Alarm;
 import com.android.launcher3.BubbleTextView;
 import com.android.launcher3.CellLayout;
@@ -73,6 +75,7 @@ import com.android.launcher3.dragndrop.DragLayer;
 import com.android.launcher3.dragndrop.DragOptions;
 import com.android.launcher3.dragndrop.DragView;
 import com.android.launcher3.dragndrop.DraggableView;
+import com.android.launcher3.graphics.PathWrapper;
 import com.android.launcher3.graphics.ThemeManager;
 import com.android.launcher3.icons.DotRenderer;
 import com.android.launcher3.logger.LauncherAtom.FromState;
@@ -125,6 +128,8 @@ public class FolderIcon extends FrameLayout implements FloatingIconViewCompanion
 
     PreviewBackground mBackground = new PreviewBackground(getContext());
     private boolean mBackgroundIsVisible = true;
+    private final AxBlurBackgroundRenderer mBlurBackgroundRenderer;
+    private final int mFolderBlurOverlayColor;
 
     FolderGridOrganizer mPreviewVerifier;
     final ClippedFolderIconLayoutRule mPreviewLayoutRule;
@@ -186,6 +191,9 @@ public class FolderIcon extends FrameLayout implements FloatingIconViewCompanion
         mDotParams = new DotRenderer.DrawParams();
         mDotParams.setDotColor(Themes.getAttrColor(context, R.attr.notificationDotColor));
         mDotParams.shapeInfo = ThemeManager.INSTANCE.get(context).getIconState().getIconShapeInfo();
+        mFolderBlurOverlayColor = AxBlurColors.surfaceContainerTint(context);
+        mBlurBackgroundRenderer = AxBlurBackgroundRenderer.launcher(
+                this, getResources().getDimension(R.dimen.folder_blur_radius));
     }
 
     public static <T extends Context & ActivityContext> FolderIcon inflateFolderAndIcon(int resId,
@@ -638,6 +646,10 @@ public class FolderIcon extends FrameLayout implements FloatingIconViewCompanion
         return mBackground;
     }
 
+    public boolean usesBlurredBackground() {
+        return mBlurBackgroundRenderer.isCrossWindowBlurActive();
+    }
+
     public PreviewItemManager getPreviewItemManager() {
         return mPreviewItemManager;
     }
@@ -646,12 +658,25 @@ public class FolderIcon extends FrameLayout implements FloatingIconViewCompanion
     protected void dispatchDraw(Canvas canvas) {
         super.dispatchDraw(canvas);
 
-        if (!mBackgroundIsVisible) return;
+        boolean usesBlurredBackground = usesBlurredBackground();
+        if (!mBackgroundIsVisible) {
+            if (usesBlurredBackground) {
+                drawBackdropBlur(canvas);
+            } else {
+                drawBackdropBlur(canvas, 0);
+            }
+            return;
+        }
 
         mPreviewItemManager.recomputePreviewDrawingParams();
 
         if (!mBackground.drawingDelegated()) {
-            mBackground.drawBackground(canvas);
+            boolean drewBlur = drawBackdropBlur(canvas);
+            if (!drewBlur && !usesBlurredBackground) {
+                mBackground.drawBackground(canvas);
+            }
+        } else {
+            drawBackdropBlur(canvas, 0);
         }
 
         if (getFolderStyle() == LauncherSettings.Favorites.FOLDER_STYLE_COVER) {
@@ -666,6 +691,21 @@ public class FolderIcon extends FrameLayout implements FloatingIconViewCompanion
         }
 
         drawDot(canvas);
+    }
+
+    private boolean drawBackdropBlur(Canvas canvas) {
+        return drawBackdropBlur(canvas, 255);
+    }
+
+    private boolean drawBackdropBlur(Canvas canvas, int alpha) {
+        PathWrapper clipPath = mBackground.getClipPath();
+        return mBlurBackgroundRenderer.draw(
+                canvas,
+                clipPath.getBounds(),
+                clipPath.getPath(),
+                clipPath.getCornerRadius(),
+                mFolderBlurOverlayColor,
+                alpha);
     }
 
     private void drawCoverText(Canvas canvas) {
@@ -825,7 +865,20 @@ public class FolderIcon extends FrameLayout implements FloatingIconViewCompanion
 
     @Override
     protected boolean verifyDrawable(@NonNull Drawable who) {
-        return mPreviewItemManager.verifyDrawable(who) || super.verifyDrawable(who);
+        return mPreviewItemManager.verifyDrawable(who) || mBlurBackgroundRenderer.verifyDrawable(who)
+                || super.verifyDrawable(who);
+    }
+
+    @Override
+    protected void onAttachedToWindow() {
+        super.onAttachedToWindow();
+        mBlurBackgroundRenderer.onAttachedToWindow();
+    }
+
+    @Override
+    protected void onDetachedFromWindow() {
+        super.onDetachedFromWindow();
+        mBlurBackgroundRenderer.onDetachedFromWindow();
     }
 
     private void updatePreviewItems(boolean animate) {

@@ -251,6 +251,7 @@ import com.android.launcher3.util.Thunk;
 import com.android.launcher3.util.TouchController;
 import com.android.launcher3.util.TraceHelper;
 import com.android.launcher3.util.WallpaperThemeManager;
+import com.android.launcher3.views.BlurredSnapshotView;
 import com.android.launcher3.views.FloatingIconView;
 import com.android.launcher3.views.FloatingSurfaceView;
 import com.android.launcher3.views.ListenerView;
@@ -363,6 +364,7 @@ public class Launcher extends StatefulActivity<LauncherState>
     AllAppsTransitionController mAllAppsController;
     // Views that should be blurred when All Apps is open or depth is otherwise applied.
     private List<View> mDepthBlurTargets;
+    private BlurredSnapshotView mBlurredSnapshotView;
 
     // Scrim view for the all apps and overview state.
     @Thunk
@@ -1327,6 +1329,7 @@ public class Launcher extends StatefulActivity<LauncherState>
         mOverviewPanel = findViewById(R.id.overview_panel);
         mHotseat = findViewById(R.id.hotseat);
         mHotseat.setWorkspace(mWorkspace);
+        mBlurredSnapshotView = findViewById(R.id.blurred_snapshot_view);
 
         // Set up pagination arrows for workspace
         mLeftArrow = findViewById(R.id.left_indicator_arrow);
@@ -2764,6 +2767,11 @@ public class Launcher extends StatefulActivity<LauncherState>
     @NonNull
     public List<View> getDepthBlurTargets() {
         return mDepthBlurTargets == null ? Collections.emptyList() : mDepthBlurTargets;
+    }
+
+    @Nullable
+    public BlurredSnapshotView getBlurredSnapshotView() {
+        return mBlurredSnapshotView;
     }
 
     /**

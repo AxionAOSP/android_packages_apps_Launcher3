@@ -68,6 +68,11 @@ interface ShapeDelegate {
 
     fun addToPath(path: Path, offsetX: Float, offsetY: Float, radius: Float)
 
+    fun addToPath(pathWrapper: PathWrapper, offsetX: Float, offsetY: Float, radius: Float) {
+        addToPath(pathWrapper.path, offsetX, offsetY, radius)
+        pathWrapper.estimateBoundsFromPath()
+    }
+
     fun <T> createRevealAnimator(
         target: T,
         startRect: Rect,
@@ -121,6 +126,20 @@ interface ShapeDelegate {
             )
         }
 
+        override fun addToPath(
+            pathWrapper: PathWrapper,
+            offsetX: Float,
+            offsetY: Float,
+            radius: Float,
+        ) {
+            val cx = radius + offsetX
+            val cy = radius + offsetY
+            val cr = radius * radiusRatio
+            addToPath(pathWrapper.path, offsetX, offsetY, radius)
+            pathWrapper.setBounds(cx - radius, cy - radius, cx + radius, cy + radius)
+            pathWrapper.cornerRadius = cr
+        }
+
         override fun <T> createRevealAnimator(
             target: T,
             startRect: Rect,
@@ -129,17 +148,24 @@ interface ShapeDelegate {
             isReversed: Boolean,
         ): ValueAnimator where T : View, T : ClipPathView {
             val startRadius = (startRect.width() / 2f) * radiusRatio
-            val pathProvider = { progress: Float, path: Path ->
-                val radius = (1 - progress) * startRadius + progress * endRadius
-                path.addRoundRect(
-                    (1 - progress) * startRect.left + progress * endRect.left,
-                    (1 - progress) * startRect.top + progress * endRect.top,
-                    (1 - progress) * startRect.right + progress * endRect.right,
-                    (1 - progress) * startRect.bottom + progress * endRect.bottom,
+            val pathProvider = { progress: Float, path: PathWrapper ->
+                val startProgress = 1 - progress
+                val radius = startProgress * startRadius + progress * endRadius
+                val left = startProgress * startRect.left + progress * endRect.left
+                val top = startProgress * startRect.top + progress * endRect.top
+                val right = startProgress * startRect.right + progress * endRect.right
+                val bottom = startProgress * startRect.bottom + progress * endRect.bottom
+                path.path.addRoundRect(
+                    left,
+                    top,
+                    right,
+                    bottom,
                     radius,
                     radius,
                     Path.Direction.CW,
                 )
+                path.setBounds(left, top, right, bottom)
+                path.cornerRadius = radius
             }
             val shouldUseSpringAnimation =
                 Flags.enableLauncherIconShapes() && Flags.enableExpressiveFolderExpansion()
@@ -188,6 +214,16 @@ interface ShapeDelegate {
             addToPath(path, offsetX, offsetY, radius, Matrix())
         }
 
+        override fun addToPath(
+            pathWrapper: PathWrapper,
+            offsetX: Float,
+            offsetY: Float,
+            radius: Float,
+        ) {
+            addToPath(pathWrapper.path, offsetX, offsetY, radius, Matrix())
+            pathWrapper.estimateBoundsFromPath()
+        }
+
         private fun addToPath(
             path: Path,
             offsetX: Float,
@@ -230,22 +266,29 @@ interface ShapeDelegate {
                             cornerR = endRadius,
                         ),
                 )
+            val pathProvider = { progress: Float, path: PathWrapper ->
+                morph.toPath(progress, path.path)
+                path.estimateBoundsFromPath()
+            }
             val shouldUseSpringAnimation =
                 Flags.enableLauncherIconShapes() && Flags.enableExpressiveFolderExpansion()
             return if (shouldUseSpringAnimation) {
-                ClipSpringAnimBuilder(target, morph::toPath).toAnim(isReversed)
+                ClipSpringAnimBuilder(target, pathProvider).toAnim(isReversed)
             } else {
-                ClipAnimBuilder(target, morph::toPath).toAnim(isReversed)
+                ClipAnimBuilder(target, pathProvider).toAnim(isReversed)
             }
         }
     }
 
-    private class ClipAnimBuilder<T>(val target: T, val pathProvider: (Float, Path) -> Unit) :
+    private class ClipAnimBuilder<T>(
+        val target: T,
+        val pathProvider: (Float, PathWrapper) -> Unit,
+    ) :
         AnimatorListenerAdapter(), AnimatorUpdateListener where T : View, T : ClipPathView {
 
         private var oldOutlineProvider: ViewOutlineProvider? = null
         private var clearClipPathOnEnd = true
-        val path = Path()
+        val path = PathWrapper()
 
         override fun onAnimationStart(animation: Animator) {
             target.apply {
@@ -280,11 +323,14 @@ interface ShapeDelegate {
                 }
     }
 
-    private class ClipSpringAnimBuilder<T>(val target: T, val pathProvider: (Float, Path) -> Unit) :
+    private class ClipSpringAnimBuilder<T>(
+        val target: T,
+        val pathProvider: (Float, PathWrapper) -> Unit,
+    ) :
         AnimatorListenerAdapter() where T : View, T : ClipPathView {
 
         private var oldOutlineProvider: ViewOutlineProvider? = null
-        val path = Path()
+        val path = PathWrapper()
         private val animatorBuilder = SpringAnimationBuilder(target.context)
         private val progressProperty =
             object : FloatProperty<ClipSpringAnimBuilder<T>>("progress") {

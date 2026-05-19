@@ -463,6 +463,7 @@ android_library {
         "SystemUI-statsd",
         "WindowManager-Shell-shared-AOSP",
         "launcher-testing-shared",
+        "ax_blur",
         "androidx.lifecycle_lifecycle-common-java8",
         "androidx.lifecycle_lifecycle-extensions",
         "androidx.lifecycle_lifecycle-runtime-ktx",

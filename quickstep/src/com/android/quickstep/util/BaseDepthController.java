@@ -19,14 +19,12 @@ import static android.os.Trace.TRACE_TAG_APP;
 
 import static com.android.launcher3.Flags.enableOverviewBackgroundWallpaperBlur;
 
+import android.app.AxBoostFwk;
 import android.app.WallpaperManager;
-import android.content.ContentResolver;
-import android.database.ContentObserver;
 import android.graphics.RenderEffect;
 import android.graphics.Shader;
 import android.gui.EarlyWakeupInfo;
 import android.os.Binder;
-import android.os.Handler;
 import android.os.IBinder;
 import android.os.Trace;
 import android.util.FloatProperty;
@@ -40,9 +38,7 @@ import androidx.annotation.Nullable;
 import androidx.annotation.VisibleForTesting;
 
 import com.android.app.animation.Interpolators;
-import android.app.AxBoostFwk;
-import com.android.axion.compose.preferences.SettingsFlow;
-import com.android.axion.compose.preferences.SettingsType;
+import com.android.axion.blur.AxBlurSettings;
 import com.android.launcher3.Flags;
 import com.android.launcher3.Launcher;
 import com.android.launcher3.LauncherPrefs;
@@ -54,7 +50,10 @@ import com.android.launcher3.uioverrides.QuickstepLauncher;
 import com.android.launcher3.util.MultiPropertyFactory;
 import com.android.launcher3.util.MultiPropertyFactory.MultiProperty;
 import com.android.launcher3.util.Executors;
+import com.android.launcher3.views.BlurredSnapshotView;
 import com.android.systemui.shared.system.BlurUtils;
+
+import java.util.List;
 
 /**
  * Utility class for applying depth effect
@@ -135,22 +134,15 @@ public class BaseDepthController {
      */
     private EarlyWakeupInfo mEarlyWakeupInfo = new EarlyWakeupInfo();
 
-    public static final String SETTING_KEY_LAUNCHER_BLUR_ENABLED = "pulse_launcher_blur_enabled";
-    public static final String SETTING_KEY_LAUNCHER_BLUR_RADIUS = "pulse_launcher_blur_radius";
-    private static final int DEFAULT_LAUNCHER_BLUR_RADIUS = 34;
-
-    private final SettingsFlow mBlurSettingsFlow;
-    private final ContentObserver mBlurSettingsObserver;
+    private static final int MIN_SNAPSHOT_BLUR_RADIUS = 24;
+    private final AxBlurSettings mBlurSettings;
+    private final float mWallpaperMaxScale;
 
     private float mLastWallpaperZoom = -1f;
+    private boolean mUsingBlurredSnapshot;
 
     private void updateMaxBlurRadius() {
-        boolean enabled =
-                mBlurSettingsFlow.getInt(SETTING_KEY_LAUNCHER_BLUR_ENABLED, 0) != 0;
-        mMaxBlurRadius = enabled
-                ? mBlurSettingsFlow.getInt(
-                        SETTING_KEY_LAUNCHER_BLUR_RADIUS, DEFAULT_LAUNCHER_BLUR_RADIUS)
-                : 0;
+        mMaxBlurRadius = Math.round(mBlurSettings.getBlurRadiusPx());
     }
 
     public BaseDepthController(QuickstepLauncher activity) {
@@ -161,23 +153,14 @@ public class BaseDepthController {
         }
         mWallpaperManager = activity.getSystemService(WallpaperManager.class);
 
-        mBlurSettingsFlow = new SettingsFlow(
-                activity.getContentResolver(), SettingsType.SECURE);
-        mBlurSettingsObserver = new ContentObserver(new Handler(activity.getMainLooper())) {
-            @Override
-            public void onChange(boolean selfChange) {
-                updateMaxBlurRadius();
-                applyDepthAndBlur();
-            }
-        };
+        mBlurSettings = AxBlurSettings.launcher(activity);
+        mWallpaperMaxScale = Math.max(
+                1f, activity.getResources().getFloat(R.dimen.config_wallpaperMaxScale));
         updateMaxBlurRadius();
-        final ContentResolver cr = activity.getContentResolver();
-        cr.registerContentObserver(
-                mBlurSettingsFlow.getUri(SETTING_KEY_LAUNCHER_BLUR_ENABLED),
-                false, mBlurSettingsObserver);
-        cr.registerContentObserver(
-                mBlurSettingsFlow.getUri(SETTING_KEY_LAUNCHER_BLUR_RADIUS),
-                false, mBlurSettingsObserver);
+        mBlurSettings.start(() -> {
+            updateMaxBlurRadius();
+            applyDepthAndBlur();
+        });
         MultiPropertyFactory<BaseDepthController> depthProperty =
                 new MultiPropertyFactory<>(this, DEPTH, DEPTH_INDEX_COUNT, Float::max);
         stateDepth = depthProperty.get(DEPTH_INDEX_STATE_TRANSITION);
@@ -187,8 +170,9 @@ public class BaseDepthController {
     }
 
     public void destroy() {
-        mLauncher.getContentResolver().unregisterContentObserver(mBlurSettingsObserver);
+        mBlurSettings.stop();
     }
+
     /**
      * Sets the applier to use for syncing surface transactions to the RenderThread.
      *
@@ -243,16 +227,18 @@ public class BaseDepthController {
     private void applyDepthAndBlur(@Nullable SurfaceTransaction surfaceTransaction,
             boolean applyImmediately, boolean skipSimilarBlur) {
         float depth = mDepth;
+        float wallpaperZoom = LauncherPrefs.get(mLauncher).get(LauncherPrefs.DISABLE_WALLPAPER_ZOOM)
+                ? 0f : depth;
         IBinder windowToken = mLauncher.getRootView().getWindowToken();
         if (windowToken != null) {
-            float zoom = LauncherPrefs.get(mLauncher).get(LauncherPrefs.DISABLE_WALLPAPER_ZOOM)
-                    ? 0f : depth;
-            if (Math.abs(mLastWallpaperZoom - zoom) >= 0.03f || (zoom == 0f && mLastWallpaperZoom != 0f) || (zoom == 1f && mLastWallpaperZoom != 1f)) {
-                final float finalZoom = zoom;
+            if (Math.abs(mLastWallpaperZoom - wallpaperZoom) >= 0.03f
+                    || (wallpaperZoom == 0f && mLastWallpaperZoom != 0f)
+                    || (wallpaperZoom == 1f && mLastWallpaperZoom != 1f)) {
+                final float finalZoom = wallpaperZoom;
                 Executors.UI_HELPER_EXECUTOR.execute(() -> {
                     mWallpaperManager.setWallpaperZoomOut(windowToken, finalZoom);
                 });
-                mLastWallpaperZoom = zoom;
+                mLastWallpaperZoom = wallpaperZoom;
             }
         }
 
@@ -274,6 +260,18 @@ public class BaseDepthController {
         boolean isSurfaceOpaque = !mHasContentBehindLauncher && hasOpaqueBg && !mPauseBlurs;
 
         float blurAmount = mapDepthToBlur(depth);
+        LauncherState targetState = getTargetState();
+        boolean useDefaultBlur = shouldUseDefaultBlur();
+        float snapshotProgress = !hasOpaqueBg && !mPauseBlurs && mMaxBlurRadius > 0
+                ? blurAmount : 0f;
+        float snapshotWallpaperZoom = mLastWallpaperZoom >= 0f ? mLastWallpaperZoom : wallpaperZoom;
+        float snapshotContentScale = mapWallpaperZoomToScale(snapshotWallpaperZoom);
+        float wallpaperOffset = mLauncher.getWorkspace().getWallpaperOffsetForCenterPage();
+        float snapshotAlpha = mapSnapshotAlpha(targetState, snapshotProgress);
+        boolean shouldBlurWorkspace = shouldBlurWorkspace(targetState);
+        boolean wantsBlurredSnapshot = snapshotProgress > 0f
+                && !useDefaultBlur
+                && shouldUseBlurredSnapshot(targetState, shouldBlurWorkspace);
         SurfaceControl blurSurface =
                 enableOverviewBackgroundWallpaperBlur() && mBlurSurface != null ? mBlurSurface
                         : mBaseSurface;
@@ -283,12 +281,20 @@ public class BaseDepthController {
                 * mMaxBlurRadius) : 0;
         int delta = Math.abs(newBlur - previousBlur);
         if (skipSimilarBlur && delta < Utilities.dpToPx(1) && newBlur != 0 && previousBlur != 0
-                && blurAmount != 1f) {
+                && blurAmount != 1f && !wantsBlurredSnapshot && !mUsingBlurredSnapshot) {
             Log.d(TAG, "Skipping small blur delta. newBlur: " + newBlur + " previousBlur: "
                     + previousBlur + " delta: " + delta + " surface: " + blurSurface);
             return;
         }
         mCurrentBlur = newBlur;
+        boolean wasUsingBlurredSnapshot = mUsingBlurredSnapshot;
+        boolean blurredSnapshotVisible = updateBlurredSnapshot(
+                shouldBlurWorkspace, wantsBlurredSnapshot, snapshotAlpha, snapshotContentScale,
+                wallpaperOffset);
+        int surfaceBlur = wantsBlurredSnapshot ? 0 : mCurrentBlur;
+        if (wasUsingBlurredSnapshot && !blurredSnapshotVisible && surfaceBlur > 0) {
+            applyImmediately = true;
+        }
         if (previousBlur == 0 && newBlur > 0) {
             AxBoostFwk.acquireHint(AxBoostFwk.OP_SHADE, -1L);
         } else if (previousBlur > 0 && newBlur == 0) {
@@ -302,11 +308,11 @@ public class BaseDepthController {
         }
 
         surfaceTransaction.forSurface(blurSurface)
-                .setBackgroundBlurRadius(mCurrentBlur)
+                .setBackgroundBlurRadius(surfaceBlur)
                 .setOpaque(isSurfaceOpaque);
         // Set early wake-up flags when we know we're executing an expensive operation, this way
         // SurfaceFlinger will adjust its internal offsets to avoid jank.
-        boolean wantsEarlyWakeUp = blurAmount > 0 && blurAmount < 1;
+        boolean wantsEarlyWakeUp = surfaceBlur > 0 && blurAmount > 0 && blurAmount < 1;
         if (wantsEarlyWakeUp && !mInEarlyWakeUp) {
             setEarlyWakeup(surfaceTransaction.getTransaction(), true);
         } else if (!wantsEarlyWakeUp && mInEarlyWakeUp) {
@@ -320,8 +326,6 @@ public class BaseDepthController {
         } else {
             mSurfaceTransactionApplier.scheduleApply(surfaceTransaction);
         }
-
-        blurWorkspaceDepthTargets();
     }
 
     /**
@@ -365,27 +369,106 @@ public class BaseDepthController {
     /** @return {@code true} if the workspace should be blurred. */
     @VisibleForTesting
     public boolean blurWorkspaceDepthTargets() {
-        if (!Flags.allAppsBlur()) {
-            return false;
-        }
-        StateManager<LauncherState, Launcher> stateManager = mLauncher.getStateManager();
-        LauncherState targetState = stateManager.getTargetState() != null
-                ? stateManager.getTargetState() : stateManager.getState();
-        // Only blur workspace if the current state wants to blur based on the target state.
-        boolean shouldBlurWorkspace =
-                stateManager.getCurrentStableState().shouldBlurWorkspace(targetState);
+        return blurWorkspaceDepthTargets(shouldUseDefaultBlur());
+    }
 
-        RenderEffect blurEffect = shouldBlurWorkspace && mCurrentBlur > 0
-                ? RenderEffect.createBlurEffect(mCurrentBlur, mCurrentBlur, Shader.TileMode.DECAL)
-                // If blur is not desired, clear the blur effect from the depth targets.
-                : null;
+    private boolean blurWorkspaceDepthTargets(boolean useDefaultBlur) {
+        LauncherState targetState = getTargetState();
+        StateManager<LauncherState, Launcher> stateManager = mLauncher.getStateManager();
+        // Only blur workspace if the current state wants to blur based on the target state.
+        boolean shouldBlurWorkspace = shouldBlurWorkspace(targetState);
+
+        applyWorkspaceDepthTargetEffects(shouldBlurWorkspace && useDefaultBlur);
         Log.d(TAG, "shouldBlurWorkspace: " + shouldBlurWorkspace
                 + " targetState: " + targetState
                 + " currentStableState: " + stateManager.getCurrentStableState()
                 + " mCurrentBlur: " + mCurrentBlur
                 + " mLauncher.getDepthBlurTargets(): " + mLauncher.getDepthBlurTargets());
-        mLauncher.getDepthBlurTargets().forEach(target -> target.setRenderEffect(blurEffect));
         return shouldBlurWorkspace;
+    }
+
+    private boolean updateBlurredSnapshot(boolean shouldBlurWorkspace, boolean wantsBlurredSnapshot,
+            float snapshotAlpha, float contentScale, float wallpaperOffset) {
+        BlurredSnapshotView snapshotView = mLauncher.getBlurredSnapshotView();
+        applyWorkspaceDepthTargetEffects(shouldBlurWorkspace && !wantsBlurredSnapshot);
+        if (snapshotView == null) {
+            mUsingBlurredSnapshot = false;
+            return false;
+        }
+        if (!wantsBlurredSnapshot) {
+            mUsingBlurredSnapshot = false;
+            snapshotView.clearSnapshot();
+            return false;
+        }
+        if (!snapshotView.hasSnapshot(
+                BlurredSnapshotView.SNAPSHOT_WALLPAPER, wallpaperOffset, mMaxBlurRadius)
+                && !captureWallpaperSnapshot(snapshotView, wallpaperOffset, mMaxBlurRadius)) {
+            applyWorkspaceDepthTargetEffects(shouldBlurWorkspace && !wantsBlurredSnapshot);
+            snapshotView.clearSnapshot();
+            mUsingBlurredSnapshot = false;
+            return false;
+        }
+        snapshotView.setSnapshotProgress(snapshotAlpha, contentScale);
+        mUsingBlurredSnapshot = snapshotView.hasSnapshot(BlurredSnapshotView.SNAPSHOT_WALLPAPER);
+        return mUsingBlurredSnapshot;
+    }
+
+    private boolean captureWallpaperSnapshot(BlurredSnapshotView snapshotView,
+            float wallpaperOffset, int blurRadius) {
+        return mWallpaperManager != null
+                && mWallpaperManager.getWallpaperInfo() == null
+                && snapshotView.captureWallpaper(
+                        mWallpaperManager.getDrawable(), wallpaperOffset, blurRadius);
+    }
+
+    private void applyWorkspaceDepthTargetEffects(boolean useRenderEffect) {
+        RenderEffect blurEffect = useRenderEffect && mCurrentBlur > 0
+                ? RenderEffect.createBlurEffect(mCurrentBlur, mCurrentBlur, Shader.TileMode.DECAL)
+                : null;
+        List<View> targets = mLauncher.getDepthBlurTargets();
+        for (int i = 0; i < targets.size(); i++) {
+            targets.get(i).setRenderEffect(blurEffect);
+        }
+    }
+
+    private LauncherState getTargetState() {
+        StateManager<LauncherState, Launcher> stateManager = mLauncher.getStateManager();
+        LauncherState targetState = stateManager.getTargetState();
+        return targetState != null ? targetState : stateManager.getState();
+    }
+
+    private boolean shouldUseOverviewWallpaperSnapshot(LauncherState targetState) {
+        return targetState != null && targetState.isRecentsViewVisible;
+    }
+
+    private boolean shouldUseBlurredSnapshot(LauncherState targetState,
+            boolean shouldBlurWorkspace) {
+        return shouldUseOverviewWallpaperSnapshot(targetState)
+                || shouldBlurWorkspace;
+    }
+
+    private boolean shouldBlurWorkspace(LauncherState targetState) {
+        StateManager<LauncherState, Launcher> stateManager = mLauncher.getStateManager();
+        return Flags.allAppsBlur()
+                && stateManager.getCurrentStableState().shouldBlurWorkspace(targetState);
+    }
+
+    private boolean shouldUseDefaultBlur() {
+        return mMaxBlurRadius < MIN_SNAPSHOT_BLUR_RADIUS
+                || (mWallpaperManager != null && mWallpaperManager.getWallpaperInfo() != null);
+    }
+
+    private float mapWallpaperZoomToScale(float wallpaperZoom) {
+        return Utilities.mapRange(1f - Utilities.boundToRange(wallpaperZoom, 0f, 1f),
+                1f, mWallpaperMaxScale);
+    }
+
+    private float mapSnapshotAlpha(LauncherState targetState, float progress) {
+        if (targetState == LauncherState.NORMAL) {
+            return Utilities.boundToRange(progress, 0f, 1f);
+        }
+        return Utilities.boundToRange(
+                progress * mMaxBlurRadius / MIN_SNAPSHOT_BLUR_RADIUS, 0f, 1f);
     }
 
     private void setDepth(float depth) {
