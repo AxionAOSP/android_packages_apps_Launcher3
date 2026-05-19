@@ -22,6 +22,7 @@ import android.appwidget.AppWidgetProviderInfo
 import android.content.Context
 import android.content.SharedPreferences
 import android.util.Log
+import android.widget.FrameLayout
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.dynamicDarkColorScheme
 import androidx.compose.material3.dynamicLightColorScheme
@@ -150,36 +151,41 @@ private fun QsbWidget(
             .getWidgetSizeOptions(idp.numColumns, 1)
     }
 
-    val widgetId = remember(searchProvider) {
-        val existingId = prefs.getInt(PREF_WIDGET_ID, -1)
+    val widgetId = remember(searchProvider, widgetInfo.provider) {
+        val existingId = prefs.getInt(PREF_WIDGET_ID, AppWidgetManager.INVALID_APPWIDGET_ID)
 
         Log.d(TAG, "Checking widget ID: existing=$existingId")
 
-        if (existingId > -1) {
-            Log.d(TAG, "Deleting old widget ID $existingId to force fresh bind")
-            try {
-                widgetHost.deleteAppWidgetId(existingId)
-            } catch (e: Exception) {
-                Log.w(TAG, "Failed to delete old widget ID", e)
-            }
-        }
-
-        val newId = widgetHost.allocateAppWidgetId()
-        Log.d(TAG, "Allocated new ID=$newId")
-
-        val bound = appWidgetManager.bindAppWidgetIdIfAllowed(
-            newId, widgetInfo.profile, widgetInfo.provider, bindOpts
-        )
-        Log.d(TAG, "Bind result=$bound")
-
-        if (bound) {
-            prefs.edit().putInt(PREF_WIDGET_ID, newId).apply()
-            Log.d(TAG, "Saved new widget ID $newId")
-            newId
+        if (appWidgetManager.getAppWidgetInfo(existingId)?.provider == widgetInfo.provider) {
+            Log.d(TAG, "Reusing existing widget ID $existingId")
+            existingId
         } else {
-            Log.e(TAG, "BIND FAILED! Launcher may not have BIND_APPWIDGET permission")
-            widgetHost.deleteAppWidgetId(newId)
-            -1
+            if (existingId != AppWidgetManager.INVALID_APPWIDGET_ID) {
+                Log.d(TAG, "Deleting old widget ID $existingId")
+                try {
+                    widgetHost.deleteAppWidgetId(existingId)
+                } catch (e: Exception) {
+                    Log.w(TAG, "Failed to delete old widget ID", e)
+                }
+            }
+
+            val newId = widgetHost.allocateAppWidgetId()
+            Log.d(TAG, "Allocated new ID=$newId")
+
+            val bound = appWidgetManager.bindAppWidgetIdIfAllowed(
+                newId, widgetInfo.profile, widgetInfo.provider, bindOpts
+            )
+            Log.d(TAG, "Bind result=$bound")
+
+            if (bound) {
+                prefs.edit().putInt(PREF_WIDGET_ID, newId).apply()
+                Log.d(TAG, "Saved new widget ID $newId")
+                newId
+            } else {
+                Log.e(TAG, "BIND FAILED! Launcher may not have BIND_APPWIDGET permission")
+                widgetHost.deleteAppWidgetId(newId)
+                AppWidgetManager.INVALID_APPWIDGET_ID
+            }
         }
     }
 
@@ -187,7 +193,7 @@ private fun QsbWidget(
 
     val qsbHeight = context.resources.getDimensionPixelSize(R.dimen.qsb_widget_height)
 
-    if (widgetId > -1) {
+    if (widgetId != AppWidgetManager.INVALID_APPWIDGET_ID) {
         key(widgetId) {
             AndroidView(
                 factory = { ctx ->
@@ -195,8 +201,8 @@ private fun QsbWidget(
                     widgetHost.createView(ctx, widgetId, widgetInfo).apply {
                         setId(R.id.qsb_widget)
                         setPadding(0, 0, 0, 0)
-                        layoutParams = android.widget.FrameLayout.LayoutParams(
-                            android.widget.FrameLayout.LayoutParams.MATCH_PARENT,
+                        layoutParams = FrameLayout.LayoutParams(
+                            FrameLayout.LayoutParams.MATCH_PARENT,
                             qsbHeight
                         )
 

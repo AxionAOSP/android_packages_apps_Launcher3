@@ -12,7 +12,7 @@
     <string name="settings_category_drawer">App drawer</string>
     <string name="settings_category_drawer_summary">Layout, hidden apps, icons</string>
     <string name="settings_category_search">Search</string>
-    <string name="settings_category_search_summary">Search providers</string>
+    <string name="settings_category_search_summary">Home search bar, app drawer providers</string>
     <string name="settings_category_gestures">Gestures</string>
     <string name="settings_category_gestures_summary">Taps and swipes</string>
     <string name="settings_category_about">About</string>
@@ -27,6 +27,7 @@
     <string name="settings_section_labels">Labels</string>
     <string name="settings_section_style">Style</string>
     <string name="settings_section_providers">Providers</string>
+    <string name="settings_section_search_bar">Home search bar</string>
 
     <!-- Preference strings -->
     <string name="pref_themed_icons_global_title">Enable themed icons</string>
@@ -49,6 +50,13 @@
     <string name="drawer_search_bar_position_title">Search bar position</string>
     <string name="drawer_search_bar_position_bottom">Bottom</string>
     <string name="drawer_search_bar_position_top">Top</string>
+    <string name="pref_search_bar_provider_title">Search provider</string>
+    <string name="pref_search_bar_provider_none">None</string>
+    <string name="pref_search_bar_provider_unavailable">Selected provider is unavailable</string>
+    <string name="pref_search_bar_settings_title">Search bar settings</string>
+    <string name="pref_search_bar_settings_summary">Configure the selected search bar widget</string>
+    <string name="pref_search_bar_settings_unavailable">No configurable search bar provider selected</string>
+    <string name="search_bar_settings_launch_failed">Search bar settings unavailable</string>
 
     <!-- Pin to top -->
     <string name="action_pin_to_top">Pin to top</string>

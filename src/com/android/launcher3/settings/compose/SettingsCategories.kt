@@ -1,13 +1,19 @@
 package com.android.launcher3.settings.compose
 
+import android.app.Activity
+import android.appwidget.AppWidgetHost
+import android.appwidget.AppWidgetManager
+import android.appwidget.AppWidgetProviderInfo
+import android.content.ActivityNotFoundException
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
-import android.net.Uri
 import android.graphics.Bitmap
 import android.graphics.Canvas
+import android.net.Uri
 import android.provider.Settings
+import android.widget.Toast
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
@@ -27,19 +33,26 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.android.axion.compose.preferences.*
-import com.android.launcher3.R
-import com.android.launcher3.InvariantDeviceProfile
-import com.android.launcher3.notification.NotificationListener
-import com.android.launcher3.states.RotationHelper
-import com.android.launcher3.util.DisplayController
-import com.android.launcher3.settings.SettingsActivity
 import com.android.launcher3.Flags
+import com.android.launcher3.InvariantDeviceProfile
+import com.android.launcher3.LauncherAppState
+import com.android.launcher3.LauncherConstants
+import com.android.launcher3.LauncherPrefs
+import com.android.launcher3.R
 import com.android.launcher3.allapps.compose.shared.constants.PreferenceKeys
 import com.android.launcher3.allapps.compose.search.domain.UniversalSearchManager
+import com.android.launcher3.dagger.LauncherComponentProvider
+import com.android.launcher3.notification.NotificationListener
 import com.android.launcher3.qsb.HotseatQsbSearchProvider
+import com.android.launcher3.qsb.QsbContainerView
 import com.android.launcher3.qsb.SearchWidgetHelper
+import com.android.launcher3.settings.SettingsActivity
+import com.android.launcher3.states.RotationHelper
+import com.android.launcher3.util.DisplayController
+import com.android.launcher3.util.OverviewScrimUtils
 import kotlin.math.roundToInt
 
+private const val HOTSEAT_QSB_WIDGET_ID_PREF = "qsb_widget_id"
 
 @Composable
 fun GeneralSettings(viewModel: SettingsState, context: Context) {
@@ -222,35 +235,6 @@ fun HomeScreenSettings(viewModel: SettingsState, context: Context) {
     Spacer(modifier = Modifier.height(8.dp))
 
     PreferenceGroup {
-        item {
-            val searchWidgets = remember { SearchWidgetHelper.getAvailableSearchWidgets(context) }
-            val searchWidgetOptions = remember(searchWidgets) {
-                searchWidgets
-                    .filter { info -> !info.label.equals("Search", ignoreCase = true) }
-                    .map { info -> info.provider.flattenToString() to info.label }
-            }
-
-            val settingsFlow = rememberSettingsFlow(SettingsType.SECURE)
-            val selectedProvider by rememberSettingString(
-                HotseatQsbSearchProvider.KEY,
-                default = HotseatQsbSearchProvider.DEFAULT
-            )
-
-            if (searchWidgetOptions.isNotEmpty()) {
-                ListPreference(
-                    title = "Search Provider",
-                    summary = if (selectedProvider == "none") "None"
-                              else searchWidgetOptions.find { it.first == selectedProvider }?.second
-                                  ?: searchWidgetOptions.firstOrNull()?.second
-                                  ?: "Select a provider",
-                    options = listOf("none" to "None") + searchWidgetOptions,
-                    value = selectedProvider,
-                    onValueChange = { newValue ->
-                        settingsFlow.putString(HotseatQsbSearchProvider.KEY, newValue)
-                    }
-                )
-            }
-        }
         item {
             val showGoogleApp by viewModel.showGoogleApp.collectAsState()
             SwitchPreference(
@@ -465,6 +449,143 @@ private fun OpacitySliderPreference(viewModel: SettingsState) {
 
 
 @Composable
+private fun SearchBarSettings(context: Context) {
+    val settingsFlow = rememberSettingsFlow(SettingsType.SECURE)
+    val selectedProvider by rememberSettingString(
+        HotseatQsbSearchProvider.KEY,
+        default = HotseatQsbSearchProvider.DEFAULT
+    )
+    val searchWidgets = remember { SearchWidgetHelper.getAvailableSearchWidgets(context) }
+    val noneLabel = stringResource(R.string.pref_search_bar_provider_none)
+    val providerOptions = remember(searchWidgets, noneLabel) {
+        listOf(HotseatQsbSearchProvider.DEFAULT to noneLabel) +
+            searchWidgets
+                .map { info -> info.provider.flattenToString() to info.label.toString() }
+                .distinctBy { it.first }
+    }
+    val providerInfo = remember(selectedProvider) {
+        SearchWidgetHelper.getSearchWidgetProvider(context)
+    }
+    val canConfigureProvider = providerInfo?.configure != null
+
+    PreferenceGroup(title = stringResource(R.string.settings_section_search_bar)) {
+        item {
+            ListPreference(
+                title = stringResource(R.string.pref_search_bar_provider_title),
+                summary = stringResource(R.string.pref_search_bar_provider_unavailable),
+                options = providerOptions,
+                value = selectedProvider,
+                onValueChange = { newValue ->
+                    settingsFlow.putString(HotseatQsbSearchProvider.KEY, newValue)
+                }
+            )
+        }
+        item {
+            ClickablePreference(
+                title = stringResource(R.string.pref_search_bar_settings_title),
+                summary = if (canConfigureProvider) {
+                    stringResource(R.string.pref_search_bar_settings_summary)
+                } else {
+                    stringResource(R.string.pref_search_bar_settings_unavailable)
+                },
+                icon = Icons.Outlined.Settings,
+                enabled = canConfigureProvider,
+                showExternalIcon = canConfigureProvider,
+                onClick = { startHotseatSearchBarSettings(context, providerInfo) }
+            )
+        }
+    }
+}
+
+private fun startHotseatSearchBarSettings(
+    context: Context,
+    providerInfo: AppWidgetProviderInfo?
+) {
+    val activity = context as? Activity ?: run {
+        showSearchBarSettingsUnavailableToast(context)
+        return
+    }
+    val info = providerInfo ?: run {
+        showSearchBarSettingsUnavailableToast(context)
+        return
+    }
+    if (info.configure == null) {
+        showSearchBarSettingsUnavailableToast(context)
+        return
+    }
+
+    val widgetHost = AppWidgetHost(context, QsbContainerView.QsbFragment.QSB_WIDGET_HOST_ID)
+    val widgetId = getOrBindHotseatQsbWidgetId(context, info, widgetHost)
+    if (widgetId == AppWidgetManager.INVALID_APPWIDGET_ID) {
+        showSearchBarSettingsUnavailableToast(context)
+        return
+    }
+
+    try {
+        widgetHost.startAppWidgetConfigureActivityForResult(
+            activity,
+            widgetId,
+            0,
+            LauncherConstants.ActivityCodes.REQUEST_RECONFIGURE_APPWIDGET,
+            null
+        )
+    } catch (e: ActivityNotFoundException) {
+        showSearchBarSettingsUnavailableToast(context)
+    } catch (e: SecurityException) {
+        showSearchBarSettingsUnavailableToast(context)
+    }
+}
+
+private fun getOrBindHotseatQsbWidgetId(
+    context: Context,
+    providerInfo: AppWidgetProviderInfo,
+    widgetHost: AppWidgetHost
+): Int {
+    val appWidgetManager = AppWidgetManager.getInstance(context)
+    val prefs = LauncherPrefs.getPrefs(context)
+    val existingId = prefs.getInt(
+        HOTSEAT_QSB_WIDGET_ID_PREF,
+        AppWidgetManager.INVALID_APPWIDGET_ID
+    )
+
+    if (appWidgetManager.getAppWidgetInfo(existingId)?.provider == providerInfo.provider) {
+        return existingId
+    }
+
+    if (existingId != AppWidgetManager.INVALID_APPWIDGET_ID) {
+        widgetHost.deleteAppWidgetId(existingId)
+    }
+
+    val widgetId = widgetHost.allocateAppWidgetId()
+    val idp = LauncherAppState.getIDP(context)
+    val options = LauncherComponentProvider.get(context)
+        .widgetSizeHandler
+        .getWidgetSizeOptions(idp.numColumns, 1)
+    val bound = appWidgetManager.bindAppWidgetIdIfAllowed(
+        widgetId,
+        providerInfo.profile,
+        providerInfo.provider,
+        options
+    )
+
+    if (!bound) {
+        widgetHost.deleteAppWidgetId(widgetId)
+        return AppWidgetManager.INVALID_APPWIDGET_ID
+    }
+
+    prefs.edit().putInt(HOTSEAT_QSB_WIDGET_ID_PREF, widgetId).apply()
+    return widgetId
+}
+
+private fun showSearchBarSettingsUnavailableToast(context: Context) {
+    Toast.makeText(
+        context,
+        R.string.search_bar_settings_launch_failed,
+        Toast.LENGTH_SHORT
+    ).show()
+}
+
+@Composable
 fun SearchSettingsPage(context: Context) {
     val searchManager = remember { UniversalSearchManager(context) }
     val preferences by searchManager.preferences.collectAsState()
@@ -472,6 +593,10 @@ fun SearchSettingsPage(context: Context) {
     DisposableEffect(Unit) {
         onDispose { searchManager.cleanup() }
     }
+
+    SearchBarSettings(context)
+
+    Spacer(modifier = Modifier.height(8.dp))
 
     PreferenceGroup(title = stringResource(R.string.settings_section_providers)) {
         item {
