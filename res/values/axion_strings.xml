@@ -65,7 +65,11 @@
 
     <!-- Recents category -->
     <string name="settings_category_recents">Recents</string>
-    <string name="settings_category_recents_summary">Overview actions</string>
+    <string name="settings_category_recents_summary">Overview appearance and actions</string>
+    <string name="pref_recents_appearance_category">Appearance</string>
+    <string name="pref_recents_overview_scrim_opacity_title">Overview scrim opacity</string>
+    <string name="pref_recents_overview_scrim_opacity_summary">Adjust the dim behind overview tasks</string>
+    <string name="pref_recents_overview_scrim_opacity_percent">%1$d%%</string>
     <string name="pref_recents_buttons_category">Action buttons</string>
     <string name="pref_recents_show_lock_title">Lock app</string>
     <string name="pref_recents_show_lock_summary">Lock focused task from being cleared</string>

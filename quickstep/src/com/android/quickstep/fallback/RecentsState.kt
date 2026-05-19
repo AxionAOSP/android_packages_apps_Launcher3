@@ -30,6 +30,7 @@ import com.android.launcher3.anim.PendingAnimation
 import com.android.launcher3.statemanager.BaseState
 import com.android.launcher3.statemanager.BaseState.FLAG_DISABLE_RESTORE
 import com.android.launcher3.util.OverviewReleaseFlags.enableGridOnlyOverview
+import com.android.launcher3.util.OverviewScrimUtils
 import com.android.launcher3.util.Themes
 import com.android.launcher3.views.ActivityContext
 import com.android.launcher3.views.ScrimColors
@@ -84,13 +85,20 @@ open class RecentsState(@JvmField val ordinal: Int, private val mFlags: Int) :
     fun hasLiveTile() = hasFlag(FLAG_LIVE_TILE)
 
     /** For this state, what color scrim should be drawn behind overview. */
-    fun getScrimColor(context: Context) =
-        ScrimColors(
-            /* backgroundColor= */ if (hasFlag(FLAG_SCRIM))
-                Themes.getAttrColor(context, R.attr.overviewScrimColor)
-            else Color.TRANSPARENT,
+    fun getScrimColor(context: Context): ScrimColors {
+        val backgroundColor = if (hasFlag(FLAG_SCRIM)) {
+            OverviewScrimUtils.applyOverviewScrimOpacity(
+                Themes.getAttrColor(context, R.attr.overviewScrimColor),
+                OverviewScrimUtils.getOverviewScrimOpacity(context),
+            )
+        } else {
+            Color.TRANSPARENT
+        }
+        return ScrimColors(
+            /* backgroundColor= */ backgroundColor,
             /* foregroundColor= */ Color.TRANSPARENT,
         )
+    }
 
     open fun getOverviewScaleAndOffset(container: RecentsViewContainer) =
         floatArrayOf(NO_SCALE, NO_OFFSET)

@@ -597,6 +597,10 @@ private fun NavHandleBurnInSettings() {
 
 @Composable
 fun RecentsSettings() {
+    RecentsAppearanceSettings()
+
+    Spacer(modifier = Modifier.height(8.dp))
+
     val (showLock, setShowLock) = rememberSecureSettingBooleanState(
         key = "pulse_recents_show_lock",
         defaultValue = true,
@@ -669,6 +673,36 @@ fun RecentsSettings() {
                 summary = stringResource(R.string.pref_recents_show_memory_info_summary),
                 checked = showMemoryInfo,
                 onCheckedChange = setShowMemoryInfo,
+            )
+        }
+    }
+}
+
+@Composable
+private fun RecentsAppearanceSettings() {
+    val (scrimOpacity, setScrimOpacity) = rememberSecureSettingIntState(
+        key = OverviewScrimUtils.RECENTS_OVERVIEW_SCRIM_OPACITY,
+        defaultValue = OverviewScrimUtils.DEFAULT_RECENTS_OVERVIEW_SCRIM_OPACITY,
+    )
+    val sliderValue = scrimOpacity.coerceIn(0, 100).toFloat()
+
+    PreferenceGroup(title = stringResource(R.string.pref_recents_appearance_category)) {
+        item {
+            SliderPreference(
+                title = stringResource(R.string.pref_recents_overview_scrim_opacity_title),
+                summary = stringResource(R.string.pref_recents_overview_scrim_opacity_summary),
+                value = sliderValue,
+                onValueChange = { setScrimOpacity(it.roundToInt()) },
+                onValueChangeFinished = {},
+                valueRange = 0f..100f,
+                steps = 0,
+                displayValue = stringResource(
+                    R.string.pref_recents_overview_scrim_opacity_percent,
+                    sliderValue.roundToInt(),
+                ),
+                onReset = {
+                    setScrimOpacity(OverviewScrimUtils.DEFAULT_RECENTS_OVERVIEW_SCRIM_OPACITY)
+                },
             )
         }
     }

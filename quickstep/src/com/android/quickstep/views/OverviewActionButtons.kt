@@ -69,6 +69,7 @@ class OverviewActionsState {
     var showFreeform by mutableStateOf(true)
     var showClearAll by mutableStateOf(true)
     var memoryInfo by mutableStateOf("")
+    var memoryInfoUseWhiteText by mutableStateOf(false)
     var onScreenshot: Runnable? = null
     var onSelectText: Runnable? = null
     var onFreeform: Runnable? = null
@@ -192,7 +193,11 @@ private fun OverviewActionButtonsContent(state: OverviewActionsState) {
                 modifier = Modifier.alpha(if (state.memoryInfo.isNotEmpty()) 1f else 0f),
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
-                color = MaterialTheme.colorScheme.onSurface,
+                color = if (state.memoryInfoUseWhiteText) {
+                    Color.White
+                } else {
+                    MaterialTheme.colorScheme.onSurface
+                },
                 style = MaterialTheme.typography.bodySmall
             )
         }

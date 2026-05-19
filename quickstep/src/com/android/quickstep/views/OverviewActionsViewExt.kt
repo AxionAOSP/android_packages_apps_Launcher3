@@ -31,6 +31,7 @@ import com.android.launcher3.concurrent.annotations.UiContext
 import com.android.launcher3.dagger.ApplicationContext
 import com.android.launcher3.dagger.LauncherAppSingleton
 import com.android.launcher3.util.DaggerSingletonTracker
+import com.android.launcher3.util.OverviewScrimUtils
 import com.android.launcher3.util.SafeCloseable
 import javax.inject.Inject
 import kotlin.coroutines.CoroutineContext
@@ -88,6 +89,16 @@ class OverviewActionsViewExt @Inject constructor(
             .launchIn(scope)
         settingsFlow.observeBoolean(KEY_SHOW_CLEAR_ALL, default = true)
             .onEach { state.showClearAll = it }
+            .launchIn(scope)
+        settingsFlow.observeInt(
+            OverviewScrimUtils.RECENTS_OVERVIEW_SCRIM_OPACITY,
+            default = OverviewScrimUtils.DEFAULT_RECENTS_OVERVIEW_SCRIM_OPACITY,
+        )
+            .distinctUntilChanged()
+            .onEach {
+                state.memoryInfoUseWhiteText =
+                    it.coerceIn(0, 100) <= LOW_SCRIM_WHITE_TEXT_OPACITY
+            }
             .launchIn(scope)
         combine(
             settingsFlow.observeBoolean(KEY_SHOW_MEMORY_INFO, default = true),
@@ -225,6 +236,7 @@ class OverviewActionsViewExt @Inject constructor(
 
         private const val MEMORY_REFRESH_INTERVAL_MS = 5000L
         private const val MAX_SERVICES = 100
+        private const val LOW_SCRIM_WHITE_TEXT_OPACITY = 40
         private const val TAG = "OverviewActionsViewExt"
     }
 }

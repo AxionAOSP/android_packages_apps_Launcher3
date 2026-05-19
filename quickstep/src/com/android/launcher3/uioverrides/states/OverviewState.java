@@ -33,6 +33,7 @@ import com.android.launcher3.LauncherUiState;
 import com.android.launcher3.R;
 import com.android.launcher3.uioverrides.QuickstepLauncher;
 import com.android.launcher3.util.DisplayController;
+import com.android.launcher3.util.OverviewScrimUtils;
 import com.android.launcher3.util.Themes;
 import com.android.launcher3.views.ActivityContext;
 import com.android.launcher3.views.ScrimColors;
@@ -163,11 +164,16 @@ public class OverviewState extends LauncherState {
 
     @Override
     public ScrimColors getWorkspaceScrimColor(Launcher launcher) {
-        return new ScrimColors(
-                /* backgroundColor */ Themes.getAttrColor(launcher, R.attr.overviewScrimColor),
-                /* foregroundColor */ ColorUtils.compositeColors(
+        int opacity = OverviewScrimUtils.getOverviewScrimOpacity(launcher);
+        int backgroundColor = Themes.getAttrColor(launcher, R.attr.overviewScrimColor);
+        int foregroundColor = ColorUtils.compositeColors(
                 Themes.getAttrColor(launcher, R.attr.overviewScrimForegroundPrimary),
-                Themes.getAttrColor(launcher, R.attr.overviewScrimForegroundSecondary)));
+                Themes.getAttrColor(launcher, R.attr.overviewScrimForegroundSecondary));
+        return new ScrimColors(
+                /* backgroundColor */ OverviewScrimUtils.applyOverviewScrimOpacity(
+                        backgroundColor, opacity),
+                /* foregroundColor */ OverviewScrimUtils.applyOverviewScrimOpacity(
+                        foregroundColor, opacity));
     }
 
     @Override
