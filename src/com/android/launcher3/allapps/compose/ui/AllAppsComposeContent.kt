@@ -45,14 +45,17 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.*
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.clipToBounds
-import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.draw.drawWithCache
 import androidx.compose.ui.focus.*
+import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Rect
+import androidx.compose.ui.geometry.RoundRect
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.TransformOrigin
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.PathFillType
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.input.nestedscroll.*
@@ -68,7 +71,6 @@ import androidx.compose.ui.unit.*
 import androidx.compose.ui.viewinterop.AndroidView
 
 import com.android.launcher3.allapps.AllAppsComposeController
-import com.android.launcher3.util.Themes
 
 import com.android.launcher3.BubbleTextView
 
@@ -112,12 +114,15 @@ fun AllAppsComposeContent(
     var dismissRequest by remember { mutableStateOf(false) }
     
     val drawerLayoutMode = rememberPreference(PreferenceKeys.DRAWER_LAYOUT_MODE) {
-        LauncherPrefs.DRAWER_LAYOUT_MODE.get(it).let { m -> if (m == "default") "dynamic" else m }
+        PreferenceKeys.normalizeDrawerLayoutMode(LauncherPrefs.DRAWER_LAYOUT_MODE.get(it))
     }
-    val isSmartLayout = drawerLayoutMode == "smart"
+    val isSmartLayout = drawerLayoutMode == PreferenceKeys.DRAWER_LAYOUT_SMART
+    val usesDefaultDrawerUi = isSmartLayout ||
+        drawerLayoutMode == PreferenceKeys.DRAWER_LAYOUT_LEGACY
     val isSearchBarAtTop = rememberPreference(PreferenceKeys.DRAWER_SEARCH_BAR_POSITION) {
         LauncherPrefs.DRAWER_SEARCH_BAR_POSITION.get(it) == PreferenceKeys.SEARCH_BAR_POSITION_TOP
     }
+    val effectiveSearchBarAtTop = isSearchBarAtTop
 
     var isLaunching by remember { mutableStateOf(false) }
     var folderPickerTarget by remember { mutableStateOf<String?>(null) }
@@ -183,14 +188,11 @@ fun AllAppsComposeContent(
     
     val currentExpanded by rememberUpdatedState(allAppsExpanded)
 
-    var isOpening by remember { mutableStateOf(true) }
     var reopenTrigger by remember { mutableIntStateOf(0) }
 
     LaunchedEffect(Unit) {
         var lastProgress = transitionProgressProvider()
         snapshotFlow { transitionProgressProvider() }.collect { progress ->
-            if (progress > lastProgress + TRANSITION_DIRECTION_EPSILON) isOpening = true
-            else if (progress < lastProgress - TRANSITION_DIRECTION_EPSILON) isOpening = false
             if (lastProgress == 0f && progress > 0f) reopenTrigger++
             lastProgress = progress
             if (currentExpanded && progress == 1f) {
@@ -298,7 +300,8 @@ fun AllAppsComposeContent(
     val iconConfig = state.iconRenderState
     CompositionLocalProvider(
         LocalAllAppsInteractions provides interactions,
-        LocalIconConfig provides iconConfig
+        LocalIconConfig provides iconConfig,
+        LocalAllAppsLegacyLayout provides usesDefaultDrawerUi
     ) {
     Box(modifier = modifier.fillMaxSize()) {
         val keyboardController = LocalSoftwareKeyboardController.current
@@ -366,66 +369,158 @@ fun AllAppsComposeContent(
             } else null
         }
 
-        val drawerBaseBg = drawerBaseBackgroundColor()
         val isTablet = state.isTablet
-        val sheetShape = if (isTablet) {
-            RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp)
-        } else {
-            RoundedCornerShape(topStart = 12.dp, topEnd = 12.dp)
+        fun currentDrawerBackgroundAlpha() = drawerScrimAlpha(
+            transitionProgressProvider(),
+            controller.isTransitionCollapsing
+        )
+        fun currentContentAlpha() = drawerContentAlpha(
+            transitionProgressProvider(),
+            controller.isTransitionCollapsing
+        )
+        fun currentSearchBarScale() = drawerSearchScale(transitionProgressProvider())
+        val sheetCornerRadius = when {
+            usesDefaultDrawerUi -> LegacyDrawerCornerRadius
+            isTablet -> 28.dp
+            else -> 0.dp
         }
-
-        val tabletScrimColor = MaterialTheme.colorScheme.surfaceContainer.copy(alpha = 0.4f)
+        val sheetShape = RoundedCornerShape(
+            topStart = sheetCornerRadius,
+            topEnd = sheetCornerRadius
+        )
+        val drawerBaseBg = drawerBaseBackgroundColor(1f, usesDefaultDrawerUi)
+        val searchBarHorizontalPadding = if (usesDefaultDrawerUi) {
+            LegacySearchBarHorizontalPadding
+        } else {
+            allAppsDrawerHorizontalPadding(false)
+        }
+        val searchBarBaseColor = when {
+            usesDefaultDrawerUi -> legacyAllAppsHeaderProtectionColor()
+            effectiveSearchBarAtTop -> surfaceEffectColor()
+            else -> MaterialTheme.colorScheme.surfaceContainerHighest
+        }
+        val searchBarContainerColor = opaqueColorOver(searchBarBaseColor, drawerBaseBg)
+        val tabletDrawerWidthFraction = 0.75f
+        val tabletDrawerTopOffset = 12.dp
+        val tabletDrawerTopPadding = WindowInsets.statusBars.asPaddingValues()
+            .calculateTopPadding() + tabletDrawerTopOffset
+        val tabletScrimColor = MaterialTheme.colorScheme.scrim.copy(
+            alpha = drawerBaseBg.alpha * 0.32f
+        )
+        val drawerContainerModifier = (if (isTablet) {
+            Modifier
+                .fillMaxWidth(tabletDrawerWidthFraction)
+                .fillMaxHeight()
+                .align(Alignment.TopCenter)
+                .statusBarsPadding()
+                .padding(top = tabletDrawerTopOffset)
+        } else {
+            Modifier
+                .fillMaxSize()
+                .then(if (usesDefaultDrawerUi) Modifier.statusBarsPadding() else Modifier)
+        })
+            .clip(sheetShape)
 
         if (isTablet && controller.backProgress == 0f) {
             Box(
                 modifier = Modifier
                     .fillMaxSize()
                     .graphicsLayer {
-                        alpha = drawerContainerAlpha(transitionProgressProvider(), isOpening)
+                        alpha = currentDrawerBackgroundAlpha()
                     }
-                    .drawBehind { drawRect(tabletScrimColor) }
+                    .drawWithCache {
+                        val panelWidth = size.width * tabletDrawerWidthFraction
+                        val panelLeft = (size.width - panelWidth) / 2f
+                        val panelTop = tabletDrawerTopPadding.toPx()
+                        val cornerRadius = CornerRadius(sheetCornerRadius.toPx())
+                        val scrimPath = Path().apply {
+                            fillType = PathFillType.EvenOdd
+                            addRect(Rect(0f, 0f, size.width, size.height))
+                            addRoundRect(
+                                RoundRect(
+                                    rect = Rect(
+                                        panelLeft,
+                                        panelTop,
+                                        panelLeft + panelWidth,
+                                        size.height
+                                    ),
+                                    topLeft = cornerRadius,
+                                    topRight = cornerRadius
+                                )
+                            )
+                        }
+                        onDrawBehind { drawPath(scrimPath, tabletScrimColor) }
+                    }
             )
         }
 
         Box(
-            modifier = (if (isTablet) {
-                Modifier
-                    .fillMaxWidth(0.75f)
-                    .fillMaxHeight()
-                    .align(Alignment.TopCenter)
-                    .statusBarsPadding()
-                    .padding(top = 12.dp)
-            } else {
-                Modifier.fillMaxSize()
-            })
+            modifier = drawerContainerModifier
                 .graphicsLayer {
-                    alpha = drawerContainerAlpha(transitionProgressProvider(), isOpening)
+                    alpha = currentDrawerBackgroundAlpha()
                 }
-                .clip(sheetShape)
                 .background(drawerBaseBg)
-                .then(if (!isTablet) Modifier.statusBarsPadding() else Modifier)
         ) {
-                if (state.isLoading) {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .then(if (isSearchBarAtTop) Modifier else Modifier.navigationBarsPadding())
-                            .padding(bottom = if (isSearchBarAtTop) 0.dp else 32.dp),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        LoadingIndicator(
-                            modifier = Modifier.size(48.dp),
-                            color = MaterialTheme.colorScheme.primary
+            if (usesDefaultDrawerUi) {
+                Box(
+                    modifier = Modifier
+                        .align(Alignment.TopCenter)
+                        .padding(top = LegacyDrawerHandleTopPadding)
+                        .width(LegacyDrawerHandleWidth)
+                        .height(LegacyDrawerHandleHeight)
+                        .clip(RoundedCornerShape(LegacyDrawerHandleHeight / 2))
+                        .background(legacyAllAppsDragHandleColor())
+                )
+            }
+        }
+
+        Box(
+            modifier = drawerContainerModifier
+                .then(if (!isTablet && !usesDefaultDrawerUi) Modifier.statusBarsPadding() else Modifier)
+        ) {
+            if (state.isLoading) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .graphicsLayer {
+                            alpha = currentContentAlpha()
+                        }
+                        .then(
+                            if (effectiveSearchBarAtTop) {
+                                Modifier
+                            } else {
+                                Modifier.navigationBarsPadding()
+                            }
                         )
-                    }
-                } else {
+                        .padding(bottom = if (effectiveSearchBarAtTop) 0.dp else 32.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    LoadingIndicator(
+                        modifier = Modifier.size(48.dp),
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                }
+            } else {
                 SceneTransitionLayout(
                     state = sceneLayoutState,
                     modifier = Modifier.fillMaxSize()
-                        .then(if (isSearchBarAtTop) Modifier else Modifier.navigationBarsPadding())
+                        .graphicsLayer {
+                            alpha = currentContentAlpha()
+                        }
+                        .then(
+                            if (effectiveSearchBarAtTop) {
+                                Modifier
+                            } else {
+                                Modifier.navigationBarsPadding()
+                            }
+                        )
                         .padding(
-                            bottom = if (isSearchBarAtTop) 0.dp else 32.dp,
-                            top = allAppsSceneTopPadding(isSearchBarAtTop, isTablet)
+                            bottom = if (effectiveSearchBarAtTop) 0.dp else 32.dp,
+                            top = allAppsSceneTopPadding(
+                                effectiveSearchBarAtTop,
+                                isTablet,
+                                usesDefaultDrawerUi
+                            )
                         )
                         .clipToBounds()
                 ) {
@@ -451,18 +546,16 @@ fun AllAppsComposeContent(
                                     callbacks.onTabSelected(tab)
                                 }
                             },
-                            transitionProgressProvider = transitionProgressProvider,
                             dismissRequest = dismissRequest,
                             onDismissRequestChange = { dismissRequest = it },
                             openCounter = openCounter,
                             allAppsExpanded = allAppsExpanded,
-                            isOpening = isOpening,
                             reopenTrigger = reopenTrigger,
                             isOnPrivateSpacePagerPage = isOnPrivateSpacePagerPage,
                             onPrivateSpacePagerChanged = { isOnPrivateSpacePagerPage = it },
                             onPagerBackAction = { pagerBackAction = it },
                             onLaunch = { isLaunching = true },
-                            isSearchBarAtTop = isSearchBarAtTop
+                            isSearchBarAtTop = effectiveSearchBarAtTop
                         )
                         }
                     }
@@ -492,13 +585,12 @@ fun AllAppsComposeContent(
                             onDismissRequestChange = { dismissRequest = it },
                             openCounter = openCounter,
                             allAppsExpanded = allAppsExpanded,
-                            isOpening = isOpening,
                             reopenTrigger = reopenTrigger,
                             isOnPrivateSpacePagerPage = isOnPrivateSpacePagerPage,
                             onPrivateSpacePagerChanged = { isOnPrivateSpacePagerPage = it },
                             onPagerBackAction = { pagerBackAction = it },
                             onLaunch = { isLaunching = true },
-                            isSearchBarAtTop = isSearchBarAtTop
+                            isSearchBarAtTop = effectiveSearchBarAtTop
                         )
                         }
                     }
@@ -517,7 +609,7 @@ fun AllAppsComposeContent(
                                     },
                                     iconSizePx = state.iconSizePx,
                                     cellHeightPx = state.cellHeightPx,
-                                    isSearchBarAtTop = isSearchBarAtTop
+                                    isSearchBarAtTop = effectiveSearchBarAtTop
                                 )
                             }
                         }
@@ -550,14 +642,7 @@ fun AllAppsComposeContent(
                                         Box(
                                             modifier = Modifier
                                                 .fillMaxSize()
-                                                .then(
-                                                    if (isSearchBarAtTop) {
-                                                        Modifier
-                                                    } else {
-                                                        Modifier.navigationBarsPadding()
-                                                    }
-                                                )
-                                                .padding(allAppsSearchScenePadding(isSearchBarAtTop)),
+                                                .padding(allAppsSearchScenePadding(effectiveSearchBarAtTop)),
                                             contentAlignment = Alignment.Center
                                         ) {
                                             LoadingIndicator(
@@ -689,7 +774,7 @@ fun AllAppsComposeContent(
                                         topResultComponent = topSearchResult?.appInfo?.componentName?.flattenToString(),
                                         modifier = Modifier
                                             .fillMaxSize()
-                                            .padding(allAppsSearchScenePadding(isSearchBarAtTop))
+                                            .padding(allAppsSearchScenePadding(effectiveSearchBarAtTop))
                                     )
                                     }
                         }
@@ -725,21 +810,29 @@ fun AllAppsComposeContent(
                         }
                     },
                     hasTopResult = topSearchResult != null,
-                    containerColor = if (isSearchBarAtTop) {
-                        surfaceEffectColor()
-                    } else {
-                        MaterialTheme.colorScheme.surfaceContainerHighest
-                    },
-                    applyBottomInsets = !isSearchBarAtTop,
+                    placeholder = stringResource(R.string.all_apps_search_bar_hint),
+                    containerColor = searchBarContainerColor,
+                    applyBottomInsets = !effectiveSearchBarAtTop,
                     modifier = Modifier
-                        .align(if (isSearchBarAtTop) Alignment.TopCenter else Alignment.BottomCenter)
+                        .align(if (effectiveSearchBarAtTop) Alignment.TopCenter else Alignment.BottomCenter)
                         .fillMaxWidth()
                         .padding(
-                            start = 16.dp,
-                            end = 16.dp,
-                            top = if (isSearchBarAtTop) TopSearchBarOuterPadding else 0.dp,
-                            bottom = if (isSearchBarAtTop) 0.dp else 8.dp
+                            start = searchBarHorizontalPadding,
+                            end = searchBarHorizontalPadding,
+                            top = if (effectiveSearchBarAtTop) {
+                                if (usesDefaultDrawerUi) LegacySearchBarTopPadding
+                                else TopSearchBarOuterPadding
+                            } else {
+                                0.dp
+                            },
+                            bottom = if (effectiveSearchBarAtTop) 0.dp else BottomSearchBarBottomPadding
                         )
+                        .graphicsLayer {
+                            val progressScale = currentSearchBarScale()
+                            alpha = currentDrawerBackgroundAlpha()
+                            scaleX = progressScale
+                            scaleY = progressScale
+                        }
                 )
             }
     }

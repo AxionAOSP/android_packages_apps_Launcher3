@@ -258,10 +258,12 @@ constructor(@ApplicationContext private val encryptedContext: Context) {
         val PROMISE_ICON_IDS = nonRestorableItem(InstallSessionHelper.PROMISE_ICON_IDS, "")
         @JvmField val WORKSPACE_ICON_SCALE = backedUpItem("pref_workspace_icon_scale", 1.0f)
         @JvmField val ALLAPPS_ICON_SCALE = backedUpItem("pref_allapps_icon_scale", 1.0f)
-        @JvmField val DRAWER_LAYOUT_MODE = backedUpItem("pref_drawer_layout_mode", "dynamic")
+        @JvmField val DRAWER_LAYOUT_MODE = backedUpItem("pref_drawer_layout_mode", "legacy")
         @JvmField val DRAWER_SEARCH_BAR_POSITION =
-            backedUpItem("pref_drawer_search_bar_position", "bottom")
-        @JvmField val ALL_APPS_BG_OPACITY = backedUpItem("pref_all_apps_bg_opacity", 255)
+            backedUpItem("pref_drawer_search_bar_position", "top")
+        const val ALL_APPS_DEFAULT_BG_OPACITY = 204
+        @JvmField val ALL_APPS_BG_OPACITY =
+            backedUpItem("pref_all_apps_bg_opacity", ALL_APPS_DEFAULT_BG_OPACITY)
         @JvmField val SHOW_ALLAPPS_PREDICTIONS = backedUpItem("pref_all_apps_predictions", true)
         @JvmField val WORK_EDU_STEP = backedUpItem("showed_work_profile_edu", 0)
         @JvmField

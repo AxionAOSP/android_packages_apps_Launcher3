@@ -20,8 +20,6 @@ import android.animation.ValueAnimator
 import android.content.Context
 import android.content.res.Configuration
 import android.graphics.Canvas
-import android.graphics.Color
-
 import android.graphics.Rect
 import android.os.UserHandle
 import android.util.AttributeSet
@@ -39,6 +37,7 @@ import com.android.launcher3.LauncherState
 import com.android.launcher3.R
 import com.android.launcher3.appprediction.AppsDividerView
 import com.android.launcher3.appprediction.PredictionRowView
+import com.android.launcher3.allapps.compose.ui.drawerScrimAlpha
 import com.android.launcher3.model.data.ItemInfo
 import com.android.launcher3.util.Themes
 
@@ -139,7 +138,7 @@ class ComposeAllAppsContainerView @JvmOverloads constructor(
         if (newUiMode != lastUiMode) {
             Log.d(TAG, "onConfigurationChanged: uiMode $lastUiMode -> $newUiMode")
             lastUiMode = newUiMode
-            controller.onUiModeChanged()
+            controller.onUiModeChanged(newConfig)
         }
     }
 
@@ -151,20 +150,23 @@ class ComposeAllAppsContainerView @JvmOverloads constructor(
     override fun isUsingCompose(): Boolean = true
 
     override fun shouldContainerScroll(ev: MotionEvent): Boolean {
-        return !controller.canScrollUp
+        return canContainerHandleSwipe()
     }
 
     override fun requestDisallowInterceptTouchEvent(disallowIntercept: Boolean) {
-        if (disallowIntercept && !controller.canScrollUp && !controller.isLongPressing) {
+        if (disallowIntercept && canContainerHandleSwipe() && !controller.isLongPressing) {
             return
         }
         super.requestDisallowInterceptTouchEvent(disallowIntercept)
     }
 
+    private fun canContainerHandleSwipe(): Boolean =
+        mTransitionProgress < 1f || !controller.canScrollUp
+
     override fun onAllAppsTransitionProgress(progress: Float) {
         mTransitionProgress = progress
         controller.setTransitionProgressWithRefresh(progress)
-        updateViewAlpha(mBottomSheetBackground, (progress - 0.7f) / 0.3f)
+        updateViewAlpha(mBottomSheetBackground, drawerAlpha(progress))
     }
 
     override fun getActiveRecyclerView(): AllAppsRecyclerView? = null
@@ -178,6 +180,11 @@ class ComposeAllAppsContainerView @JvmOverloads constructor(
     override fun getContentView(): View? = controller.getComposeView()
 
     override fun getHeaderBottom(): Int = 0
+
+    override fun invalidateHeader() {
+        super.invalidateHeader()
+        controller.onAllAppsColorsChanged()
+    }
 
     override fun getHeaderProtectionHeight(): Float = 0f
 
@@ -213,7 +220,7 @@ class ComposeAllAppsContainerView @JvmOverloads constructor(
         animator: ValueAnimator, velocity: Float, progress: Float
     ) {}
 
-    override fun getBottomSheetBackgroundColor(): Int = Color.TRANSPARENT
+    override fun getBottomSheetBackgroundColor(): Int = allAppsBottomSheetBackgroundColor(context)
 
     override fun setInsets(insets: Rect) {
         mInsets.set(insets)
@@ -233,37 +240,7 @@ class ComposeAllAppsContainerView @JvmOverloads constructor(
 
     override fun drawOnScrimWithScaleAndBottomOffset(
         canvas: Canvas, scale: Float, bottomOffsetPx: Int
-    ) {
-        val panel = mBottomSheetBackground ?: return
-        if (panel.visibility != VISIBLE) return
-        val translationY = (panel.parent as View).translationY
-        val topNoScale = panel.top + translationY
-        val verticalScaleOffset = (1 - scale) * (panel.height - height / 2f)
-        val horizontalScaleOffset = (1 - scale) * panel.width / 2f
-        val left = getLeft() + panel.left.toFloat()
-        val right = left + panel.width
-
-        mHeaderPaint.color = bottomSheetBackgroundColor
-        mHeaderPaint.alpha = (Color.alpha(bottomSheetBackgroundColor) * mTransitionProgress).toInt()
-
-        val l = left + horizontalScaleOffset
-        val t = topNoScale + verticalScaleOffset
-        val b = (panel.bottom + bottomOffsetPx).toFloat()
-        val r = right - horizontalScaleOffset
-
-        val cornerRadius = mBottomSheetCornerRadii[0]
-        if (cornerRadius > 0f) {
-            canvas.save()
-            mTmpRectF.set(l, t, r, b)
-            canvas.clipRect(mTmpRectF)
-            mTmpRectF.set(l, t, r, b + cornerRadius)
-            canvas.drawRoundRect(mTmpRectF, cornerRadius, cornerRadius, mHeaderPaint)
-            canvas.restore()
-        } else {
-            mTmpRectF.set(l, t, r, b)
-            canvas.drawRect(mTmpRectF, mHeaderPaint)
-        }
-    }
+    ) {}
 
     override fun getComposeIconForClose(packageName: String, user: UserHandle): View? =
         controller.getComposeIconForClose(packageName, user)
@@ -281,6 +258,9 @@ class ComposeAllAppsContainerView @JvmOverloads constructor(
             view.setLayerType(targetLayer, null)
         }
     }
+
+    private fun drawerAlpha(progress: Float): Float =
+        drawerScrimAlpha(progress, controller.isTransitionCollapsing)
 
     override fun computeNavBarScrimHeight(insets: WindowInsets): Int =
         insets.tappableElementInsets.bottom

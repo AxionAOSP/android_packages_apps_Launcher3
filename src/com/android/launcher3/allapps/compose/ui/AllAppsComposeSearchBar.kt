@@ -1,5 +1,6 @@
 package com.android.launcher3.allapps.compose.ui
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
@@ -21,14 +22,10 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.android.axion.blur.AxBlurSurfaceDefaults
-import com.android.axion.blur.axBlurBackground
-import com.android.axion.blur.rememberAxBlurEnabled
-import com.android.axion.blur.shared.model.AxBackdropBlurSettingsSpec
-
-private const val MAX_DRAWER_OPACITY = 255
+import com.android.launcher3.R
 
 @Composable
 fun AllAppsComposeSearchBar(
@@ -36,8 +33,8 @@ fun AllAppsComposeSearchBar(
     onQueryChange: (String) -> Unit,
     onClearQuery: () -> Unit,
     onMenuClick: () -> Unit,
+    placeholder: String,
     modifier: Modifier = Modifier,
-    placeholder: String = "Search",
     shouldAutoFocus: Boolean = false,
     focusTrigger: Int = 0,
     onSearchSubmit: (String) -> Unit = {},
@@ -47,13 +44,16 @@ fun AllAppsComposeSearchBar(
 ) {
     val focusRequester = remember { FocusRequester() }
     val rowInteractionSource = remember { MutableInteractionSource() }
-    val drawerOpacity = rememberDrawerOpacity().coerceIn(0, MAX_DRAWER_OPACITY)
-    val blurSettingsSpec = remember { AxBackdropBlurSettingsSpec.launcher() }
-    val blurEnabled = rememberAxBlurEnabled(blurSettingsSpec) && drawerOpacity < MAX_DRAWER_OPACITY
-    val drawerAlpha = drawerOpacity / MAX_DRAWER_OPACITY.toFloat()
-    val blurFallbackColor = AxBlurSurfaceDefaults.surfaceColor(drawerAlpha)
-    val backgroundColor = if (blurEnabled) blurFallbackColor else containerColor
-    val tintColor = AxBlurSurfaceDefaults.tintColor(drawerAlpha)
+    val legacyLayout = LocalAllAppsLegacyLayout.current
+    val searchBarHeight = if (legacyLayout) LegacySearchBarHeight else TopSearchBarHeight
+    val searchBarHorizontalPadding = if (legacyLayout) 12.dp else 16.dp
+    val searchBarVerticalPadding = if (legacyLayout) 0.dp else 10.dp
+    val searchTextSize = if (legacyLayout) 20.sp else 16.sp
+    val contentColor = if (legacyLayout) {
+        allAppsThemeColor(R.attr.allAppsSearchTextColor)
+    } else {
+        MaterialTheme.colorScheme.onSurface
+    }
 
     LaunchedEffect(focusTrigger) {
         if (shouldAutoFocus && focusTrigger > 0) {
@@ -68,26 +68,24 @@ fun AllAppsComposeSearchBar(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .heightIn(min = TopSearchBarHeight)
+                .heightIn(min = searchBarHeight)
                 .clip(CircleShape)
-                .axBlurBackground(
-                    enabled = blurEnabled,
-                    fallbackColor = backgroundColor,
-                    tintColor = tintColor,
-                    settingsSpec = blurSettingsSpec,
-                )
+                .background(containerColor)
                 .clickable(
                     interactionSource = rowInteractionSource,
                     indication = null,
                     onClick = { focusRequester.requestFocus() }
                 )
-                .padding(horizontal = 16.dp, vertical = 10.dp),
+                .padding(
+                    horizontal = searchBarHorizontalPadding,
+                    vertical = searchBarVerticalPadding
+                ),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Icon(
                 imageVector = Icons.Default.Search,
-                contentDescription = "Search",
-                tint = MaterialTheme.colorScheme.onSurface,
+                contentDescription = null,
+                tint = contentColor,
                 modifier = Modifier.size(24.dp)
             )
 
@@ -97,16 +95,16 @@ fun AllAppsComposeSearchBar(
                 if (query.isEmpty()) {
                     Text(
                         text = placeholder,
-                        style = MaterialTheme.typography.bodyLarge,
-                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                        style = MaterialTheme.typography.bodyLarge.copy(fontSize = searchTextSize),
+                        color = contentColor.copy(alpha = 0.6f)
                     )
                 }
                 BasicTextField(
                     value = query,
                     onValueChange = onQueryChange,
                     textStyle = TextStyle(
-                        fontSize = 16.sp,
-                        color = MaterialTheme.colorScheme.onSurface
+                        fontSize = searchTextSize,
+                        color = contentColor
                     ),
                     cursorBrush = SolidColor(MaterialTheme.colorScheme.primary),
                     singleLine = true,
@@ -131,8 +129,8 @@ fun AllAppsComposeSearchBar(
                 ) {
                     Icon(
                         imageVector = Icons.Default.Clear,
-                        contentDescription = "Clear search",
-                        tint = MaterialTheme.colorScheme.onSurface
+                        contentDescription = stringResource(R.string.drawer_search_clear),
+                        tint = contentColor
                     )
                 }
             }
@@ -143,8 +141,8 @@ fun AllAppsComposeSearchBar(
             ) {
                 Icon(
                     imageVector = Icons.Default.MoreVert,
-                    contentDescription = "Settings",
-                    tint = MaterialTheme.colorScheme.onSurface,
+                    contentDescription = stringResource(R.string.settings_button_text),
+                    tint = contentColor,
                     modifier = Modifier.size(24.dp)
                 )
             }

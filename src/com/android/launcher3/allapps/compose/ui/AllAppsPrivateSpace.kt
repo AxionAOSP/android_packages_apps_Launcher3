@@ -232,7 +232,7 @@ internal fun PrivateSpaceFullPage(
                     columns = GridCells.Fixed(state.numColumns),
                     state = gridState,
                     contentPadding = PaddingValues(
-                        bottom = if (isSearchBarAtTop) 0.dp else 72.dp
+                        bottom = allAppsScrollableContentBottomPadding(isSearchBarAtTop)
                     ),
                     verticalArrangement = Arrangement.spacedBy(8.dp),
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -343,4 +343,3 @@ internal fun PrivateSpaceFullPage(
         }
     }
     }
-

@@ -166,7 +166,7 @@ internal fun ExpandedFolderContent(
                 start = 24.dp,
                 end = 24.dp,
                 top = if (isSearchBarAtTop) 0.dp else 16.dp,
-                bottom = if (isSearchBarAtTop) 0.dp else 72.dp
+                bottom = allAppsScrollableContentBottomPadding(isSearchBarAtTop)
             ),
             verticalArrangement = Arrangement.spacedBy(16.dp),
             horizontalArrangement = Arrangement.spacedBy(16.dp),

@@ -53,6 +53,7 @@ import com.android.launcher3.util.OverviewScrimUtils
 import kotlin.math.roundToInt
 
 private const val HOTSEAT_QSB_WIDGET_ID_PREF = "qsb_widget_id"
+private const val LAUNCHER_BLUR_ENABLED_KEY = "pulse_launcher_blur_enabled"
 
 @Composable
 fun GeneralSettings(viewModel: SettingsState, context: Context) {
@@ -91,7 +92,7 @@ fun GeneralSettings(viewModel: SettingsState, context: Context) {
 @Composable
 private fun LauncherBlurSettings() {
     val (blurEnabled, setBlurEnabled) = rememberSecureSettingBooleanState(
-        key = "pulse_launcher_blur_enabled",
+        key = LAUNCHER_BLUR_ENABLED_KEY,
         defaultValue = false,
     )
     val (blurRadius, setBlurRadius) = rememberSecureSettingIntState(
@@ -250,9 +251,9 @@ fun HomeScreenSettings(viewModel: SettingsState, context: Context) {
 
 @Composable
 fun AppDrawerSettings(viewModel: SettingsState) {
+    val drawerLayoutMode by viewModel.drawerLayoutMode.collectAsState()
     PreferenceGroup(title = stringResource(R.string.settings_section_layout)) {
         item {
-            val drawerLayoutMode by viewModel.drawerLayoutMode.collectAsState()
             DrawerLayoutSelector(
                 currentMode = drawerLayoutMode,
                 onModeSelected = { viewModel.setDrawerLayoutMode(it) }
@@ -340,17 +341,17 @@ private fun DrawerLayoutSelector(
         horizontalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         LayoutModeCard(
-            title = "Default",
-            isSelected = currentMode == "dynamic",
-            onClick = { onModeSelected("default") },
-            icon = Icons.Outlined.GridView,
+            title = stringResource(R.string.drawer_layout_legacy),
+            isSelected = currentMode == PreferenceKeys.DRAWER_LAYOUT_LEGACY,
+            onClick = { onModeSelected(PreferenceKeys.DRAWER_LAYOUT_LEGACY) },
+            icon = Icons.Outlined.Apps,
             modifier = Modifier.weight(1f)
         )
         LayoutModeCard(
-            title = "Smart",
-            badge = "BETA",
-            isSelected = currentMode == "smart",
-            onClick = { onModeSelected("smart") },
+            title = stringResource(R.string.drawer_layout_smart),
+            badge = stringResource(R.string.drawer_layout_beta_badge),
+            isSelected = currentMode == PreferenceKeys.DRAWER_LAYOUT_SMART,
+            onClick = { onModeSelected(PreferenceKeys.DRAWER_LAYOUT_SMART) },
             icon = Icons.Outlined.AutoAwesome,
             modifier = Modifier.weight(1f)
         )
@@ -438,15 +439,19 @@ private fun OpacitySliderPreference(viewModel: SettingsState) {
         title = stringResource(R.string.pref_all_apps_opacity_title),
         summary = stringResource(R.string.pref_all_apps_opacity_summary),
         value = alphaFloat,
-        onValueChange = { viewModel.setAllAppsBgOpacity((it * 255).toInt()) },
+        onValueChange = { viewModel.setAllAppsBgOpacity((it * 255).roundToInt()) },
         onValueChangeFinished = {},
         valueRange = 0f..1f,
         steps = 0,
-        displayValue = "${(alphaFloat * 100).roundToInt()}%",
-        onReset = { viewModel.setAllAppsBgOpacity(255) }
+        displayValue = stringResource(
+            R.string.pref_all_apps_opacity_percent,
+            (alphaFloat * 100).roundToInt()
+        ),
+        onReset = {
+            viewModel.setAllAppsBgOpacity(LauncherPrefs.ALL_APPS_DEFAULT_BG_OPACITY)
+        }
     )
 }
-
 
 @Composable
 private fun SearchBarSettings(context: Context) {

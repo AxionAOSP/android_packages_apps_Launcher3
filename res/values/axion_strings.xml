@@ -38,6 +38,10 @@
     <string name="pref_disable_wallpaper_zoom_summary">Prevent wallpaper from zooming when switching states</string>
     <string name="pref_all_apps_opacity_title">Background opacity</string>
     <string name="pref_all_apps_opacity_summary">Adjust app drawer background transparency</string>
+    <string name="pref_all_apps_opacity_percent">%1$d%%</string>
+    <string name="drawer_layout_smart">Smart</string>
+    <string name="drawer_layout_legacy">Default</string>
+    <string name="drawer_layout_beta_badge">BETA</string>
     <string name="icon_size_slider_summary">Scale relative to default size</string>
     <string name="icon_size_home">Home Screen</string>
     <string name="icon_size_drawer">App Drawer</string>
@@ -50,6 +54,8 @@
     <string name="drawer_search_bar_position_title">Search bar position</string>
     <string name="drawer_search_bar_position_bottom">Bottom</string>
     <string name="drawer_search_bar_position_top">Top</string>
+    <string name="drawer_search_clear">Clear search</string>
+    <string name="drawer_no_apps_found">No apps found</string>
     <string name="pref_search_bar_provider_title">Search provider</string>
     <string name="pref_search_bar_provider_none">None</string>
     <string name="pref_search_bar_provider_unavailable">Selected provider is unavailable</string>

@@ -100,12 +100,10 @@ internal fun DrawerSceneContent(
     onCustomFolderAction: (AppCategory) -> Unit,
     selectedProfileTab: Int,
     onProfileTabSelected: (Int) -> Unit,
-    transitionProgressProvider: () -> Float,
     dismissRequest: Boolean,
     onDismissRequestChange: (Boolean) -> Unit,
     openCounter: Int,
     allAppsExpanded: Boolean,
-    isOpening: Boolean = false,
     reopenTrigger: Int = 0,
     isOnPrivateSpacePagerPage: Boolean,
     onPrivateSpacePagerChanged: (Boolean) -> Unit,
@@ -114,6 +112,8 @@ internal fun DrawerSceneContent(
     isSearchBarAtTop: Boolean
 ) {
     val interactions = LocalAllAppsInteractions.current
+    val legacyLayout = LocalAllAppsLegacyLayout.current
+    val horizontalPadding = allAppsDrawerHorizontalPadding(legacyLayout)
     DrawerPagerWrapper(
         state = state,
         callbacks = callbacks,
@@ -129,7 +129,7 @@ internal fun DrawerSceneContent(
                     selectedTab = selectedProfileTab,
                     onTabSelected = onProfileTabSelected,
                     modifier = Modifier.weight(1f),
-                    tabsModifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
+                    tabsModifier = Modifier.fillMaxWidth().padding(horizontal = horizontalPadding),
                     personalContent = {
                         AllAppsComposeGrid(
                             items = items, sections = sections,
@@ -138,11 +138,13 @@ internal fun DrawerSceneContent(
                             showLabels = state.showLabels,
                             onFolderClick = { onExpandedCategoryChange(it) },
                             onFolderLongClick = { if (it.isCustom) onCustomFolderAction(it) },
-                            transitionProgressProvider = transitionProgressProvider,
-                            isOpening = isOpening, reopenTrigger = reopenTrigger,
+                            reopenTrigger = reopenTrigger,
                             keyPrefix = "personal", recompositionKey = openCounter,
                             modifier = Modifier.fillMaxSize(),
-                            contentPadding = allAppsSceneContentPadding(isSearchBarAtTop)
+                            contentPadding = allAppsSceneContentPadding(
+                                isSearchBarAtTop,
+                                legacyLayout
+                            )
                         )
                     },
                     workContent = {
@@ -150,10 +152,8 @@ internal fun DrawerSceneContent(
                             state = state, workItems = workItems, workSections = workSections,
                             onPauseWork = { callbacks.onWorkProfileToggle(false) },
                             onResumeWork = { callbacks.onWorkProfileToggle(true) },
-                            transitionProgressProvider = transitionProgressProvider,
                             openCounter = openCounter,
                             isSearchBarAtTop = isSearchBarAtTop,
-                            isOpening = isOpening,
                             reopenTrigger = reopenTrigger
                         )
                     }
@@ -166,11 +166,10 @@ internal fun DrawerSceneContent(
                     showLabels = state.showLabels,
                     onFolderClick = { onExpandedCategoryChange(it) },
                     onFolderLongClick = { if (it.isCustom) onCustomFolderAction(it) },
-                    transitionProgressProvider = transitionProgressProvider,
-                    isOpening = isOpening, reopenTrigger = reopenTrigger,
+                    reopenTrigger = reopenTrigger,
                     keyPrefix = "personal", recompositionKey = openCounter,
                     modifier = Modifier.weight(1f).fillMaxSize(),
-                    contentPadding = allAppsSceneContentPadding(isSearchBarAtTop)
+                    contentPadding = allAppsSceneContentPadding(isSearchBarAtTop, legacyLayout)
                 )
             }
         }

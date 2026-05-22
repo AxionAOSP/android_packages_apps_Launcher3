@@ -125,16 +125,14 @@ public class AllAppsSwipeController extends AbstractStateChangeTouchController {
 
     public static final Interpolator ALL_APPS_FADE_ATOMIC =
             Interpolators.clampToProgress(
-                    Interpolators.mapToProgress(EMPHASIZED_DECELERATE, 0.2f, 1f),
-                    ALL_APPS_STATE_TRANSITION_ATOMIC, ALL_APPS_FADE_END_ATOMIC);
+                    EMPHASIZED_DECELERATE, ALL_APPS_STATE_TRANSITION_ATOMIC,
+                    ALL_APPS_FADE_END_ATOMIC);
     public static final Interpolator ALL_APPS_FADE_MANUAL =
             Interpolators.clampToProgress(
                     LINEAR, ALL_APPS_STATE_TRANSITION_MANUAL, ALL_APPS_FADE_END_MANUAL);
 
     public static final Interpolator ALL_APPS_VERTICAL_PROGRESS_ATOMIC =
-            Interpolators.clampToProgress(
-                    Interpolators.mapToProgress(EMPHASIZED_DECELERATE, 0.4f, 1f),
-                    ALL_APPS_STATE_TRANSITION_ATOMIC, 1f);
+            EMPHASIZED_DECELERATE;
     public static final Interpolator ALL_APPS_VERTICAL_PROGRESS_MANUAL = LINEAR;
 
     // --------
@@ -245,7 +243,8 @@ public class AllAppsSwipeController extends AbstractStateChangeTouchController {
                         Interpolators.reverse(ALL_APPS_SCRIM_RESPONDER));
                 config.setInterpolator(ANIM_ALL_APPS_FADE, ALL_APPS_CLAMPING_RESPONDER);
                 config.setInterpolator(ANIM_WORKSPACE_FADE, INSTANT);
-                config.setInterpolator(ANIM_VERTICAL_PROGRESS, EMPHASIZED_ACCELERATE);
+                config.setInterpolator(ANIM_VERTICAL_PROGRESS,
+                        Interpolators.reverse(ALL_APPS_VERTICAL_PROGRESS_ATOMIC));
             }
         }
     }

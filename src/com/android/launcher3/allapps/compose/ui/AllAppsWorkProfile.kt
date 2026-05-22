@@ -89,6 +89,18 @@ internal fun PersonalWorkTabs(
     pillFractionProvider: (() -> Float)? = null
 ) {
     val motionScheme = MaterialTheme.motionScheme
+    val tabHeight = 44.dp
+    val tabVerticalPadding = 8.dp
+    val selectedContainerColor = MaterialTheme.colorScheme.primary
+    val selectedContentColor = MaterialTheme.colorScheme.onPrimary
+    val unselectedContentColor = MaterialTheme.colorScheme.onSurface
+    val legacyLayout = LocalAllAppsLegacyLayout.current
+    val tabContainerColor = if (legacyLayout) {
+        legacyAllAppsHeaderProtectionColor()
+    } else {
+        MaterialTheme.colorScheme.surfaceBright
+    }
+    val selectedPillShape = RoundedCornerShape(50)
     val animatedPill by animateFloatAsState(
         targetValue = selectedTab.coerceIn(0, 1).toFloat(),
         animationSpec = motionScheme.defaultSpatialSpec(),
@@ -99,18 +111,18 @@ internal fun PersonalWorkTabs(
     Box(
         modifier = modifier
             .fillMaxWidth()
-            .padding(vertical = 8.dp)
-            .height(44.dp)
+            .padding(vertical = tabVerticalPadding)
+            .height(tabHeight)
             .clip(RoundedCornerShape(50))
-            .background(MaterialTheme.colorScheme.surfaceBright)
+            .background(tabContainerColor)
     ) {
         Box(
             modifier = Modifier
                 .fillMaxWidth(0.5f)
                 .fillMaxHeight()
                 .graphicsLayer { translationX = pillOffsetFractionProvider().coerceIn(0f, 1f) * size.width }
-                .clip(RoundedCornerShape(50))
-                .background(MaterialTheme.colorScheme.primary)
+                .clip(selectedPillShape)
+                .background(selectedContainerColor)
         )
         Row(
             modifier = Modifier.fillMaxSize(),
@@ -122,7 +134,7 @@ internal fun PersonalWorkTabs(
             ).forEach { (tab, labelRes) ->
                 val selected = selectedTab == tab
                 val textColor by animateColorAsState(
-                    targetValue = if (selected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface,
+                    targetValue = if (selected) selectedContentColor else unselectedContentColor,
                     animationSpec = motionScheme.fastEffectsSpec(),
                     label = "tabText_$tab"
                 )
@@ -157,13 +169,13 @@ internal fun WorkTabContent(
     workSections: List<Pair<String, Int>>,
     onPauseWork: () -> Unit,
     onResumeWork: () -> Unit,
-    transitionProgressProvider: () -> Float,
     openCounter: Int,
     isSearchBarAtTop: Boolean,
-    isOpening: Boolean = false,
     reopenTrigger: Int = 0,
     modifier: Modifier = Modifier
 ) {
+    val legacyLayout = LocalAllAppsLegacyLayout.current
+    val horizontalPadding = allAppsDrawerHorizontalPadding(legacyLayout)
     if (state.isWorkProfilePaused) {
         WorkPausedContent(
             onResumeWork = onResumeWork,
@@ -175,7 +187,7 @@ internal fun WorkTabContent(
                 WorkEduCard(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 8.dp)
+                        .padding(horizontal = horizontalPadding, vertical = 8.dp)
                 )
 
                 AllAppsComposeGrid(
@@ -188,16 +200,17 @@ internal fun WorkTabContent(
                     showLabels = state.showLabels,
                     onFolderClick = {},
                     onFolderLongClick = {},
-                    transitionProgressProvider = transitionProgressProvider,
-                    isOpening = isOpening,
                     reopenTrigger = reopenTrigger,
                     keyPrefix = "work",
                     recompositionKey = openCounter,
                     modifier = Modifier.weight(1f),
                     contentPadding = PaddingValues(
-                        start = 16.dp,
-                        end = 16.dp,
-                        bottom = if (isSearchBarAtTop) 0.dp else 96.dp
+                        start = horizontalPadding,
+                        end = horizontalPadding,
+                        bottom = allAppsScrollableContentBottomPadding(
+                            isSearchBarAtTop,
+                            extended = true
+                        )
                     )
                 )
             }
@@ -206,7 +219,7 @@ internal fun WorkTabContent(
                 onClick = onPauseWork,
                 modifier = Modifier
                     .align(Alignment.BottomCenter)
-                    .padding(bottom = 80.dp)
+                    .padding(bottom = if (isSearchBarAtTop) 80.dp else 16.dp)
             )
         }
     }
@@ -225,11 +238,7 @@ internal fun WorkEduCard(modifier: Modifier = Modifier) {
     }
     if (dismissed) return
 
-    Surface(
-        modifier = modifier,
-        shape = RoundedCornerShape(28.dp),
-        color = surfaceEffectColor()
-    ) {
+    val content: @Composable () -> Unit = {
         Row(
             modifier = Modifier.padding(16.dp),
             verticalAlignment = Alignment.CenterVertically
@@ -255,6 +264,12 @@ internal fun WorkEduCard(modifier: Modifier = Modifier) {
             }
         }
     }
+    Surface(
+        modifier = modifier,
+        shape = RoundedCornerShape(28.dp),
+        color = surfaceEffectColor(),
+        content = content
+    )
 }
 
 @Composable

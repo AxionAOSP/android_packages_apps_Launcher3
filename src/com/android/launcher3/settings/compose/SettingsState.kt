@@ -10,6 +10,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import com.android.launcher3.LauncherFiles
 import com.android.launcher3.LauncherPrefs
+import com.android.launcher3.allapps.compose.shared.constants.PreferenceKeys
 import com.android.launcher3.states.RotationHelper
 import com.android.launcher3.util.DisplayController
 import com.android.launcher3.settings.SettingsActivity
@@ -70,9 +71,7 @@ class SettingsState(private val context: Context) : ViewModel(), LauncherPrefCha
     val drawerShowLabels: StateFlow<Boolean> = _drawerShowLabels.asStateFlow()
 
     private val _drawerLayoutMode = MutableStateFlow(
-        launcherPrefs.get(LauncherPrefs.DRAWER_LAYOUT_MODE).let {
-            if (it == "default") "dynamic" else it
-        }
+        PreferenceKeys.normalizeDrawerLayoutMode(launcherPrefs.get(LauncherPrefs.DRAWER_LAYOUT_MODE))
     )
     val drawerLayoutMode: StateFlow<String> = _drawerLayoutMode.asStateFlow()
 
@@ -134,7 +133,7 @@ class SettingsState(private val context: Context) : ViewModel(), LauncherPrefCha
             LauncherPrefs.SHOW_DRAWER_LABELS.sharedPrefKey -> _drawerShowLabels.value = launcherPrefs.get(LauncherPrefs.SHOW_DRAWER_LABELS)
             LauncherPrefs.DRAWER_LAYOUT_MODE.sharedPrefKey -> {
                 val mode = launcherPrefs.get(LauncherPrefs.DRAWER_LAYOUT_MODE)
-                _drawerLayoutMode.value = if (mode == "default") "dynamic" else mode
+                _drawerLayoutMode.value = PreferenceKeys.normalizeDrawerLayoutMode(mode)
             }
             LauncherPrefs.DRAWER_SEARCH_BAR_POSITION.sharedPrefKey ->
                 _drawerSearchBarPosition.value = launcherPrefs.get(LauncherPrefs.DRAWER_SEARCH_BAR_POSITION)
@@ -209,4 +208,3 @@ class SettingsViewModelFactory(private val context: Context) : ViewModelProvider
         throw IllegalArgumentException("Unknown ViewModel class")
     }
 }
-

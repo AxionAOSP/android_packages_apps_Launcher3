@@ -21,15 +21,12 @@ import static com.android.launcher3.logging.StatsLogManager.LAUNCHER_STATE_ALLAP
 import android.content.Context;
 import android.graphics.Color;
 
-import androidx.core.graphics.ColorUtils;
-
 import com.android.internal.jank.Cuj;
 import com.android.launcher3.DeviceProfile;
 import com.android.launcher3.Flags;
 import com.android.launcher3.Launcher;
 import com.android.launcher3.LauncherState;
 import com.android.launcher3.LauncherUiState;
-import com.android.launcher3.LauncherPrefs;
 import com.android.launcher3.R;
 import com.android.launcher3.util.Themes;
 import com.android.launcher3.views.ActivityContext;
@@ -47,6 +44,9 @@ public class AllAppsState extends LauncherState {
     private static final int STATE_FLAGS =
             FLAG_WORKSPACE_INACCESSIBLE | FLAG_CLOSE_POPUPS | FLAG_HOTSEAT_INACCESSIBLE;
     private static final long BACK_CUJ_TIMEOUT_MS = TimeUnit.SECONDS.toMillis(5);
+    private static final float OPLUS_ALL_APPS_WORKSPACE_SCALE = 0.92f;
+    private static final int OPLUS_ALL_APPS_OPEN_DURATION_MS = 380;
+    private static final int OPLUS_ALL_APPS_CLOSE_DURATION_MS = 517;
 
 
     public AllAppsState(int id) {
@@ -55,6 +55,14 @@ public class AllAppsState extends LauncherState {
 
     @Override
     public int getTransitionDuration(ActivityContext context, boolean isToState) {
+        if (context instanceof Launcher) {
+            Launcher launcher = (Launcher) context;
+            if (isComposeAllApps(launcher)) {
+                return !isToState && launcher.getStateManager().getState() == ALL_APPS
+                        ? OPLUS_ALL_APPS_CLOSE_DURATION_MS
+                        : OPLUS_ALL_APPS_OPEN_DURATION_MS;
+            }
+        }
         return isToState
                 ? context.getDeviceProfile().allAppsOpenDuration
                 : context.getDeviceProfile().allAppsCloseDuration;
@@ -117,6 +125,9 @@ public class AllAppsState extends LauncherState {
 
     @Override
     public ScaleAndTranslation getWorkspaceScaleAndTranslation(Launcher launcher) {
+        if (isComposeAllApps(launcher)) {
+            return new ScaleAndTranslation(OPLUS_ALL_APPS_WORKSPACE_SCALE, NO_OFFSET, NO_OFFSET);
+        }
         return new ScaleAndTranslation(
                 launcher.getDeviceProfile().mWorkspaceProfile.getWorkspaceContentScale(), NO_OFFSET,
                 NO_OFFSET);
@@ -124,6 +135,9 @@ public class AllAppsState extends LauncherState {
 
     @Override
     public ScaleAndTranslation getHotseatScaleAndTranslation(Launcher launcher) {
+        if (isComposeAllApps(launcher)) {
+            return getWorkspaceScaleAndTranslation(launcher);
+        }
         if (launcher.getDeviceProfile().shouldShowAllAppsOnSheet()) {
             return getWorkspaceScaleAndTranslation(launcher);
         } else {
@@ -156,6 +170,9 @@ public class AllAppsState extends LauncherState {
 
     @Override
     public PageAlphaProvider getWorkspacePageAlphaProvider(Launcher launcher) {
+        if (isComposeAllApps(launcher)) {
+            return super.getWorkspacePageAlphaProvider(launcher);
+        }
         PageAlphaProvider superPageAlphaProvider = super.getWorkspacePageAlphaProvider(launcher);
         return new PageAlphaProvider(DECELERATE_2) {
             @Override
@@ -169,15 +186,15 @@ public class AllAppsState extends LauncherState {
 
     @Override
     public int getVisibleElements(LauncherUiState launcherUiState) {
-        int elements = ALL_APPS_CONTENT | FLOATING_SEARCH_BAR;
-        if (isWorkspaceVisible(launcherUiState.getDeviceProfileRef().getValue())) {
-            elements |= HOTSEAT_ICONS;
-        }
-        return elements;
+        return ALL_APPS_CONTENT | FLOATING_SEARCH_BAR;
     }
 
     private static boolean isWorkspaceVisible(DeviceProfile deviceProfile) {
-        return deviceProfile.getDeviceProperties().isTablet() || (Flags.allAppsSheetForHandheld() && Flags.allAppsBlur());
+        return deviceProfile.shouldShowAllAppsOnSheet();
+    }
+
+    private static boolean isComposeAllApps(Launcher launcher) {
+        return launcher.getAppsView() != null && launcher.getAppsView().isUsingCompose();
     }
 
     @Override

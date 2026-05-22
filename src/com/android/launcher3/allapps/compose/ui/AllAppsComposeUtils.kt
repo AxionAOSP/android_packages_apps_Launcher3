@@ -20,7 +20,9 @@ import android.app.WallpaperColors
 import android.content.Context
 import android.content.SharedPreferences
 import androidx.compose.animation.core.CubicBezierEasing
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -29,97 +31,132 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.staticCompositionLocalOf
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.compositeOver
 import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.android.launcher3.LauncherFiles
 import com.android.launcher3.LauncherPrefs
+import com.android.launcher3.R
+import com.android.launcher3.allapps.AllAppsConfiguration
+import com.android.launcher3.allapps.allAppsBottomSheetBackgroundColor
 import com.android.launcher3.allapps.compose.shared.model.AllAppsComposeItem
 import com.android.launcher3.allapps.compose.shared.model.AllAppsComposeState
 import com.android.launcher3.allapps.compose.shared.model.AppCategory
 import com.android.launcher3.util.OnColorHintListener
+import com.android.launcher3.util.Themes
 import com.android.launcher3.util.WallpaperColorHints
 
 val LocalDrawerContentColor = staticCompositionLocalOf { Color.Unspecified }
+internal val LocalAllAppsLegacyLayout = staticCompositionLocalOf { false }
+internal val LocalAllAppsConfiguration = staticCompositionLocalOf { AllAppsConfiguration() }
 
 internal val EmphasizedDecelerateEasing = CubicBezierEasing(0.05f, 0.7f, 0.1f, 1.0f)
 internal val EmphasizedAccelerateEasing = CubicBezierEasing(0.3f, 0.0f, 0.8f, 0.15f)
 
-internal const val TRANSITION_DIRECTION_EPSILON = 0.001f
-
 internal val TopSearchBarOuterPadding = 8.dp
 internal val TopSearchBarHeight = 60.dp
 internal val TopSearchBarContentGap = 8.dp
+internal val LegacySearchBarHeight = 52.dp
+internal val LegacySearchBarTopPadding = 48.dp
+internal val LegacySearchBarContentGap = 24.dp
+internal val LegacySearchBarHorizontalPadding = 16.dp
+internal val BottomSearchBarBottomPadding = 8.dp
+internal val LegacyDrawerCornerRadius = 32.dp
+internal val LegacyDrawerHandleTopPadding = 16.dp
+internal val LegacyDrawerHandleWidth = 32.dp
+internal val LegacyDrawerHandleHeight = 4.dp
+internal val DrawerHorizontalPadding = 16.dp
+internal val LegacyDrawerHorizontalPadding = 16.dp
 
-private const val TOP_CONTENT_FADE_PROGRESS_START = 0.133f
-private const val CONTENT_FADE_PROGRESS_DURATION = 0.083f
-private const val CONTENT_STAGGER = 0.01f
-private const val CLOSE_CONTENT_FADE_PROGRESS_START = 0.06f
-private const val CLOSE_CONTENT_FADE_PROGRESS_DURATION = 0.08f
-private const val CLOSE_CONTENT_STAGGER = 0.006f
+private val TopSearchBarScrollableBottomPadding = 48.dp
+
 private const val MIN_DRAWER_ANIMATION_PROGRESS = 0f
 private const val MAX_DRAWER_ANIMATION_PROGRESS = 1f
-private const val DRAWER_OPEN_ALPHA_ANIMATION_END_PROGRESS = 0.8333f
-private const val DRAWER_OPEN_ALPHA_ANIMATION_DURATION = 0.5f
-private const val DRAWER_CLOSE_ALPHA_ANIMATION_START_PROGRESS = 0.2f
-private const val DRAWER_CLOSE_ALPHA_ANIMATION_DURATION = 0.3f
+private const val DRAWER_CONTENT_FADE_START_PROGRESS = 0f
+private const val DRAWER_CONTENT_FADE_END_PROGRESS = 1f
+private const val DRAWER_COLLAPSE_BACKGROUND_FADE_START_PROGRESS = 0.7f
+private const val DRAWER_COLLAPSE_BACKGROUND_FADE_END_PROGRESS = 1f
+private const val DRAWER_COLLAPSE_CONTENT_FADE_START_PROGRESS = 0.72f
+private const val DRAWER_COLLAPSE_CONTENT_FADE_END_PROGRESS = 0.98f
+private const val DRAWER_SEARCH_COLLAPSED_SCALE = 0.8f
+private const val MAX_DRAWER_OPACITY = 255
 
-internal fun drawerAnimationProgress(progress: Float): Float = MAX_DRAWER_ANIMATION_PROGRESS - progress
-
-internal fun contentStaggerAlpha(progress: Float, rowIndex: Int, isOpening: Boolean): Float {
-    val animationProgress = drawerAnimationProgress(progress)
-    val startFade = if (isOpening) {
-        TOP_CONTENT_FADE_PROGRESS_START - CONTENT_STAGGER * rowIndex
-    } else {
-        CLOSE_CONTENT_FADE_PROGRESS_START - CLOSE_CONTENT_STAGGER * rowIndex
-    }.coerceAtLeast(MIN_DRAWER_ANIMATION_PROGRESS)
-    val duration = if (isOpening) {
-        CONTENT_FADE_PROGRESS_DURATION
-    } else {
-        CLOSE_CONTENT_FADE_PROGRESS_DURATION
-    }
-    val endFade = (startFade + duration)
-        .coerceAtLeast(MIN_DRAWER_ANIMATION_PROGRESS)
-        .coerceAtMost(MAX_DRAWER_ANIMATION_PROGRESS)
-    return MAX_DRAWER_ANIMATION_PROGRESS - progressFraction(
-        (animationProgress - startFade) / (endFade - startFade)
-    )
-}
-
-internal fun drawerContainerAlpha(progress: Float, isOpening: Boolean): Float {
-    val animationProgress = drawerAnimationProgress(progress)
-    return if (isOpening) {
-        progressFraction(
-            (DRAWER_OPEN_ALPHA_ANIMATION_END_PROGRESS - animationProgress) /
-                DRAWER_OPEN_ALPHA_ANIMATION_DURATION
+internal fun drawerScrimAlpha(progress: Float, isCollapsing: Boolean = false): Float =
+    if (isCollapsing) {
+        progressRangeFraction(
+            progress,
+            DRAWER_COLLAPSE_BACKGROUND_FADE_START_PROGRESS,
+            DRAWER_COLLAPSE_BACKGROUND_FADE_END_PROGRESS
         )
     } else {
-        MAX_DRAWER_ANIMATION_PROGRESS - progressFraction(
-            (animationProgress - DRAWER_CLOSE_ALPHA_ANIMATION_START_PROGRESS) /
-                DRAWER_CLOSE_ALPHA_ANIMATION_DURATION
-        )
+        progressFraction(progress)
     }
+
+internal fun drawerContentAlpha(progress: Float, isCollapsing: Boolean = false): Float {
+    val start = if (isCollapsing) {
+        DRAWER_COLLAPSE_CONTENT_FADE_START_PROGRESS
+    } else {
+        DRAWER_CONTENT_FADE_START_PROGRESS
+    }
+    val end = if (isCollapsing) {
+        DRAWER_COLLAPSE_CONTENT_FADE_END_PROGRESS
+    } else {
+        DRAWER_CONTENT_FADE_END_PROGRESS
+    }
+    return progressRangeFraction(progress, start, end)
 }
 
-internal fun allAppsSceneContentPadding(isSearchBarAtTop: Boolean): PaddingValues =
+internal fun drawerSearchScale(progress: Float): Float =
+    DRAWER_SEARCH_COLLAPSED_SCALE +
+        (MAX_DRAWER_ANIMATION_PROGRESS - DRAWER_SEARCH_COLLAPSED_SCALE) *
+            progressFraction(progress)
+
+internal fun allAppsDrawerHorizontalPadding(legacyLayout: Boolean): Dp =
+    if (legacyLayout) LegacyDrawerHorizontalPadding else DrawerHorizontalPadding
+
+internal fun allAppsScrollableContentBottomPadding(
+    isSearchBarAtTop: Boolean,
+    extended: Boolean = false
+): Dp =
+    if (isSearchBarAtTop) TopSearchBarScrollableBottomPadding else if (extended) 96.dp else 72.dp
+
+internal fun allAppsSceneContentPadding(
+    isSearchBarAtTop: Boolean,
+    legacyLayout: Boolean
+): PaddingValues =
     PaddingValues(
-        start = 16.dp,
-        end = 16.dp,
-        bottom = if (isSearchBarAtTop) 0.dp else 72.dp
+        start = allAppsDrawerHorizontalPadding(legacyLayout),
+        end = allAppsDrawerHorizontalPadding(legacyLayout),
+        bottom = allAppsScrollableContentBottomPadding(isSearchBarAtTop)
     )
 
-internal fun allAppsSceneTopPadding(isSearchBarAtTop: Boolean, isTablet: Boolean) =
-    (if (isTablet) 16.dp else 0.dp) +
+internal fun allAppsSceneTopPadding(
+    isSearchBarAtTop: Boolean,
+    isTablet: Boolean,
+    legacyLayout: Boolean
+) =
+    (if (isTablet) 16.dp else 0.dp) + (
         if (isSearchBarAtTop) {
-            TopSearchBarOuterPadding + TopSearchBarHeight + TopSearchBarContentGap
+            if (legacyLayout) {
+                LegacySearchBarTopPadding + LegacySearchBarHeight + LegacySearchBarContentGap
+            } else {
+                TopSearchBarOuterPadding + TopSearchBarHeight + TopSearchBarContentGap
+            }
+        } else if (legacyLayout) {
+            LegacySearchBarTopPadding
         } else {
             0.dp
         }
+    )
 
 internal fun allAppsSearchScenePadding(isSearchBarAtTop: Boolean): PaddingValues =
     PaddingValues(
-        bottom = if (isSearchBarAtTop) 0.dp else 96.dp
+        bottom = allAppsScrollableContentBottomPadding(isSearchBarAtTop, extended = true)
     )
 
 private fun progressFraction(value: Float): Float = value.coerceIn(
@@ -127,17 +164,53 @@ private fun progressFraction(value: Float): Float = value.coerceIn(
     MAX_DRAWER_ANIMATION_PROGRESS
 )
 
+private fun progressRangeFraction(value: Float, start: Float, end: Float): Float =
+    progressFraction((value - start) / (end - start))
+
+@Composable
+internal fun allAppsThemeColor(attr: Int): Color {
+    val colors = LocalAllAppsConfiguration.current.colors
+    return Color(
+        when (attr) {
+            R.attr.allAppsScrimColor -> colors.panel
+            R.attr.allAppsSurfaceLow -> colors.surfaceLow
+            R.attr.allappsHeaderProtectionColor -> colors.headerProtection
+            R.attr.bottomSheetDragHandleColor -> colors.dragHandle
+            R.attr.allAppsSearchTextColor -> colors.searchText
+            else -> Themes.getAttrColor(LocalContext.current, attr)
+        }
+    )
+}
+
+@Composable
+private fun aospAllAppsPanelBaseColor(): Color {
+    val context = LocalContext.current
+    val alpha = rememberDrawerOpacity()
+    return Color(allAppsBottomSheetBackgroundColor(context, alpha))
+}
+
+@Composable
+private fun allAppsSurfaceEffectBaseColor(): Color =
+    if (LocalAllAppsLegacyLayout.current) {
+        allAppsThemeColor(R.attr.allAppsSurfaceLow)
+    } else {
+        MaterialTheme.colorScheme.surfaceBright
+    }
+
 @Composable
 internal fun surfaceEffectColor(): Color {
-    val opacity = rememberDrawerOpacity()
-    return MaterialTheme.colorScheme.surfaceBright.copy(alpha = opacity / 255f)
+    val color = allAppsSurfaceEffectBaseColor()
+    return color.copy(alpha = rememberDrawerSurfaceAlpha())
 }
+
+internal fun opaqueColorOver(foreground: Color, background: Color): Color =
+    foreground.compositeOver(background.copy(alpha = 1f)).copy(alpha = 1f)
 
 @Composable
 internal fun rememberAdaptiveContentColor(): Color {
     val opacity = rememberDrawerOpacity()
     val onSurface = MaterialTheme.colorScheme.onSurface
-    val fraction = opacity / 255f
+    val fraction = opacity / MAX_DRAWER_OPACITY.toFloat()
     if (fraction > 0.5f) return onSurface
     val context = LocalContext.current
     val colorHints = WallpaperColorHints.get(context)
@@ -177,17 +250,45 @@ internal fun <T> rememberPreference(key: String, read: (Context) -> T): T {
 
 @Composable
 internal fun rememberDrawerOpacity(): Int =
-    rememberPreference("pref_all_apps_bg_opacity") {
+    rememberPreference(LauncherPrefs.ALL_APPS_BG_OPACITY.sharedPrefKey) {
         LauncherPrefs.get(it).get(LauncherPrefs.ALL_APPS_BG_OPACITY)
     }
 
 @Composable
-internal fun drawerBaseBackgroundColor(): Color {
-    val surfaceContainer = MaterialTheme.colorScheme.surfaceContainer
-    val opacity = rememberDrawerOpacity()
-    return remember(surfaceContainer, opacity) {
-        surfaceContainer.copy(alpha = opacity / 255f)
+private fun rememberDrawerSurfaceAlpha(alphaMultiplier: Float = 1f): Float =
+    (rememberDrawerOpacity().coerceIn(0, MAX_DRAWER_OPACITY) / MAX_DRAWER_OPACITY.toFloat() *
+        alphaMultiplier).coerceIn(0f, 1f)
+
+@Composable
+internal fun drawerBaseBackgroundColor(
+    alphaMultiplier: Float = 1f,
+    legacyLayout: Boolean = false
+): Color {
+    if (legacyLayout) {
+        val color = aospAllAppsPanelBaseColor()
+        return color.copy(alpha = (color.alpha * alphaMultiplier).coerceIn(0f, 1f))
     }
+    return MaterialTheme.colorScheme.surfaceContainer.copy(
+        alpha = rememberDrawerSurfaceAlpha(alphaMultiplier)
+    )
+}
+
+@Composable
+internal fun legacyAllAppsHeaderProtectionColor(): Color =
+    allAppsThemeColor(R.attr.allappsHeaderProtectionColor)
+
+@Composable
+internal fun legacyAllAppsDragHandleColor(): Color =
+    allAppsThemeColor(R.attr.bottomSheetDragHandleColor)
+
+@Composable
+internal fun Modifier.allAppsSurfaceBrightBackground(
+    cornerRadius: Dp,
+    alpha: Float? = null
+): Modifier {
+    val shape = RoundedCornerShape(cornerRadius)
+    val surfaceAlpha = rememberDrawerSurfaceAlpha((alpha ?: 1f).coerceIn(0f, 1f))
+    return clip(shape).background(allAppsSurfaceEffectBaseColor().copy(alpha = surfaceAlpha))
 }
 
 internal fun buildComposeItems(

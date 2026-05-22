@@ -27,7 +27,6 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 
 
-import android.content.Context
 import android.view.HapticFeedbackConstants
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.spring
@@ -36,7 +35,6 @@ import androidx.compose.foundation.gestures.detectDragGesturesAfterLongPress
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.grid.*
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.LockOpen
@@ -44,7 +42,6 @@ import androidx.compose.material.icons.filled.Work
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.*
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.graphicsLayer
@@ -66,11 +63,11 @@ import com.android.launcher3.allapps.compose.domain.categorizeApps
 import com.android.launcher3.allapps.compose.shared.model.AllAppsComposeCallbacks
 import com.android.launcher3.allapps.compose.shared.model.AllAppsComposeItem
 import com.android.launcher3.allapps.compose.shared.model.AllAppsComposeState
-import com.android.launcher3.allapps.compose.shared.model.AllAppsComposeState.Companion.TAB_WORK
 import com.android.launcher3.allapps.compose.shared.model.AppCategory
 import com.android.launcher3.model.data.AppInfo
 internal val bigIconSize = 64.dp
 internal val smallIconSize = 28.dp
+private const val SMART_DRAWER_FOLDER_BACKGROUND_ALPHA = 0.72f
 
 @Composable
 internal fun AllAppsCategoriesView(
@@ -118,6 +115,7 @@ internal fun AllAppsCategoriesView(
     val gridState = rememberLazyGridState()
     val canScrollUp by remember { derivedStateOf { gridState.canScrollBackward } }
     val canScrollDown by remember { derivedStateOf { gridState.canScrollForward } }
+    val horizontalPadding = allAppsDrawerHorizontalPadding(false)
 
     val isScrollInProgress by remember { derivedStateOf { gridState.isScrollInProgress } }
     val isScrollingProvider = remember<() -> Boolean> { { gridState.isScrollInProgress } }
@@ -220,10 +218,10 @@ internal fun AllAppsCategoriesView(
         state = gridState,
         userScrollEnabled = !isDragging,
         contentPadding = PaddingValues(
-            start = 16.dp,
-            end = 16.dp,
+            start = horizontalPadding,
+            end = horizontalPadding,
             top = if (isSearchBarAtTop) 0.dp else 8.dp,
-            bottom = if (isSearchBarAtTop) 0.dp else 72.dp
+            bottom = allAppsScrollableContentBottomPadding(isSearchBarAtTop)
         ),
         verticalArrangement = Arrangement.spacedBy(12.dp),
         horizontalArrangement = Arrangement.spacedBy(12.dp),
@@ -367,8 +365,7 @@ internal fun SmartDrawerRowCard(
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(28.dp))
-            .background(surfaceEffectColor())
+            .allAppsSurfaceBrightBackground(28.dp)
             .combinedClickable(
                 onClick = onClick,
                 indication = null,
@@ -444,8 +441,7 @@ internal fun CategoryFolder(
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(28.dp))
-            .background(surfaceEffectColor())
+            .allAppsSurfaceBrightBackground(28.dp, alpha = SMART_DRAWER_FOLDER_BACKGROUND_ALPHA)
             .combinedClickable(
                 onClick = onClick,
                 onLongClick = onLongClick,
@@ -464,7 +460,9 @@ internal fun CategoryFolder(
 
         val folderContentHeight = bigIconSize * 2 + 12.dp
         Box(
-            modifier = Modifier.fillMaxWidth().height(folderContentHeight),
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(folderContentHeight),
             contentAlignment = Alignment.Center
         ) {
             when {
@@ -643,7 +641,6 @@ internal fun SmartDrawerSceneContent(
     onDismissRequestChange: (Boolean) -> Unit,
     openCounter: Int,
     allAppsExpanded: Boolean,
-    isOpening: Boolean = false,
     reopenTrigger: Int = 0,
     isOnPrivateSpacePagerPage: Boolean,
     onPrivateSpacePagerChanged: (Boolean) -> Unit,
@@ -660,13 +657,14 @@ internal fun SmartDrawerSceneContent(
         onLaunch = onLaunch,
         isSearchBarAtTop = isSearchBarAtTop
     ) {
+        val horizontalPadding = allAppsDrawerHorizontalPadding(false)
         Column(modifier = Modifier.fillMaxSize()) {
             if (state.hasWorkApps) {
                 ProfileTabsPager(
                     selectedTab = selectedProfileTab,
                     onTabSelected = onProfileTabSelected,
                     modifier = Modifier.weight(1f),
-                    tabsModifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
+                    tabsModifier = Modifier.fillMaxWidth().padding(horizontal = horizontalPadding),
                     personalContent = {
                         AllAppsCategoriesView(
                             state = state,
@@ -686,10 +684,8 @@ internal fun SmartDrawerSceneContent(
                             state = state, workItems = workItems, workSections = workSections,
                             onPauseWork = { callbacks.onWorkProfileToggle(false) },
                             onResumeWork = { callbacks.onWorkProfileToggle(true) },
-                            transitionProgressProvider = transitionProgressProvider,
                             openCounter = openCounter,
                             isSearchBarAtTop = isSearchBarAtTop,
-                            isOpening = isOpening,
                             reopenTrigger = reopenTrigger
                         )
                     }
@@ -711,4 +707,3 @@ internal fun SmartDrawerSceneContent(
         }
     }
 }
-

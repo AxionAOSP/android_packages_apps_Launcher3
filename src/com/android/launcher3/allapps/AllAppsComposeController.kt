@@ -17,12 +17,16 @@
 package com.android.launcher3.allapps
 
 import android.Manifest
+import android.R as AndroidR
 import android.app.Activity
 import android.content.ActivityNotFoundException
 import android.content.ComponentName
 import android.content.Context
+import android.content.ContextWrapper
 import android.content.Intent
 import android.content.pm.LauncherApps
+import android.content.res.Configuration
+import android.graphics.Color
 import android.graphics.RectF
 import android.os.SystemClock
 import android.os.UserHandle
@@ -52,13 +56,18 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
+import androidx.core.graphics.ColorUtils
+import com.android.axion.blur.AxBlurSettings
 import com.android.axion.compose.host.AxComposeView
+import com.android.internal.R as InternalR
 import com.android.launcher3.allapps.compose.ui.viewmodel.AllAppsComposeViewModel
 import com.android.launcher3.AbstractFloatingView
 import com.android.launcher3.DeviceProfile
 import com.android.launcher3.DragSource
 import com.android.launcher3.Launcher
+import com.android.launcher3.LauncherPrefs
 import com.android.launcher3.R
+import com.android.launcher3.Utilities
 import com.android.launcher3.allapps.compose.shared.model.AllAppsComposeCallbacks
 import com.android.launcher3.allapps.compose.shared.model.ComposeIconInfo
 import com.android.launcher3.allapps.compose.ui.AllAppsComposeHost
@@ -70,6 +79,7 @@ import com.android.launcher3.model.data.AppInfo
 import com.android.launcher3.model.data.ItemInfo
 import com.android.launcher3.popup.PopupContainerWithArrow
 import com.android.launcher3.util.ApiWrapper
+import com.android.launcher3.util.Themes
 import com.android.launcher3.views.ActivityContext
 import com.android.launcher3.views.BaseDragLayer
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -99,6 +109,9 @@ class AllAppsComposeController @Inject constructor(
     var transitionProgress by mutableFloatStateOf(0f)
         internal set
 
+    var isTransitionCollapsing by mutableStateOf(false)
+        private set
+
     var backProgress by mutableFloatStateOf(0f)
 
     private val _predictedApps = MutableStateFlow<List<ItemInfo>>(emptyList())
@@ -113,7 +126,9 @@ class AllAppsComposeController @Inject constructor(
         internal set(value) { _isPrivateSpaceHidden.value = value }
     val isPrivateSpaceHiddenFlow: StateFlow<Boolean> = _isPrivateSpaceHidden.asStateFlow()
 
-    var configUpdate by mutableStateOf(ConfigUpdate())
+    var configuration by mutableStateOf(
+        AllAppsConfiguration.from(activityContext as Context, activityContext.deviceProfile)
+    )
         internal set
 
     var profileVersion by mutableIntStateOf(0)
@@ -208,6 +223,11 @@ class AllAppsComposeController @Inject constructor(
     }
 
     fun setTransitionProgressWithRefresh(progress: Float) {
+        if (progress < transitionProgress - TRANSITION_DIRECTION_EPSILON) {
+            isTransitionCollapsing = true
+        } else if (progress > transitionProgress + TRANSITION_DIRECTION_EPSILON) {
+            isTransitionCollapsing = false
+        }
         transitionProgress = progress
     }
 
@@ -249,9 +269,13 @@ class AllAppsComposeController @Inject constructor(
         profileVersion++
     }
 
-    fun onUiModeChanged() {
-        Log.d(TAG, "onUiModeChanged: composeView=$composeView, configUpdate=$configUpdate")
-        configUpdate = configUpdate.copy(uiMode = configUpdate.uiMode + 1)
+    fun onUiModeChanged(config: Configuration) {
+        Log.d(TAG, "onUiModeChanged: composeView=$composeView, configuration=$configuration")
+        refreshConfiguration(activityContext.deviceProfile, config)
+    }
+
+    fun onAllAppsColorsChanged() {
+        refreshConfiguration(activityContext.deviceProfile)
     }
 
     private fun resetComposeViewProperties() {
@@ -263,15 +287,14 @@ class AllAppsComposeController @Inject constructor(
     }
 
     fun updateConfig(dp: DeviceProfile) {
-        val profile = dp.allAppsProfile
-        configUpdate = ConfigUpdate(
-            dp.numShownAllAppsColumns,
-            profile.iconSizePx,
-            profile.cellWidthPx,
-            profile.cellHeightPx,
-            dp.deviceProperties.isTablet,
-            configUpdate.uiMode
-        )
+        refreshConfiguration(dp)
+    }
+
+    private fun refreshConfiguration(
+        dp: DeviceProfile,
+        config: Configuration = (activityContext as Context).resources.configuration
+    ) {
+        configuration = AllAppsConfiguration.from(activityContext as Context, dp, config)
     }
 
     fun repositionHostView(screenBounds: RectF) {
@@ -519,19 +542,11 @@ class AllAppsComposeController @Inject constructor(
         (activityContext as? Activity)?.requestPermissions(arrayOf(permission), code)
     }
 
-    data class ConfigUpdate(
-        val columns: Int = 0,
-        val iconSizePx: Int = 0,
-        val cellWidthPx: Int = 0,
-        val cellHeightPx: Int = 0,
-        val isTablet: Boolean = false,
-        val uiMode: Int = 0
-    )
-
     companion object {
         const val TAB_PERSONAL = 0
         const val TAB_WORK = 1
         private const val TAG = "ComposeAllApps"
+        private const val TRANSITION_DIRECTION_EPSILON = 0.001f
         const val REQUEST_CODE_CONTACTS = 100
         const val REQUEST_CODE_SMS = 101
         const val REQUEST_CODE_FILES = 102
@@ -539,6 +554,120 @@ class AllAppsComposeController @Inject constructor(
     }
 }
 
+data class AllAppsConfiguration(
+    val profile: AllAppsProfileConfiguration = AllAppsProfileConfiguration(),
+    val colors: AllAppsColorConfiguration = AllAppsColorConfiguration(),
+    val uiMode: Int = Configuration.UI_MODE_NIGHT_UNDEFINED,
+    val assetsSeq: Int = 0
+) {
+    companion object {
+        fun from(
+            context: Context,
+            dp: DeviceProfile,
+            resourcesConfig: Configuration = context.resources.configuration
+        ): AllAppsConfiguration {
+            return AllAppsConfiguration(
+                profile = AllAppsProfileConfiguration.from(dp),
+                colors = AllAppsColorConfiguration.from(context),
+                uiMode = resourcesConfig.uiMode and Configuration.UI_MODE_NIGHT_MASK,
+                assetsSeq = resourcesConfig.assetsSeq
+            )
+        }
+    }
+}
+
+data class AllAppsProfileConfiguration(
+    val columns: Int = 0,
+    val iconSizePx: Int = 0,
+    val cellWidthPx: Int = 0,
+    val cellHeightPx: Int = 0,
+    val isTablet: Boolean = false
+) {
+    val hasProfile: Boolean
+        get() = columns > 0
+
+    companion object {
+        fun from(dp: DeviceProfile): AllAppsProfileConfiguration {
+            val profile = dp.allAppsProfile
+            return AllAppsProfileConfiguration(
+                columns = dp.numShownAllAppsColumns,
+                iconSizePx = profile.iconSizePx,
+                cellWidthPx = profile.cellWidthPx,
+                cellHeightPx = profile.cellHeightPx,
+                isTablet = dp.deviceProperties.isTablet
+            )
+        }
+    }
+}
+
+data class AllAppsColorConfiguration(
+    val panel: Int = Color.TRANSPARENT,
+    val surfaceLow: Int = Color.TRANSPARENT,
+    val headerProtection: Int = Color.TRANSPARENT,
+    val dragHandle: Int = Color.TRANSPARENT,
+    val searchText: Int = Color.TRANSPARENT
+) {
+    companion object {
+        fun from(context: Context): AllAppsColorConfiguration {
+            return AllAppsColorConfiguration(
+                panel = allAppsBottomSheetBackgroundColor(context),
+                surfaceLow = Themes.getAttrColor(context, R.attr.allAppsSurfaceLow),
+                headerProtection = Themes.getAttrColor(
+                    context,
+                    R.attr.allappsHeaderProtectionColor
+                ),
+                dragHandle = Themes.getAttrColor(context, R.attr.bottomSheetDragHandleColor),
+                searchText = Themes.getAttrColor(context, R.attr.allAppsSearchTextColor)
+            )
+        }
+    }
+}
+
+internal fun allAppsBottomSheetBackgroundColor(
+    context: Context,
+    alpha: Int = LauncherPrefs.get(context).get(LauncherPrefs.ALL_APPS_BG_OPACITY)
+): Int {
+    if (!isLauncherBlurEnabled(context)) {
+        return context.getColor(R.color.materialColorSurfaceDim)
+    }
+    return if (lookupActivityContext(context)?.isAllAppsBackgroundBlurEnabled() != true) {
+        ColorUtils.setAlphaComponent(
+            context.getColor(
+                if (Utilities.isDarkTheme(context)) {
+                    AndroidR.color.system_accent2_800
+                } else {
+                    AndroidR.color.system_accent2_200
+                }
+            ),
+            alpha
+        )
+    } else {
+        ColorUtils.setAlphaComponent(
+            ColorUtils.compositeColors(
+                context.getColor(InternalR.color.shade_panel_fg),
+                context.getColor(InternalR.color.shade_panel_bg)
+            ),
+            alpha
+        )
+    }
+}
+
+private var launcherBlurSettings: AxBlurSettings? = null
+
+private fun isLauncherBlurEnabled(context: Context): Boolean {
+    val appContext = context.applicationContext ?: context
+    val settings = launcherBlurSettings ?: AxBlurSettings.launcher(appContext).also {
+        launcherBlurSettings = it
+    }
+    return settings.enabled
+}
+
+private tailrec fun lookupActivityContext(context: Context): ActivityContext? =
+    when (context) {
+        is ActivityContext -> context
+        is ContextWrapper -> lookupActivityContext(context.baseContext)
+        else -> null
+    }
 
 @Composable
 private fun AllAppsComposeTheme(content: @Composable () -> Unit) {

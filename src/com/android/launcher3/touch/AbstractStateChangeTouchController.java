@@ -80,6 +80,7 @@ public abstract class AbstractStateChangeTouchController
     private float mDisplacementShift;
     private boolean mCanBlockFling;
     private boolean mAllAppsOvershootStarted;
+    private float mLastDragProgress;
 
     public AbstractStateChangeTouchController(Launcher l, SingleAxisSwipeDetector.Direction dir) {
         mLauncher = l;
@@ -212,16 +213,17 @@ public abstract class AbstractStateChangeTouchController
         }
         mCanBlockFling = mFromState == NORMAL;
         mFlingBlockCheck.unblockFling();
+        mLastDragProgress = mStartProgress;
     }
 
     @Override
     public boolean onDrag(float displacement) {
         float deltaProgress = mProgressMultiplier * (displacement - mDisplacementShift);
-        float progress = deltaProgress + mStartProgress;
-        updateProgress(progress);
+        mLastDragProgress = deltaProgress + mStartProgress;
+        updateProgress(mLastDragProgress);
         boolean isDragTowardPositive = mSwipeDirection.isPositive(
                 displacement - mDisplacementShift);
-        if (progress <= 0) {
+        if (mLastDragProgress <= 0) {
             if (reinitCurrentAnimation(false, isDragTowardPositive)) {
                 mDisplacementShift = displacement;
                 if (mCanBlockFling) {
@@ -230,9 +232,9 @@ public abstract class AbstractStateChangeTouchController
             }
             if (mFromState == LauncherState.ALL_APPS) {
                 mAllAppsOvershootStarted = true;
-                mLauncher.getAppsView().onPull(-progress , -progress);
+                mLauncher.getAppsView().onPull(-mLastDragProgress, -mLastDragProgress);
             }
-        } else if (progress >= 1) {
+        } else if (mLastDragProgress >= 1) {
             if (reinitCurrentAnimation(true, isDragTowardPositive)) {
                 mDisplacementShift = displacement;
                 if (mCanBlockFling) {
@@ -242,7 +244,7 @@ public abstract class AbstractStateChangeTouchController
             if (mToState == LauncherState.ALL_APPS) {
                 mAllAppsOvershootStarted = true;
                 // 1f, value when all apps container hit the top
-                mLauncher.getAppsView().onPull(progress - 1f, progress - 1f);
+                mLauncher.getAppsView().onPull(mLastDragProgress - 1f, mLastDragProgress - 1f);
             }
 
         } else {
@@ -312,9 +314,15 @@ public abstract class AbstractStateChangeTouchController
         }
 
         final LauncherState targetState;
+        final boolean shouldSmoothenAnimation = shouldSmoothenAllAppsAnimation();
         final float progress = mCurrentAnimation.getProgressFraction();
+        final float decisionProgress = shouldSmoothenAnimation
+                ? Utilities.boundToRange(mLastDragProgress, 0f, 1f)
+                : progress;
         final float progressVelocity = velocity * mProgressMultiplier;
-        final float interpolatedProgress = mCurrentAnimation.getInterpolatedProgress();
+        final float interpolatedProgress = shouldSmoothenAnimation
+                ? mCurrentAnimation.getInterpolator().getInterpolation(decisionProgress)
+                : mCurrentAnimation.getInterpolatedProgress();
         if (fling) {
             targetState =
                     Float.compare(Math.signum(velocity), Math.signum(mProgressMultiplier)) == 0
@@ -336,6 +344,8 @@ public abstract class AbstractStateChangeTouchController
             targetState =
                     (interpolatedProgress > successTransitionProgress) ? mToState : mFromState;
         }
+        final boolean shouldSmoothenSettleAnimation =
+                shouldSmoothenAnimation && targetState == ALL_APPS;
 
         final float endProgress;
         final float startProgress;
@@ -350,8 +360,9 @@ public abstract class AbstractStateChangeTouchController
                 duration = 0;
                 startProgress = 1;
             } else {
-                startProgress = Utilities.boundToRange(progress
-                        + progressVelocity * getSingleFrameMs(mLauncher), 0f, 1f);
+                startProgress = Utilities.boundToRange(shouldSmoothenSettleAnimation
+                        ? progress
+                        : progress + progressVelocity * getSingleFrameMs(mLauncher), 0f, 1f);
                 duration = BaseSwipeDetector.calculateDuration(velocity,
                         endProgress - Math.max(progress, 0)) * durationMultiplier;
             }
@@ -390,8 +401,31 @@ public abstract class AbstractStateChangeTouchController
 
     protected void updateSwipeCompleteAnimation(ValueAnimator animator, long expectedDuration,
             LauncherState targetState, float velocity, boolean isFling) {
-        animator.setDuration(expectedDuration)
-                .setInterpolator(scrollInterpolatorForVelocity(velocity));
+        boolean shouldSmoothenAnimation = shouldSmoothenAllAppsAnimation(targetState);
+        long duration = expectedDuration;
+        if (shouldSmoothenAnimation) {
+            float progress = Utilities.boundToRange(
+                    mCurrentAnimation.getProgressFraction(), 0f, 1f);
+            float remainingProgress = 1f - progress;
+            long minDuration = (long) (ALL_APPS.getTransitionDuration(mLauncher, true)
+                    * remainingProgress);
+            duration = Math.max(duration, minDuration);
+        }
+        animator.setDuration(duration)
+                .setInterpolator(shouldSmoothenAnimation
+                        ? AllAppsSwipeController.ALL_APPS_VERTICAL_PROGRESS_MANUAL
+                        : scrollInterpolatorForVelocity(velocity));
+    }
+
+    private boolean shouldSmoothenAllAppsAnimation(LauncherState targetState) {
+        return targetState == ALL_APPS && shouldSmoothenAllAppsAnimation();
+    }
+
+    private boolean shouldSmoothenAllAppsAnimation() {
+        return mFromState == NORMAL
+                && mToState == ALL_APPS
+                && mLauncher.getAppsView() != null
+                && mLauncher.getAppsView().isUsingCompose();
     }
 
     protected void onSwipeInteractionCompleted(LauncherState targetState) {
@@ -453,11 +487,16 @@ public abstract class AbstractStateChangeTouchController
         AxBoostFwk.acquireHint(AxBoostFwk.OP_EXIT_ANIM_BOOST, -1L);
         AxBoostFwk.acquireHint(AxBoostFwk.OP_RENDER_EARLY_WAKEUP, 0L);
         AxBoostFwk.acquireHint(AxBoostFwk.OP_SCROLL_BOOST, 0L);
+        if (mAllAppsOvershootStarted) {
+            mLauncher.getAppsView().onRelease();
+            mAllAppsOvershootStarted = false;
+        }
         cancelAnimationControllers();
         mGoingBetweenStates = true;
         mDetector.finishedScrolling();
         mDetector.setDetectableScrollConditions(0, false);
         mIsTrackpadReverseScroll = false;
+        mLastDragProgress = 0;
     }
 
     private void cancelAnimationControllers() {

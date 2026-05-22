@@ -21,4 +21,17 @@ object PreferenceKeys {
 
     const val SEARCH_BAR_POSITION_TOP = "top"
     const val SEARCH_BAR_POSITION_BOTTOM = "bottom"
+    const val DRAWER_LAYOUT_SMART = "smart"
+    const val DRAWER_LAYOUT_LEGACY = "legacy"
+
+    private const val DRAWER_LAYOUT_DEFAULT = "default"
+    private const val DRAWER_LAYOUT_DYNAMIC = "dynamic"
+
+    fun normalizeDrawerLayoutMode(mode: String): String = when (mode) {
+        DRAWER_LAYOUT_DEFAULT,
+        DRAWER_LAYOUT_DYNAMIC,
+        DRAWER_LAYOUT_LEGACY -> DRAWER_LAYOUT_LEGACY
+        DRAWER_LAYOUT_SMART -> DRAWER_LAYOUT_SMART
+        else -> DRAWER_LAYOUT_LEGACY
+    }
 }

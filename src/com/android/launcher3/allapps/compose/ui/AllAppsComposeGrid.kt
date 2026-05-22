@@ -21,6 +21,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.*
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
@@ -30,9 +31,11 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalView
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.*
+import com.android.launcher3.R
 import com.android.launcher3.model.data.AppInfo
 
 private const val SCROLL_SNAP_THRESHOLD_PX = 5
@@ -46,6 +49,19 @@ private val RowPaddingFirst = PaddingValues(start = 4.dp, end = 4.dp, top = 12.d
 private val RowPaddingLast = PaddingValues(start = 4.dp, end = 4.dp, bottom = 12.dp)
 private val RowPaddingOnly = PaddingValues(start = 4.dp, end = 4.dp, top = 12.dp, bottom = 12.dp)
 private val RowPaddingMiddle = PaddingValues(horizontal = 4.dp)
+private val LegacyRowPaddingFirst = PaddingValues(top = 4.dp)
+private val LegacyRowPaddingLast = PaddingValues(bottom = 4.dp)
+private val LegacyRowPaddingOnly = PaddingValues(vertical = 4.dp)
+private val LegacyRowPaddingMiddle = PaddingValues(0.dp)
+private val LegacySectionSpacerHeight = 16.dp
+private val LegacyAllAppsDividerWidth = 128.dp
+private val LegacyAllAppsDividerHeight = 2.dp
+private val LegacyAllAppsDividerOffsetY = LegacyAllAppsDividerHeight / 2f
+private val LegacyAllAppsDividerContainerHeight = 17.dp
+private val LegacyFastScrollTrackWidth = 6.dp
+private val LegacyFastScrollThumbWidth = 8.dp
+private val LegacyFastScrollThumbHeight = 52.dp
+private val LegacyFastScrollVerticalPadding = 36.dp
 
 private enum class RowPosition { FIRST, MIDDLE, LAST, ONLY }
 
@@ -72,7 +88,10 @@ private sealed interface LazyGridItem {
 
     data class PrivateSpace(val isExpanded: Boolean) : LazyGridItem
     data object EmptySearch : LazyGridItem
-    data class SectionSpacer(val sectionId: String) : LazyGridItem
+    data class SectionSpacer(
+        val sectionId: String,
+        val previousSectionType: String
+    ) : LazyGridItem
 }
 
 private fun buildLazyGridItems(
@@ -123,7 +142,12 @@ private fun buildLazyGridItems(
     val result = mutableListOf<LazyGridItem>()
     rawSections.forEachIndexed { sectionIndex, section ->
         if (sectionIndex > 0) {
-            result.add(LazyGridItem.SectionSpacer("spacer_$sectionIndex"))
+            result.add(
+                LazyGridItem.SectionSpacer(
+                    sectionId = "spacer_$sectionIndex",
+                    previousSectionType = rawSections[sectionIndex - 1].type
+                )
+            )
         }
         when (section.type) {
             "private" -> {
@@ -175,8 +199,6 @@ fun AllAppsComposeGrid(
     showLabels: Boolean,
     onFolderClick: ((AppCategory) -> Unit)? = null,
     onFolderLongClick: ((AppCategory) -> Unit)? = null,
-    transitionProgressProvider: () -> Float = { 1f },
-    isOpening: Boolean = false,
     reopenTrigger: Int = 0,
     keyPrefix: String = "main",
     recompositionKey: Int = 0,
@@ -230,7 +252,8 @@ fun AllAppsComposeGrid(
         buildLazyGridItems(items, effectiveColumns)
     }
 
-    val cardBg = surfaceEffectColor()
+    val legacyLayout = LocalAllAppsLegacyLayout.current
+    val cardBg = if (legacyLayout) Color.Transparent else surfaceEffectColor()
 
     val isScrollingProvider = remember<() -> Boolean> { { scrollState.isScrollInProgress } }
 
@@ -251,11 +274,16 @@ fun AllAppsComposeGrid(
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .graphicsLayer(clip = true, shape = scrollClipShape)
+                    .then(
+                        if (legacyLayout) {
+                            Modifier
+                        } else {
+                            Modifier.graphicsLayer(clip = true, shape = scrollClipShape)
+                        }
+                    )
                     .verticalScroll(scrollState, enabled = isScrollEnabled)
                     .padding(contentPadding)
             ) {
-                var staggerRowIndex = 0
                 gridItems.forEach { gridItem ->
                     val itemKey = when (gridItem) {
                         is LazyGridItem.PrivateSpace -> "${keyPrefix}_private_header"
@@ -274,7 +302,18 @@ fun AllAppsComposeGrid(
                                 EmptySearchResultItem()
                             }
                             is LazyGridItem.SectionSpacer -> {
-                                Spacer(modifier = Modifier.height(8.dp))
+                                if (legacyLayout &&
+                                    (gridItem.previousSectionType == "predictions" ||
+                                        gridItem.previousSectionType == "pinned")
+                                ) {
+                                    LegacyAllAppsDivider()
+                                } else {
+                                    Spacer(
+                                        modifier = Modifier.height(
+                                            if (legacyLayout) LegacySectionSpacerHeight else 8.dp
+                                        )
+                                    )
+                                }
                             }
                             is LazyGridItem.GridRow -> {
                                 AllAppsGridRow(
@@ -287,43 +326,114 @@ fun AllAppsComposeGrid(
                                     cellWidthPx = cellWidthPx,
                                     cellHeightPx = cellHeightPx,
                                     cardBg = cardBg,
+                                    useCardBackground = !legacyLayout,
                                     isScrollingProvider = isScrollingProvider,
                                     onLongPressStatusChanged = onLongPressStatusChanged,
                                     onFolderClick = onFolderClick,
-                                    onFolderLongClick = onFolderLongClick,
-                                    transitionProgressProvider = transitionProgressProvider,
-                                    rowIndex = staggerRowIndex,
-                                    isOpening = isOpening
+                                    onFolderLongClick = onFolderLongClick
                                 )
-                                staggerRowIndex++
                             }
                         }
                     }
                 }
             }
         }
+        if (legacyLayout) {
+            LegacyScrollThumb(scrollState)
+        }
+    }
+}
+
+@Composable
+private fun LegacyAllAppsDivider() {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(LegacyAllAppsDividerContainerHeight),
+        contentAlignment = Alignment.Center
+    ) {
+        Box(
+            modifier = Modifier
+                .width(LegacyAllAppsDividerWidth)
+                .height(LegacyAllAppsDividerHeight)
+                .offset(y = LegacyAllAppsDividerOffsetY)
+                .clip(RoundedCornerShape(LegacyAllAppsDividerHeight))
+                .background(legacyAllAppsDragHandleColor())
+        )
+    }
+}
+
+@Composable
+private fun LegacyScrollThumb(scrollState: ScrollState) {
+    if (scrollState.maxValue <= 0) return
+    val progress = (scrollState.value / scrollState.maxValue.toFloat()).coerceIn(0f, 1f)
+    val trackColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 30f / 255f)
+    val thumbColor = MaterialTheme.colorScheme.primary
+    BoxWithConstraints(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(top = LegacyFastScrollVerticalPadding),
+        contentAlignment = Alignment.TopEnd
+    ) {
+        val thumbHeight = if (maxHeight < LegacyFastScrollThumbHeight) {
+            maxHeight
+        } else {
+            LegacyFastScrollThumbHeight
+        }
+        val thumbOffset = (maxHeight - thumbHeight) * progress
+        Box(
+            modifier = Modifier
+                .align(Alignment.TopEnd)
+                .width(LegacyFastScrollTrackWidth)
+                .fillMaxHeight()
+                .clip(RoundedCornerShape(LegacyFastScrollTrackWidth / 2))
+                .background(trackColor)
+        )
+        Box(
+            modifier = Modifier
+                .align(Alignment.TopEnd)
+                .offset(y = thumbOffset)
+                .width(LegacyFastScrollThumbWidth)
+                .height(thumbHeight)
+                .clip(RoundedCornerShape(LegacyFastScrollThumbWidth / 2))
+                .background(thumbColor)
+        )
     }
 }
 
 @Composable
 private fun PrivateSpaceHeaderItem(isExpanded: Boolean) {
-    Surface(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 8.dp),
-        shape = RoundedCornerShape(24.dp),
-        color = surfaceEffectColor()
-    ) {
+    val legacyLayout = LocalAllAppsLegacyLayout.current
+    val content: @Composable () -> Unit = {
         Row(
             modifier = Modifier.padding(16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
-                text = "Private Space",
+                text = stringResource(R.string.private_space_label),
                 style = MaterialTheme.typography.titleMedium,
                 modifier = Modifier.weight(1f)
             )
         }
+    }
+    val modifier = Modifier
+        .fillMaxWidth()
+        .padding(
+            horizontal = if (legacyLayout) 0.dp else 16.dp,
+            vertical = if (legacyLayout) 4.dp else 8.dp
+        )
+    if (legacyLayout) {
+        Box(
+            modifier = modifier,
+            content = { content() }
+        )
+    } else {
+        Surface(
+            modifier = modifier,
+            shape = RoundedCornerShape(24.dp),
+            color = surfaceEffectColor(),
+            content = content
+        )
     }
 }
 
@@ -336,7 +446,7 @@ private fun EmptySearchResultItem() {
         contentAlignment = Alignment.Center
     ) {
         Text(
-            text = "No apps found",
+            text = stringResource(R.string.drawer_no_apps_found),
             style = MaterialTheme.typography.bodyLarge,
             color = LocalDrawerContentColor.current
         )
@@ -354,44 +464,32 @@ private fun AllAppsGridRow(
     cellWidthPx: Int,
     cellHeightPx: Int,
     cardBg: Color,
+    useCardBackground: Boolean,
     isScrollingProvider: () -> Boolean,
     onLongPressStatusChanged: (Boolean) -> Unit,
     onFolderClick: ((AppCategory) -> Unit)?,
-    onFolderLongClick: ((AppCategory) -> Unit)?,
-    transitionProgressProvider: () -> Float,
-    rowIndex: Int,
-    isOpening: Boolean
+    onFolderLongClick: ((AppCategory) -> Unit)?
 ) {
     val interactions = LocalAllAppsInteractions.current
-    val rowAlpha = contentStaggerAlpha(
-        progress = transitionProgressProvider(),
-        rowIndex = rowIndex,
-        isOpening = isOpening
-    )
-
-    val shape = when (position) {
-        RowPosition.ONLY -> ShapeOnly
-        RowPosition.FIRST -> ShapeFirst
-        RowPosition.MIDDLE -> ShapeMiddle
-        RowPosition.LAST -> ShapeLast
-    }
-    val padding = when (position) {
-        RowPosition.ONLY -> RowPaddingOnly
-        RowPosition.FIRST -> RowPaddingFirst
-        RowPosition.MIDDLE -> RowPaddingMiddle
-        RowPosition.LAST -> RowPaddingLast
+    val padding = if (useCardBackground) {
+        when (position) {
+            RowPosition.ONLY -> RowPaddingOnly
+            RowPosition.FIRST -> RowPaddingFirst
+            RowPosition.MIDDLE -> RowPaddingMiddle
+            RowPosition.LAST -> RowPaddingLast
+        }
+    } else {
+        when (position) {
+            RowPosition.ONLY -> LegacyRowPaddingOnly
+            RowPosition.FIRST -> LegacyRowPaddingFirst
+            RowPosition.MIDDLE -> LegacyRowPaddingMiddle
+            RowPosition.LAST -> LegacyRowPaddingLast
+        }
     }
 
     CompositionLocalProvider(LocalSectionId provides sectionId) {
-        Surface(
-            modifier = Modifier
-                .fillMaxWidth()
-                .then(
-                    if (rowAlpha < 0.999f) Modifier.graphicsLayer(alpha = rowAlpha) else Modifier
-                ),
-            shape = shape,
-            color = cardBg
-        ) {
+        val rowModifier = Modifier.fillMaxWidth()
+        val rowContent: @Composable () -> Unit = {
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -441,6 +539,22 @@ private fun AllAppsGridRow(
                     }
                 }
             }
+        }
+        if (useCardBackground) {
+            val shape = when (position) {
+                RowPosition.ONLY -> ShapeOnly
+                RowPosition.FIRST -> ShapeFirst
+                RowPosition.MIDDLE -> ShapeMiddle
+                RowPosition.LAST -> ShapeLast
+            }
+            Surface(
+                modifier = rowModifier,
+                shape = shape,
+                color = cardBg,
+                content = rowContent
+            )
+        } else {
+            Box(modifier = rowModifier, content = { rowContent() })
         }
     }
 }

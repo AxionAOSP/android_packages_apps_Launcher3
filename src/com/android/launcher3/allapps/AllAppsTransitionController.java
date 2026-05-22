@@ -30,9 +30,7 @@ import static com.android.launcher3.anim.PropertySetter.NO_ANIM_PROPERTY_SETTER;
 import static com.android.launcher3.states.StateAnimationConfig.ANIM_ALL_APPS_FADE;
 import static com.android.launcher3.states.StateAnimationConfig.ANIM_VERTICAL_PROGRESS;
 import static com.android.launcher3.util.SystemUiController.FLAG_DARK_NAV;
-import static com.android.launcher3.util.SystemUiController.FLAG_DARK_STATUS;
 import static com.android.launcher3.util.SystemUiController.FLAG_LIGHT_NAV;
-import static com.android.launcher3.util.SystemUiController.FLAG_LIGHT_STATUS;
 import static com.android.launcher3.util.SystemUiController.UI_STATE_ALL_APPS;
 
 import android.animation.Animator;
@@ -46,8 +44,6 @@ import android.view.animation.Interpolator;
 
 import androidx.annotation.FloatRange;
 import androidx.annotation.Nullable;
-import androidx.core.graphics.ColorUtils;
-
 import com.android.launcher3.DeviceProfile;
 import com.android.launcher3.DeviceProfile.OnDeviceProfileChangeListener;
 import com.android.launcher3.Flags;
@@ -256,20 +252,11 @@ public class AllAppsTransitionController
         getAppsViewProgressTranslationY().setValue(mProgress * shiftRange);
         mLauncher.onAllAppsTransition(1 - progress);
         mLauncher.getAppsView().onAllAppsTransitionProgress(1 - progress);
+        updateAppsViewVisibilityForProgress();
 
         boolean hasScrim = progress < NAV_BAR_COLOR_FORCE_UPDATE_THRESHOLD
                 && mLauncher.getAppsView().getNavBarScrimHeight() > 0;
         int flags = hasScrim ? mNavScrimFlag : 0;
-        if (mLauncher.getAppsView().isUsingCompose() && progress < NAV_BAR_COLOR_FORCE_UPDATE_THRESHOLD) {
-            boolean isTablet = mLauncher.getDeviceProfile().getDeviceProperties().isTablet();
-            if (isTablet) {
-                flags |= FLAG_DARK_STATUS;
-            } else {
-                int surfaceColor = mLauncher.getColor(R.color.materialColorSurfaceContainer);
-                boolean isLight = ColorUtils.calculateLuminance(surfaceColor) >= 0.5;
-                flags |= isLight ? FLAG_LIGHT_STATUS : FLAG_DARK_STATUS;
-            }
-        }
         mLauncher.getSystemUiController().updateUiState(UI_STATE_ALL_APPS, flags);
     }
 
@@ -416,6 +403,7 @@ public class AllAppsTransitionController
                 ALL_APPS_PULL_BACK_ALPHA.set(this, ALL_APPS_PULL_BACK_ALPHA_DEFAULT);
 
                 mAllAppScale.updateValue(1f);
+                updateAppsViewVisibilityForProgress();
             });
         }
 
@@ -452,12 +440,13 @@ public class AllAppsTransitionController
     public void setAlphas(LauncherState state, StateAnimationConfig config, PropertySetter setter) {
         int visibleElements = state.getVisibleElements(mLauncher.getLauncherUiState());
         boolean hasAllAppsContent = (visibleElements & ALL_APPS_CONTENT) != 0;
+        float appsViewAlpha = hasAllAppsContent || isComposeAllApps() ? 1 : 0;
 
         Interpolator allAppsFade = config.getInterpolator(ANIM_ALL_APPS_FADE, LINEAR);
         setter.setFloat(getAppsViewProgressAlpha(), MultiPropertyFactory.MULTI_PROPERTY_VALUE,
-                hasAllAppsContent ? 1 : 0, allAppsFade);
+                appsViewAlpha, allAppsFade);
         setter.setFloat(getAppsViewPullbackAlpha(), MultiPropertyFactory.MULTI_PROPERTY_VALUE,
-                hasAllAppsContent ? 1 : 0, allAppsFade);
+                appsViewAlpha, allAppsFade);
 
         boolean shouldProtectHeader = !config.hasAnimationFlag(StateAnimationConfig.SKIP_SCRIM)
                 && (ALL_APPS == state || mLauncher.getStateManager().getState() == ALL_APPS);
@@ -466,6 +455,17 @@ public class AllAppsTransitionController
                 + " state: " + state
                 + " stateManager.getState(): " + mLauncher.getStateManager().getState());
         mScrimView.setDrawingController(shouldProtectHeader ? mAppsView : null);
+        updateAppsViewVisibilityForProgress();
+    }
+
+    private void updateAppsViewVisibilityForProgress() {
+        if (isComposeAllApps()) {
+            mAppsView.setVisibility(mProgress >= 0.999f ? View.GONE : View.VISIBLE);
+        }
+    }
+
+    private boolean isComposeAllApps() {
+        return mAppsView != null && mAppsView.isUsingCompose();
     }
 
     /**

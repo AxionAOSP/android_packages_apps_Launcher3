@@ -96,18 +96,25 @@ fun AllAppsComposeHost(
         launch { controller.predictedAppsFlow.collect { viewModel.updatePredictedApps(it) } }
         launch { controller.isPrivateSpaceHiddenFlow.collect { viewModel.setPrivateSpaceHidden(it) } }
         launch {
-            snapshotFlow { controller.configUpdate }.collect { config ->
-                if (config.columns > 0) {
+            snapshotFlow { controller.configuration.profile }.collect { profile ->
+                if (profile.hasProfile) {
                     viewModel.onConfigChanged(
-                        config.columns,
-                        config.iconSizePx,
-                        config.cellWidthPx,
-                        config.cellHeightPx,
-                        config.isTablet
+                        profile.columns,
+                        profile.iconSizePx,
+                        profile.cellWidthPx,
+                        profile.cellHeightPx,
+                        profile.isTablet
                     )
                 }
-                if (config.uiMode > 0) {
+            }
+        }
+        launch {
+            var hasSeenInitialUiMode = false
+            snapshotFlow { controller.configuration.uiMode }.collect {
+                if (hasSeenInitialUiMode) {
                     viewModel.onUiModeChanged()
+                } else {
+                    hasSeenInitialUiMode = true
                 }
             }
         }
@@ -127,8 +134,11 @@ fun AllAppsComposeHost(
     }
 
     val contentColor = rememberAdaptiveContentColor()
-
-    CompositionLocalProvider(LocalDrawerContentColor provides contentColor) {
+    val configuration = controller.configuration
+    CompositionLocalProvider(
+        LocalDrawerContentColor provides contentColor,
+        LocalAllAppsConfiguration provides configuration
+    ) {
         AllAppsComposeContent(
             state = state,
             controller = controller,

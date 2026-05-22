@@ -15,6 +15,8 @@
  */
 package com.android.launcher3.allapps;
 
+import static com.android.internal.R.color.shade_panel_bg;
+import static com.android.internal.R.color.shade_panel_fg;
 import static com.android.launcher3.Flags.clearScrimOnReset;
 import static com.android.launcher3.Flags.enableExpandingPauseWorkButton;
 import static com.android.launcher3.allapps.ActivityAllAppsContainerView.AdapterHolder.MAIN;
@@ -72,6 +74,7 @@ import androidx.core.graphics.ColorUtils;
 import androidx.core.util.Consumer;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.android.axion.blur.AxBlurSettings;
 import com.android.launcher3.DeviceProfile;
 import com.android.launcher3.DeviceProfile.OnDeviceProfileChangeListener;
 import com.android.launcher3.DragSource;
@@ -191,6 +194,7 @@ public class ActivityAllAppsContainerView<T extends Context & ActivityContext>
     private int mBottomSheetBackgroundColorBlurFallback;
     private int mBottomSheetBackgroundColorOverBlur;
     private int mBottomSheetBackgroundColorLegacy;
+    private final AxBlurSettings mLauncherBlurSettings;
     private int mTabsProtectionAlpha;
     @Nullable private AllAppsTransitionController mAllAppsTransitionController;
     protected float mTransitionProgress = 1f;
@@ -208,6 +212,7 @@ public class ActivityAllAppsContainerView<T extends Context & ActivityContext>
         super(context, attrs, defStyleAttr);
         mActivityContext = ActivityContext.lookupContext(context);
         mAllAppsStore = mActivityContext.getActivityComponent().getAppsStore();
+        mLauncherBlurSettings = AxBlurSettings.launcher(context);
 
         mScrimColor = Themes.getAttrColor(context, R.attr.allAppsScrimColor);
         mHeaderThreshold = getResources().getDimensionPixelSize(
@@ -322,15 +327,16 @@ public class ActivityAllAppsContainerView<T extends Context & ActivityContext>
     }
 
     private void updateBackgroundColors() {
-        if (Flags.allAppsBlur()) {
-            int layerFg = getContext().getColor(com.android.internal.R.color.shade_panel_fg);
-            int layerBg = getContext().getColor(com.android.internal.R.color.shade_panel_bg);
-            int alpha = LauncherPrefs.get(getContext()).get(LauncherPrefs.ALL_APPS_BG_OPACITY);
-            mBottomSheetBackgroundColorOverBlur = ColorUtils.setAlphaComponent(ColorUtils.compositeColors(layerFg, layerBg), alpha);
-            mBottomSheetBackgroundColorBlurFallback = ColorUtils.setAlphaComponent(getContext().getColor(
-                    Utilities.isDarkTheme(getContext()) ? android.R.color.system_accent2_800
-                            : android.R.color.system_accent2_200), alpha);
-        }
+        int layerFg = getContext().getColor(shade_panel_fg);
+        int layerBg = getContext().getColor(shade_panel_bg);
+        int alpha = LauncherPrefs.get(getContext()).get(LauncherPrefs.ALL_APPS_BG_OPACITY);
+        mBottomSheetBackgroundColorOverBlur = ColorUtils.setAlphaComponent(
+                ColorUtils.compositeColors(layerFg, layerBg), alpha);
+        int fallbackColor = getContext().getColor(
+                Utilities.isDarkTheme(getContext()) ? android.R.color.system_accent2_800
+                        : android.R.color.system_accent2_200);
+        mBottomSheetBackgroundColorBlurFallback = ColorUtils.setAlphaComponent(
+                fallbackColor, alpha);
     }
     @Override
     protected void onFinishInflate() {
@@ -904,7 +910,7 @@ public class ActivityAllAppsContainerView<T extends Context & ActivityContext>
     }
 
     protected int getBottomSheetBackgroundColor() {
-        if (!Flags.allAppsBlur()) {
+        if (!mLauncherBlurSettings.getEnabled()) {
             return mBottomSheetBackgroundColorLegacy;
         }
         if (!mActivityContext.isAllAppsBackgroundBlurEnabled()) {
