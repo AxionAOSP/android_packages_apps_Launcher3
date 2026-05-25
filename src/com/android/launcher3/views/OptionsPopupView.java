@@ -234,7 +234,7 @@ public class OptionsPopupView<T extends Context & ActivityContext> extends Arrow
                 OptionsPopupView::enterAllApps));
         options.add(new OptionItem(launcher,
                 R.string.action_customize_icon,
-                R.drawable.ic_customize,
+                R.drawable.ic_edit,
                 IGNORE,
                 OptionsPopupView::openIconStyleSheet));
         options.add(new OptionItem(launcher,
