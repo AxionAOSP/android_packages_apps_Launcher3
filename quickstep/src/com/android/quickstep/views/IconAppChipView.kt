@@ -83,6 +83,8 @@ constructor(
         resources.getDimensionPixelSize(R.dimen.task_thumbnail_icon_menu_expanded_height)
     private val iconMenuMarginTopStart =
         resources.getDimensionPixelSize(R.dimen.task_thumbnail_icon_menu_expanded_top_start_margin)
+    private val overviewTaskThumbnailTopMargin =
+        resources.getDimensionPixelSize(R.dimen.overview_task_thumbnail_top_margin)
     private val menuToChipGap: Int =
         resources.getDimensionPixelSize(R.dimen.task_thumbnail_icon_menu_expanded_gap)
 
@@ -275,7 +277,7 @@ constructor(
             this,
             iconMenuParams,
             iconMenuMarginTopStart,
-            iconMenuMarginTopStart,
+            overviewTaskThumbnailTopMargin,
         )
         layoutParams = iconMenuParams
 

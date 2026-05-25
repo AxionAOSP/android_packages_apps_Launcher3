@@ -172,6 +172,7 @@ public class OverviewActionsView<T extends OverlayUICallbacks> extends FrameLayo
     private final Rect mTaskSize = new Rect();
     private boolean mIsGroupedTask = false;
     private boolean mCanSaveAppPair = false;
+    private boolean mOverviewVisible = false;
 
     private OverviewActionsViewExt mExt;
 
@@ -214,6 +215,7 @@ public class OverviewActionsView<T extends OverlayUICallbacks> extends FrameLayo
         mLockHintLandscape = findViewById(R.id.lock_hint_landscape);
         mSaveAppPairButton.setOnClickListener(this);
         mActionsState = new OverviewActionsState();
+        mActionsState.setOnActionsContentChanged(this::updateActionButtonsVisibility);
         mExt = LauncherComponentProvider.get(getContext()).getOverviewActionsViewExt();
         OverviewActionButtonsBridge.setup(mActionButtons, mActionsState);
     }
@@ -221,17 +223,18 @@ public class OverviewActionsView<T extends OverlayUICallbacks> extends FrameLayo
     @Override
     protected void onAttachedToWindow() {
         super.onAttachedToWindow();
-        mExt.onAttach(mActionsState);
+        mExt.onAttach(mActionsState, mOverviewVisible);
     }
 
     @Override
     protected void onDetachedFromWindow() {
         super.onDetachedFromWindow();
-        mExt.onDetach();
+        mExt.onDetach(mActionsState);
     }
 
     public void setOverviewVisible(boolean visible) {
-        mExt.setOverviewVisible(visible);
+        mOverviewVisible = visible;
+        mExt.setOverviewVisible(mActionsState, visible);
     }
 
     /**
@@ -340,14 +343,39 @@ public class OverviewActionsView<T extends OverlayUICallbacks> extends FrameLayo
         if (mDp == null) {
             return;
         }
-        boolean showSingleTaskActions = !mIsGroupedTask;
-        boolean showGroupActions = mIsGroupedTask && mDp.getDeviceProperties().isTablet() &&
-                mCanSaveAppPair &&
-                !getContext().getSystemService(ActivityManager.class).isLowRamDevice();
+        boolean showSingleTaskActions = shouldShowSingleTaskActions();
+        boolean showGroupActions = shouldShowGroupActions();
         Log.d(TAG, "updateActionButtonsVisibility() called: showSingleTaskActions = ["
                 + showSingleTaskActions + "], showGroupActions = [" + showGroupActions + "]");
         getActionsAlphas().get(INDEX_GROUPED_ALPHA).setValue(showSingleTaskActions ? 1 : 0);
         getGroupActionsAlphas().get(INDEX_GROUPED_ALPHA).setValue(showGroupActions ? 1 : 0);
+        updateOverviewActionsAvailability();
+    }
+
+    private boolean shouldShowGroupActions() {
+        return mIsGroupedTask && mDp.getDeviceProperties().isTablet()
+                && mCanSaveAppPair
+                && !getContext().getSystemService(ActivityManager.class).isLowRamDevice();
+    }
+
+    private boolean shouldShowSingleTaskActions() {
+        return !mIsGroupedTask
+                && (mActionsState == null
+                || mActionsState.getSettingsActionsAvailable()
+                || mActionsState.getSplitVisible());
+    }
+
+    private boolean shouldReserveActionsSpace() {
+        return mIsGroupedTask ? shouldShowGroupActions() : shouldShowSingleTaskActions();
+    }
+
+    private void updateOverviewActionsAvailability() {
+        if (mDp == null) {
+            return;
+        }
+        RecentsViewContainer container = RecentsViewContainer.containerFromContext(getContext());
+        container.<RecentsView<?, ?>>getOverviewPanel()
+                .setOverviewActionsAvailable(shouldReserveActionsSpace());
     }
 
     /**
@@ -380,6 +408,7 @@ public class OverviewActionsView<T extends OverlayUICallbacks> extends FrameLayo
         }
         if (mActionsState != null) {
             mActionsState.setSplitVisible(mSplitButtonHiddenFlags == 0);
+            updateActionButtonsVisibility();
         }
     }
 

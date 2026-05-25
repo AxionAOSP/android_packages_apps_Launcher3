@@ -163,6 +163,7 @@ public class DeviceProfile {
     public final int numShownAllAppsColumns;
 
     private final OverviewProfile overviewProfile;
+    private boolean mOverviewActionsAvailable = true;
 
     // Split staging
     public int splitPlaceholderInset;
@@ -587,6 +588,14 @@ public class DeviceProfile {
 
     public OverviewProfile getOverviewProfile() {
         return overviewProfile;
+    }
+
+    public boolean areOverviewActionsAvailable() {
+        return mOverviewActionsAvailable;
+    }
+
+    public void setOverviewActionsAvailable(boolean available) {
+        mOverviewActionsAvailable = available;
     }
 
     public HotseatProfile getHotseatProfile() {
@@ -1419,7 +1428,8 @@ public class DeviceProfile {
 
     /** Gets the space that the overview actions will take, including bottom margin. */
     public int getOverviewActionsClaimedSpace() {
-        int overviewActionsSpace = mDeviceProperties.isTablet() && enableGridOnlyOverview()
+        int overviewActionsSpace = !mOverviewActionsAvailable
+                || (mDeviceProperties.isTablet() && enableGridOnlyOverview())
                 ? 0
                 : (overviewProfile.getActionsTopMarginPx() + overviewProfile.getActionsHeight());
         return overviewActionsSpace + getOverviewActionsClaimedSpaceBelow();

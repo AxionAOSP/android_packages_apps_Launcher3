@@ -2494,6 +2494,17 @@ public abstract class RecentsView<
                 getPagedOrientationHandler());
     }
 
+    public void setOverviewActionsAvailable(boolean available) {
+        DeviceProfile dp = mContainer.getDeviceProfile();
+        if (dp.areOverviewActionsAvailable() == available) {
+            return;
+        }
+        dp.setOverviewActionsAvailable(available);
+        updateSizeAndPadding();
+        mActionsView.updateDimension(dp, mLastComputedTaskSize);
+        requestLayout();
+    }
+
     /**
      * Returns the currently selected TaskView in Select mode.
      */

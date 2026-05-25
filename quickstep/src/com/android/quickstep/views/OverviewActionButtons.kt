@@ -57,6 +57,7 @@ import com.android.axion.compose.host.AxComposeView
 import com.android.launcher3.R
 
 class OverviewActionsState {
+    private val settingsActionsAvailableState = mutableStateOf(true)
     var freeformVisible by mutableStateOf(false)
     var splitVisible by mutableStateOf(false)
     var isLocked by mutableStateOf(false)
@@ -68,14 +69,32 @@ class OverviewActionsState {
     var showSelectText by mutableStateOf(true)
     var showFreeform by mutableStateOf(true)
     var showClearAll by mutableStateOf(true)
+    var showMemoryInfo by mutableStateOf(true)
     var memoryInfo by mutableStateOf("")
     var memoryInfoUseWhiteText by mutableStateOf(false)
+    var onActionsContentChanged: Runnable? = null
     var onScreenshot: Runnable? = null
     var onSelectText: Runnable? = null
     var onFreeform: Runnable? = null
     var onSplit: Runnable? = null
     var onClearAll: Runnable? = null
     var onLock: Runnable? = null
+    var settingsActionsAvailable: Boolean
+        get() = settingsActionsAvailableState.value
+        set(value) {
+            if (settingsActionsAvailableState.value == value) return
+            settingsActionsAvailableState.value = value
+            onActionsContentChanged?.run()
+        }
+
+    fun updateSettingsActionsAvailable() {
+        settingsActionsAvailable = showLock ||
+            showScreenshot ||
+            showSelectText ||
+            showFreeform ||
+            showClearAll ||
+            showMemoryInfo
+    }
 }
 
 object OverviewActionButtonsBridge {
@@ -103,6 +122,8 @@ fun OverviewActionButtons(state: OverviewActionsState) {
 
 @Composable
 private fun OverviewActionButtonsContent(state: OverviewActionsState) {
+    if (!state.settingsActionsAvailable && !state.splitVisible) return
+
     val context = LocalContext.current
     val containerColor = remember(context) {
         val ta = context.obtainStyledAttributes(intArrayOf(R.attr.overviewActionButtonContainerColor))
