@@ -18,7 +18,7 @@ package com.android.launcher3.folder;
 
 public class CircleFolderLayoutRule extends ClippedFolderIconLayoutRule {
 
-    public static final int MAX_NUM_ITEMS_IN_PREVIEW = 7;
+    public static final int MAX_NUM_ITEMS_IN_PREVIEW = 6;
     private static final int PERIMETER_ICONS = 6;
 
     @Override

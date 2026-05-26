@@ -250,7 +250,10 @@ public class SecondaryDragLayer extends BaseDragLayer<SecondaryDisplayLauncher> 
 
         // order of this list will reflect in the popup
         List<SystemShortcut<?>> systemShortcuts = new ArrayList<>();
-        systemShortcuts.add(APP_INFO.getShortcut(mContainer, item, v));
+        SystemShortcut<?> appInfoShortcut = APP_INFO.getShortcut(mContainer, item, v);
+        if (appInfoShortcut != null) {
+            systemShortcuts.add(appInfoShortcut);
+        }
         // Hide redundant pin shortcut for app drawer icons if drag-n-drop is enabled.
         if (!FeatureFlags.SECONDARY_DRAG_N_DROP_TO_PIN.get() || !mContainer.isAppDrawerShown()) {
             systemShortcuts.add(mPinnedAppsAdapter.getSystemShortcut(item, v));

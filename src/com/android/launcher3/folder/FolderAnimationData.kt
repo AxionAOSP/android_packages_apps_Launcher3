@@ -18,6 +18,7 @@ package com.android.launcher3.folder
 
 import android.graphics.Rect
 import android.view.View
+import com.android.launcher3.LauncherSettings
 import com.android.launcher3.R
 import com.android.launcher3.Utilities
 import com.android.launcher3.folder.FolderAnimationSpringBuilderManager.Companion.getBubbleTextView
@@ -63,8 +64,6 @@ data class FolderAnimationData(
 
             // Get items in Preview and their scaling
             val itemsInPreview: List<View> = getPreviewIconsOnPage(this, 0)
-            val previewScale: Float = folderIcon.layoutRule.scaleForItem(itemsInPreview.size, 0)
-            val previewSize: Float = folderIcon.layoutRule.iconSize * previewScale
 
             // Get scale and position of FolderIcon relative to DragLayer
             val folderIconWorkspacePosition = Rect()
@@ -74,9 +73,21 @@ data class FolderAnimationData(
                     folderIconWorkspacePosition,
                 )
             val scaledFolderRadius: Int = previewBackground.scaledRadius
-            val baseIconSize: Float = getBubbleTextView(itemsInPreview[0]).iconSize.toFloat()
             val initialFolderSize = (scaledFolderRadius * 2) * scaleRelativeToDragLayer
-            val initialFolderScale = previewSize / baseIconSize * scaleRelativeToDragLayer
+            val initialFolderScale =
+                if (folderIcon.folderStyle == LauncherSettings.Favorites.FOLDER_STYLE_COVER) {
+                    scaleRelativeToDragLayer
+                } else if (folderIcon.isEnlargedFolder) {
+                    0.9f
+                } else {
+                    val previewScale: Float = folderIcon.layoutRule.scaleForItem(
+                        itemsInPreview.size,
+                        0,
+                    )
+                    val previewSize: Float = folderIcon.layoutRule.iconSize * previewScale
+                    val baseIconSize = getBubbleTextView(itemsInPreview[0]).iconSize.toFloat()
+                    previewSize / baseIconSize * scaleRelativeToDragLayer
+                }
 
             // Get offsets for Previews and Content
             val initialPreviewItemOffsetX =
@@ -84,7 +95,9 @@ data class FolderAnimationData(
                     (layoutParams.width * initialFolderScale - initialFolderSize).toInt()
                 } else 0
             val contentOffsetX = (content.paddingLeft * initialFolderScale).toInt()
-            val contentOffsetY = (content.paddingTop * initialFolderScale).toInt()
+            val contentPaddingOffsetY = (content.paddingTop * initialFolderScale).toInt()
+            val headerOffsetY = headerHeight
+            val contentOffsetY = headerOffsetY + contentPaddingOffsetY
 
             // Get initial position of folder
             val initialX =
@@ -97,7 +110,8 @@ data class FolderAnimationData(
                 ((folderIconWorkspacePosition.top +
                     paddingTop +
                     Math.round(previewBackground.offsetY * scaleRelativeToDragLayer)) -
-                    contentOffsetY)
+                    contentPaddingOffsetY -
+                    headerOffsetY)
 
             // Get scaled height of content and radius of background
             val scaledContentHeight = contentAreaHeight.toFloat() * initialFolderScale

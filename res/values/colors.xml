@@ -71,6 +71,7 @@
 
     <color name="folder_preview_light">#7FCFFF</color>
     <color name="folder_preview_dark">#1E1F20</color>
+    <color name="folder_overflow_color">@android:color/system_neutral2_300</color>
 
     <color name="pagination_indicator_dot_color_light">#0B57D0</color>
     <color name="pagination_indicator_dot_color_dark">#A8C7FA</color>

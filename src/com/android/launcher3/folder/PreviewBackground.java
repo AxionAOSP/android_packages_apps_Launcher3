@@ -38,7 +38,6 @@ import android.graphics.RadialGradient;
 import android.graphics.Rect;
 import android.graphics.Region;
 import android.graphics.Shader;
-import android.util.Log;
 import android.util.Property;
 import android.view.View;
 import android.view.animation.Interpolator;
@@ -187,7 +186,7 @@ public class PreviewBackground extends DelegatedCellDrawing {
 
         if (invalidateDelegate instanceof FolderIcon) {
             FolderIcon fi = (FolderIcon) invalidateDelegate;
-            if (fi.mInfo != null && fi.mInfo.spanX == 2 && fi.mInfo.spanY == 2) {
+            if (fi.isEnlargedFolder()) {
                 isEnlarged = true;
             }
             if (!isEnlarged && fi.getLayoutParams() instanceof CellLayoutLayoutParams) {
@@ -232,7 +231,10 @@ public class PreviewBackground extends DelegatedCellDrawing {
         }
 
         if (invalidateDelegate instanceof FolderIcon) {
-            mFolderStyle = ((FolderIcon) invalidateDelegate).getFolderStyle();
+            FolderIcon folderIcon = (FolderIcon) invalidateDelegate;
+            mFolderStyle = folderIcon.isEnlargedFolder()
+                    ? folderIcon.getFolderStyle()
+                    : LauncherSettings.Favorites.FOLDER_STYLE_QUADRANT;
         }
 
         invalidate();

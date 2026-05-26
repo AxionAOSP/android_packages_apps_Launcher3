@@ -21,7 +21,6 @@ import static com.android.launcher3.LauncherSettings.Favorites.DESKTOP_ICON_FLAG
 import static com.android.launcher3.Utilities.dpToPx;
 import static com.android.launcher3.folder.ClippedFolderIconLayoutRule.ENTER_INDEX;
 import static com.android.launcher3.folder.ClippedFolderIconLayoutRule.EXIT_INDEX;
-import static com.android.launcher3.folder.ClippedFolderIconLayoutRule.MAX_NUM_ITEMS_IN_PREVIEW;
 import static com.android.launcher3.folder.FolderIcon.DROP_IN_ANIMATION_DURATION;
 import static com.android.launcher3.graphics.PreloadIconDelegate.newPendingIcon;
 import static com.android.launcher3.icons.BitmapInfo.FLAG_THEMED;
@@ -40,7 +39,6 @@ import android.graphics.drawable.Drawable;
 import android.util.FloatProperty;
 import android.util.Log;
 import android.view.View;
-import android.view.animation.AnimationUtils;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.VisibleForTesting;
@@ -48,6 +46,7 @@ import androidx.annotation.VisibleForTesting;
 import com.android.launcher3.BubbleTextView;
 import com.android.launcher3.LauncherAppState;
 import com.android.launcher3.LauncherSettings;
+import com.android.launcher3.R;
 import com.android.launcher3.Utilities;
 import com.android.launcher3.apppairs.AppPairIcon;
 import com.android.launcher3.apppairs.AppPairIconDrawingParams;
@@ -69,9 +68,6 @@ import java.util.function.Predicate;
 public class PreviewItemManager {
 
     private static final String TAG = "PreviewItemManager";
-    private static final int PREVIEW_REVEAL_DURATION = 280;
-    private static final float PREVIEW_REVEAL_STAGGER = 0.08f;
-    private static final float PREVIEW_REVEAL_START_SCALE = 0.72f;
 
     private static final FloatProperty<PreviewItemManager> CURRENT_PAGE_ITEMS_TRANS_X =
             new FloatProperty<PreviewItemManager>("currentPageItemsTransX") {
@@ -86,26 +82,11 @@ public class PreviewItemManager {
                     return manager.mCurrentPageItemsTransX;
                 }
             };
-    private static final FloatProperty<PreviewItemManager> PREVIEW_REVEAL_PROGRESS =
-            new FloatProperty<PreviewItemManager>("previewRevealProgress") {
-                @Override
-                public void setValue(PreviewItemManager manager, float v) {
-                    manager.mPreviewRevealProgress = v;
-                    manager.onParamsChanged();
-                }
-
-                @Override
-                public Float get(PreviewItemManager manager) {
-                    return manager.mPreviewRevealProgress;
-                }
-            };
 
     private final Context mContext;
     private final FolderIcon mIcon;
     @VisibleForTesting
     public final int mIconSize;
-    private float mPreviewRevealProgress = 1f;
-    private Animator mPreviewRevealAnimator;
 
     // These variables are all associated with the drawing of the preview; they are stored
     // as member variables for shared usage and to avoid computation on each frame
@@ -227,6 +208,11 @@ public class PreviewItemManager {
                     Utilities.isRtl(mIcon.getResources()),
                     mIcon.mActivity.getDeviceProfile().getFolderProfile().getNumColumns()
             );
+            mIcon.mLargeLayoutRule.init(
+                    mIcon.mBackground.previewSize, mIntrinsicIconSize,
+                    Utilities.isRtl(mIcon.getResources()),
+                    mIcon.mActivity.getDeviceProfile().getFolderProfile().getNumColumns()
+            );
             mIcon.mGridLayoutRule.init(
                     mIcon.mBackground.previewSize, mIntrinsicIconSize,
                     Utilities.isRtl(mIcon.getResources()),
@@ -249,18 +235,29 @@ public class PreviewItemManager {
             return getFinalIconParams(params);
         }
         int style = mIcon.getFolderStyle();
-        switch (style) {
-            case LauncherSettings.Favorites.FOLDER_STYLE_GRID:
-                return mIcon.mGridLayoutRule.computePreviewItemDrawingParams(index, curNumItems, params);
-            case LauncherSettings.Favorites.FOLDER_STYLE_CIRCLE:
-                return mIcon.mCircleLayoutRule.computePreviewItemDrawingParams(index, curNumItems, params);
-            default:
-                return mIcon.mPreviewLayoutRule.computePreviewItemDrawingParams(index, curNumItems, params);
+        if (mIcon.isEnlargedFolder()) {
+            switch (style) {
+                case LauncherSettings.Favorites.FOLDER_STYLE_GRID:
+                    return mIcon.mGridLayoutRule.computePreviewItemDrawingParams(
+                            index, curNumItems, params);
+                case LauncherSettings.Favorites.FOLDER_STYLE_CIRCLE:
+                    return mIcon.mCircleLayoutRule.computePreviewItemDrawingParams(
+                            index, curNumItems, params);
+                case LauncherSettings.Favorites.FOLDER_STYLE_COVER:
+                    return mIcon.mPreviewLayoutRule.computePreviewItemDrawingParams(
+                            index, curNumItems, params);
+                default:
+                    return mIcon.mLargeLayoutRule.computePreviewItemDrawingParams(
+                            index, curNumItems, params);
+            }
         }
+        return mIcon.mPreviewLayoutRule.computePreviewItemDrawingParams(
+                index, curNumItems, params);
     }
 
     private PreviewItemDrawingParams getFinalIconParams(PreviewItemDrawingParams params) {
-        float iconSize = mIcon.mActivity.getDeviceProfile().getWorkspaceIconProfile().getIconSizePx();
+        float iconSize = mIcon.mActivity.getDeviceProfile()
+                .getWorkspaceIconProfile().getIconSizePx();
 
         final float scale = iconSize / mReferenceDrawable.getIntrinsicWidth();
         final float trans = (mIcon.mBackground.previewSize - iconSize) / 2;
@@ -269,16 +266,20 @@ public class PreviewItemManager {
         return params;
     }
 
-    private final PreviewItemDrawingParams mSynthesizedDotParams = new PreviewItemDrawingParams(0, 0, 0);
+    private final PreviewItemDrawingParams mSynthesizedDotParams =
+            new PreviewItemDrawingParams(0, 0, 0);
 
     public void drawParams(Canvas canvas, ArrayList<PreviewItemDrawingParams> params,
             PointF offset, boolean shouldClipPath, Path clipPath) {
         int indicatorIndex = getIndicatorIndex();
+        int maxPreviewItems = mIcon.getMaxPreviewItems();
+        int totalItems = mIcon.mInfo.getContents().size();
 
-        if (mIcon.getFolderStyle() == LauncherSettings.Favorites.FOLDER_STYLE_CIRCLE
-                && indicatorIndex == 6 && params.size() == 6) {
-            computePreviewItemDrawingParams(6, 7, mSynthesizedDotParams);
-            drawIndicatorDots(canvas, mSynthesizedDotParams, offset, getRevealProgress(6));
+        if (indicatorIndex >= 0 && totalItems > maxPreviewItems
+                && params.size() == maxPreviewItems) {
+            computePreviewItemDrawingParams(indicatorIndex, indicatorIndex + 1,
+                    mSynthesizedDotParams);
+            drawDotsIndicator(canvas, mSynthesizedDotParams, offset);
         }
 
         // The first item should be drawn last (ie. on top of later items)
@@ -287,12 +288,11 @@ public class PreviewItemManager {
             if (!p.hidden) {
                 // Exiting param should always be clipped.
                 boolean isExiting = p.index == EXIT_INDEX;
-                float revealProgress = getRevealProgress(i);
-                if (indicatorIndex >= 0 && p.index == indicatorIndex) {
-                    drawIndicatorDots(canvas, p, offset, revealProgress);
+                if (indicatorIndex >= 0 && totalItems > maxPreviewItems
+                        && p.index == indicatorIndex) {
+                    drawDotsIndicator(canvas, p, offset);
                 } else {
-                    drawPreviewItem(canvas, p, offset, isExiting | shouldClipPath, clipPath,
-                            revealProgress);
+                    drawPreviewItem(canvas, p, offset, isExiting | shouldClipPath, clipPath);
                 }
             }
         }
@@ -326,37 +326,6 @@ public class PreviewItemManager {
         mIcon.invalidate();
     }
 
-    void startPreviewRevealAnimation() {
-        if (mPreviewRevealAnimator != null) {
-            mPreviewRevealAnimator.cancel();
-        }
-        preparePreviewRevealAnimation();
-        mPreviewRevealAnimator = ObjectAnimator.ofFloat(this, PREVIEW_REVEAL_PROGRESS, 0f, 1f);
-        mPreviewRevealAnimator.setDuration(PREVIEW_REVEAL_DURATION);
-        mPreviewRevealAnimator.setInterpolator(AnimationUtils.loadInterpolator(
-                mContext, android.R.interpolator.fast_out_slow_in));
-        mPreviewRevealAnimator.addListener(new AnimatorListenerAdapter() {
-            @Override
-            public void onAnimationEnd(Animator animation) {
-                mPreviewRevealProgress = 1f;
-                mPreviewRevealAnimator = null;
-                onParamsChanged();
-            }
-        });
-        mPreviewRevealAnimator.start();
-    }
-
-    void preparePreviewRevealAnimation() {
-        mPreviewRevealProgress = 0f;
-        onParamsChanged();
-    }
-
-    private float getRevealProgress(int index) {
-        float progress = (mPreviewRevealProgress - index * PREVIEW_REVEAL_STAGGER)
-                / (1f - index * PREVIEW_REVEAL_STAGGER);
-        return Math.max(0f, Math.min(1f, progress));
-    }
-
     /**
      * Draws each preview item.
      *
@@ -365,104 +334,30 @@ public class PreviewItemManager {
      * @param clipPath       The clip path of the folder icon.
      */
     private void drawPreviewItem(Canvas canvas, PreviewItemDrawingParams params, PointF offset,
-            boolean shouldClipPath, Path clipPath, float revealProgress) {
+            boolean shouldClipPath, Path clipPath) {
         canvas.save();
         if (shouldClipPath) {
             canvas.clipPath(clipPath);
         }
-        float revealScale = PREVIEW_REVEAL_START_SCALE
-                + (1f - PREVIEW_REVEAL_START_SCALE) * revealProgress;
-        float finalSize = mIntrinsicIconSize * params.scale;
-        float revealOffset = finalSize * (1f - revealScale) / 2f;
-        canvas.translate(offset.x + params.transX + revealOffset,
-                offset.y + params.transY + revealOffset);
-        canvas.scale(params.scale * revealScale, params.scale * revealScale);
+        canvas.translate(offset.x + params.transX, offset.y + params.transY);
+        canvas.scale(params.scale, params.scale);
         Drawable d = params.drawable;
 
         if (d != null) {
-            int oldAlpha = d.getAlpha();
-            d.setAlpha(Math.round(oldAlpha * revealProgress));
             Rect bounds = d.getBounds();
             canvas.save();
             canvas.translate(-bounds.left, -bounds.top);
             canvas.scale(mIntrinsicIconSize / bounds.width(), mIntrinsicIconSize / bounds.height());
             d.draw(canvas);
             canvas.restore();
-            d.setAlpha(oldAlpha);
         }
         canvas.restore();
     }
 
-    private void drawIndicatorDots(Canvas canvas, PreviewItemDrawingParams params, PointF offset,
-            float revealProgress) {
-        int style = mIcon.getFolderStyle();
-
-        if (style == LauncherSettings.Favorites.FOLDER_STYLE_QUADRANT) {
-            drawQuadrantMiniIcons(canvas, params, offset, revealProgress);
-        } else {
-            drawDotsIndicator(canvas, params, offset, revealProgress);
-        }
-    }
-
-    private void drawQuadrantMiniIcons(Canvas canvas, PreviewItemDrawingParams params, PointF offset,
-            float revealProgress) {
+    private void drawDotsIndicator(Canvas canvas, PreviewItemDrawingParams params, PointF offset) {
         canvas.save();
-        float revealScale = PREVIEW_REVEAL_START_SCALE
-                + (1f - PREVIEW_REVEAL_START_SCALE) * revealProgress;
-        float finalSize = mIntrinsicIconSize * params.scale;
-        float revealOffset = finalSize * (1f - revealScale) / 2f;
-        canvas.translate(offset.x + params.transX + revealOffset,
-                offset.y + params.transY + revealOffset);
-        canvas.scale(params.scale * revealScale, params.scale * revealScale);
-
-        float iconSize = mIntrinsicIconSize;
-        float miniIconSize = iconSize * 0.42f;
-        float spacing = iconSize * 0.08f;
-        float startX = (iconSize - 2 * miniIconSize - spacing) / 2f;
-        float startY = startX;
-
-        List<ItemInfo> items = mIcon.mInfo.getContents();
-        int startIndex = 3;
-
-        int drawn = 0;
-        for (int itemIdx = startIndex; itemIdx < items.size() && drawn < 4; itemIdx++) {
-            ItemInfo item = items.get(itemIdx);
-            Drawable icon = null;
-            if (item instanceof ItemInfoWithIcon) {
-                icon = ((ItemInfoWithIcon) item).newIcon(mContext, FLAG_THEMED);
-            }
-
-            if (icon == null) {
-                continue;
-            }
-            icon.setAlpha(Math.round(255 * revealProgress));
-
-            int row = drawn / 2;
-            int col = drawn % 2;
-            float x = startX + col * (miniIconSize + spacing);
-            float y = startY + row * (miniIconSize + spacing);
-
-            canvas.save();
-            canvas.translate(x, y);
-            icon.setBounds(0, 0, (int) miniIconSize, (int) miniIconSize);
-            icon.draw(canvas);
-            canvas.restore();
-            drawn++;
-        }
-
-        canvas.restore();
-    }
-
-    private void drawDotsIndicator(Canvas canvas, PreviewItemDrawingParams params, PointF offset,
-            float revealProgress) {
-        canvas.save();
-        float revealScale = PREVIEW_REVEAL_START_SCALE
-                + (1f - PREVIEW_REVEAL_START_SCALE) * revealProgress;
-        float finalSize = mIntrinsicIconSize * params.scale;
-        float revealOffset = finalSize * (1f - revealScale) / 2f;
-        canvas.translate(offset.x + params.transX + revealOffset,
-                offset.y + params.transY + revealOffset);
-        canvas.scale(params.scale * revealScale, params.scale * revealScale);
+        canvas.translate(offset.x + params.transX, offset.y + params.transY);
+        canvas.scale(params.scale, params.scale);
 
         float iconSize = mIntrinsicIconSize;
         float dotRadius = iconSize * 0.05f;
@@ -471,7 +366,7 @@ public class PreviewItemManager {
         float centerY = iconSize / 2f;
 
         mIndicatorPaint.setColor(Themes.getColorAccent(mContext));
-        mIndicatorPaint.setAlpha(Math.round(255 * revealProgress));
+        mIndicatorPaint.setAlpha(255);
 
         canvas.drawCircle(centerX - spacing, centerY - spacing, dotRadius, mIndicatorPaint);
         canvas.drawCircle(centerX + spacing, centerY - spacing, dotRadius, mIndicatorPaint);
@@ -483,12 +378,12 @@ public class PreviewItemManager {
 
     private int getIndicatorIndex() {
         int style = mIcon.getFolderStyle();
-        if (style == LauncherSettings.Favorites.FOLDER_STYLE_QUADRANT) {
-            return ClippedFolderIconLayoutRule.MAX_NUM_ITEMS_IN_PREVIEW - 1;
-        } else if (style == LauncherSettings.Favorites.FOLDER_STYLE_GRID) {
-            return GridFolderLayoutRule.MAX_NUM_ITEMS_IN_PREVIEW - 1;
-        } else if (style == LauncherSettings.Favorites.FOLDER_STYLE_CIRCLE) {
-            return 6;
+        if (!mIcon.isEnlargedFolder()) {
+            return -1;
+        }
+        if (style == LauncherSettings.Favorites.FOLDER_STYLE_GRID
+                || style == LauncherSettings.Favorites.FOLDER_STYLE_CIRCLE) {
+            return mIcon.getMaxPreviewItems();
         }
         return -1;
     }
@@ -497,7 +392,7 @@ public class PreviewItemManager {
         // If there are more params than visible in the preview, they are used for enter/exit
         // animation purposes and they were added to the front of the list.
         // To index the params properly, we need to skip these params.
-        index = index + Math.max(mFirstPageParams.size() - MAX_NUM_ITEMS_IN_PREVIEW, 0);
+        index = index + Math.max(mFirstPageParams.size() - mIcon.getMaxPreviewItems(), 0);
 
         PreviewItemDrawingParams params = index < mFirstPageParams.size() ?
                 mFirstPageParams.get(index) : null;
@@ -517,7 +412,7 @@ public class PreviewItemManager {
             params.add(new PreviewItemDrawingParams(0, 0, 0));
         }
 
-        int numItemsInFirstPagePreview = page == 0 ? items.size() : MAX_NUM_ITEMS_IN_PREVIEW;
+        int numItemsInFirstPagePreview = page == 0 ? items.size() : mIcon.getMaxPreviewItems();
         for (int i = 0; i < params.size(); i++) {
             PreviewItemDrawingParams p = params.get(i);
             p.index = i;

@@ -26,6 +26,7 @@ import android.graphics.drawable.GradientDrawable
 import android.util.FloatProperty
 import android.util.Property
 import android.view.View
+import android.view.animation.PathInterpolator
 import androidx.dynamicanimation.animation.DynamicAnimation.MIN_VISIBLE_CHANGE_ALPHA
 import androidx.dynamicanimation.animation.DynamicAnimation.MIN_VISIBLE_CHANGE_PIXELS
 import androidx.dynamicanimation.animation.DynamicAnimation.MIN_VISIBLE_CHANGE_SCALE
@@ -36,7 +37,6 @@ import com.android.launcher3.R
 import com.android.launcher3.Utilities.isDarkTheme
 import com.android.launcher3.anim.SpringAnimationBuilder
 import com.android.launcher3.apppairs.AppPairIcon
-import com.android.launcher3.folder.ClippedFolderIconLayoutRule.MAX_NUM_ITEMS_IN_PREVIEW
 import com.android.launcher3.util.Themes
 
 /** Holder for Animators created from [FolderAnimationSpringBuilderManager] */
@@ -49,14 +49,16 @@ class FolderSpringAnimatorSet(val animatorSet: AnimatorSet) {
     companion object Factory {
         private const val LAUNCHER_SCALE = 0.975f
         private const val FOLDER_NAME_ALPHA_DURATION = 32
-        private const val CONTENT_ALPHA_OUT_DURATION = 96
         private const val LARGE_FOLDER_FOOTER_DURATION = 128
+        private const val ITEM_ALPHA_START_DELAY = 10L
+        private const val ITEM_ALPHA_DURATION = 150L
         private const val STIFFNESS_SHAPE_POSITION = 380f
         private const val DAMPING_SHAPE_POSITION = 0.8f
         private const val STIFFNESS_ALPHA = 1600f
         private const val DAMPING_ALPHA = 0.9f
         private const val STIFFNESS_LAUNCHER_SCRIM = 380f
         private const val DAMPING_LAUNCHER_SCRIM = 0.98f
+        private val ITEM_ALPHA_INTERPOLATOR = PathInterpolator(0.4f, 0f, 0.6f, 1f)
 
         /**
          * Factory method to take data calculated from [FolderAnimationSpringBuilderManager], and
@@ -251,60 +253,44 @@ class FolderSpringAnimatorSet(val animatorSet: AnimatorSet) {
                         .apply { duration = animationData.defaultDuration.toLong() }
                 )
 
-                val footerAlphaDuration: Int
                 var footerStartDelay = 0
-                val isLargeFolder = folder.itemCount > MAX_NUM_ITEMS_IN_PREVIEW
+                val isLargeFolder = folder.itemCount > maxOf(folder.folderIcon.maxPreviewItems, 1)
                 if (isLargeFolder) {
+                    folder.mFooter.alpha = 0f
                     if (isOpening) {
-                        folder.mFooter.alpha = 0f
-                        footerAlphaDuration = LARGE_FOLDER_FOOTER_DURATION
-                        footerStartDelay = animationData.defaultDuration - footerAlphaDuration
+                        footerStartDelay =
+                            animationData.defaultDuration - LARGE_FOLDER_FOOTER_DURATION
                     }
                 }
 
-                playSpringAnimation(
-                    context = folder.context,
-                    animatorSet = animatorSet,
-                    isOpening = isOpening,
-                    startDelay = if (animationData.isOpening) footerStartDelay else 0,
-                    stiffness = STIFFNESS_ALPHA,
-                    damping = DAMPING_ALPHA,
-                    startValue = 0f,
-                    endValue = 1f,
-                    minVisibleChange = MIN_VISIBLE_CHANGE_ALPHA,
-                    property = View.ALPHA,
-                    view = mFooter,
-                )
-                if (!isOpening) {
-                    val contentFade =
-                        ObjectAnimator.ofFloat(content, View.ALPHA, 1f, 0f).apply {
-                            duration = CONTENT_ALPHA_OUT_DURATION.toLong()
-                        }
-                    contentFade.addListener(
-                        object : AnimatorListenerAdapter() {
-                            override fun onAnimationEnd(animation: Animator) {
-                                folder.content.alpha = 0f
-                            }
-                        }
+                if (!isLargeFolder || isOpening) {
+                    playSpringAnimation(
+                        context = folder.context,
+                        animatorSet = animatorSet,
+                        isOpening = isOpening,
+                        startDelay = if (animationData.isOpening) footerStartDelay else 0,
+                        stiffness = STIFFNESS_ALPHA,
+                        damping = DAMPING_ALPHA,
+                        startValue = 0f,
+                        endValue = 1f,
+                        minVisibleChange = MIN_VISIBLE_CHANGE_ALPHA,
+                        property = View.ALPHA,
+                        view = mFooter,
                     )
-                    animatorSet.play(contentFade)
                 }
                 // Fade in the folder name, as the text can overlap the icons when grid size is
                 // small.
-                folder.folderName.alpha = if (animationData.isOpening) 0f else 1f
-                playSpringAnimation(
-                    context = folder.context,
-                    animatorSet = animatorSet,
-                    isOpening = isOpening,
-                    startDelay = if (animationData.isOpening) FOLDER_NAME_ALPHA_DURATION else 0,
-                    stiffness = STIFFNESS_ALPHA,
-                    damping = DAMPING_ALPHA,
-                    startValue = 0f,
-                    endValue = 1f,
-                    minVisibleChange = MIN_VISIBLE_CHANGE_ALPHA,
-                    property = View.ALPHA,
-                    view = folderName,
-                )
+                folder.folderName.alpha = 0f
+                if (isOpening) {
+                    animatorSet.play(
+                        ObjectAnimator.ofFloat(folderName, View.ALPHA, 0f, 1f).apply {
+                            startDelay =
+                                maxOf(0, animationData.defaultDuration - FOLDER_NAME_ALPHA_DURATION)
+                                    .toLong()
+                            duration = FOLDER_NAME_ALPHA_DURATION.toLong()
+                        }
+                    )
+                }
             }
         }
 
@@ -347,7 +333,12 @@ class FolderSpringAnimatorSet(val animatorSet: AnimatorSet) {
             val scrimView = launcher.scrimView
             val workspace = launcher.workspace
             val hotseat = launcher.hotseat
-            val finalScrimAlpha = if (isDarkTheme(context)) 0.32f else 0.2f
+            val finalScrimAlpha =
+                context.resources.getFloat(
+                    if (isDarkTheme(context)) R.dimen.config_folderScrimAlphaDark
+                    else R.dimen.config_folderScrimAlphaLight
+                )
+            scrimView.alpha = if (isOpening) 0f else finalScrimAlpha
             scrimView.setBackgroundColor(Color.BLACK)
             playSpringAnimation(
                 context = context,
@@ -400,6 +391,17 @@ class FolderSpringAnimatorSet(val animatorSet: AnimatorSet) {
             return if (v is AppPairIcon) v.titleTextView else (v as BubbleTextView)
         }
 
+        private fun playItemAlphaAnimator(
+            animatorSet: AnimatorSet,
+            animator: ObjectAnimator,
+            isOpening: Boolean,
+        ) {
+            animator.startDelay = if (isOpening) ITEM_ALPHA_START_DELAY else 0L
+            animator.duration = ITEM_ALPHA_DURATION
+            animator.interpolator = ITEM_ALPHA_INTERPOLATOR
+            animatorSet.play(animator)
+        }
+
         private fun addContentIconAnimators(
             context: Context,
             animatorSet: AnimatorSet,
@@ -408,31 +410,21 @@ class FolderSpringAnimatorSet(val animatorSet: AnimatorSet) {
             with(iconData) {
                 val titleText = getBubbleTextView(icon)
                 titleText.setTextVisibility(false)
-                val anim =
-                    titleText.createTextAlphaAnimator(isOpening).apply {
-                        startDelay = (if (isOpening) iconDelay + 100 else iconDelay).toLong()
-                    }
-                animatorSet.play(anim)
                 if (!itemsInPreview.contains(icon)) {
-                    playSpringAnimation(
-                        context = context,
-                        animatorSet = animatorSet,
-                        isOpening = isOpening,
-                        startDelay = iconDelay,
-                        stiffness = STIFFNESS_ALPHA,
-                        damping = DAMPING_ALPHA,
-                        startValue = 0f,
-                        endValue = 1f,
-                        minVisibleChange = MIN_VISIBLE_CHANGE_ALPHA,
-                        property = View.ALPHA,
-                        view = icon,
-                    )
+                    icon.alpha = 0f
+                    if (isOpening) {
+                        playItemAlphaAnimator(
+                            animatorSet,
+                            ObjectAnimator.ofFloat(icon, View.ALPHA, 0f, 1f),
+                            isOpening,
+                        )
+                    }
                 }
                 playSpringAnimation(
                     context = context,
                     animatorSet = animatorSet,
                     isOpening = isOpening,
-                    startDelay = iconDelay,
+                    startDelay = 0,
                     stiffness = STIFFNESS_SHAPE_POSITION,
                     damping = DAMPING_SHAPE_POSITION,
                     startValue = xDistance,
@@ -445,7 +437,7 @@ class FolderSpringAnimatorSet(val animatorSet: AnimatorSet) {
                     context = context,
                     animatorSet = animatorSet,
                     isOpening = isOpening,
-                    startDelay = iconDelay,
+                    startDelay = 0,
                     stiffness = STIFFNESS_SHAPE_POSITION,
                     damping = DAMPING_SHAPE_POSITION,
                     startValue = yDistance,
@@ -458,7 +450,7 @@ class FolderSpringAnimatorSet(val animatorSet: AnimatorSet) {
                     context = context,
                     animatorSet = animatorSet,
                     isOpening = isOpening,
-                    startDelay = iconDelay,
+                    startDelay = 0,
                     stiffness = STIFFNESS_SHAPE_POSITION,
                     damping = DAMPING_SHAPE_POSITION,
                     startValue = initialIconScale,
@@ -473,6 +465,8 @@ class FolderSpringAnimatorSet(val animatorSet: AnimatorSet) {
                         xDistance = xDistance,
                         yDistance = yDistance,
                         initialScale = initialIconScale,
+                        pivotX = pivotX,
+                        pivotY = pivotY,
                         itemsInPreview = itemsInPreview,
                         isOpening = isOpening,
                     )
@@ -485,21 +479,24 @@ class FolderSpringAnimatorSet(val animatorSet: AnimatorSet) {
             xDistance: Float,
             yDistance: Float,
             initialScale: Float,
+            pivotX: Float,
+            pivotY: Float,
             itemsInPreview: List<View>,
             isOpening: Boolean,
         ) =
             object : AnimatorListenerAdapter() {
                 override fun onAnimationStart(animation: Animator) {
                     super.onAnimationStart(animation)
-                    // Necessary to initialize values here because of the start delay.
+                    icon.pivotX = 0f
+                    icon.pivotY = 0f
                     if (isOpening) {
                         icon.translationX = xDistance
                         icon.translationY = yDistance
                         icon.scaleX = initialScale
                         icon.scaleY = initialScale
-                        if (!itemsInPreview.contains(icon)) {
-                            icon.alpha = 0f
-                        }
+                    }
+                    if (!itemsInPreview.contains(icon)) {
+                        icon.alpha = 0f
                     }
                 }
 
@@ -514,6 +511,8 @@ class FolderSpringAnimatorSet(val animatorSet: AnimatorSet) {
                             icon.alpha = 1f
                         }
                     }
+                    icon.pivotX = pivotX
+                    icon.pivotY = pivotY
                 }
             }
     }

@@ -74,9 +74,17 @@ class FolderAnimationSpringBuilderManager(
     companion object {
         /** Returns the list of "preview items" on {@param page}. */
         fun getPreviewIconsOnPage(folder: Folder, page: Int): List<View> {
-            return createFolderGridOrganizer(folder.mActivityContext.deviceProfile)
-                .setFolderInfo(folder.mInfo)
-                .previewItemsForPage(page, folder.iconsInReadingOrder)
+            val maxPreviewItems = folder.folderIcon.maxPreviewItems
+            if (maxPreviewItems <= 0) return emptyList()
+            if (!folder.folderIcon.isEnlargedFolder) {
+                val items: List<View> =
+                    createFolderGridOrganizer(folder.mActivityContext.deviceProfile)
+                        .setFolderInfo(folder.mInfo)
+                        .previewItemsForPage(page, folder.iconsInReadingOrder)
+                return items.take(maxPreviewItems)
+            }
+            val items = folder.getItemsOnPage(page)
+            return items.subList(0, minOf(maxPreviewItems, items.size))
         }
 
         /**

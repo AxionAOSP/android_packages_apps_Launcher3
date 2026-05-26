@@ -133,11 +133,13 @@ public class TaskbarPopupController implements TaskbarControllers.LoggableTaskba
     }
 
     // Create a Stream of all applicable system shortcuts
-    private Stream<SystemShortcut.Factory<BaseTaskbarContext>> getSystemShortcuts() {
+    private Stream<SystemShortcut.Factory<BaseTaskbarContext>> getSystemShortcuts(ItemInfo itemInfo) {
         // append split options to APP_INFO shortcut if not in Desktop Windowing mode, the order
         // here will reflect in the popup
         ArrayList<SystemShortcut.Factory<BaseTaskbarContext>> shortcuts = new ArrayList<>();
-        shortcuts.add(APP_INFO);
+        if (itemInfo.itemType != LauncherSettings.Favorites.ITEM_TYPE_FOLDER) {
+            shortcuts.add(APP_INFO);
+        }
         if (!mControllers.taskbarDesktopModeController
                 .isInDesktopModeAndNotInOverview(mContext.getDisplayId())) {
             shortcuts.addAll(mControllers.uiController.getSplitMenuOptions().toList());
@@ -232,7 +234,7 @@ public class TaskbarPopupController implements TaskbarControllers.LoggableTaskba
                 .getPopupDataProvider().getShortcutCountForItem(itemInfo);
         // TODO(b/198438631): add support for INSTALL shortcut factory
         final ItemInfo finalInfo = itemInfo;
-        List<SystemShortcut<BaseTaskbarContext>> systemShortcuts = getSystemShortcuts()
+        List<SystemShortcut<BaseTaskbarContext>> systemShortcuts = getSystemShortcuts(finalInfo)
                 .map(s -> s.getShortcut(context, finalInfo, icon))
                 .filter(Objects::nonNull)
                 .collect(Collectors.toList());

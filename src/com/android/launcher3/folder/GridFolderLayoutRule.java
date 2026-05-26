@@ -18,7 +18,7 @@ package com.android.launcher3.folder;
 
 public class GridFolderLayoutRule extends ClippedFolderIconLayoutRule {
 
-    public static final int MAX_NUM_ITEMS_IN_PREVIEW = 9;
+    public static final int MAX_NUM_ITEMS_IN_PREVIEW = 8;
     private static final int GRID_SIZE = 3;
 
     @Override

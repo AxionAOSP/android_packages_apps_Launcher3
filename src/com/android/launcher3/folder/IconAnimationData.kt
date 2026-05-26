@@ -18,7 +18,6 @@ package com.android.launcher3.folder
 
 import android.view.View
 import com.android.launcher3.celllayout.CellLayoutLayoutParams
-import com.android.launcher3.folder.ClippedFolderIconLayoutRule.MAX_NUM_ITEMS_IN_PREVIEW
 import com.android.launcher3.folder.FolderAnimationSpringBuilderManager.Companion.getBubbleTextView
 import com.android.launcher3.folder.FolderAnimationSpringBuilderManager.Companion.getPreviewIconsOnPage
 
@@ -26,8 +25,6 @@ import com.android.launcher3.folder.FolderAnimationSpringBuilderManager.Companio
 data class IconAnimationData(
     /** icon in folder content to animate */
     val icon: View,
-    /** delay for animating this icon */
-    val iconDelay: Int,
     /** icons to display in Folder Preview */
     val itemsInPreview: List<View>,
     /** x distance to translate this icon */
@@ -36,13 +33,13 @@ data class IconAnimationData(
     val yDistance: Float,
     /** initial scale of this icon when folder is closed */
     val initialIconScale: Float,
+    val pivotX: Float,
+    val pivotY: Float,
     /** if folder is opening or closing */
     val isOpening: Boolean,
 ) {
 
     companion object Factory {
-        private const val OPEN_ICON_DELAY_INCREMENT = 5
-
         /**
          * Animates the icons within the folder. Icons start at the Preview Icon scale and then are
          * translated and scaled to the final folder content icon size. Their animations are also
@@ -97,14 +94,19 @@ data class IconAnimationData(
                 val finalIconScale = 1f
                 // Scale to start with in Animation
                 val startScale = if (isOpening) initialIconScale else finalIconScale
+                val pivotX = currentIcon.pivotX
+                val pivotY = currentIcon.pivotY
+                currentIcon.pivotX = 0f
+                currentIcon.pivotY = 0f
                 currentIcon.scaleX = startScale
                 currentIcon.scaleY = startScale
 
+                val maxPreviewItems = maxOf(folderIcon.maxPreviewItems, 1)
                 val pageLayoutCount =
-                    if (numItemsOnPage < MAX_NUM_ITEMS_IN_PREVIEW && page > 0) {
+                    if (numItemsOnPage < maxPreviewItems && page > 0) {
                         // If not on first page, we don't want preview items to position in a
                         // circle.
-                        MAX_NUM_ITEMS_IN_PREVIEW
+                        maxPreviewItems
                     } else {
                         numItemsOnPage
                     }
@@ -130,16 +132,15 @@ data class IconAnimationData(
                         .toInt()
                 val xDistance = (iconPositionX - iconLayoutParams.x).toFloat()
                 val yDistance = (iconPositionY - iconLayoutParams.y).toFloat()
-                val iconDelay = if (isOpening) i * OPEN_ICON_DELAY_INCREMENT else 0
-
                 iconDataList.add(
                     IconAnimationData(
                         icon = currentIcon,
-                        iconDelay = iconDelay,
                         itemsInPreview = itemsInPreview,
                         xDistance = xDistance,
                         yDistance = yDistance,
                         initialIconScale = initialIconScale,
+                        pivotX = pivotX,
+                        pivotY = pivotY,
                         isOpening = isOpening,
                     )
                 )

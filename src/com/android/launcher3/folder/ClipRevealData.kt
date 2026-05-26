@@ -53,6 +53,7 @@ data class ClipRevealData(
             val deviceProfile = mActivityContext.deviceProfile
 
             with(folderAnimationData) {
+                val headerOffsetY = headerHeight
                 // Setup start and end area for revealing Folder background
                 val backgroundStartRect =
                     Rect(
@@ -61,7 +62,8 @@ data class ClipRevealData(
                         Math.round((previewOffsetX + initialFolderSize)),
                         Math.round((contentOffsetY + initialFolderSize)),
                     )
-                val backgroundEndRect = Rect(0, 0, layoutParams.width, layoutParams.height)
+                val backgroundEndRect =
+                    Rect(0, headerOffsetY, layoutParams.width, layoutParams.height)
                 val finalBackgroundRadius = folderBackground.cornerRadius
 
                 // Get page for revealing Folder Content
@@ -80,13 +82,15 @@ data class ClipRevealData(
                     Rect(
                         (pageStart + (backgroundStartRect.left / initialFolderScale)).toInt() -
                             extraRadius,
-                        (backgroundStartRect.top / initialFolderScale).toInt() - extraRadius,
+                        ((backgroundStartRect.top - headerOffsetY) / initialFolderScale).toInt() -
+                            extraRadius,
                         (pageStart + (backgroundStartRect.right / initialFolderScale)).toInt() +
                             extraRadius,
-                        (backgroundStartRect.bottom / initialFolderScale).toInt() + extraRadius,
+                        ((backgroundStartRect.bottom - headerOffsetY) / initialFolderScale)
+                            .toInt() + extraRadius,
                     )
                 val contentEnd =
-                    Rect(pageStart, 0, pageStart + layoutParams.width, layoutParams.height)
+                    Rect(pageStart, 0, pageStart + contentAreaWidth, contentAreaHeight)
                 return ClipRevealData(
                     isOpening = folderAnimationData.isOpening,
                     shapeDelegate = shapeDelegate,
