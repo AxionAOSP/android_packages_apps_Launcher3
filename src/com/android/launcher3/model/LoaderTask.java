@@ -471,6 +471,7 @@ public class LoaderTask implements Runnable {
                     mIsRestoreFromBackup ? restoreEventLogger : null);
             final Bundle extras = c.getExtras();
             mDbName = extras == null ? null : extras.getString(ModelDbController.EXTRA_DB_NAME);
+            final boolean isCurrentModelDb = Objects.equals(mIDP.dbFile, mDbName);
             WorkspaceItemProcessor itemProcessor;
             try {
                 final LongSparseArray<Boolean> unlockedUsers = new LongSparseArray<>();
@@ -482,7 +483,8 @@ public class LoaderTask implements Runnable {
                         mShortcutKeyToPinnedShortcuts, mContext, mIDP, mIconCache,
                         mIsSafeModeEnabled, installingPkgs, isSdCardReady, widgetInflater,
                         mPmHelper, mWorkspaceIconRequestInfos, unlockedUsers, allDeepShortcuts,
-                        mWidgetSizeHandler, mWorkspaceItemSpaceFinder, mHomeScreenFilesQueryResult);
+                        mWidgetSizeHandler, mWorkspaceItemSpaceFinder, mHomeScreenFilesQueryResult,
+                        isCurrentModelDb);
 
                 if (mStopped) {
                     Log.w(TAG, "loadWorkspaceImpl: Loader stopped, skipping item processing");

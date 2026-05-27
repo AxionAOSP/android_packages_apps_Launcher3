@@ -357,6 +357,8 @@ public class ModelDbController {
 
             boolean isAfterRestore =
                     LauncherPrefs.get(mContext).get(LauncherPrefs.IS_FIRST_LOAD_AFTER_RESTORE);
+            boolean allowAnyExistingGrid = isAfterRestore
+                    || srcDeviceState.getDeviceType() != destDeviceState.getDeviceType();
             GridSizeMigrationLogic gridSizeMigrationLogic = mMigrationLogicFactory.get();
 
             // Check if the migration path from source to destination is valid before migrating.
@@ -368,10 +370,14 @@ public class ModelDbController {
                             destDeviceState.getColumns(), destDeviceState.getRows());
             if (sourceGridMigrationOption != null && destinationGridMigrationOption != null
                     && sourceGridMigrationOption.canMigrate(destinationGridMigrationOption,
-                    isAfterRestore)) {
+                    allowAnyExistingGrid)) {
                 mOpenHelper = createDatabaseHelper(true, new DeviceGridState(mIdp).getDbFile());
-                gridSizeMigrationLogic.migrateGrid(srcDeviceState, destDeviceState,
-                        mOpenHelper, oldHelper.getWritableDatabase(), isDestNewDb, modelDelegate);
+                if (!gridSizeMigrationLogic.migrateGrid(srcDeviceState, destDeviceState,
+                        mOpenHelper, oldHelper.getWritableDatabase(), isDestNewDb, modelDelegate)) {
+                    DatabaseHelper failedHelper = mOpenHelper;
+                    mOpenHelper = oldHelper;
+                    failedHelper.close();
+                }
             } else {
                 FileLog.e(TAG, "Cannot migrate from source: " + srcDeviceState
                         + " to destination: " + destDeviceState);

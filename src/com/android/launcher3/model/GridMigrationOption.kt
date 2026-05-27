@@ -52,8 +52,14 @@ sealed class GridMigrationOption(val columns: Int, val rows: Int) {
                 FourByFour,
                 FourByFive,
                 FourBySix,
+                FourBySeven,
+                FourByEight,
                 FiveByFive,
                 FiveBySix,
+                FiveBySeven,
+                FiveByEight,
+                FiveByNine,
+                SixBySix,
                 EightByThree,
                 SevenByThree -> validDestinationsForPhone
                 SixByFive -> validDestinationsForTablet
@@ -67,8 +73,14 @@ sealed class GridMigrationOption(val columns: Int, val rows: Int) {
                 FourByFour,
                 FourByFive,
                 FourBySix,
+                FourBySeven,
+                FourByEight,
                 FiveByFive,
                 FiveBySix,
+                FiveBySeven,
+                FiveByEight,
+                FiveByNine,
+                SixBySix,
                 EightByThree,
                 SevenByThree,
             )
@@ -86,11 +98,23 @@ sealed class GridMigrationOption(val columns: Int, val rows: Int) {
 
     data object FourBySix : GridMigrationOption(columns = 4, rows = 6)
 
+    data object FourBySeven : GridMigrationOption(columns = 4, rows = 7)
+
+    data object FourByEight : GridMigrationOption(columns = 4, rows = 8)
+
     data object FiveByFive : GridMigrationOption(columns = 5, rows = 5)
 
     data object FiveBySix : GridMigrationOption(columns = 5, rows = 6)
 
+    data object FiveBySeven : GridMigrationOption(columns = 5, rows = 7)
+
+    data object FiveByEight : GridMigrationOption(columns = 5, rows = 8)
+
+    data object FiveByNine : GridMigrationOption(columns = 5, rows = 9)
+
     data object SixByFive : GridMigrationOption(columns = 6, rows = 5)
+
+    data object SixBySix : GridMigrationOption(columns = 6, rows = 6)
 
     data object EightByThree : GridMigrationOption(columns = 8, rows = 3)
 
@@ -110,9 +134,15 @@ sealed class GridMigrationOption(val columns: Int, val rows: Int) {
                 columns == 4 && rows == 4 -> FourByFour
                 columns == 4 && rows == 5 -> FourByFive
                 columns == 4 && rows == 6 -> FourBySix
+                columns == 4 && rows == 7 -> FourBySeven
+                columns == 4 && rows == 8 -> FourByEight
                 columns == 5 && rows == 5 -> FiveByFive
                 columns == 5 && rows == 6 -> FiveBySix
+                columns == 5 && rows == 7 -> FiveBySeven
+                columns == 5 && rows == 8 -> FiveByEight
+                columns == 5 && rows == 9 -> FiveByNine
                 columns == 6 && rows == 5 -> SixByFive
+                columns == 6 && rows == 6 -> SixBySix
                 columns == 8 && rows == 3 -> EightByThree
                 columns == 7 && rows == 3 -> SevenByThree
                 else -> null

@@ -68,10 +68,10 @@ constructor(
         source: SQLiteDatabase,
         isDestNewDb: Boolean,
         modelDelegate: ModelDelegate,
-    ) {
+    ): Boolean {
 
         if (!GridSizeMigrationDBController.needsToMigrate(srcDeviceState, destDeviceState)) {
-            return
+            return true
         }
         val statsLogManager: StatsLogManager = logFactory.create(context)
         val isAfterRestore = launcherPrefs.get(LauncherPrefs.IS_FIRST_LOAD_AFTER_RESTORE)
@@ -84,14 +84,16 @@ constructor(
 
         val shouldMigrateToStrtictlyTallerGrid =
             shouldMigrateToStrictlyTallerGrid(isDestNewDb, srcDeviceState, destDeviceState)
-        if (shouldMigrateToStrtictlyTallerGrid) {
-            copyTable(source, TABLE_NAME, target.writableDatabase, TABLE_NAME, context)
-        } else {
-            copyTable(source, TABLE_NAME, target.writableDatabase, TMP_TABLE, context)
-        }
 
         val migrationStartTime = System.currentTimeMillis()
+        var migrationSuccessful = false
         try {
+            if (shouldMigrateToStrtictlyTallerGrid) {
+                copyTable(source, TABLE_NAME, target.writableDatabase, TABLE_NAME, context)
+            } else {
+                copyTable(source, TABLE_NAME, target.writableDatabase, TMP_TABLE, context)
+            }
+
             SQLiteTransaction(target.writableDatabase).use { t ->
                 // We want to add the extra row(s) to the top of the screen, so we shift the grid
                 // down.
@@ -104,16 +106,15 @@ constructor(
                             TABLE_NAME,
                         )
                     }
-                    // Save current configuration, so that the migration does not run again.
-                    destDeviceState.writeToPrefs(context)
                     t.commit()
+                    migrationSuccessful = true
 
                     if (isOneGridMigration(srcDeviceState, destDeviceState)) {
                         statsLogManager.logger().log(LAUNCHER_ROW_SHIFT_ONE_GRID_MIGRATION)
                     }
                     statsLogManager.logger().log(LAUNCHER_ROW_SHIFT_GRID_MIGRATION)
 
-                    return
+                    return true
                 }
 
                 val srcReader = DbReader(t.db, TMP_TABLE, context)
@@ -142,6 +143,7 @@ constructor(
 
                 dropTable(t.db, TMP_TABLE)
                 t.commit()
+                migrationSuccessful = true
 
                 if (isOneGridMigration(srcDeviceState, destDeviceState)) {
                     statsLogManager.logger().log(LAUNCHER_STANDARD_ONE_GRID_MIGRATION)
@@ -156,13 +158,17 @@ constructor(
                 "Workspace migration completed in " +
                     (System.currentTimeMillis() - migrationStartTime),
             )
-
             // Save current configuration, so that the migration does not run again.
-            destDeviceState.writeToPrefs(context)
+            if (migrationSuccessful) {
+                destDeviceState.writeToPrefs(context)
+            }
 
             // Notify if we've migrated successfully
-            modelDelegate.gridMigrationComplete(srcDeviceState, destDeviceState)
+            if (migrationSuccessful) {
+                modelDelegate.gridMigrationComplete(srcDeviceState, destDeviceState)
+            }
         }
+        return migrationSuccessful
     }
 
     /** Handles hotseat migration. */

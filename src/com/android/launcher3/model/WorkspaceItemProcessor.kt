@@ -94,6 +94,7 @@ class WorkspaceItemProcessor(
     private val widgetSizeHandler: WidgetSizeHandler,
     private val workspaceItemSpaceFinder: WorkspaceItemSpaceFinder,
     private val homeScreenFiles: Lazy<Map<Uri, HomeScreenFile>>,
+    private val commitDeletedItems: Boolean = true,
 ) {
 
     private val loadedItems = IntSparseArrayMap<ItemInfo>()
@@ -758,7 +759,7 @@ class WorkspaceItemProcessor(
         delegate.markActive()
 
         // Remove dead items
-        val itemsDeleted = c.commitDeleted()
+        val itemsDeleted = commitDeletedItems && c.commitDeleted()
 
         processFolderItems()
         // After all items have been processed and added to the BgDataModel, this method
@@ -770,8 +771,10 @@ class WorkspaceItemProcessor(
             removeItems(modelDbController.deleteEmptyFolders())
         }
         // Cleans up app pairs if they don't have the right number of member apps (2).
-        removeItems(modelDbController.deleteBadAppPairs())
-        removeItems(modelDbController.deleteUnparentedApps())
+        if (commitDeletedItems) {
+            removeItems(modelDbController.deleteBadAppPairs())
+            removeItems(modelDbController.deleteUnparentedApps())
+        }
 
         addRemainingFileSystemItems(modelDbController)
 
