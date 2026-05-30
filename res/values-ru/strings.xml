@@ -240,6 +240,11 @@
     <string name="icon_pack_title">Набор иконок</string>
     <string name="themed_icons_card_title">Тематические иконки</string>
     <string name="themed_icons_description">Монохромные иконки, адаптированные к вашим цветам</string>
+    <string name="themed_icon_size_title">Icon size</string>
+    <string name="themed_icon_size_summary">Scale monochrome artwork inside themed icon backgrounds</string>
+    <string name="themed_icon_size_percent">%d%%</string>
+    <string name="themed_icon_background_title">Background icon color</string>
+    <string name="themed_icon_foreground_title">Foreground icon color</string>
     <string name="icon_shape_title">Форма иконок</string>
     <string name="themed_icon_pack_title">Тематический набор иконок</string>
     <string name="themed_icon_pack_none">Отсутствует</string>
