@@ -216,14 +216,14 @@ public class QuickstepTransitionManager implements OnDeviceProfileChangeListener
 
     public static final long APP_LAUNCH_DURATION = 500;
 
-    private static final long APP_LAUNCH_ALPHA_DURATION = 150;
-    private static final long APP_LAUNCH_ALPHA_START_DELAY = 35;
-    private static final long APP_LAUNCH_WINDOW_ALPHA_DURATION = 75;
-    private static final float OPENING_CARD_MIN_ICON_SCALE = 2.15f;
-    private static final float OPENING_CARD_MIN_SCREEN_FRACTION = 0.16f;
-    private static final float OPENING_WINDOW_REVEAL_START_PROGRESS = 0.10f;
-    private static final float OPENING_CARD_RADIUS_FACTOR = 0.50f;
-    private static final float OPENING_CARD_EDGE_MARGIN_FACTOR = 0.35f;
+    private static final long APP_LAUNCH_ALPHA_DURATION = 125;
+    private static final long APP_LAUNCH_ALPHA_START_DELAY = 25;
+    private static final long APP_LAUNCH_WINDOW_ALPHA_DURATION = 70;
+    private static final float OPENING_CARD_MIN_ICON_SCALE = 1.95f;
+    private static final float OPENING_CARD_MIN_SCREEN_FRACTION = 0.14f;
+    private static final float OPENING_WINDOW_REVEAL_START_PROGRESS = 0.08f;
+    private static final float OPENING_CARD_RADIUS_FACTOR = 0.48f;
+    private static final float OPENING_CARD_EDGE_MARGIN_FACTOR = 0.30f;
 
     public static final int ANIMATION_NAV_FADE_IN_DURATION = 266;
     public static final int ANIMATION_NAV_FADE_OUT_DURATION = 133;
@@ -377,8 +377,8 @@ public class QuickstepTransitionManager implements OnDeviceProfileChangeListener
             mSystemUiProxy.setStartingWindowListener(mStartingWindowListener);
         }
 
-        mOpeningXInterpolator = new PathInterpolator(0.42f, 0f, 0.2f, 1f);
-        mOpeningInterpolator = new PathInterpolator(0.42f, 0f, 0.2f, 1f);
+        mOpeningXInterpolator = new PathInterpolator(0.2f, 0f, 0f, 1f);
+        mOpeningInterpolator = new PathInterpolator(0.2f, 0f, 0f, 1f);
         mCoordinateTransfer = new RemoteAnimationCoordinateTransfer(mLauncher);
         mLatencyTracker = LatencyTracker.getInstance(launcher);
     }
