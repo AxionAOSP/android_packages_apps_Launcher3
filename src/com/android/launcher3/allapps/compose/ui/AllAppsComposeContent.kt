@@ -114,7 +114,7 @@ fun AllAppsComposeContent(
     var dismissRequest by remember { mutableStateOf(false) }
     
     val drawerLayoutMode = rememberPreference(PreferenceKeys.DRAWER_LAYOUT_MODE) {
-        PreferenceKeys.normalizeDrawerLayoutMode(LauncherPrefs.DRAWER_LAYOUT_MODE.get(it))
+        LauncherPrefs.DRAWER_LAYOUT_MODE.get(it)
     }
     val isSmartLayout = drawerLayoutMode == PreferenceKeys.DRAWER_LAYOUT_SMART
     val usesDefaultDrawerUi = isSmartLayout ||

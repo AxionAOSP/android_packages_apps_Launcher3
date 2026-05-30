@@ -3,7 +3,7 @@ package com.android.launcher3.allapps.compose.shared.constants
 object PreferenceKeys {
     const val DRAWER_SHOW_LABELS = "pref_drawer_show_labels"
     const val ALL_APPS_PREDICTIONS = "pref_all_apps_predictions"
-    const val DRAWER_LAYOUT_MODE = "pref_drawer_layout_mode"
+    const val DRAWER_LAYOUT_MODE = "pref_app_drawer_layout_mode"
     const val DRAWER_SEARCH_BAR_POSITION = "pref_drawer_search_bar_position"
     const val ALLAPPS_THEMED_ICONS = "pref_allapps_themed_icons"
 
@@ -21,17 +21,6 @@ object PreferenceKeys {
 
     const val SEARCH_BAR_POSITION_TOP = "top"
     const val SEARCH_BAR_POSITION_BOTTOM = "bottom"
-    const val DRAWER_LAYOUT_SMART = "smart"
-    const val DRAWER_LAYOUT_LEGACY = "legacy"
-
-    private const val DRAWER_LAYOUT_DEFAULT = "default"
-    private const val DRAWER_LAYOUT_DYNAMIC = "dynamic"
-
-    fun normalizeDrawerLayoutMode(mode: String): String = when (mode) {
-        DRAWER_LAYOUT_DEFAULT,
-        DRAWER_LAYOUT_DYNAMIC,
-        DRAWER_LAYOUT_LEGACY -> DRAWER_LAYOUT_LEGACY
-        DRAWER_LAYOUT_SMART -> DRAWER_LAYOUT_SMART
-        else -> DRAWER_LAYOUT_LEGACY
-    }
+    const val DRAWER_LAYOUT_LEGACY = 0
+    const val DRAWER_LAYOUT_SMART = 1
 }

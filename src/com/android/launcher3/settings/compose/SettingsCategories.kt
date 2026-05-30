@@ -331,8 +331,8 @@ fun AppDrawerSettings(viewModel: SettingsState) {
 
 @Composable
 private fun DrawerLayoutSelector(
-    currentMode: String,
-    onModeSelected: (String) -> Unit
+    currentMode: Int,
+    onModeSelected: (Int) -> Unit
 ) {
     Row(
         modifier = Modifier

@@ -71,9 +71,9 @@ class SettingsState(private val context: Context) : ViewModel(), LauncherPrefCha
     val drawerShowLabels: StateFlow<Boolean> = _drawerShowLabels.asStateFlow()
 
     private val _drawerLayoutMode = MutableStateFlow(
-        PreferenceKeys.normalizeDrawerLayoutMode(launcherPrefs.get(LauncherPrefs.DRAWER_LAYOUT_MODE))
+        launcherPrefs.get(LauncherPrefs.DRAWER_LAYOUT_MODE)
     )
-    val drawerLayoutMode: StateFlow<String> = _drawerLayoutMode.asStateFlow()
+    val drawerLayoutMode: StateFlow<Int> = _drawerLayoutMode.asStateFlow()
 
     private val _drawerSearchBarPosition =
         MutableStateFlow(launcherPrefs.get(LauncherPrefs.DRAWER_SEARCH_BAR_POSITION))
@@ -132,8 +132,7 @@ class SettingsState(private val context: Context) : ViewModel(), LauncherPrefCha
             LauncherPrefs.SHOW_DESKTOP_LABELS.sharedPrefKey -> _desktopShowLabels.value = launcherPrefs.get(LauncherPrefs.SHOW_DESKTOP_LABELS)
             LauncherPrefs.SHOW_DRAWER_LABELS.sharedPrefKey -> _drawerShowLabels.value = launcherPrefs.get(LauncherPrefs.SHOW_DRAWER_LABELS)
             LauncherPrefs.DRAWER_LAYOUT_MODE.sharedPrefKey -> {
-                val mode = launcherPrefs.get(LauncherPrefs.DRAWER_LAYOUT_MODE)
-                _drawerLayoutMode.value = PreferenceKeys.normalizeDrawerLayoutMode(mode)
+                _drawerLayoutMode.value = launcherPrefs.get(LauncherPrefs.DRAWER_LAYOUT_MODE)
             }
             LauncherPrefs.DRAWER_SEARCH_BAR_POSITION.sharedPrefKey ->
                 _drawerSearchBarPosition.value = launcherPrefs.get(LauncherPrefs.DRAWER_SEARCH_BAR_POSITION)
@@ -165,7 +164,7 @@ class SettingsState(private val context: Context) : ViewModel(), LauncherPrefCha
         launcherPrefs.put(LauncherPrefs.ALL_APPS_BG_OPACITY, value)
     }
 
-    fun setDrawerLayoutMode(mode: String) {
+    fun setDrawerLayoutMode(mode: Int) {
         launcherPrefs.put(LauncherPrefs.DRAWER_LAYOUT_MODE, mode)
     }
 
