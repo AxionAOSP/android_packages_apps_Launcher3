@@ -527,7 +527,7 @@ public class QuickstepLauncher extends Launcher implements RecentsViewContainer,
         } else if (Flags.allAppsBlur()) {
             // For all apps, we only need to update the scrim, which draws the panel. But if the
             // activity was recreated above, this is unnecessary.
-            getAppsView().invalidateHeader();
+            getAppsView().updateAllAppsColors();
         }
     }
 
@@ -1077,6 +1077,14 @@ public class QuickstepLauncher extends Launcher implements RecentsViewContainer,
     public void onAllAppsTransition(float progress) {
         super.onAllAppsTransition(progress);
         onTaskbarInAppDisplayProgressUpdate(progress, ALL_APPS_PAGE_PROGRESS_INDEX);
+    }
+
+    @Override
+    public void onAllAppsTransitionProgressChanged() {
+        super.onAllAppsTransitionProgressChanged();
+        if (mDepthController != null) {
+            mDepthController.onAllAppsTransitionProgressChanged();
+        }
     }
 
     @Override

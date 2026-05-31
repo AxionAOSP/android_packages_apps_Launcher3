@@ -116,6 +116,12 @@ class TaskbarComposeAllAppsContainerView @JvmOverloads constructor(
 
     override fun getHeaderBottom(): Int = 0
 
+    override fun invalidateHeader() {}
+
+    override fun updateAllAppsColors() {
+        controller.onAllAppsColorsChanged()
+    }
+
     override fun getHeaderProtectionHeight(): Float = 0f
 
     override fun setupHeader() {}

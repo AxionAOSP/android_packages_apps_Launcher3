@@ -125,9 +125,21 @@ public final class LauncherActivityInterface extends
                                 MULTI_PROPERTY_VALUE, fromDepthRatio, toDepthRatio),
                         fromDepthRatio, toDepthRatio, LINEAR);
             }
+
+            @Override
+            public void setEndTarget(GestureEndTarget endTarget) {
+                super.setEndTarget(endTarget);
+                DepthController depthController = LauncherActivityInterface.this
+                        .getDepthController();
+                if (depthController != null) {
+                    depthController.setGestureTargetState(
+                            LauncherActivityInterface.this.stateFromGestureEndTarget(endTarget));
+                }
+            }
         };
 
         QuickstepLauncher launcher = factory.initBackgroundStateUI();
+        launcher.getDepthController().setGestureTargetState(null);
         // Since all apps is not visible, we can safely reset the scroll position.
         // This ensures then the next swipe up to all-apps starts from scroll 0.
         launcher.getAppsView().reset(false /* animate */, true /* clearScrim */);

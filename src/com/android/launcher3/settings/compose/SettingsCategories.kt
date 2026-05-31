@@ -433,6 +433,10 @@ private fun LayoutModeCard(
 @Composable
 private fun OpacitySliderPreference(viewModel: SettingsState) {
     val alpha by viewModel.allAppsBgOpacity.collectAsState()
+    val (blurEnabled, _) = rememberSecureSettingBooleanState(
+        key = LAUNCHER_BLUR_ENABLED_KEY,
+        defaultValue = false,
+    )
     val alphaFloat = alpha / 255f
 
     SliderPreference(
@@ -447,6 +451,7 @@ private fun OpacitySliderPreference(viewModel: SettingsState) {
             R.string.pref_all_apps_opacity_percent,
             (alphaFloat * 100).roundToInt()
         ),
+        enabled = blurEnabled,
         onReset = {
             viewModel.setAllAppsBgOpacity(LauncherPrefs.ALL_APPS_DEFAULT_BG_OPACITY)
         }

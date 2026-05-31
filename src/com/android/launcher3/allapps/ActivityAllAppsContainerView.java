@@ -131,6 +131,7 @@ public class ActivityAllAppsContainerView<T extends Context & ActivityContext>
     protected static final String BUNDLE_KEY_CURRENT_PAGE = "launcher.allapps.current_page";
     // As of this writing, search transition does not seem to work properly, so set duration to 0.
     private static final long DEFAULT_SEARCH_TRANSITION_DURATION_MS = 0;
+    private static final float TRANSITION_DIRECTION_EPSILON = 0.001f;
     // Render the header protection at all times to debug clipping issues.
     private static final boolean DEBUG_HEADER_PROTECTION = false;
     /** Context of an activity or window that is inflating this container. */
@@ -198,6 +199,7 @@ public class ActivityAllAppsContainerView<T extends Context & ActivityContext>
     private int mTabsProtectionAlpha;
     @Nullable private AllAppsTransitionController mAllAppsTransitionController;
     protected float mTransitionProgress = 1f;
+    private boolean mTransitionCollapsing;
     private SharedPreferences.OnSharedPreferenceChangeListener mPreferenceChangeListener;
 
     public ActivityAllAppsContainerView(Context context) {
@@ -445,11 +447,29 @@ public class ActivityAllAppsContainerView<T extends Context & ActivityContext>
     }
 
     public void onAllAppsTransitionProgress(float progress) {
-        mTransitionProgress = progress;
+        updateAllAppsTransitionProgress(progress);
         float alpha = (progress - 0.7f) / (1f - 0.7f);
         updateViewAlpha(mBottomSheetBackground, alpha);
         updateViewAlpha(mBottomSheetHandle, alpha);
     }
+
+    protected void updateAllAppsTransitionProgress(float progress) {
+        if (progress < mTransitionProgress - TRANSITION_DIRECTION_EPSILON) {
+            mTransitionCollapsing = true;
+        } else if (progress > mTransitionProgress + TRANSITION_DIRECTION_EPSILON) {
+            mTransitionCollapsing = false;
+        }
+        mTransitionProgress = progress;
+    }
+
+    public float getAllAppsTransitionProgress() {
+        return mTransitionProgress;
+    }
+
+    public boolean isAllAppsTransitionCollapsing() {
+        return mTransitionCollapsing;
+    }
+
     private void updateViewAlpha(View view, float alpha) {
         if (view == null) return;
         view.setAlpha(alpha);
@@ -1502,7 +1522,13 @@ public class ActivityAllAppsContainerView<T extends Context & ActivityContext>
     @Override
     public void setTranslationY(float translationY) {
         super.setTranslationY(translationY);
-        invalidateHeader();
+        if (shouldInvalidateHeaderOnTranslation()) {
+            invalidateHeader();
+        }
+    }
+
+    protected boolean shouldInvalidateHeaderOnTranslation() {
+        return true;
     }
 
     @Override
@@ -1669,6 +1695,10 @@ public class ActivityAllAppsContainerView<T extends Context & ActivityContext>
         if (mScrimView != null) {
             mScrimView.invalidate();
         }
+    }
+
+    public void updateAllAppsColors() {
+        invalidateHeader();
     }
 
     /** Returns the position of the bottom edge of the header */

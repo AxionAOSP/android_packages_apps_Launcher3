@@ -34,6 +34,7 @@ import static com.android.launcher3.states.StateAnimationConfig.ANIM_SCRIM_FADE;
 import static com.android.launcher3.states.StateAnimationConfig.ANIM_VERTICAL_PROGRESS;
 import static com.android.launcher3.states.StateAnimationConfig.ANIM_WORKSPACE_FADE;
 import static com.android.launcher3.states.StateAnimationConfig.ANIM_WORKSPACE_SCALE;
+import static com.android.launcher3.states.StateAnimationConfig.ANIM_WORKSPACE_TRANSLATE;
 
 import android.view.MotionEvent;
 import android.view.animation.Interpolator;
@@ -66,6 +67,17 @@ public class AllAppsSwipeController extends AbstractStateChangeTouchController {
 
     // Depth to apply behind All Apps when it's presented on a sheet.
     private static final Interpolator ALL_APPS_SHEET_DEPTH = DECELERATED_EASE;
+    private static final float WORKSPACE_RECOVERY_START_PROGRESS = 0.55f;
+    private static final float WORKSPACE_RECOVERY_END_PROGRESS = 1f;
+    private static final Interpolator WORKSPACE_RECOVERY =
+            Interpolators.clampToProgress(
+                    LINEAR, WORKSPACE_RECOVERY_START_PROGRESS, WORKSPACE_RECOVERY_END_PROGRESS);
+    private static final Interpolator WORKSPACE_RECOVERY_FADE =
+            Interpolators.clampToProgress(
+                    LINEAR, WORKSPACE_RECOVERY_START_PROGRESS, WORKSPACE_RECOVERY_END_PROGRESS);
+    private static final Interpolator WORKSPACE_RECOVERY_DEPTH =
+            Interpolators.clampToProgress(
+                    LINEAR, WORKSPACE_RECOVERY_START_PROGRESS, WORKSPACE_RECOVERY_END_PROGRESS);
 
     // ---- Custom interpolators for NORMAL -> ALL_APPS on phones only. ----
 
@@ -125,14 +137,16 @@ public class AllAppsSwipeController extends AbstractStateChangeTouchController {
 
     public static final Interpolator ALL_APPS_FADE_ATOMIC =
             Interpolators.clampToProgress(
-                    EMPHASIZED_DECELERATE, ALL_APPS_STATE_TRANSITION_ATOMIC,
-                    ALL_APPS_FADE_END_ATOMIC);
+                    Interpolators.mapToProgress(EMPHASIZED_DECELERATE, 0.2f, 1f),
+                    ALL_APPS_STATE_TRANSITION_ATOMIC, ALL_APPS_FADE_END_ATOMIC);
     public static final Interpolator ALL_APPS_FADE_MANUAL =
             Interpolators.clampToProgress(
                     LINEAR, ALL_APPS_STATE_TRANSITION_MANUAL, ALL_APPS_FADE_END_MANUAL);
 
     public static final Interpolator ALL_APPS_VERTICAL_PROGRESS_ATOMIC =
-            EMPHASIZED_DECELERATE;
+            Interpolators.clampToProgress(
+                    Interpolators.mapToProgress(EMPHASIZED_DECELERATE, 0.4f, 1f),
+                    ALL_APPS_STATE_TRANSITION_ATOMIC, 1f);
     public static final Interpolator ALL_APPS_VERTICAL_PROGRESS_MANUAL = LINEAR;
 
     // --------
@@ -206,13 +220,9 @@ public class AllAppsSwipeController extends AbstractStateChangeTouchController {
                     Interpolators.reverse(ALL_APPS_SCRIM_RESPONDER));
             config.setInterpolator(ANIM_ALL_APPS_FADE, FINAL_FRAME);
             if (!config.isUserControlled()) {
-                config.duration = 200;
                 config.setInterpolator(ANIM_VERTICAL_PROGRESS, ACCELERATE);
             }
-            config.setInterpolator(ANIM_WORKSPACE_SCALE,
-                    Interpolators.reverse(ALL_APPS_SHEET_DEPTH));
-            config.setInterpolator(ANIM_HOTSEAT_SCALE, Interpolators.reverse(ALL_APPS_SHEET_DEPTH));
-            config.setInterpolator(ANIM_DEPTH, Interpolators.reverse(ALL_APPS_SHEET_DEPTH));
+            applyWorkspaceRecoveryConfig(config);
             if (!Flags.allAppsBlur()
                     && launcher.getDeviceProfile().getDeviceProperties().isPhone()) {
                 // On phones without blur, reveal the workspace and hotseat when leaving All Apps.
@@ -222,17 +232,9 @@ public class AllAppsSwipeController extends AbstractStateChangeTouchController {
             }
         } else {
             if (config.isUserControlled()) {
-                config.setInterpolator(ANIM_DEPTH, Interpolators.reverse(BLUR_MANUAL));
-                config.setInterpolator(ANIM_WORKSPACE_FADE,
-                        Interpolators.reverse(WORKSPACE_FADE_MANUAL));
-                config.setInterpolator(ANIM_WORKSPACE_SCALE,
-                        Interpolators.reverse(WORKSPACE_SCALE_MANUAL));
-                config.setInterpolator(ANIM_HOTSEAT_FADE,
-                        Interpolators.reverse(HOTSEAT_FADE_MANUAL));
-                config.setInterpolator(ANIM_HOTSEAT_SCALE,
-                        Interpolators.reverse(HOTSEAT_SCALE_MANUAL));
-                config.setInterpolator(ANIM_HOTSEAT_TRANSLATE,
-                        Interpolators.reverse(HOTSEAT_TRANSLATE_MANUAL));
+                config.setInterpolator(ANIM_WORKSPACE_FADE, WORKSPACE_RECOVERY_FADE);
+                config.setInterpolator(ANIM_HOTSEAT_FADE, WORKSPACE_RECOVERY_FADE);
+                applyWorkspaceRecoveryConfig(config);
                 config.setInterpolator(ANIM_SCRIM_FADE, Interpolators.reverse(SCRIM_FADE_MANUAL));
                 config.setInterpolator(ANIM_ALL_APPS_FADE,
                         Interpolators.reverse(ALL_APPS_FADE_MANUAL));
@@ -242,11 +244,20 @@ public class AllAppsSwipeController extends AbstractStateChangeTouchController {
                 config.setInterpolator(ANIM_SCRIM_FADE,
                         Interpolators.reverse(ALL_APPS_SCRIM_RESPONDER));
                 config.setInterpolator(ANIM_ALL_APPS_FADE, ALL_APPS_CLAMPING_RESPONDER);
-                config.setInterpolator(ANIM_WORKSPACE_FADE, INSTANT);
-                config.setInterpolator(ANIM_VERTICAL_PROGRESS,
-                        Interpolators.reverse(ALL_APPS_VERTICAL_PROGRESS_ATOMIC));
+                config.setInterpolator(ANIM_WORKSPACE_FADE, WORKSPACE_RECOVERY_FADE);
+                config.setInterpolator(ANIM_HOTSEAT_FADE, WORKSPACE_RECOVERY_FADE);
+                applyWorkspaceRecoveryConfig(config);
+                config.setInterpolator(ANIM_VERTICAL_PROGRESS, EMPHASIZED_ACCELERATE);
             }
         }
+    }
+
+    private static void applyWorkspaceRecoveryConfig(StateAnimationConfig config) {
+        config.setInterpolator(ANIM_WORKSPACE_SCALE, WORKSPACE_RECOVERY);
+        config.setInterpolator(ANIM_WORKSPACE_TRANSLATE, WORKSPACE_RECOVERY);
+        config.setInterpolator(ANIM_HOTSEAT_SCALE, WORKSPACE_RECOVERY);
+        config.setInterpolator(ANIM_HOTSEAT_TRANSLATE, WORKSPACE_RECOVERY);
+        config.setInterpolator(ANIM_DEPTH, WORKSPACE_RECOVERY_DEPTH);
     }
 
     /**

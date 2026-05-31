@@ -147,6 +147,10 @@ class ComposeAllAppsContainerView @JvmOverloads constructor(
         requestLayout()
     }
 
+    override fun updateBackgroundVisibility(deviceProfile: DeviceProfile) {
+        mBottomSheetBackground.visibility = GONE
+    }
+
     override fun isUsingCompose(): Boolean = true
 
     override fun shouldContainerScroll(ev: MotionEvent): Boolean {
@@ -164,7 +168,7 @@ class ComposeAllAppsContainerView @JvmOverloads constructor(
         mTransitionProgress < 1f || !controller.canScrollUp
 
     override fun onAllAppsTransitionProgress(progress: Float) {
-        mTransitionProgress = progress
+        updateAllAppsTransitionProgress(progress)
         controller.setTransitionProgressWithRefresh(progress)
         updateViewAlpha(mBottomSheetBackground, drawerAlpha(progress))
     }
@@ -181,8 +185,11 @@ class ComposeAllAppsContainerView @JvmOverloads constructor(
 
     override fun getHeaderBottom(): Int = 0
 
-    override fun invalidateHeader() {
-        super.invalidateHeader()
+    override fun invalidateHeader() {}
+
+    protected override fun shouldInvalidateHeaderOnTranslation(): Boolean = false
+
+    override fun updateAllAppsColors() {
         controller.onAllAppsColorsChanged()
     }
 

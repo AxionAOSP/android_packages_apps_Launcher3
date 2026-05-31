@@ -34,10 +34,8 @@ import static com.android.launcher3.util.SystemUiController.FLAG_LIGHT_NAV;
 import static com.android.launcher3.util.SystemUiController.UI_STATE_ALL_APPS;
 
 import android.animation.Animator;
-import android.animation.AnimatorListenerAdapter;
 import android.animation.ObjectAnimator;
 import android.util.FloatProperty;
-import android.util.Log;
 import android.view.HapticFeedbackConstants;
 import android.view.View;
 import android.view.animation.Interpolator;
@@ -78,7 +76,6 @@ import com.google.android.msdl.data.model.MSDLToken;
  */
 public class AllAppsTransitionController
         implements StateHandler<LauncherState>, OnDeviceProfileChangeListener {
-    private static final String TAG = "AllAppsTransitionController";
     // This constant should match the second derivative of the animator interpolator.
     public static final float INTERP_COEFF = 1.7f;
     public static final int REVERT_SWIPE_ALL_APPS_TO_HOME_ANIMATION_DURATION_MS = 200;
@@ -229,10 +226,7 @@ public class AllAppsTransitionController
             mLauncher.getWorkspace().getPageIndicator().setTranslationY(0);
         }
 
-        boolean wasSheet = mShouldShowAllAppsOnSheet;
         mShouldShowAllAppsOnSheet = dp.shouldShowAllAppsOnSheet();
-        View appsView = mAppsView;
-        View rv = getActiveOrContentView();
     }
 
     /**
@@ -250,8 +244,10 @@ public class AllAppsTransitionController
         // Allow apps panel to shift the full screen if coming from another app.
         float shiftRange = fromBackground ? mLauncher.getDeviceProfile().getDeviceProperties().getHeightPx() : mShiftRange;
         getAppsViewProgressTranslationY().setValue(mProgress * shiftRange);
-        mLauncher.onAllAppsTransition(1 - progress);
-        mLauncher.getAppsView().onAllAppsTransitionProgress(1 - progress);
+        float allAppsProgress = 1 - progress;
+        mLauncher.onAllAppsTransition(allAppsProgress);
+        mLauncher.getAppsView().onAllAppsTransitionProgress(allAppsProgress);
+        mLauncher.onAllAppsTransitionProgressChanged();
         updateAppsViewVisibilityForProgress();
 
         boolean hasScrim = progress < NAV_BAR_COLOR_FORCE_UPDATE_THRESHOLD
@@ -327,7 +323,7 @@ public class AllAppsTransitionController
                     .setBackProgress(0f);
         }
 
-        if (mShouldScaleHeader || !mShouldShowAllAppsOnSheet) {
+        if (!isComposeAllApps() && (mShouldScaleHeader || !mShouldShowAllAppsOnSheet)) {
             mLauncher.getScrimView().setScrimHeaderScale(scaleProgress);
         }
 
@@ -418,16 +414,22 @@ public class AllAppsTransitionController
         Interpolator verticalProgressInterpolator = config.getInterpolator(ANIM_VERTICAL_PROGRESS,
                 config.isUserControlled() ? LINEAR : DECELERATE_1_7);
         Animator anim = createSpringAnimation(mProgress, targetProgress);
-        anim.addListener(new AnimatorListenerAdapter() {
-            @Override
-            public void onAnimationCancel(Animator animation) {
-                setProgress(targetProgress);
-            }
-        });
         anim.setInterpolator(verticalProgressInterpolator);
         builder.add(anim);
 
         setAlphas(toState, config, builder);
+        if (ALL_APPS.equals(toState) && mLauncher.isInState(NORMAL)) {
+            if (Flags.msdlFeedback()) {
+                if (config.isUserControlled()) {
+                    mMSDLPlayerWrapper.playToken(MSDLToken.SWIPE_THRESHOLD_INDICATOR);
+                } else {
+                    mMSDLPlayerWrapper.playToken(MSDLToken.TAP_HIGH_EMPHASIS);
+                }
+            } else {
+                mLauncher.getAppsView().performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY,
+                        HapticFeedbackConstants.FLAG_IGNORE_VIEW_SETTING);
+            }
+        }
     }
 
     public Animator createSpringAnimation(float... progressValues) {
@@ -449,18 +451,18 @@ public class AllAppsTransitionController
                 appsViewAlpha, allAppsFade);
 
         boolean shouldProtectHeader = !config.hasAnimationFlag(StateAnimationConfig.SKIP_SCRIM)
+                && !isComposeAllApps()
                 && (ALL_APPS == state || mLauncher.getStateManager().getState() == ALL_APPS);
-        Log.d(TAG, "shouldProtectHeader: " + shouldProtectHeader
-                + " skipScrim: " + config.hasAnimationFlag(StateAnimationConfig.SKIP_SCRIM)
-                + " state: " + state
-                + " stateManager.getState(): " + mLauncher.getStateManager().getState());
         mScrimView.setDrawingController(shouldProtectHeader ? mAppsView : null);
         updateAppsViewVisibilityForProgress();
     }
 
     private void updateAppsViewVisibilityForProgress() {
         if (isComposeAllApps()) {
-            mAppsView.setVisibility(mProgress >= 0.999f ? View.GONE : View.VISIBLE);
+            int visibility = mProgress >= 0.999f ? View.GONE : View.VISIBLE;
+            if (mAppsView.getVisibility() != visibility) {
+                mAppsView.setVisibility(visibility);
+            }
         }
     }
 

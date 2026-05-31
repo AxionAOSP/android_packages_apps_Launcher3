@@ -47,15 +47,8 @@ import androidx.compose.ui.*
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.clipToBounds
-import androidx.compose.ui.draw.drawWithCache
 import androidx.compose.ui.focus.*
-import androidx.compose.ui.geometry.CornerRadius
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.geometry.Rect
-import androidx.compose.ui.geometry.RoundRect
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.Path
-import androidx.compose.ui.graphics.PathFillType
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.input.nestedscroll.*
@@ -370,15 +363,21 @@ fun AllAppsComposeContent(
         }
 
         val isTablet = state.isTablet
-        fun currentDrawerBackgroundAlpha() = drawerScrimAlpha(
-            transitionProgressProvider(),
-            controller.isTransitionCollapsing
-        )
-        fun currentContentAlpha() = drawerContentAlpha(
-            transitionProgressProvider(),
-            controller.isTransitionCollapsing
-        )
-        fun currentSearchBarScale() = drawerSearchScale(transitionProgressProvider())
+        val allAppsProfile = LocalAllAppsConfiguration.current.profile
+        val isAllAppsOnSheet = allAppsProfile.isAllAppsOnSheet
+        val drawerTopPadding = with(LocalDensity.current) {
+            allAppsProfile.allAppsTopPaddingPx.toDp()
+        }
+        val transitionProgress = transitionProgressProvider()
+        val transitionCollapsing = controller.isTransitionCollapsing
+        val drawerBackgroundAlpha = drawerScrimAlpha(
+            transitionProgress,
+            transitionCollapsing
+        ).let { if (isAllAppsOnSheet) 1f else it }
+        val contentAlpha = drawerContentAlpha(
+            transitionProgress,
+            transitionCollapsing
+        ).let { if (isAllAppsOnSheet) 1f else it }
         val sheetCornerRadius = when {
             usesDefaultDrawerUi -> LegacyDrawerCornerRadius
             isTablet -> 28.dp
@@ -394,70 +393,44 @@ fun AllAppsComposeContent(
         } else {
             allAppsDrawerHorizontalPadding(false)
         }
-        val searchBarBaseColor = when {
-            usesDefaultDrawerUi -> legacyAllAppsHeaderProtectionColor()
-            effectiveSearchBarAtTop -> surfaceEffectColor()
-            else -> MaterialTheme.colorScheme.surfaceContainerHighest
+        val searchBarContainerColor = if (effectiveSearchBarAtTop) {
+            allAppsSurfaceBrightColor()
+        } else {
+            MaterialTheme.colorScheme.surfaceBright
         }
-        val searchBarContainerColor = opaqueColorOver(searchBarBaseColor, drawerBaseBg)
+        val searchBarContentColor = if (effectiveSearchBarAtTop) {
+            LocalDrawerContentColor.current
+        } else {
+            MaterialTheme.colorScheme.onSurface
+        }
+        val searchBarAlpha = if (effectiveSearchBarAtTop) drawerBackgroundAlpha else 1f
         val tabletDrawerWidthFraction = 0.75f
-        val tabletDrawerTopOffset = 12.dp
-        val tabletDrawerTopPadding = WindowInsets.statusBars.asPaddingValues()
-            .calculateTopPadding() + tabletDrawerTopOffset
-        val tabletScrimColor = MaterialTheme.colorScheme.scrim.copy(
-            alpha = drawerBaseBg.alpha * 0.32f
-        )
+        val tabletDrawerTopPadding = drawerTopPadding
         val drawerContainerModifier = (if (isTablet) {
             Modifier
                 .fillMaxWidth(tabletDrawerWidthFraction)
                 .fillMaxHeight()
                 .align(Alignment.TopCenter)
-                .statusBarsPadding()
-                .padding(top = tabletDrawerTopOffset)
+                .padding(top = tabletDrawerTopPadding)
         } else {
             Modifier
                 .fillMaxSize()
-                .then(if (usesDefaultDrawerUi) Modifier.statusBarsPadding() else Modifier)
+                .then(
+                    if (isAllAppsOnSheet) {
+                        Modifier.padding(top = drawerTopPadding)
+                    } else if (usesDefaultDrawerUi) {
+                        Modifier.statusBarsPadding()
+                    } else {
+                        Modifier
+                    }
+                )
         })
             .clip(sheetShape)
-
-        if (isTablet && controller.backProgress == 0f) {
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .graphicsLayer {
-                        alpha = currentDrawerBackgroundAlpha()
-                    }
-                    .drawWithCache {
-                        val panelWidth = size.width * tabletDrawerWidthFraction
-                        val panelLeft = (size.width - panelWidth) / 2f
-                        val panelTop = tabletDrawerTopPadding.toPx()
-                        val cornerRadius = CornerRadius(sheetCornerRadius.toPx())
-                        val scrimPath = Path().apply {
-                            fillType = PathFillType.EvenOdd
-                            addRect(Rect(0f, 0f, size.width, size.height))
-                            addRoundRect(
-                                RoundRect(
-                                    rect = Rect(
-                                        panelLeft,
-                                        panelTop,
-                                        panelLeft + panelWidth,
-                                        size.height
-                                    ),
-                                    topLeft = cornerRadius,
-                                    topRight = cornerRadius
-                                )
-                            )
-                        }
-                        onDrawBehind { drawPath(scrimPath, tabletScrimColor) }
-                    }
-            )
-        }
 
         Box(
             modifier = drawerContainerModifier
                 .graphicsLayer {
-                    alpha = currentDrawerBackgroundAlpha()
+                    alpha = drawerBackgroundAlpha
                 }
                 .background(drawerBaseBg)
         ) {
@@ -476,14 +449,20 @@ fun AllAppsComposeContent(
 
         Box(
             modifier = drawerContainerModifier
-                .then(if (!isTablet && !usesDefaultDrawerUi) Modifier.statusBarsPadding() else Modifier)
+                .then(
+                    if (!isTablet && !usesDefaultDrawerUi && !isAllAppsOnSheet) {
+                        Modifier.statusBarsPadding()
+                    } else {
+                        Modifier
+                    }
+                )
         ) {
             if (state.isLoading) {
                 Box(
                     modifier = Modifier
                         .fillMaxSize()
                         .graphicsLayer {
-                            alpha = currentContentAlpha()
+                            alpha = contentAlpha
                         }
                         .then(
                             if (effectiveSearchBarAtTop) {
@@ -505,7 +484,7 @@ fun AllAppsComposeContent(
                     state = sceneLayoutState,
                     modifier = Modifier.fillMaxSize()
                         .graphicsLayer {
-                            alpha = currentContentAlpha()
+                            alpha = contentAlpha
                         }
                         .then(
                             if (effectiveSearchBarAtTop) {
@@ -812,6 +791,7 @@ fun AllAppsComposeContent(
                     hasTopResult = topSearchResult != null,
                     placeholder = stringResource(R.string.all_apps_search_bar_hint),
                     containerColor = searchBarContainerColor,
+                    contentColor = searchBarContentColor,
                     applyBottomInsets = !effectiveSearchBarAtTop,
                     modifier = Modifier
                         .align(if (effectiveSearchBarAtTop) Alignment.TopCenter else Alignment.BottomCenter)
@@ -828,10 +808,7 @@ fun AllAppsComposeContent(
                             bottom = if (effectiveSearchBarAtTop) 0.dp else BottomSearchBarBottomPadding
                         )
                         .graphicsLayer {
-                            val progressScale = currentSearchBarScale()
-                            alpha = currentDrawerBackgroundAlpha()
-                            scaleX = progressScale
-                            scaleY = progressScale
+                            alpha = searchBarAlpha
                         }
                 )
             }

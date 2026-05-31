@@ -385,6 +385,10 @@ public abstract class LauncherState implements BaseState<LauncherState> {
         DeviceProfile dp = launcher.getDeviceProfile();
         boolean shouldFadeAdjacentScreens = (this == NORMAL || this == HINT_STATE)
                 && dp.shouldFadeAdjacentWorkspaceScreens();
+        if (Flags.allAppsSheetForHandheld() && dp.getDeviceProperties().isPhone()
+                && this == ALL_APPS) {
+            shouldFadeAdjacentScreens = true;
+        }
         if (!shouldFadeAdjacentScreens) {
             return DEFAULT_ALPHA_PROVIDER;
         }

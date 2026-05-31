@@ -20,9 +20,7 @@ import android.app.WallpaperColors
 import android.content.Context
 import android.content.SharedPreferences
 import androidx.compose.animation.core.CubicBezierEasing
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -31,10 +29,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.staticCompositionLocalOf
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.compositeOver
 import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.Dp
@@ -44,6 +39,7 @@ import com.android.launcher3.LauncherPrefs
 import com.android.launcher3.R
 import com.android.launcher3.allapps.AllAppsConfiguration
 import com.android.launcher3.allapps.allAppsBottomSheetBackgroundColor
+import com.android.launcher3.allapps.isLauncherBlurEnabled
 import com.android.launcher3.allapps.compose.shared.model.AllAppsComposeItem
 import com.android.launcher3.allapps.compose.shared.model.AllAppsComposeState
 import com.android.launcher3.allapps.compose.shared.model.AppCategory
@@ -79,11 +75,13 @@ private const val MIN_DRAWER_ANIMATION_PROGRESS = 0f
 private const val MAX_DRAWER_ANIMATION_PROGRESS = 1f
 private const val DRAWER_CONTENT_FADE_START_PROGRESS = 0f
 private const val DRAWER_CONTENT_FADE_END_PROGRESS = 1f
-private const val DRAWER_COLLAPSE_BACKGROUND_FADE_START_PROGRESS = 0.7f
+private const val DRAWER_COLLAPSE_BACKGROUND_FADE_START_PROGRESS = 0.42f
 private const val DRAWER_COLLAPSE_BACKGROUND_FADE_END_PROGRESS = 1f
-private const val DRAWER_COLLAPSE_CONTENT_FADE_START_PROGRESS = 0.72f
+private const val DRAWER_COLLAPSE_CONTENT_FADE_START_PROGRESS = 0.48f
 private const val DRAWER_COLLAPSE_CONTENT_FADE_END_PROGRESS = 0.98f
-private const val DRAWER_SEARCH_COLLAPSED_SCALE = 0.8f
+private const val SURFACE_BRIGHT_CONTAINER_MIN_ALPHA = 0.56f
+private const val SURFACE_BRIGHT_CONTAINER_MAX_ALPHA = 0.84f
+private const val SURFACE_BRIGHT_COLOR_MIN_ALPHA = 0.25f
 private const val MAX_DRAWER_OPACITY = 255
 
 internal fun drawerScrimAlpha(progress: Float, isCollapsing: Boolean = false): Float =
@@ -110,11 +108,6 @@ internal fun drawerContentAlpha(progress: Float, isCollapsing: Boolean = false):
     }
     return progressRangeFraction(progress, start, end)
 }
-
-internal fun drawerSearchScale(progress: Float): Float =
-    DRAWER_SEARCH_COLLAPSED_SCALE +
-        (MAX_DRAWER_ANIMATION_PROGRESS - DRAWER_SEARCH_COLLAPSED_SCALE) *
-            progressFraction(progress)
 
 internal fun allAppsDrawerHorizontalPadding(legacyLayout: Boolean): Dp =
     if (legacyLayout) LegacyDrawerHorizontalPadding else DrawerHorizontalPadding
@@ -198,13 +191,46 @@ private fun allAppsSurfaceEffectBaseColor(): Color =
     }
 
 @Composable
-internal fun surfaceEffectColor(): Color {
-    val color = allAppsSurfaceEffectBaseColor()
-    return color.copy(alpha = rememberDrawerSurfaceAlpha())
+internal fun surfaceEffectColor(): Color =
+    allAppsSurfaceBrightContainerColor()
+
+@Composable
+internal fun allAppsSurfaceBrightContainerColor(): Color =
+    protectedDrawerSurfaceColor(
+        allAppsSurfaceEffectBaseColor(),
+        SURFACE_BRIGHT_CONTAINER_MIN_ALPHA,
+        SURFACE_BRIGHT_CONTAINER_MAX_ALPHA
+    )
+
+@Composable
+internal fun allAppsSurfaceBrightColor(): Color {
+    val context = LocalContext.current
+    val drawerOpacity = rememberDrawerOpacity()
+    val color = MaterialTheme.colorScheme.surfaceBright
+    if (!isLauncherBlurEnabled(context) || drawerOpacity == MAX_DRAWER_OPACITY) return color
+    return protectedDrawerSurfaceColor(color, drawerOpacity, SURFACE_BRIGHT_COLOR_MIN_ALPHA)
 }
 
-internal fun opaqueColorOver(foreground: Color, background: Color): Color =
-    foreground.compositeOver(background.copy(alpha = 1f)).copy(alpha = 1f)
+@Composable
+private fun protectedDrawerSurfaceColor(
+    baseColor: Color,
+    minAlpha: Float,
+    maxAlpha: Float = 1f
+): Color {
+    return protectedDrawerSurfaceColor(baseColor, rememberDrawerOpacity(), minAlpha, maxAlpha)
+}
+
+private fun protectedDrawerSurfaceColor(
+    baseColor: Color,
+    drawerOpacity: Int,
+    minAlpha: Float,
+    maxAlpha: Float = 1f
+): Color {
+    val drawerAlpha = (drawerOpacity.coerceIn(0, MAX_DRAWER_OPACITY) /
+        MAX_DRAWER_OPACITY.toFloat()).coerceIn(0f, 1f)
+    val surfaceAlpha = minAlpha + (maxAlpha - minAlpha) * drawerAlpha
+    return baseColor.copy(alpha = surfaceAlpha.coerceIn(0f, 1f))
+}
 
 @Composable
 internal fun rememberAdaptiveContentColor(): Color {
@@ -280,16 +306,6 @@ internal fun legacyAllAppsHeaderProtectionColor(): Color =
 @Composable
 internal fun legacyAllAppsDragHandleColor(): Color =
     allAppsThemeColor(R.attr.bottomSheetDragHandleColor)
-
-@Composable
-internal fun Modifier.allAppsSurfaceBrightBackground(
-    cornerRadius: Dp,
-    alpha: Float? = null
-): Modifier {
-    val shape = RoundedCornerShape(cornerRadius)
-    val surfaceAlpha = rememberDrawerSurfaceAlpha((alpha ?: 1f).coerceIn(0f, 1f))
-    return clip(shape).background(allAppsSurfaceEffectBaseColor().copy(alpha = surfaceAlpha))
-}
 
 internal fun buildComposeItems(
     state: AllAppsComposeState,

@@ -575,7 +575,7 @@ private fun AllAppsComposeFolderIcon(
     val density = LocalDensity.current
     val view = LocalView.current
     val isPagerSwiping = LocalPagerSwiping.current
-    val folderBgColor = MaterialTheme.colorScheme.surfaceContainer
+    val folderBgColor = allAppsSurfaceBrightColor()
     val folderCornerPx = with(density) { 16.dp.toPx() }
     val miniGapPx = with(density) { 2.dp.toPx() }
     val miniIconSizePx = with(density) { 20.dp.roundToPx() }

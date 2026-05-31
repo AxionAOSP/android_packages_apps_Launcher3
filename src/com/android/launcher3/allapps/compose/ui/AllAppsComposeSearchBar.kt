@@ -40,6 +40,7 @@ fun AllAppsComposeSearchBar(
     onSearchSubmit: (String) -> Unit = {},
     hasTopResult: Boolean = false,
     containerColor: Color = MaterialTheme.colorScheme.surfaceContainerHighest,
+    contentColor: Color = MaterialTheme.colorScheme.onSurface,
     applyBottomInsets: Boolean = true
 ) {
     val focusRequester = remember { FocusRequester() }
@@ -49,11 +50,6 @@ fun AllAppsComposeSearchBar(
     val searchBarHorizontalPadding = if (legacyLayout) 12.dp else 16.dp
     val searchBarVerticalPadding = if (legacyLayout) 0.dp else 10.dp
     val searchTextSize = if (legacyLayout) 20.sp else 16.sp
-    val contentColor = if (legacyLayout) {
-        allAppsThemeColor(R.attr.allAppsSearchTextColor)
-    } else {
-        MaterialTheme.colorScheme.onSurface
-    }
 
     LaunchedEffect(focusTrigger) {
         if (shouldAutoFocus && focusTrigger > 0) {

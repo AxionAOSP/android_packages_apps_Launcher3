@@ -35,6 +35,7 @@ import androidx.compose.foundation.gestures.detectDragGesturesAfterLongPress
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.grid.*
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.LockOpen
@@ -42,6 +43,7 @@ import androidx.compose.material.icons.filled.Work
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.*
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.graphicsLayer
@@ -50,7 +52,6 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalView
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.*
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.zIndex
@@ -67,7 +68,6 @@ import com.android.launcher3.allapps.compose.shared.model.AppCategory
 import com.android.launcher3.model.data.AppInfo
 internal val bigIconSize = 64.dp
 internal val smallIconSize = 28.dp
-private const val SMART_DRAWER_FOLDER_BACKGROUND_ALPHA = 0.72f
 
 @Composable
 internal fun AllAppsCategoriesView(
@@ -365,7 +365,8 @@ internal fun SmartDrawerRowCard(
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .allAppsSurfaceBrightBackground(28.dp)
+            .clip(RoundedCornerShape(28.dp))
+            .background(allAppsSurfaceBrightColor())
             .combinedClickable(
                 onClick = onClick,
                 indication = null,
@@ -376,7 +377,6 @@ internal fun SmartDrawerRowCard(
         Text(
             text = category.name,
             style = MaterialTheme.typography.titleSmall,
-            fontWeight = FontWeight.SemiBold,
             color = LocalDrawerContentColor.current
         )
         Spacer(modifier = Modifier.height(12.dp))
@@ -441,7 +441,8 @@ internal fun CategoryFolder(
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .allAppsSurfaceBrightBackground(28.dp, alpha = SMART_DRAWER_FOLDER_BACKGROUND_ALPHA)
+            .clip(RoundedCornerShape(28.dp))
+            .background(allAppsSurfaceBrightColor())
             .combinedClickable(
                 onClick = onClick,
                 onLongClick = onLongClick,
@@ -453,7 +454,6 @@ internal fun CategoryFolder(
         Text(
             text = category.name,
             style = MaterialTheme.typography.titleSmall,
-            fontWeight = FontWeight.SemiBold,
             color = LocalDrawerContentColor.current
         )
         Spacer(modifier = Modifier.height(12.dp))

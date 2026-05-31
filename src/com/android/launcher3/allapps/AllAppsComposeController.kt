@@ -42,7 +42,11 @@ import android.window.OnBackInvokedDispatcher
 import androidx.activity.OnBackPressedDispatcherOwner
 import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
 import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.material3.LocalContentColor
+import androidx.compose.material3.MaterialExpressiveTheme
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.MotionScheme
 import androidx.compose.material3.dynamicDarkColorScheme
 import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.runtime.Composable
@@ -59,6 +63,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.core.graphics.ColorUtils
 import com.android.axion.blur.AxBlurSettings
 import com.android.axion.compose.host.AxComposeView
+import com.android.axion.compose.theme.rememberAxionTypography
 import com.android.internal.R as InternalR
 import com.android.launcher3.allapps.compose.ui.viewmodel.AllAppsComposeViewModel
 import com.android.launcher3.AbstractFloatingView
@@ -283,6 +288,8 @@ class AllAppsComposeController @Inject constructor(
         composeView?.let { cv ->
             cv.translationY = 0f
             cv.alpha = 1f
+            cv.scaleX = 1f
+            cv.scaleY = 1f
         }
     }
 
@@ -294,7 +301,10 @@ class AllAppsComposeController @Inject constructor(
         dp: DeviceProfile,
         config: Configuration = (activityContext as Context).resources.configuration
     ) {
-        configuration = AllAppsConfiguration.from(activityContext as Context, dp, config)
+        val updated = AllAppsConfiguration.from(activityContext as Context, dp, config)
+        if (configuration != updated) {
+            configuration = updated
+        }
     }
 
     fun repositionHostView(screenBounds: RectF) {
@@ -581,7 +591,9 @@ data class AllAppsProfileConfiguration(
     val iconSizePx: Int = 0,
     val cellWidthPx: Int = 0,
     val cellHeightPx: Int = 0,
-    val isTablet: Boolean = false
+    val isTablet: Boolean = false,
+    val isAllAppsOnSheet: Boolean = false,
+    val allAppsTopPaddingPx: Int = 0
 ) {
     val hasProfile: Boolean
         get() = columns > 0
@@ -594,7 +606,9 @@ data class AllAppsProfileConfiguration(
                 iconSizePx = profile.iconSizePx,
                 cellWidthPx = profile.cellWidthPx,
                 cellHeightPx = profile.cellHeightPx,
-                isTablet = dp.deviceProperties.isTablet
+                isTablet = dp.deviceProperties.isTablet,
+                isAllAppsOnSheet = dp.shouldShowAllAppsOnSheet(),
+                allAppsTopPaddingPx = dp.allAppsPadding.top
             )
         }
     }
@@ -627,11 +641,10 @@ internal fun allAppsBottomSheetBackgroundColor(
     context: Context,
     alpha: Int = LauncherPrefs.get(context).get(LauncherPrefs.ALL_APPS_BG_OPACITY)
 ): Int {
-    if (!isLauncherBlurEnabled(context)) {
-        return context.getColor(R.color.materialColorSurfaceDim)
+    if (!isLauncherBlurEnabled(context) || alpha == 255) {
+        return context.getColor(InternalR.color.materialColorSurfaceContainer)
     }
-    return if (lookupActivityContext(context)?.isAllAppsBackgroundBlurEnabled() != true) {
-        ColorUtils.setAlphaComponent(
+    return ColorUtils.setAlphaComponent(
             context.getColor(
                 if (Utilities.isDarkTheme(context)) {
                     AndroidR.color.system_accent2_800
@@ -641,20 +654,11 @@ internal fun allAppsBottomSheetBackgroundColor(
             ),
             alpha
         )
-    } else {
-        ColorUtils.setAlphaComponent(
-            ColorUtils.compositeColors(
-                context.getColor(InternalR.color.shade_panel_fg),
-                context.getColor(InternalR.color.shade_panel_bg)
-            ),
-            alpha
-        )
-    }
 }
 
 private var launcherBlurSettings: AxBlurSettings? = null
 
-private fun isLauncherBlurEnabled(context: Context): Boolean {
+internal fun isLauncherBlurEnabled(context: Context): Boolean {
     val appContext = context.applicationContext ?: context
     val settings = launcherBlurSettings ?: AxBlurSettings.launcher(appContext).also {
         launcherBlurSettings = it
@@ -670,6 +674,7 @@ private tailrec fun lookupActivityContext(context: Context): ActivityContext? =
     }
 
 @Composable
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 private fun AllAppsComposeTheme(content: @Composable () -> Unit) {
     val context = LocalContext.current
     val isDark = isSystemInDarkTheme()
@@ -677,5 +682,14 @@ private fun AllAppsComposeTheme(content: @Composable () -> Unit) {
     val colorScheme = remember(isDark, assetsSeq) {
         if (isDark) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
     }
-    MaterialTheme(colorScheme = colorScheme, content = content)
+    MaterialExpressiveTheme(
+        colorScheme = colorScheme,
+        typography = rememberAxionTypography(),
+        motionScheme = MotionScheme.expressive(),
+    ) {
+        CompositionLocalProvider(
+            LocalContentColor provides MaterialTheme.colorScheme.onSurface,
+            content = content
+        )
+    }
 }

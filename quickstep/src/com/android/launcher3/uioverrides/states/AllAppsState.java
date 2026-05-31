@@ -44,9 +44,7 @@ public class AllAppsState extends LauncherState {
     private static final int STATE_FLAGS =
             FLAG_WORKSPACE_INACCESSIBLE | FLAG_CLOSE_POPUPS | FLAG_HOTSEAT_INACCESSIBLE;
     private static final long BACK_CUJ_TIMEOUT_MS = TimeUnit.SECONDS.toMillis(5);
-    private static final float OPLUS_ALL_APPS_WORKSPACE_SCALE = 0.92f;
-    private static final int OPLUS_ALL_APPS_OPEN_DURATION_MS = 380;
-    private static final int OPLUS_ALL_APPS_CLOSE_DURATION_MS = 517;
+    private static final float COMPOSE_ALL_APPS_WORKSPACE_SCALE = 0.92f;
 
 
     public AllAppsState(int id) {
@@ -55,14 +53,6 @@ public class AllAppsState extends LauncherState {
 
     @Override
     public int getTransitionDuration(ActivityContext context, boolean isToState) {
-        if (context instanceof Launcher) {
-            Launcher launcher = (Launcher) context;
-            if (isComposeAllApps(launcher)) {
-                return !isToState && launcher.getStateManager().getState() == ALL_APPS
-                        ? OPLUS_ALL_APPS_CLOSE_DURATION_MS
-                        : OPLUS_ALL_APPS_OPEN_DURATION_MS;
-            }
-        }
         return isToState
                 ? context.getDeviceProfile().allAppsOpenDuration
                 : context.getDeviceProfile().allAppsCloseDuration;
@@ -125,8 +115,8 @@ public class AllAppsState extends LauncherState {
 
     @Override
     public ScaleAndTranslation getWorkspaceScaleAndTranslation(Launcher launcher) {
-        if (isComposeAllApps(launcher)) {
-            return new ScaleAndTranslation(OPLUS_ALL_APPS_WORKSPACE_SCALE, NO_OFFSET, NO_OFFSET);
+        if (shouldUseComposeWorkspaceMotion(launcher)) {
+            return new ScaleAndTranslation(COMPOSE_ALL_APPS_WORKSPACE_SCALE, NO_OFFSET, NO_OFFSET);
         }
         return new ScaleAndTranslation(
                 launcher.getDeviceProfile().mWorkspaceProfile.getWorkspaceContentScale(), NO_OFFSET,
@@ -135,7 +125,7 @@ public class AllAppsState extends LauncherState {
 
     @Override
     public ScaleAndTranslation getHotseatScaleAndTranslation(Launcher launcher) {
-        if (isComposeAllApps(launcher)) {
+        if (shouldUseComposeWorkspaceMotion(launcher)) {
             return getWorkspaceScaleAndTranslation(launcher);
         }
         if (launcher.getDeviceProfile().shouldShowAllAppsOnSheet()) {
@@ -170,7 +160,7 @@ public class AllAppsState extends LauncherState {
 
     @Override
     public PageAlphaProvider getWorkspacePageAlphaProvider(Launcher launcher) {
-        if (isComposeAllApps(launcher)) {
+        if (shouldUseComposeWorkspaceMotion(launcher)) {
             return super.getWorkspacePageAlphaProvider(launcher);
         }
         PageAlphaProvider superPageAlphaProvider = super.getWorkspacePageAlphaProvider(launcher);
@@ -186,15 +176,21 @@ public class AllAppsState extends LauncherState {
 
     @Override
     public int getVisibleElements(LauncherUiState launcherUiState) {
-        return ALL_APPS_CONTENT | FLOATING_SEARCH_BAR;
+        int elements = ALL_APPS_CONTENT | FLOATING_SEARCH_BAR;
+        if (isWorkspaceVisible(launcherUiState.getDeviceProfileRef().getValue())) {
+            elements |= HOTSEAT_ICONS;
+        }
+        return elements;
     }
 
     private static boolean isWorkspaceVisible(DeviceProfile deviceProfile) {
         return deviceProfile.shouldShowAllAppsOnSheet();
     }
 
-    private static boolean isComposeAllApps(Launcher launcher) {
-        return launcher.getAppsView() != null && launcher.getAppsView().isUsingCompose();
+    private static boolean shouldUseComposeWorkspaceMotion(Launcher launcher) {
+        return launcher.getAppsView() != null
+                && launcher.getAppsView().isUsingCompose()
+                && !launcher.getDeviceProfile().shouldShowAllAppsOnSheet();
     }
 
     @Override
@@ -223,9 +219,10 @@ public class AllAppsState extends LauncherState {
     @Override
     public ScrimColors getWorkspaceScrimColor(Launcher launcher) {
         int backgroundColor;
-        if (launcher.getAppsView() != null && launcher.getAppsView().isUsingCompose()) {
+        boolean shouldShowAllAppsOnSheet = launcher.getDeviceProfile().shouldShowAllAppsOnSheet();
+        if (shouldUseComposeWorkspaceMotion(launcher)) {
             backgroundColor = Color.TRANSPARENT;
-        } else if (!launcher.getDeviceProfile().shouldShowAllAppsOnSheet()) {
+        } else if (!shouldShowAllAppsOnSheet) {
             // Always use an opaque scrim if there's no sheet.
             backgroundColor = launcher.getResources().getColor(R.color.materialColorSurfaceDim);
         } else if (!Flags.allAppsBlur()) {
