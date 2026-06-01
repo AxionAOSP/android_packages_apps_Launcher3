@@ -343,7 +343,6 @@
     <dimen name="folder_header_height">80dp</dimen>
     <dimen name="folder_indicator_dots_marginBottom">18px</dimen>
     <dimen name="folder_name_paddings">16dp</dimen>
-    <dimen name="folder_padding_top">300px</dimen>
     <!-- label text size = workspace text size multiplied by this scale -->
     <dimen name="folder_label_text_scale">1.14</dimen>
     <dimen name="folder_footer_height_default">56dp</dimen>

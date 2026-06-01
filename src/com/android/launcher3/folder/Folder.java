@@ -228,7 +228,6 @@ public class Folder extends AbstractFloatingView implements ClipPathView, DragSo
     protected LinearLayout mFooter;
     private int mFooterHeight;
     private int mHeaderHeight;
-    private int mFolderMarginTop;
     private int mContentFooterGap;
     private int mContentPaddingLeftRight;
     private int mContentPaddingTop;
@@ -338,7 +337,6 @@ public class Folder extends AbstractFloatingView implements ClipPathView, DragSo
         mFooter = findViewById(R.id.folder_footer);
         mFooter.getLayoutParams().height = mFooterHeight;
         mHeaderHeight = getResources().getDimensionPixelSize(R.dimen.folder_header_height);
-        mFolderMarginTop = getResources().getDimensionPixelSize(R.dimen.folder_padding_top);
         mFolderName = findViewById(R.id.folder_name);
         if (Flags.enableLauncherVisualRefresh()) {
             mFolderName.setTypeface(Typeface.create("google-sans-flex", Typeface.NORMAL));
@@ -1387,9 +1385,13 @@ public class Folder extends AbstractFloatingView implements ClipPathView, DragSo
         parent.getDescendantRectRelativeToSelf(mFolderIcon, sTempRect);
         int centerX = sTempRect.centerX();
         int centerY = sTempRect.centerY();
-        int left = (mActivityContext.getDeviceProfile().getDeviceProperties().getWidthPx()
-                - width) / 2;
-        int top = mFolderMarginTop;
+        sTempRect.set(mActivityContext.getFolderBoundingBox());
+        int left = sTempRect.left + (sTempRect.width() - width) / 2;
+        int top = sTempRect.top + (sTempRect.height() - height) / 2;
+        int[] inOutPosition = new int[]{left, top};
+        mActivityContext.updateOpenFolderPosition(inOutPosition, sTempRect, width, height);
+        left = inOutPosition[0];
+        top = inOutPosition[1];
 
         setPivotX(centerX - left);
         setPivotY(centerY - top);
