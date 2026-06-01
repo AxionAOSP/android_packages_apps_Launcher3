@@ -119,9 +119,11 @@ public class DoubleShadowBubbleTextView extends BubbleTextView {
 
         drawWithoutDot(canvas);
         canvas.save();
+        int keyShadowBottom = (int) Math.ceil(mShadowInfo.getKeyShadowBlur()
+                + Math.max(0f, mShadowInfo.getKeyShadowOffsetY()));
         canvas.clipRect(getScrollX(), getScrollY() + getExtendedPaddingTop(),
                 getScrollX() + getWidth(),
-                getScrollY() + getHeight());
+                getScrollY() + getHeight() + keyShadowBottom);
 
         getPaint().setShadowLayer(
                 mShadowInfo.getKeyShadowBlur(),
