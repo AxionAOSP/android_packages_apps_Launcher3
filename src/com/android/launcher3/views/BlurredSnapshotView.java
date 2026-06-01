@@ -31,12 +31,10 @@ import android.view.View;
 
 import androidx.annotation.Nullable;
 
-import com.android.launcher3.DeviceProfile;
 import com.android.launcher3.Utilities;
 import com.android.launcher3.icons.BitmapRenderer;
 
-public class BlurredSnapshotView extends View
-        implements DeviceProfile.OnDeviceProfileChangeListener {
+public class BlurredSnapshotView extends View {
     public static final int SNAPSHOT_WALLPAPER = 1;
 
     private static final int SNAPSHOT_NONE = 0;
@@ -52,7 +50,6 @@ public class BlurredSnapshotView extends View
     private int mBlurRadius;
     private float mContentScale = 1f;
     private float mWallpaperOffset = 0.5f;
-    @Nullable private ActivityContext mActivityContext;
 
     public BlurredSnapshotView(Context context) {
         this(context, null);
@@ -118,14 +115,23 @@ public class BlurredSnapshotView extends View
 
     public void setSnapshotProgress(float progress, float contentScale) {
         float alpha = Utilities.boundToRange(progress, 0f, 1f);
-        mContentScale = Math.max(1f, contentScale);
-        setAlpha(alpha);
-        boolean isVisible = alpha > 0f
-                && mSnapshotType != SNAPSHOT_NONE
+        float scale = Math.max(1f, contentScale);
+        boolean scaleChanged = Float.compare(mContentScale, scale) != 0;
+        mContentScale = scale;
+        boolean hasSnapshot = mSnapshotType != SNAPSHOT_NONE
                 && mSnapshot != null
                 && !mSnapshot.isRecycled();
-        setVisibility(isVisible ? VISIBLE : INVISIBLE);
-        postInvalidateOnAnimation();
+        int visibility = alpha > 0f && hasSnapshot ? VISIBLE : INVISIBLE;
+        if (getVisibility() != visibility) {
+            setVisibility(visibility);
+        }
+        boolean alphaChanged = Float.compare(getAlpha(), alpha) != 0;
+        if (alphaChanged) {
+            setAlpha(alpha);
+        }
+        if (scaleChanged && !alphaChanged && visibility == VISIBLE) {
+            postInvalidateOnAnimation();
+        }
     }
 
     public void clearSnapshot() {
@@ -138,44 +144,28 @@ public class BlurredSnapshotView extends View
         recycleSnapshot();
     }
 
-    @Override
-    protected void onAttachedToWindow() {
-        super.onAttachedToWindow();
-        onActivityContextChanged(ActivityContext.lookupContextNoThrow(getContext()));
+    public void hideSnapshot() {
+        mContentScale = 1f;
+        if (getAlpha() != 0f) {
+            setAlpha(0f);
+        }
+        if (getVisibility() != INVISIBLE) {
+            setVisibility(INVISIBLE);
+        }
     }
 
     @Override
     protected void onDetachedFromWindow() {
-        onActivityContextChanged(null);
         recycleSnapshot();
         super.onDetachedFromWindow();
-    }
-
-    private void onActivityContextChanged(@Nullable ActivityContext context) {
-        if (mActivityContext != null) {
-            mActivityContext.removeOnDeviceProfileChangeListener(this);
-        }
-        mActivityContext = context;
-        if (mActivityContext != null) {
-            mActivityContext.addOnDeviceProfileChangeListener(this);
-        }
     }
 
     @Override
     protected void onSizeChanged(int w, int h, int oldw, int oldh) {
         super.onSizeChanged(w, h, oldw, oldh);
         if ((oldw > 0 || oldh > 0) && (w != oldw || h != oldh)) {
-            invalidateSnapshot();
+            clearSnapshot();
         }
-    }
-
-    @Override
-    public void onDeviceProfileChanged(DeviceProfile dp) {
-        invalidateSnapshot();
-    }
-
-    private void invalidateSnapshot() {
-        clearSnapshot();
     }
 
     @Override

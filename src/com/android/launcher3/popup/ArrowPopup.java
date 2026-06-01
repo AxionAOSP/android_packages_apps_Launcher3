@@ -19,6 +19,7 @@ package com.android.launcher3.popup;
 import static com.android.app.animation.Interpolators.EMPHASIZED_ACCELERATE;
 import static com.android.app.animation.Interpolators.EMPHASIZED_DECELERATE;
 import static com.android.app.animation.Interpolators.LINEAR;
+import static com.android.launcher3.LauncherState.NORMAL;
 
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
@@ -50,6 +51,7 @@ import com.android.axion.blur.AxBlurBackgroundRenderer;
 import com.android.axion.blur.AxBlurColors;
 import com.android.launcher3.AbstractFloatingView;
 import com.android.launcher3.InsettableFrameLayout;
+import com.android.launcher3.Launcher;
 import com.android.launcher3.R;
 import com.android.launcher3.Utilities;
 import com.android.launcher3.dragndrop.DragLayer;
@@ -258,6 +260,38 @@ public abstract class ArrowPopup<T extends Context & ActivityContext>
         return false;
     }
 
+    private boolean hasVisibleShortcutChild(ViewGroup group) {
+        for (int i = 0; i < group.getChildCount(); i++) {
+            View child = group.getChildAt(i);
+            if (child.getVisibility() == VISIBLE && isShortcutOrWrapper(child)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private void assignShortcutChildMargins(ViewGroup group) {
+        View lastShortcut = null;
+        for (int i = 0; i < group.getChildCount(); i++) {
+            View child = group.getChildAt(i);
+            if (child.getVisibility() != VISIBLE || !isShortcutOrWrapper(child)) {
+                continue;
+            }
+            if (lastShortcut != null) {
+                MarginLayoutParams mlp = (MarginLayoutParams) lastShortcut.getLayoutParams();
+                mlp.bottomMargin = mChildContainerMargin;
+            }
+            MarginLayoutParams mlp = (MarginLayoutParams) child.getLayoutParams();
+            mlp.bottomMargin = 0;
+            lastShortcut = child;
+        }
+    }
+
+    private boolean shouldEnablePopupBlur() {
+        return !(mActivityContext instanceof Launcher)
+                || ((Launcher) mActivityContext).isInState(NORMAL);
+    }
+
     public ArrowPopup(Context context, AttributeSet attrs) {
         this(context, attrs, 0);
     }
@@ -334,13 +368,16 @@ public abstract class ArrowPopup<T extends Context & ActivityContext>
                 MarginLayoutParams mlp = (MarginLayoutParams) lastView.getLayoutParams();
                 mlp.bottomMargin = 0;
 
-                if (colors != null && isShortcutContainer(view)) {
-                    setChildColor(view, colors[0], colorAnimator);
-                    mArrowColor = colors[0];
-                }
-
                 if (view instanceof ViewGroup && isShortcutContainer(view)) {
-                    assignMarginsAndBackgrounds((ViewGroup) view, backgroundColor);
+                    int childBackgroundColor = colors != null ? colors[0] : backgroundColor;
+                    boolean hasChildRows = hasVisibleShortcutChild((ViewGroup) view);
+                    setChildColor(view, hasChildRows ? Color.TRANSPARENT : childBackgroundColor,
+                            colorAnimator);
+                    mArrowColor = childBackgroundColor;
+                    assignMarginsAndBackgrounds((ViewGroup) view, childBackgroundColor);
+                    if (hasChildRows) {
+                        assignShortcutChildMargins((ViewGroup) view);
+                    }
                     continue;
                 }
 
@@ -414,7 +451,7 @@ public abstract class ArrowPopup<T extends Context & ActivityContext>
         setVisibility(View.INVISIBLE);
         mIsOpen = true;
         BaseDragLayer popupContainer = getPopupContainer();
-        mPopupBackgroundBlurView.setBlurEnabled(true);
+        mPopupBackgroundBlurView.setBlurEnabled(shouldEnablePopupBlur());
         popupContainer.addView(mPopupBackgroundBlurView);
         popupContainer.addView(this);
         orientAboutObject();
@@ -948,6 +985,10 @@ public abstract class ArrowPopup<T extends Context & ActivityContext>
         }
 
         void prepareCloseBlur() {
+            if (!shouldEnablePopupBlur()) {
+                setBlurEnabled(false);
+                return;
+            }
             mBlurEnabled = true;
             syncWithPopup();
             mBlur.setCrossWindowBlurEnabled(true);

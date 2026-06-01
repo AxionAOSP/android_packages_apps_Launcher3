@@ -145,6 +145,7 @@ public class DepthController extends BaseDepthController implements StateHandler
 
     @Override
     public void setState(LauncherState toState) {
+        setGestureTargetState(null);
         stateDepth.setValue(toState.getDepth(mLauncher));
         if (toState == LauncherState.BACKGROUND_APP) {
             addOnDrawListener();
@@ -154,6 +155,7 @@ public class DepthController extends BaseDepthController implements StateHandler
     @Override
     public void setStateWithAnimation(LauncherState toState, StateAnimationConfig config,
             PendingAnimation animation) {
+        setGestureTargetState(null);
         if (config.hasAnimationFlag(SKIP_DEPTH_CONTROLLER)) {
             return;
         }
