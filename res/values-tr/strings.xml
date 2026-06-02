@@ -238,6 +238,11 @@
     <string name="icon_pack_title">Simge Paketi</string>
     <string name="themed_icons_card_title">Temalı Simgeler</string>
     <string name="themed_icons_description">Renklerinize uyum sağlayan monokrom simgeler</string>
+    <string name="themed_icon_size_title">Icon size</string>
+    <string name="themed_icon_size_summary">Scale monochrome artwork inside themed icon backgrounds</string>
+    <string name="themed_icon_size_percent">%d%%</string>
+    <string name="themed_icon_background_title">Background icon color</string>
+    <string name="themed_icon_foreground_title">Foreground icon color</string>
     <string name="icon_shape_title">Simge Şekli</string>
     <string name="themed_icon_pack_title">Temalı Simge Paketi</string>
     <string name="themed_icon_pack_none">Hiçbiri</string>
