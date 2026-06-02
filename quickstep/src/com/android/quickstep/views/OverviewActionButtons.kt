@@ -202,6 +202,7 @@ private fun OverviewActionButtonsContent(state: OverviewActionsState) {
             }
         }
 
+        val statusText = state.memoryInfo.ifEmpty { state.lockHint }
         val lockHintBoxHeight = if (state.showClearAll) 24.dp + clearAllTopMargin else 24.dp
         Box(
             modifier = Modifier
@@ -210,8 +211,8 @@ private fun OverviewActionButtonsContent(state: OverviewActionsState) {
             contentAlignment = Alignment.Center
         ) {
             Text(
-                text = state.memoryInfo,
-                modifier = Modifier.alpha(if (state.memoryInfo.isNotEmpty()) 1f else 0f),
+                text = statusText,
+                modifier = Modifier.alpha(if (statusText.isNotEmpty()) 1f else 0f),
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
                 color = if (state.memoryInfoUseWhiteText) {

@@ -2375,7 +2375,6 @@ public abstract class RecentsView<
 
         // Update RecentsView and TaskView's DeviceProfile dependent layout.
         updateOrientationHandler();
-        mActionsView.updateDimension(dp, mLastComputedTaskSize);
     }
 
     private void updateOrientationHandler() {
@@ -2458,6 +2457,9 @@ public abstract class RecentsView<
         // Force TaskView to update size from thumbnail
         updateTaskSize();
         updatePivots();
+        if (mActionsView != null) {
+            mActionsView.updateDimension(dp, mLastComputedTaskSize);
+        }
     }
 
     /**
@@ -2501,7 +2503,6 @@ public abstract class RecentsView<
         }
         dp.setOverviewActionsAvailable(available);
         updateSizeAndPadding();
-        mActionsView.updateDimension(dp, mLastComputedTaskSize);
         requestLayout();
     }
 
