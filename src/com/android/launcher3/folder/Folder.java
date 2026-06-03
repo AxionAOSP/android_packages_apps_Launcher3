@@ -1989,7 +1989,7 @@ public class Folder extends AbstractFloatingView implements ClipPathView, DragSo
     }
 
     private void drawBackground(Canvas canvas, boolean drewBlur) {
-        if (!drewBlur && !mBlurBackgroundRenderer.isCrossWindowBlurActive()) {
+        if (!mBlurBackgroundRenderer.isCrossWindowBlurActive()) {
             mBackground.draw(canvas);
         }
     }

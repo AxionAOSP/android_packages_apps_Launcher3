@@ -686,8 +686,8 @@ public class FolderIcon extends FrameLayout implements FloatingIconViewCompanion
         mPreviewItemManager.recomputePreviewDrawingParams();
 
         if (!mBackground.drawingDelegated()) {
-            boolean drewBlur = drawBackdropBlur(canvas);
-            if (!drewBlur && !usesBlurredBackground) {
+            drawBackdropBlur(canvas);
+            if (!usesBlurredBackground) {
                 mBackground.drawBackground(canvas);
             }
         } else {
