@@ -118,11 +118,6 @@ fun AllAppsComposeHost(
                 }
             }
         }
-        launch {
-            snapshotFlow { controller.transitionProgress }.collect { progress ->
-                viewModel.setTransitionProgress(progress)
-            }
-        }
     }
 
     val state by viewModel.state.collectAsStateWithLifecycle()
@@ -134,10 +129,14 @@ fun AllAppsComposeHost(
     }
 
     val contentColor = rememberAdaptiveContentColor()
+    val launcherBlurEnabled = rememberLauncherBlurEnabled()
+    val drawerOpacity = rememberDrawerOpacityState()
     val configuration = controller.configuration
     CompositionLocalProvider(
         LocalDrawerContentColor provides contentColor,
-        LocalAllAppsConfiguration provides configuration
+        LocalAllAppsConfiguration provides configuration,
+        LocalLauncherBlurEnabled provides launcherBlurEnabled,
+        LocalDrawerOpacity provides drawerOpacity
     ) {
         AllAppsComposeContent(
             state = state,

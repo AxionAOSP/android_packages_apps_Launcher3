@@ -34,12 +34,12 @@ import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import com.android.axion.blur.AxBlurSettings
 import com.android.launcher3.LauncherFiles
 import com.android.launcher3.LauncherPrefs
 import com.android.launcher3.R
 import com.android.launcher3.allapps.AllAppsConfiguration
 import com.android.launcher3.allapps.allAppsBottomSheetBackgroundColor
-import com.android.launcher3.allapps.isLauncherBlurEnabled
 import com.android.launcher3.allapps.compose.shared.model.AllAppsComposeItem
 import com.android.launcher3.allapps.compose.shared.model.AllAppsComposeState
 import com.android.launcher3.allapps.compose.shared.model.AppCategory
@@ -50,6 +50,8 @@ import com.android.launcher3.util.WallpaperColorHints
 val LocalDrawerContentColor = staticCompositionLocalOf { Color.Unspecified }
 internal val LocalAllAppsLegacyLayout = staticCompositionLocalOf { false }
 internal val LocalAllAppsConfiguration = staticCompositionLocalOf { AllAppsConfiguration() }
+internal val LocalLauncherBlurEnabled = staticCompositionLocalOf { false }
+internal val LocalDrawerOpacity = staticCompositionLocalOf { MAX_DRAWER_OPACITY }
 
 internal val EmphasizedDecelerateEasing = CubicBezierEasing(0.05f, 0.7f, 0.1f, 1.0f)
 internal val EmphasizedAccelerateEasing = CubicBezierEasing(0.3f, 0.0f, 0.8f, 0.15f)
@@ -179,7 +181,10 @@ internal fun allAppsThemeColor(attr: Int): Color {
 private fun aospAllAppsPanelBaseColor(): Color {
     val context = LocalContext.current
     val alpha = rememberDrawerOpacity()
-    return Color(allAppsBottomSheetBackgroundColor(context, alpha))
+    val blurEnabled = LocalLauncherBlurEnabled.current
+    return remember(context, alpha, blurEnabled) {
+        Color(allAppsBottomSheetBackgroundColor(context, alpha, blurEnabled))
+    }
 }
 
 @Composable
@@ -204,10 +209,9 @@ internal fun allAppsSurfaceBrightContainerColor(): Color =
 
 @Composable
 internal fun allAppsSurfaceBrightColor(): Color {
-    val context = LocalContext.current
     val drawerOpacity = rememberDrawerOpacity()
     val color = MaterialTheme.colorScheme.surfaceBright
-    if (!isLauncherBlurEnabled(context) || drawerOpacity == MAX_DRAWER_OPACITY) return color
+    if (!LocalLauncherBlurEnabled.current || drawerOpacity == MAX_DRAWER_OPACITY) return color
     return protectedDrawerSurfaceColor(color, drawerOpacity, SURFACE_BRIGHT_COLOR_MIN_ALPHA)
 }
 
@@ -257,6 +261,20 @@ internal fun rememberAdaptiveContentColor(): Color {
 }
 
 @Composable
+internal fun rememberLauncherBlurEnabled(): Boolean {
+    val context = LocalContext.current
+    val appContext = context.applicationContext ?: context
+    val settings = remember(appContext) { AxBlurSettings.launcher(appContext) }
+    var enabled by remember(settings) { mutableStateOf(settings.enabled) }
+    DisposableEffect(settings) {
+        val callback = Runnable { enabled = settings.enabled }
+        settings.start(callback)
+        onDispose { settings.stop() }
+    }
+    return enabled
+}
+
+@Composable
 internal fun <T> rememberPreference(key: String, read: (Context) -> T): T {
     val context = LocalContext.current
     val state = remember { mutableStateOf(read(context)) }
@@ -275,10 +293,13 @@ internal fun <T> rememberPreference(key: String, read: (Context) -> T): T {
 }
 
 @Composable
-internal fun rememberDrawerOpacity(): Int =
+internal fun rememberDrawerOpacityState(): Int =
     rememberPreference(LauncherPrefs.ALL_APPS_BG_OPACITY.sharedPrefKey) {
         LauncherPrefs.get(it).get(LauncherPrefs.ALL_APPS_BG_OPACITY)
     }
+
+@Composable
+internal fun rememberDrawerOpacity(): Int = LocalDrawerOpacity.current
 
 @Composable
 private fun rememberDrawerSurfaceAlpha(alphaMultiplier: Float = 1f): Float =

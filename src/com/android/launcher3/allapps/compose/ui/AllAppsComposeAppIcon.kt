@@ -99,10 +99,27 @@ fun AllAppsComposeAppIcon(
 
     fun getIconBoundsOnScreen(): RectF {
         val coords = layoutCoords.icon
-        if (coords == null || !coords.isAttached) {
-            return RectF(0f, 0f, effectiveIconSizePx.toFloat(), effectiveIconSizePx.toFloat())
+        if (coords != null && coords.isAttached) {
+            return toScreenRect(coords)
         }
-        return toScreenRect(coords)
+        val columnCoords = layoutCoords.column
+        if (columnCoords != null && columnCoords.isAttached) {
+            val boundsInWindow = columnCoords.boundsInWindow()
+            val screenOffset = getScreenOffset()
+            val left = boundsInWindow.left + (boundsInWindow.width - effectiveIconSizePx) / 2f
+            val top = if (cellHeightPx > 0) {
+                boundsInWindow.top + (boundsInWindow.height - effectiveIconSizePx) / 2f
+            } else {
+                boundsInWindow.top
+            }
+            return RectF(
+                left + screenOffset.x,
+                top + screenOffset.y,
+                left + effectiveIconSizePx + screenOffset.x,
+                top + effectiveIconSizePx + screenOffset.y
+            )
+        }
+        return RectF(0f, 0f, effectiveIconSizePx.toFloat(), effectiveIconSizePx.toFloat())
     }
 
     val controller = LocalAllAppsInteractions.current.controller
@@ -114,6 +131,11 @@ fun AllAppsComposeAppIcon(
             ctrl.hiddenIconComponent != null
                 && ctrl.hiddenIconComponent == componentNameForHide
                 && ctrl.hiddenIconSection == sectionId
+        }
+    }
+    val tracksIconPosition = remember(componentNameForHide, sectionId, controller) {
+        derivedStateOf {
+            controller?.isTrackingComposeIconPosition(componentNameForHide, sectionId) == true
         }
     }
 
@@ -161,9 +183,7 @@ fun AllAppsComposeAppIcon(
             .then(heightModifier)
             .width(cellWidth)
             .onGloballyPositioned { coords ->
-                if (!isScrollingProvider()) {
-                    layoutCoords.column = coords
-                }
+                layoutCoords.column = coords
             }
             .pointerInput(appInfo, sectionId) {
                 awaitEachGesture {
@@ -245,29 +265,24 @@ fun AllAppsComposeAppIcon(
         verticalArrangement = if (cellHeightPx > 0) Arrangement.Center else Arrangement.Top
     ) {
         val iconSizeDp = with(density) { effectiveIconSizePx.toDp() }
+        val iconPositionModifier = if (tracksIconPosition.value) {
+            Modifier.onGloballyPositioned { coords ->
+                layoutCoords.icon = coords
+                controller?.onComposeIconPositioned(
+                    appInfo.componentName,
+                    sectionId,
+                    toScreenRect(coords),
+                    effectiveIconSizePx
+                )
+            }
+        } else {
+            Modifier
+        }
 
         Box(
             modifier = Modifier
                 .size(iconSizeDp)
-                .onGloballyPositioned { coords ->
-                    if (!isScrollingProvider()) {
-                        layoutCoords.icon = coords
-                        val ctrl = controller
-                        val comp = appInfo.componentName
-                        if (ctrl != null && (
-                                (ctrl.hiddenIconComponent == comp && ctrl.hiddenIconSection == sectionId) ||
-                                (ctrl.lastLaunchedComponent == comp && ctrl.lastLaunchedSection == sectionId)
-                            )
-                        ) {
-                            ctrl.onComposeIconPositioned(
-                                comp,
-                                sectionId,
-                                toScreenRect(coords),
-                                effectiveIconSizePx
-                            )
-                        }
-                    }
-                }
+                .then(iconPositionModifier)
                 .drawBehind {
                     if (!isHiddenState.value) {
                         iconDrawable.draw(drawContext.canvas.nativeCanvas)

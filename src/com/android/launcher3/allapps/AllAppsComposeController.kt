@@ -155,6 +155,10 @@ class AllAppsComposeController @Inject constructor(
 
     var hiddenIconComponent: ComponentName? by mutableStateOf(null)
     var hiddenIconSection: String? = null
+    var launchedIconComponent: ComponentName? by mutableStateOf(null)
+        private set
+    var launchedIconSection: String? by mutableStateOf(null)
+        private set
 
 
     private var showFolderPickerHandler: ((String) -> Unit)? = null
@@ -212,6 +216,7 @@ class AllAppsComposeController @Inject constructor(
         composeView = cv
         updateConfig(activityContext.deviceProfile)
         transitionProgress = 1f
+        viewModel.setTransitionProgress(transitionProgress)
     }
 
     fun detachContainer() {
@@ -228,12 +233,14 @@ class AllAppsComposeController @Inject constructor(
     }
 
     fun setTransitionProgressWithRefresh(progress: Float) {
+        if (progress == transitionProgress) return
         if (progress < transitionProgress - TRANSITION_DIRECTION_EPSILON) {
             isTransitionCollapsing = true
         } else if (progress > transitionProgress + TRANSITION_DIRECTION_EPSILON) {
             isTransitionCollapsing = false
         }
         transitionProgress = progress
+        viewModel.setTransitionProgress(progress)
     }
 
     fun resetState() {
@@ -349,17 +356,24 @@ class AllAppsComposeController @Inject constructor(
         screenBounds: RectF,
         iconSizePx: Int
     ) {
-        if (componentName == null) return
-        val matchesHiddenIcon =
-            hiddenIconComponent == componentName && hiddenIconSection == sectionId
-        val matchesLaunchedIcon =
-            lastLaunchedComponent == componentName && lastLaunchedSection == sectionId
-        if (!matchesHiddenIcon && !matchesLaunchedIcon) return
+        if (!isTrackingComposeIconPosition(componentName, sectionId)) return
         sharedHostView?.setIconSizePx(iconSizePx)
         repositionHostView(screenBounds)
     }
 
+    fun isTrackingComposeIconPosition(componentName: ComponentName?, sectionId: String?): Boolean {
+        if (componentName == null) return false
+        val matchesHiddenIcon =
+            hiddenIconComponent == componentName && hiddenIconSection == sectionId
+        val matchesLaunchedIcon =
+            (launchedIconComponent == componentName && launchedIconSection == sectionId) ||
+                (lastLaunchedComponent == componentName && lastLaunchedSection == sectionId)
+        return matchesHiddenIcon || matchesLaunchedIcon
+    }
+
     fun clearLaunchedState() {
+        launchedIconComponent = null
+        launchedIconSection = null
         composeLauncher.clearLaunchedState()
     }
 
@@ -378,10 +392,14 @@ class AllAppsComposeController @Inject constructor(
 
     private fun createCallbacks() = object : AllAppsComposeCallbacks {
         override fun onAppClicked(iconInfo: ComposeIconInfo) {
+            launchedIconComponent = iconInfo.appInfo.componentName
+            launchedIconSection = (iconInfo.hostView as? ComposeAppIconView)?.sectionId
             composeLauncher.launch(iconInfo)
         }
 
         override fun onAppClickedFromFolder(appInfo: AppInfo) {
+            launchedIconComponent = null
+            launchedIconSection = null
             composeLauncher.launchWithoutIcon(appInfo)
         }
 
@@ -639,9 +657,10 @@ data class AllAppsColorConfiguration(
 
 internal fun allAppsBottomSheetBackgroundColor(
     context: Context,
-    alpha: Int = LauncherPrefs.get(context).get(LauncherPrefs.ALL_APPS_BG_OPACITY)
+    alpha: Int = LauncherPrefs.get(context).get(LauncherPrefs.ALL_APPS_BG_OPACITY),
+    blurEnabled: Boolean = isLauncherBlurEnabled(context)
 ): Int {
-    if (!isLauncherBlurEnabled(context) || alpha == 255) {
+    if (!blurEnabled || alpha == 255) {
         return context.getColor(InternalR.color.materialColorSurfaceContainer)
     }
     return ColorUtils.setAlphaComponent(

@@ -15,8 +15,10 @@ import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.gestures.waitForUpOrCancellation
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListState
+import androidx.compose.foundation.lazy.items as lazyItems
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -188,6 +190,22 @@ private fun buildLazyGridItems(
     return result
 }
 
+private fun lazyGridItemKey(keyPrefix: String, gridItem: LazyGridItem): String =
+    when (gridItem) {
+        is LazyGridItem.PrivateSpace -> "${keyPrefix}_private_header"
+        is LazyGridItem.EmptySearch -> "${keyPrefix}_empty_search"
+        is LazyGridItem.SectionSpacer -> "${keyPrefix}_spacer_${gridItem.sectionId}"
+        is LazyGridItem.GridRow -> "${keyPrefix}_row_${gridItem.sectionId}_${gridItem.rowIndex}"
+    }
+
+private fun lazyGridItemContentType(gridItem: LazyGridItem): String =
+    when (gridItem) {
+        is LazyGridItem.PrivateSpace -> "private"
+        is LazyGridItem.EmptySearch -> "empty"
+        is LazyGridItem.SectionSpacer -> "spacer"
+        is LazyGridItem.GridRow -> "row_${gridItem.position}"
+    }
+
 @Composable
 fun AllAppsComposeGrid(
     items: List<AllAppsComposeItem>,
@@ -206,7 +224,7 @@ fun AllAppsComposeGrid(
     contentPadding: PaddingValues = PaddingValues(horizontal = 16.dp, vertical = 8.dp)
 ) {
     val interactions = LocalAllAppsInteractions.current
-    val scrollState = rememberScrollState()
+    val scrollState = rememberLazyListState()
     val effectiveColumns = if (numColumns > 0) numColumns else 4
 
     var isScrollEnabled by remember { mutableStateOf(true) }
@@ -217,7 +235,7 @@ fun AllAppsComposeGrid(
         }
     }
     LaunchedEffect(effectiveColumns) {
-        scrollState.scrollTo(0)
+        scrollState.scrollToItem(0)
         interactions.controller?.let {
             it.canScrollUp = false
             it.canScrollDown = scrollState.canScrollForward
@@ -225,13 +243,16 @@ fun AllAppsComposeGrid(
     }
 
     LaunchedEffect(items.size) {
-        if (scrollState.value > 0) {
-            scrollState.scrollTo(0)
+        if (scrollState.firstVisibleItemIndex > 0 || scrollState.firstVisibleItemScrollOffset > 0) {
+            scrollState.scrollToItem(0)
         }
     }
 
     val canScrollBack by remember {
-        derivedStateOf { scrollState.value > SCROLL_SNAP_THRESHOLD_PX }
+        derivedStateOf {
+            scrollState.firstVisibleItemIndex > 0 ||
+                scrollState.firstVisibleItemScrollOffset > SCROLL_SNAP_THRESHOLD_PX
+        }
     }
     val canScrollFwd by remember { derivedStateOf { scrollState.canScrollForward } }
 
@@ -244,7 +265,7 @@ fun AllAppsComposeGrid(
 
     LaunchedEffect(reopenTrigger) {
         if (reopenTrigger > 0) {
-            scrollState.scrollTo(0)
+            scrollState.scrollToItem(0)
         }
     }
 
@@ -271,7 +292,10 @@ fun AllAppsComposeGrid(
 
     Box(modifier = modifier.fillMaxSize()) {
         CompositionLocalProvider(LocalOverscrollConfiguration provides null) {
-            Column(
+            LazyColumn(
+                state = scrollState,
+                userScrollEnabled = isScrollEnabled,
+                contentPadding = contentPadding,
                 modifier = Modifier
                     .fillMaxSize()
                     .then(
@@ -281,58 +305,50 @@ fun AllAppsComposeGrid(
                             Modifier.graphicsLayer(clip = true, shape = scrollClipShape)
                         }
                     )
-                    .verticalScroll(scrollState, enabled = isScrollEnabled)
-                    .padding(contentPadding)
             ) {
-                gridItems.forEach { gridItem ->
-                    val itemKey = when (gridItem) {
-                        is LazyGridItem.PrivateSpace -> "${keyPrefix}_private_header"
-                        is LazyGridItem.EmptySearch -> "${keyPrefix}_empty_search"
-                        is LazyGridItem.SectionSpacer ->
-                            "${keyPrefix}_spacer_${gridItem.sectionId}"
-                        is LazyGridItem.GridRow ->
-                            "${keyPrefix}_row_${gridItem.sectionId}_${gridItem.rowIndex}"
-                    }
-                    key(itemKey) {
-                        when (gridItem) {
-                            is LazyGridItem.PrivateSpace -> {
-                                PrivateSpaceHeaderItem(isExpanded = gridItem.isExpanded)
-                            }
-                            is LazyGridItem.EmptySearch -> {
-                                EmptySearchResultItem()
-                            }
-                            is LazyGridItem.SectionSpacer -> {
-                                if (legacyLayout &&
-                                    (gridItem.previousSectionType == "predictions" ||
-                                        gridItem.previousSectionType == "pinned")
-                                ) {
-                                    LegacyAllAppsDivider()
-                                } else {
-                                    Spacer(
-                                        modifier = Modifier.height(
-                                            if (legacyLayout) LegacySectionSpacerHeight else 8.dp
-                                        )
+                lazyItems(
+                    items = gridItems,
+                    key = { lazyGridItemKey(keyPrefix, it) },
+                    contentType = { lazyGridItemContentType(it) }
+                ) { gridItem ->
+                    when (gridItem) {
+                        is LazyGridItem.PrivateSpace -> {
+                            PrivateSpaceHeaderItem(isExpanded = gridItem.isExpanded)
+                        }
+                        is LazyGridItem.EmptySearch -> {
+                            EmptySearchResultItem()
+                        }
+                        is LazyGridItem.SectionSpacer -> {
+                            if (legacyLayout &&
+                                (gridItem.previousSectionType == "predictions" ||
+                                    gridItem.previousSectionType == "pinned")
+                            ) {
+                                LegacyAllAppsDivider()
+                            } else {
+                                Spacer(
+                                    modifier = Modifier.height(
+                                        if (legacyLayout) LegacySectionSpacerHeight else 8.dp
                                     )
-                                }
-                            }
-                            is LazyGridItem.GridRow -> {
-                                AllAppsGridRow(
-                                    rowItems = gridItem.rowItems,
-                                    sectionId = gridItem.sectionId,
-                                    position = gridItem.position,
-                                    effectiveColumns = effectiveColumns,
-                                    showLabels = showLabels,
-                                    iconSizePx = iconSizePx,
-                                    cellWidthPx = cellWidthPx,
-                                    cellHeightPx = cellHeightPx,
-                                    cardBg = cardBg,
-                                    useCardBackground = !legacyLayout,
-                                    isScrollingProvider = isScrollingProvider,
-                                    onLongPressStatusChanged = onLongPressStatusChanged,
-                                    onFolderClick = onFolderClick,
-                                    onFolderLongClick = onFolderLongClick
                                 )
                             }
+                        }
+                        is LazyGridItem.GridRow -> {
+                            AllAppsGridRow(
+                                rowItems = gridItem.rowItems,
+                                sectionId = gridItem.sectionId,
+                                position = gridItem.position,
+                                effectiveColumns = effectiveColumns,
+                                showLabels = showLabels,
+                                iconSizePx = iconSizePx,
+                                cellWidthPx = cellWidthPx,
+                                cellHeightPx = cellHeightPx,
+                                cardBg = cardBg,
+                                useCardBackground = !legacyLayout,
+                                isScrollingProvider = isScrollingProvider,
+                                onLongPressStatusChanged = onLongPressStatusChanged,
+                                onFolderClick = onFolderClick,
+                                onFolderLongClick = onFolderLongClick
+                            )
                         }
                     }
                 }
@@ -364,9 +380,20 @@ private fun LegacyAllAppsDivider() {
 }
 
 @Composable
-private fun LegacyScrollThumb(scrollState: ScrollState) {
-    if (scrollState.maxValue <= 0) return
-    val progress = (scrollState.value / scrollState.maxValue.toFloat()).coerceIn(0f, 1f)
+private fun LegacyScrollThumb(scrollState: LazyListState) {
+    val layoutInfo = scrollState.layoutInfo
+    val visibleItems = layoutInfo.visibleItemsInfo
+    val totalItems = layoutInfo.totalItemsCount
+    if (visibleItems.isEmpty() || totalItems <= visibleItems.size) return
+    val averageItemSize = visibleItems.sumOf { it.size }.toFloat() / visibleItems.size
+    val itemOffset = if (averageItemSize > 0f) {
+        scrollState.firstVisibleItemScrollOffset / averageItemSize
+    } else {
+        0f
+    }
+    val maxScroll = (totalItems - visibleItems.size).coerceAtLeast(1)
+    val progress = ((scrollState.firstVisibleItemIndex + itemOffset) / maxScroll)
+        .coerceIn(0f, 1f)
     val trackColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 30f / 255f)
     val thumbColor = MaterialTheme.colorScheme.primary
     BoxWithConstraints(

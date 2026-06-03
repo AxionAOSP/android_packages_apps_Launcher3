@@ -49,8 +49,15 @@ class ComposeAllAppsContainerView @JvmOverloads constructor(
 
     private var stubHeader: FloatingHeaderView? = null
 
+    private var controllerCache: AllAppsComposeController? = null
     private val controller: AllAppsComposeController
-        get() = mActivityContext.activityComponent.allAppsComposeController
+        get() {
+            val cached = controllerCache
+            if (cached != null) return cached
+            return mActivityContext.activityComponent.allAppsComposeController.also {
+                controllerCache = it
+            }
+        }
 
     val currentTransitionProgress: Float get() = mTransitionProgress
 
@@ -258,6 +265,7 @@ class ComposeAllAppsContainerView @JvmOverloads constructor(
 
     private fun updateViewAlpha(view: View?, alpha: Float) {
         view ?: return
+        if (view.visibility == GONE) return
         val clamped = alpha.coerceIn(0f, 1f)
         view.alpha = clamped
         val targetLayer = if (clamped > 0f && clamped < 1f) LAYER_TYPE_HARDWARE else LAYER_TYPE_NONE
