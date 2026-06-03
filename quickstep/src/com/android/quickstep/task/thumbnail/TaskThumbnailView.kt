@@ -178,7 +178,9 @@ class TaskThumbnailView : FrameLayout, ViewPool.Reusable {
             }
         }
         
-        logDebug("taskId: $taskId - uiState changed from: $uiState to: $state")
+        if (DEBUG) {
+            logDebug("taskId: $taskId - uiState changed from: $uiState to: $state")
+        }
         uiState = state
         resetViews()
 
@@ -317,6 +319,7 @@ class TaskThumbnailView : FrameLayout, ViewPool.Reusable {
     }
 
     private companion object {
+        private const val DEBUG = false
         const val TAG = "TaskThumbnailView"
         private const val MAX_SCRIM_ALPHA = 0.4f
 

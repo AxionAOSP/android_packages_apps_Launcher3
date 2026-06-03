@@ -69,13 +69,13 @@ import java.util.Set;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
-import java.util.stream.Collectors;
 
 /**
  * Manages the recent task list from the system, caching it as necessary.
  */
 public class RecentTasksList {
 
+    private static final boolean DEBUG = false;
     private static final TaskLoadResult INVALID_RESULT = new TaskLoadResult(-1, false, 0);
 
     private final Context mContext;
@@ -92,11 +92,16 @@ public class RecentTasksList {
 
     private TaskLoadResult mResultsBg = INVALID_RESULT;
     private TaskLoadResult mResultsUi = INVALID_RESULT;
+    private final ArrayList<PendingTaskKeyLoad> mPendingTaskKeyLoads = new ArrayList<>();
+    private boolean mLoadingTaskKeysInBackground;
+    private int mLoadingTaskKeysRequestId = -1;
+    private int mLoadingTaskKeysNumTasks;
 
     private @Nullable RecentsModel.RunningTasksListener mRunningTasksListener;
     private @Nullable RecentsModel.RecentTasksChangedListener mRecentTasksChangedListener;
     // Tasks are stored in order of least recently launched to most recently launched.
     private ArrayList<RunningTaskInfo> mRunningTasks;
+    private volatile AxAppLockerHelper mAppLockerHelper;
 
     // Track displays that belong to virtual devices. Tasks on such displays are treated as if
     // they are running on the default display.
@@ -194,11 +199,49 @@ public class RecentTasksList {
      * Fetches the task keys skipping any local cache.
      */
     public void getTaskKeys(int numTasks, Consumer<ArrayList<GroupTask>> callback) {
+        final int requestLoadId;
+        final boolean loadDirect;
+        synchronized (this) {
+            requestLoadId = mChangeId;
+            if (!mLoadingTaskKeysInBackground) {
+                mLoadingTaskKeysInBackground = true;
+                mLoadingTaskKeysRequestId = requestLoadId;
+                mLoadingTaskKeysNumTasks = numTasks;
+                mPendingTaskKeyLoads.add(new PendingTaskKeyLoad(numTasks, callback));
+                loadDirect = false;
+            } else if (mLoadingTaskKeysRequestId == requestLoadId
+                    && mLoadingTaskKeysNumTasks >= numTasks) {
+                mPendingTaskKeyLoads.add(new PendingTaskKeyLoad(numTasks, callback));
+                return;
+            } else {
+                loadDirect = true;
+            }
+        }
+
+        if (loadDirect) {
+            requestTaskKeys(numTasks, callback);
+            return;
+        }
+
         // Kick off task loading in the background
         UI_HELPER_EXECUTOR.execute(() -> {
-            ArrayList<GroupTask> tasks = loadTasksInBackground(numTasks, -1,
-                    true /* loadKeysOnly */);
-            mMainThreadExecutor.execute(() -> callback.accept(tasks));
+            ArrayList<GroupTask> tasks = loadTaskKeysInBackground(numTasks);
+            mMainThreadExecutor.execute(() -> {
+                ArrayList<PendingTaskKeyLoad> pendingLoads;
+                synchronized (RecentTasksList.this) {
+                    pendingLoads = new ArrayList<>(mPendingTaskKeyLoads);
+                    mPendingTaskKeyLoads.clear();
+                    mLoadingTaskKeysInBackground = false;
+                    mLoadingTaskKeysRequestId = -1;
+                    mLoadingTaskKeysNumTasks = 0;
+                }
+                for (int i = 0; i < pendingLoads.size(); i++) {
+                    PendingTaskKeyLoad pendingLoad = pendingLoads.get(i);
+                    pendingLoad.mCallback.accept(pendingLoad.mNumTasks == numTasks
+                            ? tasks
+                            : copyTasks(tasks, pendingLoad.mNumTasks));
+                }
+            });
         });
     }
 
@@ -232,15 +275,16 @@ public class RecentTasksList {
             Predicate<GroupTask> filter) {
         final int requestLoadId = mChangeId;
         if (mResultsUi.isValidForRequest(requestLoadId, loadKeysOnly)) {
-            Log.d("b/417220811", "getTasks - mResultsUi still valid: " + mResultsUi.mRequestId);
+            if (DEBUG) {
+                Log.d("b/417220811", "getTasks - mResultsUi still valid: "
+                        + mResultsUi.mRequestId);
+            }
             // The list is up to date, send the callback on the next frame,
             // so that requestID can be returned first.
             if (callback != null) {
                 // Copy synchronously as the changeId might change by next frame
                 // and filter GroupTasks
-                ArrayList<GroupTask> result = mResultsUi.stream().filter(filter)
-                        .map(GroupTask::copy)
-                        .collect(Collectors.toCollection(ArrayList<GroupTask>::new));
+                ArrayList<GroupTask> result = copyAndFilterTasks(mResultsUi, filter);
 
                 mMainThreadExecutor.post(() -> {
                     callback.accept(result, requestLoadId);
@@ -255,18 +299,22 @@ public class RecentTasksList {
         UI_HELPER_EXECUTOR.execute(() -> {
             if (!mResultsBg.isValidForRequest(requestLoadId, loadKeysOnly)) {
                 mResultsBg = loadTasksInBackground(Integer.MAX_VALUE, requestLoadId, loadKeysOnly);
-                Log.d("b/417220811", "getTasks - loadTasksInBackground: " + mResultsBg.mRequestId);
+                if (DEBUG) {
+                    Log.d("b/417220811", "getTasks - loadTasksInBackground: "
+                            + mResultsBg.mRequestId);
+                }
             }
             TaskLoadResult loadResult = mResultsBg;
             mMainThreadExecutor.execute(() -> {
                 mLoadingTasksInBackground = false;
                 mResultsUi = loadResult;
-                Log.d("b/417220811", "getTasks - updating mResultsUi: " + mResultsUi.mRequestId);
+                if (DEBUG) {
+                    Log.d("b/417220811", "getTasks - updating mResultsUi: "
+                            + mResultsUi.mRequestId);
+                }
                 if (callback != null) {
                     // filter the tasks if needed before passing them into the callback
-                    ArrayList<GroupTask> result = mResultsUi.stream().filter(filter)
-                            .map(GroupTask::copy)
-                            .collect(Collectors.toCollection(ArrayList<GroupTask>::new));
+                    ArrayList<GroupTask> result = copyAndFilterTasks(mResultsUi, filter);
 
                     callback.accept(result, requestLoadId);
                 }
@@ -274,6 +322,38 @@ public class RecentTasksList {
         });
 
         return requestLoadId;
+    }
+
+    private void requestTaskKeys(int numTasks, Consumer<ArrayList<GroupTask>> callback) {
+        UI_HELPER_EXECUTOR.execute(() -> {
+            ArrayList<GroupTask> tasks = loadTaskKeysInBackground(numTasks);
+            mMainThreadExecutor.execute(() -> callback.accept(tasks));
+        });
+    }
+
+    private ArrayList<GroupTask> loadTaskKeysInBackground(int numTasks) {
+        return loadTasksInBackground(numTasks, -1, true);
+    }
+
+    private static ArrayList<GroupTask> copyAndFilterTasks(List<GroupTask> tasks,
+            Predicate<GroupTask> filter) {
+        ArrayList<GroupTask> result = new ArrayList<>(tasks.size());
+        for (int i = 0; i < tasks.size(); i++) {
+            GroupTask task = tasks.get(i);
+            if (filter.test(task)) {
+                result.add(task.copy());
+            }
+        }
+        return result;
+    }
+
+    private static ArrayList<GroupTask> copyTasks(List<GroupTask> tasks, int maxTasks) {
+        int size = Math.min(tasks.size(), Math.max(0, maxTasks));
+        ArrayList<GroupTask> result = new ArrayList<>(size);
+        for (int i = 0; i < size; i++) {
+            result.add(tasks.get(i).copy());
+        }
+        return result;
     }
 
     /**
@@ -291,8 +371,10 @@ public class RecentTasksList {
     }
 
     private synchronized void invalidateLoadedTasks() {
-        Log.d("b/417220811",
-                "invalidateLoadedTasks - previous requestLoadId: " + mResultsBg.mRequestId);
+        if (DEBUG) {
+            Log.d("b/417220811",
+                    "invalidateLoadedTasks - previous requestLoadId: " + mResultsBg.mRequestId);
+        }
         UI_HELPER_EXECUTOR.execute(() -> mResultsBg = INVALID_RESULT);
         mResultsUi = INVALID_RESULT;
         mChangeId++;
@@ -395,14 +477,17 @@ public class RecentTasksList {
         // The raw tasks are given in most-recent to least-recent order, we need to reverse it
         Collections.reverse(rawTasks);
 
-        SparseBooleanArray tmpLockedUsers = new SparseBooleanArray() {
+        SparseBooleanArray tmpLockedUsers = loadKeysOnly ? null : new SparseBooleanArray() {
             @Override
             public boolean get(int key) {
                 if (!enableLaterIsLockedCheck() && indexOfKey(key) < 0) {
                     // Fill the cached locked state as we fetch
                     put(key, mKeyguardManager.isDeviceLocked(key));
-                    Log.d("b/417220811",
-                            "loadTasksInBackground - isDeviceLocked(" + key + "): " + get(key));
+                    if (DEBUG) {
+                        Log.d("b/417220811",
+                                "loadTasksInBackground - isDeviceLocked(" + key + "): "
+                                        + get(key));
+                    }
                 }
                 return super.get(key);
             }
@@ -435,14 +520,18 @@ public class RecentTasksList {
             if (Flags.enableShellTopTaskTracking()) {
                 final TaskInfo taskInfo1 = rawTask.getBaseGroupedTask().getTaskInfo1();
                 final Task.TaskKey task1Key = createTaskKey(taskInfo1);
-                final Task task1 = Task.from(task1Key, taskInfo1,
-                        isAppLocked(task1Key, tmpLockedUsers) /* isLocked */);
+                final Task task1 = loadKeysOnly
+                        ? new Task(task1Key)
+                        : Task.from(task1Key, taskInfo1,
+                                isAppLocked(task1Key, tmpLockedUsers) /* isLocked */);
 
                 if (rawTask.isBaseType(TYPE_SPLIT)) {
                     final TaskInfo taskInfo2 = rawTask.getBaseGroupedTask().getTaskInfo2();
                     final Task.TaskKey task2Key = createTaskKey(taskInfo2);
-                    final Task task2 = Task.from(task2Key, taskInfo2,
-                            isAppLocked(task2Key, tmpLockedUsers) /* isLocked */);
+                    final Task task2 = loadKeysOnly
+                            ? new Task(task2Key)
+                            : Task.from(task2Key, taskInfo2,
+                                    isAppLocked(task2Key, tmpLockedUsers) /* isLocked */);
                     allTasks.add(new SplitTask(task1, task2,
                             rawTask.getBaseGroupedTask().getSplitBounds()));
                 } else {
@@ -492,8 +581,17 @@ public class RecentTasksList {
     }
 
     private boolean isAppLocked(Task.TaskKey key, SparseBooleanArray users) {
-        return AxAppLockerHelper.get().isAppLocked(key.getPackageName())
-                || (users != null && users.get(key.userId));
+        return (users != null && users.get(key.userId))
+                || getAppLockerHelper().isAppLocked(key.getPackageName());
+    }
+
+    private AxAppLockerHelper getAppLockerHelper() {
+        AxAppLockerHelper helper = mAppLockerHelper;
+        if (helper == null) {
+            helper = AxAppLockerHelper.get();
+            mAppLockerHelper = helper;
+        }
+        return helper;
     }
 
     private Task createTask(TaskInfo taskInfo, Set<Integer> minimizedTaskIds) {
@@ -587,6 +685,16 @@ public class RecentTasksList {
 
         boolean isValidForRequest(int requestId, boolean loadKeysOnly) {
             return mRequestId == requestId && (!mKeysOnly || loadKeysOnly);
+        }
+    }
+
+    private static class PendingTaskKeyLoad {
+        final int mNumTasks;
+        final Consumer<ArrayList<GroupTask>> mCallback;
+
+        PendingTaskKeyLoad(int numTasks, Consumer<ArrayList<GroupTask>> callback) {
+            mNumTasks = numTasks;
+            mCallback = callback;
         }
     }
 }
