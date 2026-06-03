@@ -740,6 +740,9 @@ public class BubbleTextView extends TextView implements ItemInfoUpdateReceiver,
         if (isLongClickable()) {
             super.onTouchEvent(event);
             mLongPressHelper.onTouchEvent(event);
+            if (shouldSuppressLockedWorkspaceIconScale()) {
+                resetIconScale();
+            }
             // Keep receiving the rest of the events
             return true;
         } else {
@@ -777,6 +780,16 @@ public class BubbleTextView extends TextView implements ItemInfoUpdateReceiver,
     public void clearPressedBackground() {
         setPressed(false);
         setStayPressed(false);
+        resetIconScale();
+    }
+
+    private boolean shouldSuppressLockedWorkspaceIconScale() {
+        if (mDisplay != DISPLAY_WORKSPACE || !(getTag() instanceof ItemInfo info)) {
+            return false;
+        }
+        return info.container == LauncherSettings.Favorites.CONTAINER_DESKTOP
+                && info.spanX == 2 && info.spanY == 2
+                && !Utilities.isWorkspaceEditAllowed(getContext());
     }
 
     @Override

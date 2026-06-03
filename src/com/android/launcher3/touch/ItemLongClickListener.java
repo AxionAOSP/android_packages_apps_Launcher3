@@ -29,10 +29,12 @@ import android.graphics.Rect;
 import android.view.View;
 import android.view.View.OnLongClickListener;
 
+import com.android.launcher3.BubbleTextView;
 import com.android.launcher3.CellLayout;
 import com.android.launcher3.DragSource;
 import com.android.launcher3.DropTarget;
 import com.android.launcher3.Launcher;
+import com.android.launcher3.Utilities;
 import com.android.launcher3.Workspace;
 import com.android.launcher3.celllayout.CellInfo;
 import com.android.launcher3.config.FeatureFlags;
@@ -70,6 +72,15 @@ public class ItemLongClickListener {
             TestLogging.recordEvent(TestProtocol.SEQUENCE_MAIN, "onWorkspaceItemLongClick");
         }
         Launcher launcher = Launcher.getLauncher(v.getContext());
+        if (launcher == null) return false;
+        if (!Utilities.isWorkspaceEditAllowed(launcher)) {
+            if (v instanceof BubbleTextView icon) {
+                icon.clearPressedBackground();
+            } else {
+                v.setPressed(false);
+            }
+            return true;
+        }
         if (!canStartDrag(launcher)) return false;
         if (!launcher.isInState(NORMAL)
                 && !launcher.isInState(OVERVIEW)
@@ -230,6 +241,7 @@ public class ItemLongClickListener {
         if (launcher == null) {
             return false;
         }
+        if (!Utilities.isWorkspaceEditAllowed(launcher)) return false;
         // We prevent dragging when we are loading the workspace as it is possible to pick up a view
         // that is subsequently removed from the workspace in startBinding().
         if (launcher.isWorkspaceLocked()) return false;

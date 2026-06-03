@@ -31,6 +31,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.graphics.Canvas;
 import android.graphics.Paint;
+import android.graphics.Point;
 import android.graphics.Rect;
 import android.graphics.drawable.Drawable;
 import android.os.Looper;
@@ -832,7 +833,31 @@ public class FolderIcon extends FrameLayout implements FloatingIconViewCompanion
                 .collect(Collectors.toList());
         popup.populateAndShowRows(0, systemShortcuts);
         popup.requestFocus();
-        return popup.createPreDragCondition();
+        DragOptions.PreDragCondition popupCondition = popup.createPreDragCondition();
+        if (popupCondition == null) return null;
+        return new DragOptions.PreDragCondition() {
+            @Override
+            public boolean shouldStartDrag(double distanceDragged) {
+                return popupCondition.shouldStartDrag(distanceDragged);
+            }
+
+            @Override
+            public void onPreDragStart(DragObject dragObject) {
+                setVisibility(VISIBLE);
+                popupCondition.onPreDragStart(dragObject);
+            }
+
+            @Override
+            public void onPreDragEnd(DragObject dragObject, boolean dragStarted) {
+                popupCondition.onPreDragEnd(dragObject, dragStarted);
+                setVisibility(dragStarted ? INVISIBLE : VISIBLE);
+            }
+
+            @Override
+            public Point getDragOffset() {
+                return popupCondition.getDragOffset();
+            }
+        };
     }
 
     /**
