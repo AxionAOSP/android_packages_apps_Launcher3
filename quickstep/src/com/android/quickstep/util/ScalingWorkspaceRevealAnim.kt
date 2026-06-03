@@ -110,7 +110,11 @@ class ScalingWorkspaceRevealAnim(
             LauncherState.BACKGROUND_APP,
             setupConfig,
         )
-        if (playBlur) {
+        val depthController: DepthController? =
+            if (playBlur) (launcher as? QuickstepLauncher)?.depthController else null
+        val useSnapshotBlur = depthController?.isUsingBlurredSnapshot == true
+        var pausedBlurs = false
+        if (playBlur && !useSnapshotBlur) {
             addBlurLayer()
         }
 
@@ -174,12 +178,13 @@ class ScalingWorkspaceRevealAnim(
         val transitionConfig = StateAnimationConfig()
         transitionConfig.duration = SCALE_DURATION_MS
 
-        var depthController: DepthController? = null
         if (playBlur) {
             // Match the Wallpaper depth to the rest of the content.
-            depthController = (launcher as? QuickstepLauncher)?.depthController
             transitionConfig.setInterpolator(StateAnimationConfig.ANIM_DEPTH, SCALE_INTERPOLATOR)
-            depthController?.pauseBlursOnWindows(true) // Blurring is handled by the scrim layer.
+            if (!useSnapshotBlur && depthController != null) {
+                depthController.pauseBlursOnWindows(true)
+                pausedBlurs = true
+            }
             depthController?.stateDepth?.value = LauncherState.BACKGROUND_APP.getDepth(launcher)
             depthController?.setStateWithAnimation(
                 LauncherState.NORMAL,
@@ -188,25 +193,27 @@ class ScalingWorkspaceRevealAnim(
             )
 
             // Add a blur animation to the scrim layer.
-            var maxBlurRadius =
-                launcher.resources.getDimensionPixelSize(
-                    if (Flags.allAppsBlur() || Flags.enableOverviewBackgroundWallpaperBlur()) {
-                        R.dimen.max_depth_blur_radius_enhanced
-                    } else {
-                        R.integer.max_depth_blur_radius
+            if (!useSnapshotBlur) {
+                val maxBlurRadius =
+                    launcher.resources.getDimensionPixelSize(
+                        if (Flags.allAppsBlur() || Flags.enableOverviewBackgroundWallpaperBlur()) {
+                            R.dimen.max_depth_blur_radius_enhanced
+                        } else {
+                            R.integer.max_depth_blur_radius
+                        }
+                    )
+                val blurAnimator = ValueAnimator.ofFloat(1f, 0f)
+                blurAnimator.setInterpolator(BLUR_INTERPOLATOR)
+                var lastBlurRadius = -1
+                blurAnimator.addUpdateListener {
+                    val blurRadius = (maxBlurRadius * blurAnimator.animatedValue as Float).toInt()
+                    if (Math.abs(lastBlurRadius - blurRadius) >= 4) {
+                        applyBlur(blurRadius.toFloat())
+                        lastBlurRadius = blurRadius
                     }
-                )
-            val blurAnimator = ValueAnimator.ofFloat(1f, 0f)
-            blurAnimator.setInterpolator(BLUR_INTERPOLATOR)
-            var lastBlurRadius = -1
-            blurAnimator.addUpdateListener {
-                val blurRadius = (maxBlurRadius * blurAnimator.animatedValue as Float).toInt()
-                if (Math.abs(lastBlurRadius - blurRadius) >= 4) {
-                    applyBlur(blurRadius.toFloat())
-                    lastBlurRadius = blurRadius
                 }
+                animation.add(blurAnimator)
             }
-            animation.add(blurAnimator)
 
             // Make sure that the contrast scrim animates correctly (alongside the blur) if needed.
             transitionConfig.setInterpolator(
@@ -300,7 +307,9 @@ class ScalingWorkspaceRevealAnim(
                     Animations.setOngoingAnimation(workspace, animation = null)
                     Animations.setOngoingAnimation(hotseat, animation = null)
                     removeBlurLayer()
-                    depthController?.pauseBlursOnWindows(false)
+                    if (pausedBlurs) {
+                        depthController?.pauseBlursOnWindows(false)
+                    }
                 }
             )
         )

@@ -41,6 +41,7 @@ import com.android.app.animation.Interpolators;
 import com.android.axion.blur.AxBlurSettings;
 import com.android.launcher3.Flags;
 import com.android.launcher3.Launcher;
+import com.android.launcher3.LauncherPrefChangeListener;
 import com.android.launcher3.LauncherPrefs;
 import com.android.launcher3.LauncherState;
 import com.android.launcher3.R;
@@ -60,7 +61,7 @@ import java.util.List;
 /**
  * Utility class for applying depth effect
  */
-public class BaseDepthController {
+public class BaseDepthController implements LauncherPrefChangeListener {
     public static final float DEPTH_0_PERCENT = 0f;
     public static final float DEPTH_60_PERCENT = 0.6f;
     public static final float DEPTH_70_PERCENT = 0.7f;
@@ -139,18 +140,25 @@ public class BaseDepthController {
     private static final int MIN_SNAPSHOT_BLUR_RADIUS = 24;
     private static final float SNAPSHOT_COLLAPSE_FADE_START_PROGRESS = 0.42f;
     private static final float SNAPSHOT_COLLAPSE_FADE_END_PROGRESS = 1f;
+    private static final boolean DEBUG = false;
+    private final LauncherPrefs mLauncherPrefs;
     private final AxBlurSettings mBlurSettings;
     private final float mWallpaperMaxScale;
     private final BlurredSnapshotManager mBlurredSnapshotManager;
     private final SafeCloseable mBlurredSnapshotRegistration;
+    private final boolean mSupportsBlursOnWindows;
+    private final int mBlurSkipThresholdPx;
 
     private float mLastWallpaperZoom = -1f;
+    private boolean mDisableWallpaperZoom;
     private boolean mUsingBlurredSnapshot;
+    private boolean mPreferBlurredSnapshot;
     @Nullable private LauncherState mGestureTargetState;
     private int mAppliedSurfaceBlur = -1;
     private boolean mAppliedSurfaceOpaque;
     @Nullable private SurfaceControl mAppliedBlurSurface;
     private int mAppliedWorkspaceBlur = -1;
+    private float mBlurredSnapshotWallpaperOffset = Float.NaN;
 
     private void updateMaxBlurRadius() {
         mMaxBlurRadius = Math.round(mBlurSettings.getBlurRadiusPx());
@@ -158,6 +166,10 @@ public class BaseDepthController {
 
     public BaseDepthController(QuickstepLauncher activity) {
         mLauncher = activity;
+        mLauncherPrefs = LauncherPrefs.get(activity);
+        mDisableWallpaperZoom = mLauncherPrefs.get(LauncherPrefs.DISABLE_WALLPAPER_ZOOM);
+        mLauncherPrefs.addListener(this, LauncherPrefs.DISABLE_WALLPAPER_ZOOM);
+        mSupportsBlursOnWindows = BlurUtils.supportsBlursOnWindows();
         if (Flags.allAppsBlur() || enableOverviewBackgroundWallpaperBlur()) {
             mCrossWindowBlursEnabled =
                     CrossWindowBlurListeners.getInstance().isCrossWindowBlurEnabled();
@@ -170,6 +182,7 @@ public class BaseDepthController {
         mBlurSettings = AxBlurSettings.launcher(activity);
         mWallpaperMaxScale = Math.max(
                 1f, activity.getResources().getFloat(R.dimen.config_wallpaperMaxScale));
+        mBlurSkipThresholdPx = Utilities.dpToPx(1);
         updateMaxBlurRadius();
         mBlurSettings.start(() -> {
             updateMaxBlurRadius();
@@ -184,9 +197,23 @@ public class BaseDepthController {
     }
 
     public void destroy() {
+        mLauncherPrefs.removeListener(this, LauncherPrefs.DISABLE_WALLPAPER_ZOOM);
         mBlurredSnapshotRegistration.close();
         clearBlurredSnapshot();
         mBlurSettings.stop();
+    }
+
+    @Override
+    public void onPrefChanged(String key) {
+        if (!LauncherPrefs.DISABLE_WALLPAPER_ZOOM.getSharedPrefKey().equals(key)) {
+            return;
+        }
+        boolean disableWallpaperZoom = mLauncherPrefs.get(LauncherPrefs.DISABLE_WALLPAPER_ZOOM);
+        if (mDisableWallpaperZoom == disableWallpaperZoom) {
+            return;
+        }
+        mDisableWallpaperZoom = disableWallpaperZoom;
+        applyDepthAndBlur();
     }
 
     /**
@@ -230,7 +257,12 @@ public class BaseDepthController {
             return;
         }
         mGestureTargetState = targetState;
+        mBlurredSnapshotWallpaperOffset = Float.NaN;
         applyDepthAndBlur();
+    }
+
+    public boolean isUsingBlurredSnapshot() {
+        return mUsingBlurredSnapshot || mPreferBlurredSnapshot;
     }
 
     public void pauseBlursOnWindows(boolean pause) {
@@ -257,8 +289,7 @@ public class BaseDepthController {
     private void applyDepthAndBlur(@Nullable SurfaceTransaction surfaceTransaction,
             boolean applyImmediately, boolean skipSimilarBlur) {
         float depth = mDepth;
-        float wallpaperZoom = LauncherPrefs.get(mLauncher).get(LauncherPrefs.DISABLE_WALLPAPER_ZOOM)
-                ? 0f : depth;
+        float wallpaperZoom = mDisableWallpaperZoom ? 0f : depth;
         IBinder windowToken = mLauncher.getRootView().getWindowToken();
         if (windowToken != null) {
             if (Math.abs(mLastWallpaperZoom - wallpaperZoom) >= 0.03f
@@ -272,15 +303,19 @@ public class BaseDepthController {
             }
         }
 
-        if (!BlurUtils.supportsBlursOnWindows()) {
+        if (!mSupportsBlursOnWindows) {
             return;
         }
         if (mBaseSurface == null) {
-            Log.d(TAG, "mSurface is null and mCurrentBlur is: " + mCurrentBlur);
+            if (DEBUG) {
+                Log.d(TAG, "mSurface is null and mCurrentBlur is: " + mCurrentBlur);
+            }
             return;
         }
         if (!mBaseSurface.isValid()) {
-            Log.d(TAG, "mSurface is not valid");
+            if (DEBUG) {
+                Log.d(TAG, "mSurface is not valid");
+            }
             mWaitingOnSurfaceValidity = true;
             onInvalidSurface();
             return;
@@ -296,12 +331,16 @@ public class BaseDepthController {
                 ? blurAmount : 0f;
         float snapshotWallpaperZoom = mLastWallpaperZoom >= 0f ? mLastWallpaperZoom : wallpaperZoom;
         float snapshotContentScale = mapWallpaperZoomToScale(snapshotWallpaperZoom);
-        float wallpaperOffset = mLauncher.getWorkspace().getWallpaperOffsetForCenterPage();
         boolean shouldBlurWorkspace = shouldBlurWorkspace(targetState);
         float snapshotAlpha = mapSnapshotAlpha(targetState, shouldBlurWorkspace, snapshotProgress);
-        boolean wantsBlurredSnapshot = snapshotProgress > 0f
-                && !useDefaultBlur
-                && shouldUseBlurredSnapshot(targetState, shouldBlurWorkspace);
+        boolean canUseBlurredSnapshot = snapshotProgress > 0f && !useDefaultBlur;
+        boolean wantsBlurredSnapshot = canUseBlurredSnapshot
+                && (shouldUseBlurredSnapshot(targetState, shouldBlurWorkspace)
+                        || (mPreferBlurredSnapshot && targetState == LauncherState.NORMAL));
+        mPreferBlurredSnapshot = wantsBlurredSnapshot;
+        float wallpaperOffset = wantsBlurredSnapshot
+                ? getBlurredSnapshotWallpaperOffset()
+                : 0f;
         SurfaceControl blurSurface =
                 enableOverviewBackgroundWallpaperBlur() && mBlurSurface != null ? mBlurSurface
                         : mBaseSurface;
@@ -310,7 +349,7 @@ public class BaseDepthController {
         int newBlur = mCrossWindowBlursEnabled && !hasOpaqueBg && !mPauseBlurs ? (int) (blurAmount
                 * mMaxBlurRadius) : 0;
         int delta = Math.abs(newBlur - previousBlur);
-        if (skipSimilarBlur && delta < Utilities.dpToPx(1) && newBlur != 0 && previousBlur != 0
+        if (skipSimilarBlur && delta < mBlurSkipThresholdPx && newBlur != 0 && previousBlur != 0
                 && blurAmount != 1f && !wantsBlurredSnapshot && !mUsingBlurredSnapshot) {
             return;
         }
@@ -428,20 +467,32 @@ public class BaseDepthController {
         }
         if (!wantsBlurredSnapshot) {
             mUsingBlurredSnapshot = false;
+            mPreferBlurredSnapshot = false;
+            mBlurredSnapshotWallpaperOffset = Float.NaN;
             snapshotView.hideSnapshot();
             return false;
         }
-        if (!snapshotView.hasSnapshot(
-                BlurredSnapshotView.SNAPSHOT_WALLPAPER, wallpaperOffset, mMaxBlurRadius)
+        boolean hasSnapshot = snapshotView.hasSnapshot(
+                BlurredSnapshotView.SNAPSHOT_WALLPAPER, wallpaperOffset, mMaxBlurRadius);
+        if (!hasSnapshot
                 && !captureWallpaperSnapshot(snapshotView, wallpaperOffset, mMaxBlurRadius)) {
             applyWorkspaceDepthTargetEffects(false);
             snapshotView.clearSnapshot();
             mUsingBlurredSnapshot = false;
+            mBlurredSnapshotWallpaperOffset = Float.NaN;
             return false;
         }
         snapshotView.setSnapshotProgress(snapshotAlpha, contentScale);
-        mUsingBlurredSnapshot = snapshotView.hasSnapshot(BlurredSnapshotView.SNAPSHOT_WALLPAPER);
-        return mUsingBlurredSnapshot;
+        mUsingBlurredSnapshot = true;
+        mBlurredSnapshotWallpaperOffset = wallpaperOffset;
+        return true;
+    }
+
+    private float getBlurredSnapshotWallpaperOffset() {
+        if (mUsingBlurredSnapshot && !Float.isNaN(mBlurredSnapshotWallpaperOffset)) {
+            return mBlurredSnapshotWallpaperOffset;
+        }
+        return mLauncher.getWorkspace().getWallpaperOffsetForCenterPage();
     }
 
     private boolean captureWallpaperSnapshot(BlurredSnapshotView snapshotView,
@@ -455,6 +506,8 @@ public class BaseDepthController {
             snapshotView.clearSnapshot();
         }
         mUsingBlurredSnapshot = false;
+        mPreferBlurredSnapshot = false;
+        mBlurredSnapshotWallpaperOffset = Float.NaN;
     }
 
     private void onBlurredSnapshotInvalidated() {
@@ -566,7 +619,11 @@ public class BaseDepthController {
             boolean applyImmediately = mBaseSurfaceOverride != null && baseSurfaceOverride == null
                     && !applyOnDraw;
             mBaseSurfaceOverride = baseSurfaceOverride;
-            Log.d(TAG, "setBaseSurfaceOverride: applying blur behind leash " + baseSurfaceOverride);
+            if (DEBUG) {
+                Log.d(TAG,
+                        "setBaseSurfaceOverride: applying blur behind leash "
+                                + baseSurfaceOverride);
+            }
             SurfaceTransaction transaction = setupBlurSurface();
             applyDepthAndBlur(transaction, applyImmediately, /* skipSimilarBlur */ false);
         }
@@ -583,15 +640,25 @@ public class BaseDepthController {
                         .setName("Overview Blur")
                         .setHidden(false)
                         .build();
-                Log.d(TAG,
-                        "setupBlurSurface: creating Overview Blur surface " + mBlurSurface);
+                if (DEBUG) {
+                    Log.d(TAG,
+                            "setupBlurSurface: creating Overview Blur surface " + mBlurSurface);
+                }
                 surfaceTransaction.forSurface(mBlurSurface).reparent(mBaseSurface);
-                Log.d(TAG, "setupBlurSurface: reparenting " + mBlurSurface + " to " + mBaseSurface);
+                if (DEBUG) {
+                    Log.d(TAG,
+                            "setupBlurSurface: reparenting " + mBlurSurface + " to "
+                                    + mBaseSurface);
+                }
             }
             surfaceTransaction.forSurface(mBlurSurface).setRelativeLayer(mBaseSurfaceOverride, -1);
-            Log.d(TAG, "setupBlurSurface: relayering to leash " + mBaseSurfaceOverride);
+            if (DEBUG) {
+                Log.d(TAG, "setupBlurSurface: relayering to leash " + mBaseSurfaceOverride);
+            }
         } else if (mBlurSurface != null) {
-            Log.d(TAG, "setupBlurSurface: removing blur surface " + mBlurSurface);
+            if (DEBUG) {
+                Log.d(TAG, "setupBlurSurface: removing blur surface " + mBlurSurface);
+            }
             surfaceTransaction = new SurfaceTransaction();
             surfaceTransaction.forSurface(mBlurSurface).setRemove();
             mBlurSurface = null;
@@ -605,8 +672,11 @@ public class BaseDepthController {
     protected void setBaseSurface(SurfaceControl baseSurface) {
         if (mBaseSurface != baseSurface || mWaitingOnSurfaceValidity) {
             mBaseSurface = baseSurface;
-            Log.d(TAG, "setSurface:\n\tmWaitingOnSurfaceValidity: " + mWaitingOnSurfaceValidity
-                    + "\n\tmBaseSurface: " + mBaseSurface);
+            if (DEBUG) {
+                Log.d(TAG,
+                        "setSurface:\n\tmWaitingOnSurfaceValidity: " + mWaitingOnSurfaceValidity
+                                + "\n\tmBaseSurface: " + mBaseSurface);
+            }
             SurfaceTransaction transaction = null;
             if (enableOverviewBackgroundWallpaperBlur()) {
                 transaction = setupBlurSurface();
