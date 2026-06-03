@@ -133,13 +133,7 @@ fun AllAppsComposeAppIcon(
                 && ctrl.hiddenIconSection == sectionId
         }
     }
-    val tracksIconPosition = remember(componentNameForHide, sectionId, controller) {
-        derivedStateOf {
-            controller?.isTrackingComposeIconPosition(componentNameForHide, sectionId) == true
-        }
-    }
-
-    fun configureSharedHostView(): ComposeAppIconView {
+    fun configureSharedHostView(iconBounds: RectF): ComposeAppIconView {
         val ctrl = controller ?: return ComposeAppIconView(context)
         val hostView = ctrl.getSharedHostView()
         val activityContext: ActivityContext = ActivityContext.lookupContext(context)
@@ -151,7 +145,7 @@ fun AllAppsComposeAppIcon(
         hostView.setIconSizePx(effectiveIconSizePx)
         hostView.applyDotState(activityContext.getDotInfoForItem(appInfo), false)
 
-        ctrl.repositionHostView(getIconBoundsOnScreen())
+        ctrl.repositionHostView(iconBounds)
         hostView.translationX = 0f
         hostView.translationY = 0f
 
@@ -160,7 +154,7 @@ fun AllAppsComposeAppIcon(
 
     fun createIconInfo(): ComposeIconInfo {
         val bounds = getIconBoundsOnScreen()
-        val hostView = configureSharedHostView()
+        val hostView = configureSharedHostView(bounds)
         return ComposeIconInfo(
             appInfo = appInfo,
             iconBoundsOnScreen = bounds,
@@ -265,18 +259,17 @@ fun AllAppsComposeAppIcon(
         verticalArrangement = if (cellHeightPx > 0) Arrangement.Center else Arrangement.Top
     ) {
         val iconSizeDp = with(density) { effectiveIconSizePx.toDp() }
-        val iconPositionModifier = if (tracksIconPosition.value) {
-            Modifier.onGloballyPositioned { coords ->
-                layoutCoords.icon = coords
-                controller?.onComposeIconPositioned(
+        val iconPositionModifier = Modifier.onGloballyPositioned { coords ->
+            layoutCoords.icon = coords
+            val ctrl = controller
+            if (ctrl?.isTrackingComposeIconPosition(appInfo.componentName, sectionId) == true) {
+                ctrl.onComposeIconPositioned(
                     appInfo.componentName,
                     sectionId,
                     toScreenRect(coords),
                     effectiveIconSizePx
                 )
             }
-        } else {
-            Modifier
         }
 
         Box(

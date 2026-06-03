@@ -4,6 +4,7 @@ import android.content.Context
 import android.graphics.Canvas
 import android.graphics.Paint
 import android.graphics.Rect
+import android.graphics.RectF
 import android.graphics.drawable.Drawable
 import android.view.View
 import com.android.launcher3.dot.DotInfo
@@ -34,6 +35,7 @@ class ComposeAppIconView(context: Context) : View(context), DraggableView, Float
         }
 
     private val iconBounds = Rect()
+    private val iconBoundsInDragLayer = RectF()
     private val tmpBounds = Rect()
     private var dotInfo: DotInfo? = null
     private var mForceHideDot = false
@@ -74,9 +76,11 @@ class ComposeAppIconView(context: Context) : View(context), DraggableView, Float
                 ctrl.hiddenIconComponent = it
                 ctrl.hiddenIconSection = sectionId
             }
+            ctrl.setIconPositionTrackingFrozen(true)
         } else {
             ctrl.hiddenIconComponent = null
             ctrl.hiddenIconSection = null
+            ctrl.setIconPositionTrackingFrozen(false)
         }
         Snapshot.sendApplyNotifications()
     }
@@ -126,6 +130,20 @@ class ComposeAppIconView(context: Context) : View(context), DraggableView, Float
         } else {
             outRect.set(iconBounds)
         }
+    }
+
+    fun setIconBoundsInDragLayer(left: Float, top: Float, right: Float, bottom: Float) {
+        iconBoundsInDragLayer.set(left, top, right, bottom)
+    }
+
+    fun clearIconBoundsInDragLayer() {
+        iconBoundsInDragLayer.setEmpty()
+    }
+
+    fun getIconBoundsInDragLayer(outRect: RectF): Boolean {
+        if (iconBoundsInDragLayer.isEmpty) return false
+        outRect.set(iconBoundsInDragLayer)
+        return true
     }
 
     fun getIcon(): Drawable? = iconDrawable

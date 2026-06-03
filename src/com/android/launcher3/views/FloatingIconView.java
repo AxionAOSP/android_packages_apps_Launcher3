@@ -278,6 +278,12 @@ public class FloatingIconView extends FrameLayout implements
             return;
         }
 
+        if (!isOpening && v instanceof ComposeAppIconView cav
+                && cav.getIconBoundsInDragLayer(outRect)) {
+            outViewBounds.set(0, 0, Math.round(outRect.width()), Math.round(outRect.height()));
+            return;
+        }
+
         if (v instanceof BubbleTextView) {
             ((BubbleTextView) v).getIconBounds(outViewBounds);
         } else if (v instanceof FolderIcon) {

@@ -92,6 +92,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import java.lang.ref.WeakReference
 import javax.inject.Inject
+import kotlin.math.roundToInt
 
 @Stable
 @ActivityContextSingleton
@@ -159,6 +160,7 @@ class AllAppsComposeController @Inject constructor(
         private set
     var launchedIconSection: String? by mutableStateOf(null)
         private set
+    private var isIconPositionTrackingFrozen = false
 
 
     private var showFolderPickerHandler: ((String) -> Unit)? = null
@@ -318,36 +320,61 @@ class AllAppsComposeController @Inject constructor(
         val hv = sharedHostView ?: return
         val parentLoc = IntArray(2)
         (hv.parent as? View)?.getLocationOnScreen(parentLoc)
+        launcher?.dragLayer?.let { dragLayer ->
+            val dragLayerLoc = IntArray(2)
+            dragLayer.getLocationOnScreen(dragLayerLoc)
+            hv.setIconBoundsInDragLayer(
+                screenBounds.left - dragLayerLoc[0],
+                screenBounds.top - dragLayerLoc[1],
+                screenBounds.right - dragLayerLoc[0],
+                screenBounds.bottom - dragLayerLoc[1]
+            )
+        } ?: hv.clearIconBoundsInDragLayer()
         val iconSize = hv.getIconSizePx()
-        val left = (screenBounds.left - parentLoc[0]).toInt()
-        val top = (screenBounds.top - parentLoc[1]).toInt()
+        val left = (screenBounds.left - parentLoc[0]).roundToInt()
+        val top = (screenBounds.top - parentLoc[1]).roundToInt()
+        val needsLayout =
+            hv.left != left || hv.top != top || hv.width != iconSize || hv.height != iconSize
         when (val lp = hv.layoutParams) {
             is BaseDragLayer.LayoutParams -> {
-                lp.width = iconSize
-                lp.height = iconSize
-                lp.x = left
-                lp.y = top
-                lp.customPosition = true
-                lp.ignoreInsets = true
-                hv.layoutParams = lp
+                if (lp.width != iconSize || lp.height != iconSize || lp.x != left ||
+                    lp.y != top || !lp.customPosition || !lp.ignoreInsets
+                ) {
+                    lp.width = iconSize
+                    lp.height = iconSize
+                    lp.x = left
+                    lp.y = top
+                    lp.customPosition = true
+                    lp.ignoreInsets = true
+                    hv.layoutParams = lp
+                }
             }
             is RelativeLayout.LayoutParams -> {
-                lp.width = iconSize
-                lp.height = iconSize
-                lp.leftMargin = left
-                lp.topMargin = top
-                lp.rightMargin = 0
-                lp.marginStart = left
-                lp.marginEnd = 0
-                hv.layoutParams = lp
+                if (lp.width != iconSize || lp.height != iconSize || lp.leftMargin != left ||
+                    lp.topMargin != top || lp.rightMargin != 0 || lp.marginStart != left ||
+                    lp.marginEnd != 0
+                ) {
+                    lp.width = iconSize
+                    lp.height = iconSize
+                    lp.leftMargin = left
+                    lp.topMargin = top
+                    lp.rightMargin = 0
+                    lp.marginStart = left
+                    lp.marginEnd = 0
+                    hv.layoutParams = lp
+                }
             }
             else -> return
         }
-        hv.measure(
-            View.MeasureSpec.makeMeasureSpec(iconSize, View.MeasureSpec.EXACTLY),
-            View.MeasureSpec.makeMeasureSpec(iconSize, View.MeasureSpec.EXACTLY)
-        )
-        hv.layout(left, top, left + hv.getIconSizePx(), top + hv.getIconSizePx())
+        if (hv.measuredWidth != iconSize || hv.measuredHeight != iconSize) {
+            hv.measure(
+                View.MeasureSpec.makeMeasureSpec(iconSize, View.MeasureSpec.EXACTLY),
+                View.MeasureSpec.makeMeasureSpec(iconSize, View.MeasureSpec.EXACTLY)
+            )
+        }
+        if (needsLayout) {
+            hv.layout(left, top, left + iconSize, top + iconSize)
+        }
     }
 
     fun onComposeIconPositioned(
@@ -362,6 +389,7 @@ class AllAppsComposeController @Inject constructor(
     }
 
     fun isTrackingComposeIconPosition(componentName: ComponentName?, sectionId: String?): Boolean {
+        if (isIconPositionTrackingFrozen) return false
         if (componentName == null) return false
         val matchesHiddenIcon =
             hiddenIconComponent == componentName && hiddenIconSection == sectionId
@@ -371,7 +399,12 @@ class AllAppsComposeController @Inject constructor(
         return matchesHiddenIcon || matchesLaunchedIcon
     }
 
+    fun setIconPositionTrackingFrozen(frozen: Boolean) {
+        isIconPositionTrackingFrozen = frozen
+    }
+
     fun clearLaunchedState() {
+        isIconPositionTrackingFrozen = false
         launchedIconComponent = null
         launchedIconSection = null
         composeLauncher.clearLaunchedState()
