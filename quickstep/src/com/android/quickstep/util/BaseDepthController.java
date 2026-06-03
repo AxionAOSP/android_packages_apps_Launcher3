@@ -332,7 +332,8 @@ public class BaseDepthController implements LauncherPrefChangeListener {
         float snapshotWallpaperZoom = mLastWallpaperZoom >= 0f ? mLastWallpaperZoom : wallpaperZoom;
         float snapshotContentScale = mapWallpaperZoomToScale(snapshotWallpaperZoom);
         boolean shouldBlurWorkspace = shouldBlurWorkspace(targetState);
-        float snapshotAlpha = mapSnapshotAlpha(targetState, shouldBlurWorkspace, snapshotProgress);
+        float snapshotAlpha = mapSnapshotAlpha(targetState, shouldBlurWorkspace, snapshotProgress,
+                depth);
         boolean canUseBlurredSnapshot = snapshotProgress > 0f && !useDefaultBlur;
         boolean wantsBlurredSnapshot = canUseBlurredSnapshot
                 && (shouldUseBlurredSnapshot(targetState, shouldBlurWorkspace)
@@ -566,7 +567,7 @@ public class BaseDepthController implements LauncherPrefChangeListener {
     }
 
     private float mapSnapshotAlpha(LauncherState targetState, boolean shouldBlurWorkspace,
-            float progress) {
+            float progress, float depth) {
         if (shouldBlurWorkspace) {
             float allAppsProgress = Utilities.boundToRange(
                     mLauncher.getAppsView().getAllAppsTransitionProgress(), 0f, 1f);
@@ -579,7 +580,7 @@ public class BaseDepthController implements LauncherPrefChangeListener {
             return allAppsProgress;
         }
         if (targetState == LauncherState.NORMAL) {
-            return Utilities.boundToRange(progress, 0f, 1f);
+            return Utilities.boundToRange(depth / DEPTH_70_PERCENT, 0f, 1f);
         }
         return Utilities.boundToRange(
                 progress * mMaxBlurRadius / MIN_SNAPSHOT_BLUR_RADIUS, 0f, 1f);
