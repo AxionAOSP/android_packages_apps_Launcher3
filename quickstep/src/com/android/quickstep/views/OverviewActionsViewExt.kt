@@ -16,15 +16,10 @@
 package com.android.quickstep.views
 
 import android.app.ActivityManager
-import android.app.ActivityManager.RunningAppProcessInfo
-import android.app.ActivityManager.RunningServiceInfo
-import android.app.RunningAppProcessInfo as RunningAppProcessInfoAidl
 import android.content.Context
 import android.text.format.Formatter
-import android.util.Log
 import com.android.axion.compose.preferences.SettingsFlow
 import com.android.axion.compose.preferences.SettingsType
-import com.android.internal.util.MemInfoReader
 import com.android.launcher3.R
 import com.android.launcher3.concurrent.annotations.ThreadPoolContext
 import com.android.launcher3.concurrent.annotations.UiContext
@@ -157,102 +152,13 @@ class OverviewActionsViewExt @Inject constructor(
     }.flowOn(backgroundContext)
 
     private fun readMemoryInfo(): String {
-        val memInfoReader = MemInfoReader()
-        memInfoReader.readMemInfo()
-        val total = memInfoReader.totalSize
-        val kernelFree = memInfoReader.freeSize + memInfoReader.cachedSize
-        val backgroundProcMem = computeBackgroundProcessMemory()
-        val available = (kernelFree + backgroundProcMem).coerceAtMost(total)
+        val memoryInfo = ActivityManager.MemoryInfo()
+        activityManager.getMemoryInfo(memoryInfo)
+        val total = memoryInfo.totalMem
+        val available = memoryInfo.availMem.coerceAtMost(total)
         val availableStr = Formatter.formatShortFileSize(appContext, available)
         val totalStr = Formatter.formatShortFileSize(appContext, total)
         return appContext.getString(R.string.overview_memory_usage, availableStr, totalStr)
-    }
-
-    private fun computeBackgroundProcessMemory(): Long {
-        val processes = try {
-            activityManager.runningAppProcesses
-        } catch (e: SecurityException) {
-            Log.w(TAG, "runningAppProcesses denied", e)
-            return 0L
-        } ?: return 0L
-        if (processes.isEmpty()) return 0L
-
-        val services = try {
-            activityManager.getRunningServices(MAX_SERVICES)
-        } catch (e: SecurityException) {
-            Log.w(TAG, "getRunningServices denied", e)
-            null
-        }
-
-        val procByPid = HashMap<Int, RunningAppProcessInfo>(processes.size)
-        for (p in processes) {
-            procByPid[p.pid] = p
-        }
-
-        val markedPids = HashSet<Int>()
-
-        if (services != null) {
-            for (s in services) {
-                if (!s.started && s.clientLabel == 0) continue
-                if ((s.flags and RunningServiceInfo.FLAG_PERSISTENT_PROCESS) != 0) continue
-                if (s.restarting != 0L || s.pid <= 0) continue
-                markedPids.add(s.pid)
-            }
-        }
-
-        for (p in processes) {
-            if (isInterestingProcess(p)) {
-                markedPids.add(p.pid)
-            }
-        }
-
-        val visited = HashSet<Int>()
-        for (p in processes) {
-            if (p.pid in markedPids) continue
-            visited.clear()
-            var cur: RunningAppProcessInfo? = p
-            while (cur != null && cur.pid !in visited) {
-                visited.add(cur.pid)
-                val reasonPid = cur.importanceReasonPid
-                if (reasonPid == 0 || reasonPid == cur.pid) break
-                if (reasonPid in markedPids) {
-                    markedPids.add(p.pid)
-                    break
-                }
-                cur = procByPid[reasonPid]
-            }
-        }
-
-        val bgPids = processes
-            .filter {
-                it.importance >= RunningAppProcessInfo.IMPORTANCE_CACHED &&
-                    it.pid !in markedPids
-            }
-            .map { it.pid }
-        if (bgPids.isEmpty()) return 0L
-
-        val pidArr = bgPids.toIntArray()
-        return try {
-            val pssArr = ActivityManager.getService().getProcessPss(pidArr)
-            var sum = 0L
-            for (pss in pssArr) {
-                sum += pss * 1024L
-            }
-            sum
-        } catch (e: Exception) {
-            Log.w(TAG, "getProcessPss failed", e)
-            0L
-        }
-    }
-
-    private fun isInterestingProcess(pi: RunningAppProcessInfo): Boolean {
-        if ((pi.flags and RunningAppProcessInfoAidl.FLAG_CANT_SAVE_STATE) != 0) {
-            return true
-        }
-        return (pi.flags and RunningAppProcessInfoAidl.FLAG_PERSISTENT) == 0 &&
-            pi.importance >= RunningAppProcessInfo.IMPORTANCE_FOREGROUND &&
-            pi.importance < RunningAppProcessInfo.IMPORTANCE_CANT_SAVE_STATE &&
-            pi.importanceReasonCode == RunningAppProcessInfo.REASON_UNKNOWN
     }
 
     private data class Binding(
@@ -269,8 +175,6 @@ class OverviewActionsViewExt @Inject constructor(
         const val KEY_SHOW_MEMORY_INFO = "pulse_recents_show_memory_info"
 
         private const val MEMORY_REFRESH_INTERVAL_MS = 5000L
-        private const val MAX_SERVICES = 100
         private const val LOW_SCRIM_WHITE_TEXT_OPACITY = 40
-        private const val TAG = "OverviewActionsViewExt"
     }
 }
