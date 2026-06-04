@@ -693,19 +693,24 @@ internal fun allAppsBottomSheetBackgroundColor(
     alpha: Int = LauncherPrefs.get(context).get(LauncherPrefs.ALL_APPS_BG_OPACITY),
     blurEnabled: Boolean = isLauncherBlurEnabled(context)
 ): Int {
-    if (!blurEnabled || alpha == 255) {
-        return context.getColor(InternalR.color.materialColorSurfaceContainer)
-    }
-    return ColorUtils.setAlphaComponent(
-            context.getColor(
-                if (Utilities.isDarkTheme(context)) {
-                    AndroidR.color.system_accent2_800
-                } else {
-                    AndroidR.color.system_accent2_200
-                }
-            ),
+    val opaque = !blurEnabled || alpha == 255
+    val baseColor = context.getColor(
+        if (Utilities.isDarkTheme(context)) {
+            if (opaque) {
+                AndroidR.color.system_neutral2_700
+            } else AndroidR.color.system_accent2_800
+        } else {
+            AndroidR.color.system_accent2_200
+        }
+    )
+    return if (opaque) {
+        baseColor 
+    } else { 
+        ColorUtils.setAlphaComponent(
+            baseColor,
             alpha
         )
+    }
 }
 
 private var launcherBlurSettings: AxBlurSettings? = null
