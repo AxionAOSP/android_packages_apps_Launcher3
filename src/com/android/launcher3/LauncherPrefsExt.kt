@@ -38,6 +38,12 @@ object LauncherPrefsExt {
         backedUpItem("pref_desktop_show_labels", true, EncryptionType.SECURE_SETTINGS)
     @JvmField val SHOW_DRAWER_LABELS =
         backedUpItem("pref_drawer_show_labels", true, EncryptionType.SECURE_SETTINGS)
+    @JvmField val PINNED_APPS =
+        backedUpItem(
+            "pref_all_apps_pinned_apps",
+            emptySet<String>(),
+            EncryptionType.SECURE_SETTINGS,
+        )
     @JvmField val SLEEP_GESTURE =
         backedUpItem("pref_sleep_gesture", false, EncryptionType.SECURE_SETTINGS)
 }

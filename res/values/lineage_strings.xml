@@ -55,6 +55,9 @@
     <string name="drawer_show_labels">Show icon labels in drawer</string>
     <string name="all_apps_drawer_settings_title">All apps drawer</string>
     <string name="all_apps_drawer_appearance_category">Appearance</string>
+    <string name="pin_to_drawer">Pin to drawer</string>
+    <string name="unpin_from_drawer">Unpin from drawer</string>
+    <string name="title_pinned_apps">Pinned apps</string>
     <string name="search_app_drawer_category">App drawer search</string>
     <string name="home_settings_suggestions_category">Suggestions</string>
     <string name="all_apps_drawer_labels_category">Labels</string>
