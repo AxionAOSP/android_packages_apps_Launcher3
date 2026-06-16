@@ -17,6 +17,7 @@ package com.android.launcher3.allapps;
 
 import static android.multiuser.Flags.enableMovingContentIntoPrivateSpace;
 
+import static com.android.launcher3.LauncherPrefsExt.PINNED_APPS;
 import static com.android.launcher3.LauncherSettings.Favorites.CONTAINER_PRIVATESPACE;
 import static com.android.launcher3.allapps.BaseAllAppsAdapter.VIEW_TYPE_BOTTOM_VIEW_TO_SCROLL_TO;
 import static com.android.launcher3.allapps.BaseAllAppsAdapter.VIEW_TYPE_MASK_PRIVATE_SPACE_HEADER;
@@ -37,6 +38,8 @@ import androidx.annotation.VisibleForTesting;
 import androidx.recyclerview.widget.DiffUtil;
 
 import com.android.launcher3.Flags;
+import com.android.launcher3.LauncherPrefChangeListener;
+import com.android.launcher3.LauncherPrefs;
 import com.android.launcher3.R;
 import com.android.launcher3.allapps.BaseAllAppsAdapter.AdapterItem;
 import com.android.launcher3.model.data.AppInfo;
@@ -57,7 +60,8 @@ import java.util.stream.Stream;
 /**
  * The alphabetically sorted list of applications.
  */
-public class AlphabeticalAppsList implements AllAppsStore.OnUpdateListener {
+public class AlphabeticalAppsList implements AllAppsStore.OnUpdateListener,
+        LauncherPrefChangeListener {
 
     public static final String TAG = "AlphabeticalAppsList";
     public static final String PRIVATE_SPACE_PACKAGE = "com.android.privatespace";
@@ -138,6 +142,7 @@ public class AlphabeticalAppsList implements AllAppsStore.OnUpdateListener {
                         R.drawable.ic_private_profile_divider_badge, ImageSpan.ALIGN_CENTER),
                 0, 1, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
         mSortSections = context.getResources().getBoolean(R.bool.config_appsListSortSections);
+        LauncherPrefs.get(context).addListener(this, PINNED_APPS);
     }
 
     /** Set the number of apps per row when device profile changes. */
@@ -233,6 +238,13 @@ public class AlphabeticalAppsList implements AllAppsStore.OnUpdateListener {
      * Updates internals when the set of apps are updated.
      */
     @Override
+    public void onPrefChanged(String key) {
+        if (PINNED_APPS.getSharedPrefKey().equals(key)) {
+            onAppsUpdated();
+        }
+    }
+
+    @Override
     public void onAppsUpdated() {
         // Don't update apps when the private profile animations are running, otherwise the motion
         // is canceled.
@@ -246,7 +258,8 @@ public class AlphabeticalAppsList implements AllAppsStore.OnUpdateListener {
 
         // Filter against private space app that may show outside of Private Profile.
         Stream<AppInfo> appSteam = Stream.of(mAllAppsStore.getApps()).filter(
-                info -> !isPrivateSpaceApp(info));
+                info -> !isPrivateSpaceApp(info)
+                        && !PinnedApps.isPinned(mActivityContext.asContext(), info));
         Stream<AppInfo> privateAppStream = Stream.of(mAllAppsStore.getApps());
 
         if (!hasSearchResults() && mItemFilter != null) {
