@@ -27,13 +27,16 @@ import static com.android.launcher3.InvariantDeviceProfile.TYPE_MULTI_DISPLAY;
 import static com.android.launcher3.InvariantDeviceProfile.TYPE_TABLET;
 import static com.android.launcher3.states.RotationHelper.ALLOW_ROTATION_PREFERENCE_KEY;
 
+import android.Manifest;
 import android.app.Activity;
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
 import android.content.pm.LauncherApps;
+import android.content.pm.PackageManager;
 import android.content.res.Resources;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Environment;
 import android.provider.Settings;
 import android.text.TextUtils;
 import android.view.MenuItem;
@@ -90,6 +93,9 @@ public class SettingsActivity extends FragmentActivity
     public static final String EXTRA_FRAGMENT_ROOT_KEY = ARG_PREFERENCE_ROOT;
 
     private static final int DELAY_HIGHLIGHT_DURATION_MILLIS = 600;
+    private static final int REQUEST_SEARCH_CONTACTS_PERMISSION = 1;
+    private static final int REQUEST_SEARCH_STORAGE_PERMISSION = 2;
+    private static final int REQUEST_SEARCH_CALENDAR_PERMISSION = 3;
     public static final String SAVE_HIGHLIGHTED_KEY = "android:preference_highlighted";
 
     private static final String KEY_MINUS_ONE = "pref_enable_minus_one";
@@ -109,6 +115,18 @@ public class SettingsActivity extends FragmentActivity
     private static final String KEY_SCREEN_NOTIFICATIONS = "settings_screen_notifications";
     private static final String KEY_SCREEN_PRIVACY = "settings_screen_privacy";
     private static final String KEY_ALL_APPS_FOLDER_SETTINGS = "pref_all_apps_folder_settings";
+    private static final String KEY_ALL_APPS_DRAWER_SETTINGS = "pref_all_apps_drawer_settings";
+    private static final String KEY_ALL_APPS_DRAWER_OPTIONS =
+            "settings_screen_all_apps_drawer_options";
+    private static final String KEY_ALL_APPS_SEARCH_SETTINGS = "pref_all_apps_search_settings";
+    private static final String KEY_ALL_APPS_SEARCH_RESULTS =
+            "settings_screen_all_apps_search_results";
+    private static final String KEY_ALL_APPS_SEARCH_PERMISSION_CONTACTS =
+            "pref_all_apps_search_permission_contacts";
+    private static final String KEY_ALL_APPS_SEARCH_PERMISSION_STORAGE =
+            "pref_all_apps_search_permission_storage";
+    private static final String KEY_ALL_APPS_SEARCH_PERMISSION_CALENDAR =
+            "pref_all_apps_search_permission_calendar";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -443,6 +461,51 @@ public class SettingsActivity extends FragmentActivity
                 case KEY_ALL_APPS_FOLDER_SETTINGS:
                     bindSettingsScreenPreference(preference, KEY_ALL_APPS_FOLDER_SETTINGS);
                     return true;
+                case KEY_ALL_APPS_DRAWER_SETTINGS:
+                    bindSettingsScreenPreference(preference, KEY_ALL_APPS_DRAWER_OPTIONS);
+                    return true;
+                case KEY_ALL_APPS_DRAWER_OPTIONS:
+                    return false;
+                case KEY_ALL_APPS_SEARCH_SETTINGS:
+                    bindSettingsScreenPreference(preference, KEY_ALL_APPS_SEARCH_RESULTS);
+                    return true;
+                case KEY_ALL_APPS_SEARCH_RESULTS:
+                    return false;
+                case KEY_ALL_APPS_SEARCH_PERMISSION_CONTACTS:
+                    if (hasPermission(Manifest.permission.READ_CONTACTS)) {
+                        return false;
+                    }
+                    preference.setOnPreferenceClickListener(p -> {
+                        requestPermissions(new String[] {Manifest.permission.READ_CONTACTS},
+                                REQUEST_SEARCH_CONTACTS_PERMISSION);
+                        return true;
+                    });
+                    return true;
+                case KEY_ALL_APPS_SEARCH_PERMISSION_STORAGE:
+                    if (hasStorageSearchPermission()) {
+                        return false;
+                    }
+                    preference.setOnPreferenceClickListener(p -> {
+                        requestPermissions(new String[] {
+                                Manifest.permission.READ_MEDIA_IMAGES,
+                                Manifest.permission.READ_MEDIA_VIDEO,
+                                Manifest.permission.READ_MEDIA_AUDIO,
+                                Manifest.permission.READ_MEDIA_VISUAL_USER_SELECTED,
+                                Manifest.permission.READ_EXTERNAL_STORAGE,
+                        }, REQUEST_SEARCH_STORAGE_PERMISSION);
+                        return true;
+                    });
+                    return true;
+                case KEY_ALL_APPS_SEARCH_PERMISSION_CALENDAR:
+                    if (hasPermission(Manifest.permission.READ_CALENDAR)) {
+                        return false;
+                    }
+                    preference.setOnPreferenceClickListener(p -> {
+                        requestPermissions(new String[] {Manifest.permission.READ_CALENDAR},
+                                REQUEST_SEARCH_CALENDAR_PERMISSION);
+                        return true;
+                    });
+                    return true;
             }
             return true;
         }
@@ -459,9 +522,26 @@ public class SettingsActivity extends FragmentActivity
                     .putExtra(EXTRA_FRAGMENT_ROOT_KEY, rootKey));
         }
 
+        private boolean hasStorageSearchPermission() {
+            return Environment.isExternalStorageManager()
+                    || hasPermission(Manifest.permission.READ_EXTERNAL_STORAGE)
+                    || hasPermission(Manifest.permission.READ_MEDIA_IMAGES)
+                    || hasPermission(Manifest.permission.READ_MEDIA_VISUAL_USER_SELECTED)
+                    || hasPermission(Manifest.permission.READ_MEDIA_VIDEO)
+                    || hasPermission(Manifest.permission.READ_MEDIA_AUDIO);
+        }
+
+        private boolean hasPermission(String permission) {
+            return getContext().checkSelfPermission(permission) == PackageManager.PERMISSION_GRANTED;
+        }
+
         @Override
         public void onResume() {
             super.onResume();
+            PreferenceScreen screen = getPreferenceScreen();
+            if (screen != null) {
+                initPreferenceGroup(screen);
+            }
 
             if (isAdded() && !mPreferenceHighlighted) {
                 PreferenceHighlighter highlighter = createHighlighter();

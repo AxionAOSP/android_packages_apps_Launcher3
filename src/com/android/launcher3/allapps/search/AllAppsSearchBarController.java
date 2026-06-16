@@ -45,6 +45,8 @@ public class AllAppsSearchBarController
     protected ExtendedEditText mInput;
     protected String mQuery;
     private String[] mTextConversions;
+    private boolean mShowingHistory;
+    private boolean mResetting;
 
     protected SearchAlgorithm<AdapterItem> mSearchAlgorithm;
 
@@ -65,6 +67,11 @@ public class AllAppsSearchBarController
         mInput.addTextChangedListener(this);
         mInput.setOnEditorActionListener(this);
         mInput.setOnBackKeyListener(this);
+        mInput.addOnFocusChangeListener((v, hasFocus) -> {
+            if (hasFocus && TextUtils.isEmpty(mInput.getText())) {
+                showHistoryOrClear();
+            }
+        });
         mSearchAlgorithm = searchAlgorithm;
     }
 
@@ -99,8 +106,14 @@ public class AllAppsSearchBarController
         mQuery = s.toString();
         if (mQuery.isEmpty()) {
             mSearchAlgorithm.cancel(true);
-            mCallback.clearSearchResult();
+            if (mResetting) {
+                mShowingHistory = false;
+                mCallback.clearSearchResult();
+            } else {
+                showHistoryOrClear();
+            }
         } else {
+            mShowingHistory = false;
             mSearchAlgorithm.cancel(false);
             mSearchAlgorithm.doSearch(mQuery, mTextConversions, mCallback);
         }
@@ -126,6 +139,7 @@ public class AllAppsSearchBarController
             } else {
                 Log.i(TAG, "User tapped ime search button");
             }
+            AxSearchHistory.record(mInput.getContext(), mQuery);
             // selectFocusedView should return SearchTargetEvent that is passed onto onClick
             return mLauncher.getAppsView().getMainAdapterProvider().launchHighlightedItem();
         }
@@ -140,6 +154,12 @@ public class AllAppsSearchBarController
             reset();
             return true;
         }
+        if (mShowingHistory) {
+            mShowingHistory = false;
+            mCallback.clearSearchResult();
+            mInput.hideKeyboard();
+            return true;
+        }
         return false;
     }
 
@@ -147,11 +167,17 @@ public class AllAppsSearchBarController
      * Resets the search bar state.
      */
     public void reset() {
-        mCallback.clearSearchResult();
-        mInput.reset();
+        mResetting = true;
+        try {
+            mCallback.clearSearchResult();
+            mInput.reset();
+        } finally {
+            mResetting = false;
+        }
         mInput.clearFocus();
         mInput.hideKeyboard();
         mQuery = null;
+        mShowingHistory = false;
     }
 
     /**
@@ -159,6 +185,9 @@ public class AllAppsSearchBarController
      */
     public void focusSearchField() {
         mInput.showKeyboard();
+        if (TextUtils.isEmpty(mInput.getText())) {
+            showHistoryOrClear();
+        }
     }
 
     /**
@@ -166,5 +195,12 @@ public class AllAppsSearchBarController
      */
     public boolean isSearchFieldFocused() {
         return mInput.isFocused();
+    }
+
+    private void showHistoryOrClear() {
+        mShowingHistory = AxSearchHistory.showHistory(mInput.getContext(), mCallback);
+        if (!mShowingHistory) {
+            mCallback.clearSearchResult();
+        }
     }
 }

@@ -115,6 +115,13 @@
         android:title="@string/all_apps_label"
         launcher:isPreferenceVisible="false">
 
+        <com.android.axion.preference.AxPreference
+            android:key="pref_all_apps_search_settings"
+            android:icon="@drawable/ic_home_settings_search"
+            android:title="@string/search_results_settings_title"
+            android:summary="@string/search_results_settings_summary"
+            android:persistent="false" />
+
         <SwitchPreferenceCompat
             android:key="pref_drawer_open_keyboard"
             android:title="@string/drawer_open_keyboard_title"
@@ -141,6 +148,125 @@
             android:title="@string/all_apps_folders_title"
             android:summary="@string/all_apps_folders_summary"
             android:persistent="false" />
+
+        <PreferenceScreen
+            android:key="settings_screen_all_apps_search_results"
+            android:title="@string/search_results_settings_title"
+            android:summary="@string/search_results_settings_summary">
+
+            <PreferenceCategory
+                android:title="@string/search_results_category_core">
+
+                <com.android.axion.preference.AxSwitchPreference
+                    android:key="pref_all_apps_search_result_apps"
+                    android:title="@string/search_results_apps_title"
+                    android:summary="@string/search_results_apps_summary"
+                    android:defaultValue="true"
+                    android:persistent="true" />
+
+                <com.android.axion.preference.AxSwitchPreference
+                    android:key="pref_all_apps_search_result_app_actions"
+                    android:title="@string/search_results_app_actions_title"
+                    android:summary="@string/search_results_app_actions_summary"
+                    android:defaultValue="true"
+                    android:persistent="true" />
+
+                <com.android.axion.preference.AxSwitchPreference
+                    android:key="pref_all_apps_search_result_quick_answers"
+                    android:title="@string/search_results_quick_answers_title"
+                    android:summary="@string/search_results_quick_answers_summary"
+                    android:defaultValue="true"
+                    android:persistent="true" />
+
+                <com.android.axion.preference.AxSwitchPreference
+                    android:key="pref_all_apps_search_result_settings"
+                    android:title="@string/search_results_settings_type_title"
+                    android:summary="@string/search_results_settings_type_summary"
+                    android:defaultValue="true"
+                    android:persistent="true" />
+            </PreferenceCategory>
+
+            <PreferenceCategory
+                android:title="@string/search_results_category_personal">
+
+                <com.android.axion.preference.AxSwitchPreference
+                    android:key="pref_all_apps_search_result_contacts"
+                    android:title="@string/search_results_contacts_title"
+                    android:summary="@string/search_results_contacts_summary"
+                    android:defaultValue="true"
+                    android:persistent="true" />
+
+                <com.android.axion.preference.AxSwitchPreference
+                    android:key="pref_all_apps_search_result_images"
+                    android:title="@string/search_results_images_title"
+                    android:summary="@string/search_results_images_summary"
+                    android:defaultValue="true"
+                    android:persistent="true" />
+
+                <com.android.axion.preference.AxSwitchPreference
+                    android:key="pref_all_apps_search_result_files"
+                    android:title="@string/search_results_files_title"
+                    android:summary="@string/search_results_files_summary"
+                    android:defaultValue="true"
+                    android:persistent="true" />
+
+                <com.android.axion.preference.AxSwitchPreference
+                    android:key="pref_all_apps_search_result_calendar"
+                    android:title="@string/search_results_calendar_title"
+                    android:summary="@string/search_results_calendar_summary"
+                    android:defaultValue="true"
+                    android:persistent="true" />
+            </PreferenceCategory>
+
+            <PreferenceCategory
+                android:title="@string/search_results_category_web_media">
+
+                <com.android.axion.preference.AxSwitchPreference
+                    android:key="pref_all_apps_search_result_web"
+                    android:title="@string/search_results_web_title"
+                    android:summary="@string/search_results_web_summary"
+                    android:defaultValue="true"
+                    android:persistent="true" />
+
+                <com.android.axion.preference.AxSwitchPreference
+                    android:key="pref_all_apps_search_result_in_apps"
+                    android:title="@string/search_results_in_apps_title"
+                    android:summary="@string/search_results_in_apps_summary"
+                    android:defaultValue="true"
+                    android:persistent="true" />
+
+                <com.android.axion.preference.AxSwitchPreference
+                    android:key="pref_all_apps_search_result_media"
+                    android:title="@string/search_results_media_title"
+                    android:summary="@string/search_results_media_summary"
+                    android:defaultValue="true"
+                    android:persistent="true" />
+            </PreferenceCategory>
+
+            <PreferenceCategory
+                android:key="pref_all_apps_search_permission_category"
+                android:title="@string/search_permissions_category_title">
+
+                <com.android.axion.preference.AxPreference
+                    android:key="pref_all_apps_search_permission_contacts"
+                    android:title="@string/search_permissions_contacts_title"
+                    android:summary="@string/search_permissions_contacts_summary"
+                    android:persistent="false" />
+
+                <com.android.axion.preference.AxPreference
+                    android:key="pref_all_apps_search_permission_storage"
+                    android:title="@string/search_permissions_storage_title"
+                    android:summary="@string/search_permissions_storage_summary"
+                    android:persistent="false" />
+
+                <com.android.axion.preference.AxPreference
+                    android:key="pref_all_apps_search_permission_calendar"
+                    android:title="@string/search_permissions_calendar_title"
+                    android:summary="@string/search_permissions_calendar_summary"
+                    android:persistent="false" />
+            </PreferenceCategory>
+        </PreferenceScreen>
+
     </PreferenceScreen>
 
     <PreferenceScreen
