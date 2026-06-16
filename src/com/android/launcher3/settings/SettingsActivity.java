@@ -108,6 +108,7 @@ public class SettingsActivity extends FragmentActivity
     private static final String KEY_SCREEN_SEARCH = "settings_screen_search";
     private static final String KEY_SCREEN_NOTIFICATIONS = "settings_screen_notifications";
     private static final String KEY_SCREEN_PRIVACY = "settings_screen_privacy";
+    private static final String KEY_ALL_APPS_FOLDER_SETTINGS = "pref_all_apps_folder_settings";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -439,6 +440,9 @@ public class SettingsActivity extends FragmentActivity
                 case KEY_SUGGESTIONS:
                     return launcherApps != null &&
                             launcherApps.isPackageEnabled(SUGGESTIONS_PACKAGE, myUserHandle());
+                case KEY_ALL_APPS_FOLDER_SETTINGS:
+                    bindSettingsScreenPreference(preference, KEY_ALL_APPS_FOLDER_SETTINGS);
+                    return true;
             }
             return true;
         }

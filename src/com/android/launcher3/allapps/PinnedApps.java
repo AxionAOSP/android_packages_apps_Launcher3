@@ -26,7 +26,6 @@ import com.android.launcher3.LauncherPrefs;
 import com.android.launcher3.model.data.AppInfo;
 import com.android.launcher3.model.data.ItemInfo;
 import com.android.launcher3.model.data.WorkspaceItemInfo;
-import com.android.launcher3.pm.UserCache;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -82,7 +81,6 @@ public final class PinnedApps {
         if (componentName == null) {
             return null;
         }
-        return componentName.flattenToShortString() + "#"
-                + UserCache.INSTANCE.get(context).getSerialNumberForUser(itemInfo.user);
+        return AllAppsFolderStore.encodeAppKey(context, componentName, itemInfo.user);
     }
 }

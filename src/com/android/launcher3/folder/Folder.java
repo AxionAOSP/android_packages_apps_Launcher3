@@ -386,6 +386,9 @@ public class Folder extends AbstractFloatingView implements ClipPathView, DragSo
     }
 
     public boolean onLongClick(View v) {
+        if (AxFolderExt.onLongClick(mInfo, v)) {
+            return true;
+        }
         // Return if global dragging is not enabled
         if (!getIsLauncherDraggingEnabled()) return true;
         return startDrag(v, new DragOptions());
@@ -474,8 +477,12 @@ public class Folder extends AbstractFloatingView implements ClipPathView, DragSo
         if (DEBUG) {
             Log.d(TAG, "onBackKey newTitle=" + newTitle);
         }
-        mInfo.setTitle(newTitle, mActivityContext.getModelWriter());
-        mFolderIcon.onTitleChanged(newTitle);
+        if (AxFolderExt.setTitle(mActivityContext, mInfo, newTitle)) {
+            mFolderIcon.onTitleChanged(mInfo.title);
+        } else {
+            mInfo.setTitle(newTitle, mActivityContext.getModelWriter());
+            mFolderIcon.onTitleChanged(newTitle);
+        }
 
         if (TextUtils.isEmpty(mInfo.title)) {
             mFolderName.setHint(R.string.folder_hint_text);
@@ -574,7 +581,9 @@ public class Folder extends AbstractFloatingView implements ClipPathView, DragSo
         mInfo = info;
         mFromTitle = info.title;
         mFromLabelState = info.getFromLabelState();
-        updateItemLocationsInDatabaseBatch(true);
+        if (!AxFolderExt.isAllAppsFolder(mInfo)) {
+            updateItemLocationsInDatabaseBatch(true);
+        }
 
         BaseDragLayer.LayoutParams lp = (BaseDragLayer.LayoutParams) getLayoutParams();
         if (lp == null) {
@@ -583,6 +592,9 @@ public class Folder extends AbstractFloatingView implements ClipPathView, DragSo
             setLayoutParams(lp);
         }
         reapplyItemInfo();
+        if (AxFolderExt.onBind(mInfo, mFolderName)) {
+            return;
+        }
         // In case any children didn't come across during loading, clean up the folder accordingly
         mFolderIcon.post(() -> {
             if (getItemCount() <= 1) {
@@ -781,6 +793,7 @@ public class Folder extends AbstractFloatingView implements ClipPathView, DragSo
             @Override
             public void onAnimationStart(Animator animation) {
                 mFolderIcon.setIconVisible(false);
+                mFolderIcon.mFolderName.setTextVisibility(false);
                 mFolderIcon.drawLeaveBehindIfExists();
             }
 
@@ -854,7 +867,8 @@ public class Folder extends AbstractFloatingView implements ClipPathView, DragSo
      * Determines whether we should animate the folder opening.
      */
     boolean shouldAnimateOpen(List<ItemInfo> items) {
-        if (items == null || items.size() <= 1) {
+        if (items == null || items.isEmpty()
+                || (items.size() <= 1 && !AxFolderExt.isAllAppsFolder(mInfo))) {
             Log.d(TAG, "Couldn't animate folder open because items is: " + items);
             return false;
         }
@@ -993,7 +1007,8 @@ public class Folder extends AbstractFloatingView implements ClipPathView, DragSo
         if (mFolderIcon != null) {
             mFolderIcon.setVisibility(View.VISIBLE);
             mFolderIcon.setIconVisible(true);
-            mFolderIcon.mFolderName.setTextVisibility(true);
+            mFolderIcon.mFolderName.setTextVisibility(mFolderIcon.mFolderName.shouldShowLabel()
+                    && mFolderIcon.mFolderName.shouldTextBeVisible());
             if (wasAnimated) {
                 mFolderIcon.animateBgShadowAndStroke();
                 mFolderIcon.onFolderClose(mContent.getCurrentPage());
@@ -1009,7 +1024,9 @@ public class Folder extends AbstractFloatingView implements ClipPathView, DragSo
             mRearrangeOnClose = false;
         }
         if (getItemCount() <= 1) {
-            if (!mIsDragInProgress && !mSuppressFolderDeletion) {
+            if (AxFolderExt.isAllAppsFolder(mInfo) && !mIsDragInProgress) {
+                mContent.unbindItems();
+            } else if (!mIsDragInProgress && !mSuppressFolderDeletion) {
                 replaceFolderWithFinalItem();
             } else if (mIsDragInProgress) {
                 mDeleteFolderOnDropCompleted = true;
@@ -1224,6 +1241,9 @@ public class Folder extends AbstractFloatingView implements ClipPathView, DragSo
     }
 
     private void updateItemLocationsInDatabaseBatch(boolean isBind) {
+        if (AxFolderExt.isAllAppsFolder(mInfo)) {
+            return;
+        }
         FolderGridOrganizer verifier = createFolderGridOrganizer(
                 mActivityContext.getDeviceProfile()
         ).setFolderInfo(mInfo);
@@ -1358,7 +1378,15 @@ public class Folder extends AbstractFloatingView implements ClipPathView, DragSo
     protected void onSizeChanged(int w, int h, int oldw, int oldh) {
         super.onSizeChanged(w, h, oldw, oldh);
         int minTitleWidth = getResources().getDimensionPixelSize(R.dimen.folder_title_min_width);
-        if (enableLauncherVisualRefresh() && mFolderName.getMeasuredWidth() < minTitleWidth) {
+        if (!enableLauncherVisualRefresh()) {
+            return;
+        }
+        if (AxFolderExt.isAllAppsFolder(mInfo)) {
+            mFolderName.post(() -> mFolderName.setVisibility(View.VISIBLE));
+            mFooter.setGravity(Gravity.NO_GRAVITY);
+            return;
+        }
+        if (mFolderName.getMeasuredWidth() < minTitleWidth) {
             ((MarginLayoutParams) mFolderName.getLayoutParams()).setMarginEnd(0);
             // The post is necessary for margins to be recalculated. RTL UI is shifted otherwise.
             mFolderName.post(() -> mFolderName.setVisibility(View.GONE));
@@ -1382,6 +1410,9 @@ public class Folder extends AbstractFloatingView implements ClipPathView, DragSo
     }
 
     void replaceFolderWithFinalItem() {
+        if (AxFolderExt.isAllAppsFolder(mInfo)) {
+            return;
+        }
         mDestroyed = mLauncherDelegate.replaceFolderWithFinalItem(this);
     }
 

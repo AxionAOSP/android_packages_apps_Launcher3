@@ -17,7 +17,6 @@ package com.android.launcher3.allapps;
 
 import static android.multiuser.Flags.enableMovingContentIntoPrivateSpace;
 
-import static com.android.launcher3.LauncherPrefsExt.PINNED_APPS;
 import static com.android.launcher3.LauncherSettings.Favorites.CONTAINER_PRIVATESPACE;
 import static com.android.launcher3.allapps.BaseAllAppsAdapter.VIEW_TYPE_BOTTOM_VIEW_TO_SCROLL_TO;
 import static com.android.launcher3.allapps.BaseAllAppsAdapter.VIEW_TYPE_MASK_PRIVATE_SPACE_HEADER;
@@ -39,7 +38,6 @@ import androidx.recyclerview.widget.DiffUtil;
 
 import com.android.launcher3.Flags;
 import com.android.launcher3.LauncherPrefChangeListener;
-import com.android.launcher3.LauncherPrefs;
 import com.android.launcher3.R;
 import com.android.launcher3.allapps.BaseAllAppsAdapter.AdapterItem;
 import com.android.launcher3.model.data.AppInfo;
@@ -118,6 +116,7 @@ public class AlphabeticalAppsList implements AllAppsStore.OnUpdateListener,
     private int mNumAppRowsInAdapter;
     private Predicate<ItemInfo> mItemFilter;
     private final boolean mSortSections;
+    private final AxAllAppsListController mAxListController;
 
     public AlphabeticalAppsList(ActivityContext activityContext, @Nullable AllAppsStore appsStore,
             WorkProfileManager workProfileManager, PrivateProfileManager privateProfileManager) {
@@ -142,7 +141,8 @@ public class AlphabeticalAppsList implements AllAppsStore.OnUpdateListener,
                         R.drawable.ic_private_profile_divider_badge, ImageSpan.ALIGN_CENTER),
                 0, 1, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
         mSortSections = context.getResources().getBoolean(R.bool.config_appsListSortSections);
-        LauncherPrefs.get(context).addListener(this, PINNED_APPS);
+        mAxListController = new AxAllAppsListController(context);
+        mAxListController.addPreferenceListener(this);
     }
 
     /** Set the number of apps per row when device profile changes. */
@@ -239,7 +239,7 @@ public class AlphabeticalAppsList implements AllAppsStore.OnUpdateListener,
      */
     @Override
     public void onPrefChanged(String key) {
-        if (PINNED_APPS.getSharedPrefKey().equals(key)) {
+        if (mAxListController.handlesPrefChange(key)) {
             onAppsUpdated();
         }
     }
@@ -258,8 +258,7 @@ public class AlphabeticalAppsList implements AllAppsStore.OnUpdateListener,
 
         // Filter against private space app that may show outside of Private Profile.
         Stream<AppInfo> appSteam = Stream.of(mAllAppsStore.getApps()).filter(
-                info -> !isPrivateSpaceApp(info)
-                        && !PinnedApps.isPinned(mActivityContext.asContext(), info));
+                info -> !isPrivateSpaceApp(info) && mAxListController.shouldShowApp(info));
         Stream<AppInfo> privateAppStream = Stream.of(mAllAppsStore.getApps());
 
         if (!hasSearchResults() && mItemFilter != null) {
@@ -325,7 +324,7 @@ public class AlphabeticalAppsList implements AllAppsStore.OnUpdateListener,
                                     R.string.work_profile_edu_section), 0));
                     Log.d(TAG, "Adding FastScrollSection for work edu card.");
                 }
-                position = addAppsWithSections(mApps, position);
+                position = addApps(mApps, position);
             }
             if (Flags.enablePrivateSpace()) {
                 position = addPrivateSpaceItems(position);
@@ -425,7 +424,7 @@ public class AlphabeticalAppsList implements AllAppsStore.OnUpdateListener,
                 .log(LAUNCHER_PRIVATE_SPACE_PREINSTALLED_APPS_COUNT);
 
         // Add user installed apps
-        position = addAppsWithSections(split.get(true), position);
+        position = addApps(split.get(true), position);
         // Add system apps separator.
         if (Flags.privateSpaceSysAppsSeparation()) {
             position = mPrivateProviderManager.addSystemAppsDivider(mAdapterItems);
@@ -436,7 +435,7 @@ public class AlphabeticalAppsList implements AllAppsStore.OnUpdateListener,
             }
         }
         // Add system apps.
-        position = addAppsWithSections(split.get(false), position);
+        position = addApps(split.get(false), position);
 
         if (enableMovingContentIntoPrivateSpace()) {
             // Look for the private space app via package and move it after header.
@@ -467,6 +466,10 @@ public class AlphabeticalAppsList implements AllAppsStore.OnUpdateListener,
         return position;
     }
 
+    private int addApps(List<AppInfo> appList, int startPosition) {
+        return addAppsWithSections(appList, startPosition);
+    }
+
     private int addAppsWithSections(List<AppInfo> appList, int startPosition) {
         String lastSectionName = null;
         boolean hasPrivateApps = false;
@@ -476,23 +479,28 @@ public class AlphabeticalAppsList implements AllAppsStore.OnUpdateListener,
                     allMatch(mPrivateProviderManager.getItemInfoMatcher());
         }
         Log.d(TAG, "Adding apps with sections. HasPrivateApps: " + hasPrivateApps);
-        for (int i = 0; i < appList.size(); i++) {
-            AppInfo info = appList.get(i);
-            // Apply decorator to private apps.
-            if (hasPrivateApps) {
-                mAdapterItems.add(AdapterItem.asAppWithDecorationInfo(info,
-                        new SectionDecorationInfo(mActivityContext.asContext(),
-                                getRoundRegions(i, appList.size())),
-                        isPrivateSpaceApp(info)));
+
+        List<Object> entries = mAxListController.getEntries(appList, hasPrivateApps);
+        for (int i = 0; i < entries.size(); i++) {
+            Object entry = entries.get(i);
+            if (mAxListController.isFolderEntry(entry)) {
+                mAdapterItems.add(mAxListController.createFolderItem(entry));
             } else {
-                mAdapterItems.add(AdapterItem.asApp(info));
+                AppInfo info = (AppInfo) entry;
+                if (hasPrivateApps) {
+                    mAdapterItems.add(AdapterItem.asAppWithDecorationInfo(info,
+                            new SectionDecorationInfo(mActivityContext.asContext(),
+                                    getRoundRegions(i, entries.size())),
+                            isPrivateSpaceApp(info)));
+                } else {
+                    mAdapterItems.add(AdapterItem.asApp(info));
+                }
             }
 
-            String sectionName = info.sectionName;
-            // Create a new section if the section names do not match
+            String sectionName = mAxListController.getSectionName(entry);
             if (!sectionName.equals(lastSectionName)) {
                 Log.d(TAG, "addAppsWithSections: adding sectionName: " + sectionName
-                    + " with appInfoTitle: " + info.title);
+                    + " with entryTitle: " + mAxListController.getEntryTitle(entry));
                 lastSectionName = sectionName;
                 boolean usePrivateAppScrollerBadge = !Flags.letterFastScroller() && hasPrivateApps;
                 FastScrollSectionInfo sectionInfo = new FastScrollSectionInfo(
@@ -504,6 +512,7 @@ public class AlphabeticalAppsList implements AllAppsStore.OnUpdateListener,
         }
         return position;
     }
+
 
     private boolean isPrivateSpaceApp(AppInfo appInfo) {
         return appInfo != null && Objects.equals(appInfo.getTargetPackage(), PRIVATE_SPACE_PACKAGE);

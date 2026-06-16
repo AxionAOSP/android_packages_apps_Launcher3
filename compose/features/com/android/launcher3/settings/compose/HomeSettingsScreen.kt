@@ -80,7 +80,8 @@ internal fun HomeSettingsScreen(
                     when (targetRoute) {
                         HomeSettingsRoutes.ROOT -> DashboardScreen(activity, navigator::navigateTo)
                         HomeSettingsRoutes.HOME -> HomeScreen(activity)
-                        HomeSettingsRoutes.ALL_APPS -> AllAppsDrawerScreen()
+                        HomeSettingsRoutes.ALL_APPS -> AllAppsDrawerScreen(navigator::navigateTo)
+                        HomeSettingsRoutes.ALL_APPS_FOLDERS -> AllAppsFoldersScreen()
                         HomeSettingsRoutes.SEARCH -> SearchScreen(activity)
                         HomeSettingsRoutes.NOTIFICATIONS -> NotificationsScreen(activity)
                         HomeSettingsRoutes.PRIVACY -> PrivacyScreen(activity)

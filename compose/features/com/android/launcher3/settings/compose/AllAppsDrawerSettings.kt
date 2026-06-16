@@ -22,7 +22,16 @@ import com.android.launcher3.LauncherPrefsExt
 import com.android.launcher3.R
 
 @Composable
-internal fun AllAppsDrawerScreen() {
+internal fun AllAppsDrawerScreen(onNavigate: (String) -> Unit) {
+    PreferenceGroup(title = stringResource(R.string.all_apps_drawer_layout_category)) {
+        item {
+            CategoryPreference(
+                titleRes = R.string.all_apps_folders_title,
+                summaryRes = R.string.all_apps_folders_summary,
+                onClick = { onNavigate(HomeSettingsRoutes.ALL_APPS_FOLDERS) },
+            )
+        }
+    }
     PreferenceGroup(title = stringResource(R.string.all_apps_drawer_appearance_category)) {
         item {
             BooleanPreference(

@@ -46,6 +46,7 @@ import static com.android.launcher3.LauncherState.OVERVIEW;
 import static com.android.launcher3.LauncherState.OVERVIEW_MODAL_TASK;
 import static com.android.launcher3.LauncherState.OVERVIEW_SPLIT_SELECT;
 import static com.android.launcher3.Utilities.isRtl;
+import static com.android.launcher3.allapps.AxAllAppsShortcuts.PIN_TO_DRAWER;
 import static com.android.launcher3.anim.AnimatorListeners.forEndCallback;
 import static com.android.launcher3.compat.AccessibilityManagerCompat.sendCustomAccessibilityEvent;
 import static com.android.launcher3.logging.StatsLogManager.LauncherEvent.LAUNCHER_APP_LAUNCH_TAP;
@@ -58,7 +59,6 @@ import static com.android.launcher3.popup.SystemShortcut.APP_INFO;
 import static com.android.launcher3.popup.SystemShortcut.BUBBLE_SHORTCUT;
 import static com.android.launcher3.popup.SystemShortcut.DONT_SUGGEST_APP;
 import static com.android.launcher3.popup.SystemShortcut.INSTALL;
-import static com.android.launcher3.popup.SystemShortcut.PIN_TO_DRAWER;
 import static com.android.launcher3.popup.SystemShortcut.PRIVATE_PROFILE_INSTALL;
 import static com.android.launcher3.popup.SystemShortcut.REMOVE;
 import static com.android.launcher3.popup.SystemShortcut.UNINSTALL_APP;
@@ -141,6 +141,7 @@ import com.android.launcher3.apppairs.AppPairIcon;
 import com.android.launcher3.appprediction.PredictionRowView;
 import com.android.launcher3.config.FeatureFlags;
 import com.android.launcher3.desktop.DesktopRecentsTransitionController;
+import com.android.launcher3.folder.AxFolderExt;
 import com.android.launcher3.hybridhotseat.HotseatPredictionController;
 import com.android.launcher3.logging.InstanceId;
 import com.android.launcher3.logging.StatsLogManager;
@@ -559,10 +560,17 @@ public class QuickstepLauncher extends Launcher implements RecentsViewContainer,
         // TODO(b/444744861): Update private space apps to have its own container.
         boolean isPinnable = itemInfo instanceof ItemInfoWithIcon info
                 && (info.runtimeStatusFlags & FLAG_NOT_PINNABLE) == 0;
+        boolean isAllAppsFolderItem = AxFolderExt.isAllAppsFolderItem(this, itemInfo);
         if (Utilities.isWorkspaceEditAllowed(this)
+                && !isAllAppsFolderItem
                 && (container == CONTAINER_HOTSEAT || container == CONTAINER_DESKTOP
                 || /* Folder */ container > 0)) {
             shortcuts.add(REMOVE);
+        } else if (isAllAppsFolderItem) {
+            shortcuts.add(PIN_TO_DRAWER);
+            if (Utilities.isWorkspaceEditAllowed(this)) {
+                shortcuts.add(ADD_TO_HOME_SCREEN);
+            }
         } else if (isPinnable
                 && (container == CONTAINER_ALL_APPS
                 || container == CONTAINER_ALL_APPS_PREDICTION)) {

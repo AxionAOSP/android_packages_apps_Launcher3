@@ -71,6 +71,7 @@ import static com.android.launcher3.LauncherState.SPRING_LOADED;
 import static com.android.launcher3.Utilities.postAsyncCallback;
 import static com.android.launcher3.Utilities.shouldEnableMouseInteractionChanges;
 import static com.android.launcher3.Workspace.mapOverCellLayouts;
+import static com.android.launcher3.allapps.AxAllAppsShortcuts.PIN_TO_DRAWER;
 import static com.android.launcher3.anim.AnimatorListeners.forEndCallback;
 import static com.android.launcher3.config.FeatureFlags.FOLDABLE_SINGLE_PAGE;
 import static com.android.launcher3.config.FeatureFlags.MULTI_SELECT_EDIT_MODE;
@@ -98,7 +99,6 @@ import static com.android.launcher3.pageindicators.PaginationArrow.FULLY_OPAQUE;
 import static com.android.launcher3.popup.SystemShortcut.ADD_TO_HOME_SCREEN;
 import static com.android.launcher3.popup.SystemShortcut.APP_INFO;
 import static com.android.launcher3.popup.SystemShortcut.INSTALL;
-import static com.android.launcher3.popup.SystemShortcut.PIN_TO_DRAWER;
 import static com.android.launcher3.popup.SystemShortcut.REMOVE;
 import static com.android.launcher3.popup.SystemShortcut.WIDGETS;
 import static com.android.launcher3.states.RotationHelper.REQUEST_LOCK;
@@ -184,6 +184,7 @@ import com.android.launcher3.dragndrop.DragLayer;
 import com.android.launcher3.dragndrop.DragView;
 import com.android.launcher3.dragndrop.LauncherDragController;
 import com.android.launcher3.dragndrop.SystemDragController;
+import com.android.launcher3.folder.AxFolderExt;
 import com.android.launcher3.folder.Folder;
 import com.android.launcher3.folder.FolderIcon;
 import com.android.launcher3.keyboard.ViewGroupFocusHelper;
@@ -2976,6 +2977,8 @@ public class Launcher extends StatefulActivity<LauncherState>
             } else {
                 return Stream.of(APP_INFO, WIDGETS, INSTALL);
             }
+        } else if (AxFolderExt.isAllAppsFolderItem(this, itemInfo)) {
+            return Stream.of(APP_INFO, WIDGETS, INSTALL, PIN_TO_DRAWER, ADD_TO_HOME_SCREEN);
         }
         return Stream.of(APP_INFO, WIDGETS, INSTALL);
     }
