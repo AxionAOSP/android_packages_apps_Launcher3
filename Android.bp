@@ -435,6 +435,8 @@ android_library {
     resource_dirs: ["res"],
     static_libs: [
         "LauncherPluginLib",
+        "ax_preferences",
+        "ax_utils",
         "launcher_quickstep_log_protos_lite",
         "androidx-constraintlayout_constraintlayout",
         "androidx.recyclerview_recyclerview",

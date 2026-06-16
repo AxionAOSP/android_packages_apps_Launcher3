@@ -43,6 +43,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.android.launcher3.BubbleTextView;
 import com.android.launcher3.R;
+import com.android.launcher3.allapps.search.AxSearchHistory;
 import com.android.launcher3.allapps.search.SearchAdapterProvider;
 import com.android.launcher3.model.data.AppInfo;
 import com.android.launcher3.popup.PopupContainerWithArrow;
@@ -74,7 +75,8 @@ public abstract class BaseAllAppsAdapter
     public static final int VIEW_TYPE_FOLDER_ICON = 1 << 10;
     public static final int VIEW_TYPE_SEARCH_ACTION = 1 << 11;
     public static final int VIEW_TYPE_SEARCH_PILL = 1 << 12;
-    public static final int NEXT_ID = 13;
+    public static final int VIEW_TYPE_SEARCH_SECTION = 1 << 13;
+    public static final int NEXT_ID = 14;
 
     // Common view type masks
     public static final int VIEW_TYPE_MASK_DIVIDER = VIEW_TYPE_ALL_APPS_DIVIDER;
@@ -105,6 +107,11 @@ public abstract class BaseAllAppsAdapter
      * Info about a particular adapter item (can be either section or app)
      */
     public static class AdapterItem {
+        public static final int SEARCH_GROUP_SINGLE = 0;
+        public static final int SEARCH_GROUP_TOP = 1;
+        public static final int SEARCH_GROUP_MIDDLE = 2;
+        public static final int SEARCH_GROUP_BOTTOM = 3;
+
         /** Common properties */
         // The type of this item
         public final int viewType;
@@ -122,9 +129,12 @@ public abstract class BaseAllAppsAdapter
         public int searchActionIconRes = 0;
         public boolean searchActionIconTinted = true;
         public boolean searchActionIconFullBleed = false;
+        public boolean searchActionThumbnailTrailing = false;
         public int searchActionEndIconRes = R.drawable.ic_chevron_end;
         public Intent searchActionIntent = null;
         public ShortcutInfo searchActionShortcut = null;
+        public String searchActionQuery = null;
+        public int searchActionGroupPosition = SEARCH_GROUP_SINGLE;
         // Private App Decorator
         public SectionDecorationInfo decorationInfo = null;
         public AdapterItem(int viewType) {
@@ -183,15 +193,44 @@ public abstract class BaseAllAppsAdapter
             return item;
         }
 
-        public static AdapterItem asShortcutAction(CharSequence title, CharSequence subtitle,
-                Drawable icon, ShortcutInfo shortcutInfo) {
+        public static AdapterItem asSearchPill(CharSequence title, int iconRes, Intent intent) {
             AdapterItem item = new AdapterItem(VIEW_TYPE_SEARCH_PILL);
             item.searchActionTitle = title;
-            item.searchActionSubtitle = subtitle;
+            item.searchActionIconRes = iconRes;
+            item.searchActionIntent = intent;
+            return item;
+        }
+
+        public static AdapterItem asSearchPill(CharSequence title, Drawable icon, Intent intent) {
+            AdapterItem item = new AdapterItem(VIEW_TYPE_SEARCH_PILL);
+            item.searchActionTitle = title;
             item.searchActionIcon = icon;
             item.searchActionIconRes = R.drawable.ic_allapps_search;
             item.searchActionIconTinted = icon == null;
-            item.searchActionShortcut = shortcutInfo;
+            item.searchActionIntent = intent;
+            return item;
+        }
+
+        public static AdapterItem asSearchHistory(String query) {
+            AdapterItem item = asSearchAction(query, null, R.drawable.ic_allapps_search, null);
+            item.searchActionQuery = query;
+            item.searchActionEndIconRes = R.drawable.ic_search_north_west;
+            return item;
+        }
+
+        public static AdapterItem asSearchSection(CharSequence title, int iconRes) {
+            AdapterItem item = new AdapterItem(VIEW_TYPE_SEARCH_SECTION);
+            item.searchActionTitle = title;
+            item.searchActionIconRes = iconRes;
+            item.searchActionEndIconRes = 0;
+            return item;
+        }
+
+        public static AdapterItem asSearchSection(CharSequence title, Drawable icon,
+                int fallbackIconRes) {
+            AdapterItem item = asSearchSection(title, fallbackIconRes);
+            item.searchActionIcon = icon;
+            item.searchActionIconTinted = icon == null;
             return item;
         }
 
@@ -209,16 +248,21 @@ public abstract class BaseAllAppsAdapter
             if (viewType == VIEW_TYPE_FOLDER_ICON) {
                 return Objects.equals(folderInfo, other.folderInfo);
             }
-            if (viewType == VIEW_TYPE_SEARCH_ACTION || viewType == VIEW_TYPE_SEARCH_PILL) {
+            if (viewType == VIEW_TYPE_SEARCH_ACTION || viewType == VIEW_TYPE_SEARCH_PILL
+                    || viewType == VIEW_TYPE_SEARCH_SECTION) {
                 return searchActionIconRes == other.searchActionIconRes
+                        && searchActionIconTinted == other.searchActionIconTinted
                         && searchActionIconFullBleed == other.searchActionIconFullBleed
+                        && searchActionThumbnailTrailing == other.searchActionThumbnailTrailing
                         && searchActionEndIconRes == other.searchActionEndIconRes
+                        && searchActionGroupPosition == other.searchActionGroupPosition
                         && Objects.equals(searchActionTitle, other.searchActionTitle)
                         && Objects.equals(searchActionSubtitle, other.searchActionSubtitle)
                         && Objects.equals(getSearchActionIntentKey(searchActionIntent),
                                 getSearchActionIntentKey(other.searchActionIntent))
                         && Objects.equals(getSearchActionShortcutKey(searchActionShortcut),
-                                getSearchActionShortcutKey(other.searchActionShortcut));
+                                getSearchActionShortcutKey(other.searchActionShortcut))
+                        && Objects.equals(searchActionQuery, other.searchActionQuery);
             }
             return true;
         }
@@ -231,7 +275,8 @@ public abstract class BaseAllAppsAdapter
             if (viewType == VIEW_TYPE_FOLDER_ICON) {
                 return Objects.equals(folderInfo, other.folderInfo);
             }
-            if (viewType == VIEW_TYPE_SEARCH_ACTION || viewType == VIEW_TYPE_SEARCH_PILL) {
+            if (viewType == VIEW_TYPE_SEARCH_ACTION || viewType == VIEW_TYPE_SEARCH_PILL
+                    || viewType == VIEW_TYPE_SEARCH_SECTION) {
                 return isSameAs(other);
             }
             return itemInfo == null && other.itemInfo == null;
@@ -451,7 +496,10 @@ public abstract class BaseAllAppsAdapter
                 layout, parent, false);
         icon.setLongPressTimeoutFactor(1f);
         icon.setOnFocusChangeListener(mIconFocusListener);
-        icon.setOnClickListener(mOnIconClickListener);
+        icon.setOnClickListener(v -> {
+            AxSearchHistory.recordCurrentQuery(mActivityContext);
+            mOnIconClickListener.onClick(v);
+        });
         icon.setOnLongClickListener(mOnIconLongClickListener);
         // Ensure the all apps icon height matches the workspace icons in portrait mode.
         icon.getLayoutParams().height =

@@ -15,8 +15,10 @@
  */
 package com.android.launcher3.settings.compose
 
+import android.content.Context
 import android.content.pm.LauncherApps
 import android.os.Process
+import android.widget.Toast
 import androidx.annotation.DrawableRes
 import androidx.annotation.StringRes
 import androidx.compose.foundation.background
@@ -28,6 +30,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -35,11 +38,15 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
 import com.android.axion.compose.preferences.ClickablePreference
 import com.android.axion.compose.preferences.SettingsType
+import com.android.axion.compose.preferences.SliderPreference
 import com.android.axion.compose.preferences.SwitchPreference
 import com.android.axion.compose.preferences.rememberSettingInt
 import com.android.axion.compose.preferences.rememberSettingsFlow
@@ -49,6 +56,38 @@ import com.android.launcher3.EncryptionType
 import com.android.launcher3.Item
 import com.android.launcher3.LauncherPrefChangeListener
 import com.android.launcher3.LauncherPrefs
+import kotlin.math.roundToInt
+
+@Composable
+internal fun IntSliderPreference(
+    item: ConstantItem<Int>,
+    @StringRes titleRes: Int,
+    min: Int,
+    max: Int,
+    defaultValue: Int,
+    interval: Int = 1,
+    resetValue: Int = defaultValue,
+    valueOverride: (Int) -> Int = { it },
+    valueLabel: @Composable (Int) -> String,
+) {
+    val preference = rememberLauncherPreference(item)
+    val value = valueOverride(preference.value).coerceIn(min, max)
+    SliderPreference(
+        title = stringResource(titleRes),
+        summary = "",
+        value = value.toFloat(),
+        onValueChange = { preference.onChange(roundSliderValue(it, min, max, interval)) },
+        onValueChangeFinished = {},
+        valueRange = min.toFloat()..max.toFloat(),
+        steps = ((max - min) / interval - 1).coerceAtLeast(0),
+        displayValue = valueLabel(value),
+        onReset = { preference.onChange(resetValue) },
+    )
+}
+
+private fun roundSliderValue(value: Float, min: Int, max: Int, interval: Int): Int {
+    return (min + ((value - min) / interval).roundToInt() * interval).coerceIn(min, max)
+}
 
 @Composable
 internal fun CategoryPreference(
@@ -146,6 +185,22 @@ internal fun rememberPackageEnabled(packageName: String): Boolean {
 }
 
 @Composable
+internal fun rememberResumeVersion(): Int {
+    val lifecycleOwner = LocalLifecycleOwner.current
+    var version by remember { mutableIntStateOf(0) }
+    DisposableEffect(lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_RESUME) {
+                version++
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
+    }
+    return version
+}
+
+@Composable
 internal fun <T : Any> rememberLauncherPreference(item: ConstantItem<T>): PreferenceState<T> {
     if (item.encryptionType == EncryptionType.SECURE_SETTINGS) {
         return rememberSecureSettingPreference(item)
@@ -224,6 +279,10 @@ internal data class PreferenceState<T>(
     val value: T,
     val onChange: (T) -> Unit,
 )
+
+internal fun showToast(context: Context, text: String) {
+    Toast.makeText(context, text, Toast.LENGTH_SHORT).show()
+}
 
 internal fun preferenceIcon(@DrawableRes iconRes: Int): (@Composable () -> Unit) = {
     Box(

@@ -20,30 +20,31 @@ import static com.android.launcher3.util.Executors.MAIN_EXECUTOR;
 
 import android.content.Context;
 import android.os.Handler;
-import android.os.UserManager;
 
 import androidx.annotation.AnyThread;
 
 import com.android.launcher3.LauncherAppState;
+import com.android.launcher3.LauncherPrefs;
+import com.android.launcher3.LauncherPrefsExt;
+import com.android.launcher3.Utilities;
 import com.android.launcher3.allapps.BaseAllAppsAdapter.AdapterItem;
 import com.android.launcher3.model.data.AppInfo;
 import com.android.launcher3.search.SearchAlgorithm;
 import com.android.launcher3.search.SearchCallback;
-import com.android.launcher3.search.StringMatcherUtility;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * The default search implementation.
  */
 public class DefaultAppSearchAlgorithm implements SearchAlgorithm<AdapterItem> {
 
-    private static final int MAX_RESULTS_COUNT = 5;
-
     private final LauncherAppState mAppState;
     private final Handler mResultHandler;
     private final boolean mAddNoResultsMessage;
+    private final AtomicInteger mSearchToken = new AtomicInteger();
 
     public DefaultAppSearchAlgorithm(Context context) {
         this(context, false);
@@ -58,19 +59,48 @@ public class DefaultAppSearchAlgorithm implements SearchAlgorithm<AdapterItem> {
     @Override
     public void cancel(boolean interruptActiveRequests) {
         if (interruptActiveRequests) {
+            mSearchToken.incrementAndGet();
             mResultHandler.removeCallbacksAndMessages(null);
         }
     }
 
     @Override
     public void doSearch(String query, SearchCallback<AdapterItem> callback) {
+        int searchToken = mSearchToken.incrementAndGet();
+        int delayMs = getSearchDelayMs();
+        if (delayMs > 0) {
+            mResultHandler.postDelayed(() -> enqueueSearch(query, callback, searchToken), delayMs);
+        } else {
+            enqueueSearch(query, callback, searchToken);
+        }
+    }
+
+    private int getSearchDelayMs() {
+        return Utilities.boundToRange(
+                LauncherPrefs.get(mAppState.getContext())
+                        .get(LauncherPrefsExt.ALL_APPS_SEARCH_WEB_DELAY_MS),
+                0, 1000);
+    }
+
+    private void enqueueSearch(String query, SearchCallback<AdapterItem> callback,
+            int searchToken) {
         mAppState.getModel().enqueueModelUpdateTask((taskController, dataModel, apps) ->  {
+            if (searchToken != mSearchToken.get()) {
+                return;
+            }
             ArrayList<AdapterItem> result = getTitleMatchResult(mAppState.getContext(), apps.data,
                     query);
+            if (searchToken != mSearchToken.get()) {
+                return;
+            }
             if (mAddNoResultsMessage && result.isEmpty()) {
                 result.add(getEmptyMessageAdapterItem(query));
             }
-            mResultHandler.post(() -> callback.onSearchResult(query, result));
+            mResultHandler.post(() -> {
+                if (searchToken == mSearchToken.get()) {
+                    callback.onSearchResult(query, result);
+                }
+            });
         });
     }
 
@@ -89,26 +119,7 @@ public class DefaultAppSearchAlgorithm implements SearchAlgorithm<AdapterItem> {
     @AnyThread
     public static ArrayList<AdapterItem> getTitleMatchResult(Context context, List<AppInfo> apps,
             String query) {
-        // Do an intersection of the words in the query and each title, and filter out all the
-        // apps that don't match all of the words in the query.
-        final String queryTextLower = query.toLowerCase();
-        final ArrayList<AdapterItem> result = new ArrayList<>();
-        StringMatcherUtility.StringMatcher matcher =
-                StringMatcherUtility.StringMatcher.getInstance();
-
-        int resultCount = 0;
-        int total = apps.size();
-        UserManager userManager = UserManager.get(context);
-        for (int i = 0; i < total && resultCount < MAX_RESULTS_COUNT; i++) {
-            AppInfo info = apps.get(i);
-            if (userManager.isQuietModeEnabled(info.user)) {
-                continue;
-            }
-            if (StringMatcherUtility.matches(queryTextLower, info.title.toString(), matcher)) {
-                result.add(AdapterItem.asApp(info));
-                resultCount++;
-            }
-        }
-        return result;
+        return AxUniversalSearchProvider.getSearchResults(context, apps, query);
     }
+
 }

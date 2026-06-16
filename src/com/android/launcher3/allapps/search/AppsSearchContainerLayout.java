@@ -144,6 +144,11 @@ public class AppsSearchContainerLayout extends ExtendedEditText
     }
 
     @Override
+    public void refreshResults() {
+        mSearchBarController.refreshSearchResult();
+    }
+
+    @Override
     public void resetSearch() {
         mSearchBarController.reset();
     }

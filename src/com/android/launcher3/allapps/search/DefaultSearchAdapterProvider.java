@@ -36,6 +36,7 @@ public class DefaultSearchAdapterProvider extends SearchAdapterProvider<Activity
 
     @Override
     public void onBindView(AllAppsGridAdapter.ViewHolder holder, int position) {
+        AxUniversalSearchAdapter.onBindView(mLauncher, holder, position);
         if (position == 0) {
             mHighlightedView = holder.itemView;
         }
@@ -43,13 +44,23 @@ public class DefaultSearchAdapterProvider extends SearchAdapterProvider<Activity
 
     @Override
     public boolean isViewSupported(int viewType) {
-        return false;
+        return AxUniversalSearchAdapter.isViewSupported(viewType);
     }
 
     @Override
     public AllAppsGridAdapter.ViewHolder onCreateViewHolder(LayoutInflater layoutInflater,
             ViewGroup parent, int viewType) {
-        return null;
+        return AxUniversalSearchAdapter.onCreateViewHolder(layoutInflater, parent, viewType);
+    }
+
+    @Override
+    public int[] getSupportedItemsPerRowArray() {
+        return AxUniversalSearchAdapter.getSupportedItemsPerRowArray();
+    }
+
+    @Override
+    public int getItemsPerRow(int viewType, int appsPerRow) {
+        return AxUniversalSearchAdapter.getItemsPerRow(viewType, appsPerRow);
     }
 
     @Override
@@ -57,10 +68,11 @@ public class DefaultSearchAdapterProvider extends SearchAdapterProvider<Activity
         if (mHighlightedView instanceof BubbleTextView
                 && mHighlightedView.getTag() instanceof ItemInfo) {
             ItemInfo itemInfo = (ItemInfo) mHighlightedView.getTag();
+            AxSearchHistory.recordCurrentQuery(mLauncher);
             return mLauncher.startActivitySafely(
                     mHighlightedView, itemInfo.getIntent(), itemInfo) != null;
         }
-        return false;
+        return AxUniversalSearchAdapter.launchHighlightedItem(mLauncher, mHighlightedView);
     }
 
     @Override
@@ -72,4 +84,5 @@ public class DefaultSearchAdapterProvider extends SearchAdapterProvider<Activity
     public void clearHighlightedItem() {
         mHighlightedView = null;
     }
+
 }
