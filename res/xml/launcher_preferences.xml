@@ -134,6 +134,13 @@
             android:title="@string/drawer_show_labels"
             android:defaultValue="true"
             android:persistent="true" />
+
+        <com.android.axion.preference.AxPreference
+            android:key="pref_all_apps_folder_settings"
+            android:icon="@drawable/ic_apps"
+            android:title="@string/all_apps_folders_title"
+            android:summary="@string/all_apps_folders_summary"
+            android:persistent="false" />
     </PreferenceScreen>
 
     <PreferenceScreen

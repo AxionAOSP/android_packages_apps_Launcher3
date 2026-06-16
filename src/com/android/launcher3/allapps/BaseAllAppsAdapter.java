@@ -25,6 +25,9 @@ import static com.android.launcher3.allapps.SectionDecorationInfo.ROUND_TOP_RIGH
 import static com.android.launcher3.allapps.UserProfileManager.STATE_DISABLED;
 import static com.android.launcher3.allapps.UserProfileManager.STATE_ENABLED;
 
+import android.content.Intent;
+import android.content.pm.ShortcutInfo;
+import android.graphics.drawable.Drawable;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -44,6 +47,8 @@ import com.android.launcher3.allapps.search.SearchAdapterProvider;
 import com.android.launcher3.model.data.AppInfo;
 import com.android.launcher3.popup.PopupContainerWithArrow;
 import com.android.launcher3.views.ActivityContext;
+
+import java.util.Objects;
 
 /**
  * Adapter for all the apps.
@@ -66,11 +71,15 @@ public abstract class BaseAllAppsAdapter
     public static final int VIEW_TYPE_PRIVATE_SPACE_SYS_APPS_DIVIDER = 1 << 7;
     public static final int VIEW_TYPE_BOTTOM_VIEW_TO_SCROLL_TO = 1 << 8;
     public static final int VIEW_TYPE_PRIVATE_SPACE_APP_ICON = 1 << 9;
-    public static final int NEXT_ID = 10;
+    public static final int VIEW_TYPE_FOLDER_ICON = 1 << 10;
+    public static final int VIEW_TYPE_SEARCH_ACTION = 1 << 11;
+    public static final int VIEW_TYPE_SEARCH_PILL = 1 << 12;
+    public static final int NEXT_ID = 13;
 
     // Common view type masks
     public static final int VIEW_TYPE_MASK_DIVIDER = VIEW_TYPE_ALL_APPS_DIVIDER;
-    public static final int VIEW_TYPE_MASK_ICON = VIEW_TYPE_ICON | VIEW_TYPE_PRIVATE_SPACE_APP_ICON;
+    public static final int VIEW_TYPE_MASK_ICON = VIEW_TYPE_ICON | VIEW_TYPE_PRIVATE_SPACE_APP_ICON
+            | VIEW_TYPE_FOLDER_ICON;
 
     public static final int VIEW_TYPE_MASK_PRIVATE_SPACE_HEADER =
             VIEW_TYPE_PRIVATE_SPACE_HEADER;
@@ -106,6 +115,16 @@ public abstract class BaseAllAppsAdapter
         public int rowAppIndex;
         // The associated ItemInfoWithIcon for the item
         public AppInfo itemInfo = null;
+        public AllAppsFolderInfo folderInfo = null;
+        public CharSequence searchActionTitle = null;
+        public CharSequence searchActionSubtitle = null;
+        public Drawable searchActionIcon = null;
+        public int searchActionIconRes = 0;
+        public boolean searchActionIconTinted = true;
+        public boolean searchActionIconFullBleed = false;
+        public int searchActionEndIconRes = R.drawable.ic_chevron_end;
+        public Intent searchActionIntent = null;
+        public ShortcutInfo searchActionShortcut = null;
         // Private App Decorator
         public SectionDecorationInfo decorationInfo = null;
         public AdapterItem(int viewType) {
@@ -130,15 +149,78 @@ public abstract class BaseAllAppsAdapter
             return item;
         }
 
+        public static AdapterItem asFolder(AllAppsFolderInfo folderInfo) {
+            AdapterItem item = new AdapterItem(VIEW_TYPE_FOLDER_ICON);
+            item.folderInfo = folderInfo;
+            return item;
+        }
+
+        public static AdapterItem asSearchAction(CharSequence title, CharSequence subtitle,
+                int iconRes, Intent intent) {
+            AdapterItem item = new AdapterItem(VIEW_TYPE_SEARCH_ACTION);
+            item.searchActionTitle = title;
+            item.searchActionSubtitle = subtitle;
+            item.searchActionIconRes = iconRes;
+            item.searchActionIntent = intent;
+            return item;
+        }
+
+        public static AdapterItem asSearchAction(CharSequence title, CharSequence subtitle,
+                Drawable icon, Intent intent) {
+            return asSearchAction(title, subtitle, icon, intent, false);
+        }
+
+        public static AdapterItem asSearchAction(CharSequence title, CharSequence subtitle,
+                Drawable icon, Intent intent, boolean iconFullBleed) {
+            AdapterItem item = new AdapterItem(VIEW_TYPE_SEARCH_ACTION);
+            item.searchActionTitle = title;
+            item.searchActionSubtitle = subtitle;
+            item.searchActionIcon = icon;
+            item.searchActionIconRes = R.drawable.ic_allapps_search;
+            item.searchActionIconTinted = false;
+            item.searchActionIconFullBleed = iconFullBleed;
+            item.searchActionIntent = intent;
+            return item;
+        }
+
+        public static AdapterItem asShortcutAction(CharSequence title, CharSequence subtitle,
+                Drawable icon, ShortcutInfo shortcutInfo) {
+            AdapterItem item = new AdapterItem(VIEW_TYPE_SEARCH_PILL);
+            item.searchActionTitle = title;
+            item.searchActionSubtitle = subtitle;
+            item.searchActionIcon = icon;
+            item.searchActionIconRes = R.drawable.ic_allapps_search;
+            item.searchActionIconTinted = icon == null;
+            item.searchActionShortcut = shortcutInfo;
+            return item;
+        }
+
         protected boolean isCountedForAccessibility() {
-            return viewType == VIEW_TYPE_ICON;
+            return viewType == VIEW_TYPE_ICON || viewType == VIEW_TYPE_FOLDER_ICON;
         }
 
         /**
          * Returns true if the items represent the same object
          */
         public boolean isSameAs(AdapterItem other) {
-            return (other.viewType == viewType) && (other.getClass() == getClass());
+            if (other.viewType != viewType || other.getClass() != getClass()) {
+                return false;
+            }
+            if (viewType == VIEW_TYPE_FOLDER_ICON) {
+                return Objects.equals(folderInfo, other.folderInfo);
+            }
+            if (viewType == VIEW_TYPE_SEARCH_ACTION || viewType == VIEW_TYPE_SEARCH_PILL) {
+                return searchActionIconRes == other.searchActionIconRes
+                        && searchActionIconFullBleed == other.searchActionIconFullBleed
+                        && searchActionEndIconRes == other.searchActionEndIconRes
+                        && Objects.equals(searchActionTitle, other.searchActionTitle)
+                        && Objects.equals(searchActionSubtitle, other.searchActionSubtitle)
+                        && Objects.equals(getSearchActionIntentKey(searchActionIntent),
+                                getSearchActionIntentKey(other.searchActionIntent))
+                        && Objects.equals(getSearchActionShortcutKey(searchActionShortcut),
+                                getSearchActionShortcutKey(other.searchActionShortcut));
+            }
+            return true;
         }
 
         /**
@@ -146,7 +228,22 @@ public abstract class BaseAllAppsAdapter
          * as well. Returning true will prevent redrawing of thee item.
          */
         public boolean isContentSame(AdapterItem other) {
+            if (viewType == VIEW_TYPE_FOLDER_ICON) {
+                return Objects.equals(folderInfo, other.folderInfo);
+            }
+            if (viewType == VIEW_TYPE_SEARCH_ACTION || viewType == VIEW_TYPE_SEARCH_PILL) {
+                return isSameAs(other);
+            }
             return itemInfo == null && other.itemInfo == null;
+        }
+
+        private static String getSearchActionIntentKey(Intent intent) {
+            return intent == null ? null : intent.toUri(0);
+        }
+
+        private static String getSearchActionShortcutKey(ShortcutInfo shortcutInfo) {
+            return shortcutInfo == null ? null : shortcutInfo.getPackage() + "/"
+                    + shortcutInfo.getId() + "/" + shortcutInfo.getUserHandle();
         }
 
         @Nullable
@@ -219,6 +316,8 @@ public abstract class BaseAllAppsAdapter
         switch (viewType) {
             case VIEW_TYPE_ICON:
                 return new ViewHolder(getIconOnCreateSetup(parent));
+            case VIEW_TYPE_FOLDER_ICON:
+                return AxAllAppsFolderAdapter.onCreateViewHolder(mActivityContext, parent);
             case VIEW_TYPE_PRIVATE_SPACE_APP_ICON:
                 BubbleTextView icon = getIconOnCreateSetup(parent);
                 icon.setOnClickListener(v ->
@@ -257,6 +356,10 @@ public abstract class BaseAllAppsAdapter
     public void onBindViewHolder(ViewHolder holder, int position) {
         holder.itemView.setVisibility(View.VISIBLE);
         switch (holder.getItemViewType()) {
+            case VIEW_TYPE_FOLDER_ICON:
+                AxAllAppsFolderAdapter.onBindViewHolder(mActivityContext, mApps,
+                        mIconFocusListener, holder, position);
+                break;
             case VIEW_TYPE_PRIVATE_SPACE_APP_ICON:
             case VIEW_TYPE_ICON: {
                 AdapterItem adapterItem = mApps.getAdapterItems().get(position);

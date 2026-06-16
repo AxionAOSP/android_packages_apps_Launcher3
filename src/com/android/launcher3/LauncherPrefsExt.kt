@@ -44,6 +44,8 @@ object LauncherPrefsExt {
             emptySet<String>(),
             EncryptionType.SECURE_SETTINGS,
         )
+    @JvmField val ALL_APPS_FOLDERS =
+        backedUpItem("pref_all_apps_folders", "[]", EncryptionType.SECURE_SETTINGS)
     @JvmField val SLEEP_GESTURE =
         backedUpItem("pref_sleep_gesture", false, EncryptionType.SECURE_SETTINGS)
 }

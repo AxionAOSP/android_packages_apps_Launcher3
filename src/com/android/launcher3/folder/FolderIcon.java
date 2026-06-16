@@ -213,8 +213,11 @@ public class FolderIcon extends FrameLayout implements FloatingIconViewCompanion
         }
         icon.mFolderName.setCompoundDrawablePadding(0);
         FrameLayout.LayoutParams lp = (FrameLayout.LayoutParams) icon.mFolderName.getLayoutParams();
-        lp.topMargin = grid.getWorkspaceIconProfile().getIconSizePx()
-                + grid.getWorkspaceIconProfile().getIconDrawablePaddingPx();
+        lp.topMargin = AxFolderExt.isAllAppsFolder(folderInfo)
+                ? grid.getAllAppsProfile().getIconSizePx()
+                        + grid.getAllAppsProfile().getIconDrawablePaddingPx()
+                : grid.getWorkspaceIconProfile().getIconSizePx()
+                        + grid.getWorkspaceIconProfile().getIconDrawablePaddingPx();
 
         icon.setTag(folderInfo);
         icon.setOnClickListener(activity.getItemOnClickListener());
@@ -628,10 +631,13 @@ public class FolderIcon extends FrameLayout implements FloatingIconViewCompanion
 
     @Override
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
-        boolean shouldCenterIcon = mActivity.getDeviceProfile().getWorkspaceIconProfile()
-                .getIconCenterVertically();
+        boolean isAllAppsFolder = AxFolderExt.isAllAppsFolder(mInfo);
+        boolean shouldCenterIcon = isAllAppsFolder
+                || mActivity.getDeviceProfile().getWorkspaceIconProfile().getIconCenterVertically();
         if (shouldCenterIcon) {
-            int iconSize = mActivity.getDeviceProfile().getWorkspaceIconProfile().getIconSizePx();
+            int iconSize = isAllAppsFolder
+                    ? mActivity.getDeviceProfile().getAllAppsProfile().getIconSizePx()
+                    : mActivity.getDeviceProfile().getWorkspaceIconProfile().getIconSizePx();
             Paint.FontMetrics fm = mFolderName.getPaint().getFontMetrics();
             int cellHeightPx = iconSize + mFolderName.getCompoundDrawablePadding()
                     + (int) Math.ceil(fm.bottom - fm.top);

@@ -24,6 +24,7 @@ internal object HomeSettingsRoutes {
     const val ROOT = "root"
     const val HOME = "home"
     const val ALL_APPS = "all_apps"
+    const val ALL_APPS_FOLDERS = "all_apps_folders"
     const val SEARCH = "search"
     const val NOTIFICATIONS = "notifications"
     const val PRIVACY = "privacy"
@@ -32,6 +33,7 @@ internal object HomeSettingsRoutes {
         null -> ROOT
         KEY_SCREEN_HOME -> HOME
         KEY_SCREEN_ALL_APPS -> ALL_APPS
+        KEY_ALL_APPS_FOLDER_SETTINGS -> ALL_APPS_FOLDERS
         KEY_SCREEN_SEARCH -> SEARCH
         KEY_SCREEN_NOTIFICATIONS -> NOTIFICATIONS
         KEY_SCREEN_PRIVACY -> PRIVACY
@@ -59,6 +61,7 @@ internal object HomeSettingsRoutes {
             KEY_SCREEN_ALL_APPS,
             KEY_ALLAPPS_THEMED_ICONS,
             KEY_DRAWER_LABELS -> ALL_APPS
+            KEY_ALL_APPS_FOLDER_SETTINGS -> ALL_APPS_FOLDERS
             KEY_DRAWER_OPEN_KEYBOARD,
             KEY_SUGGESTIONS -> SEARCH
             KEY_NOTIFICATION_DOTS -> NOTIFICATIONS
@@ -74,6 +77,7 @@ internal fun parentRoute(route: String?): String? = when (route) {
     HomeSettingsRoutes.SEARCH,
     HomeSettingsRoutes.PRIVACY,
     HomeSettingsRoutes.NOTIFICATIONS -> HomeSettingsRoutes.ROOT
+    HomeSettingsRoutes.ALL_APPS_FOLDERS -> HomeSettingsRoutes.ALL_APPS
     else -> null
 }
 
@@ -81,6 +85,7 @@ internal fun parentRoute(route: String?): String? = when (route) {
 internal fun routeTitle(route: String): Int = when (route) {
     HomeSettingsRoutes.HOME -> R.string.home_screen
     HomeSettingsRoutes.ALL_APPS -> R.string.all_apps_drawer_settings_title
+    HomeSettingsRoutes.ALL_APPS_FOLDERS -> R.string.all_apps_folders_title
     HomeSettingsRoutes.SEARCH -> R.string.home_settings_search_title
     HomeSettingsRoutes.NOTIFICATIONS -> R.string.notifications_header
     HomeSettingsRoutes.PRIVACY -> R.string.home_settings_privacy_title
