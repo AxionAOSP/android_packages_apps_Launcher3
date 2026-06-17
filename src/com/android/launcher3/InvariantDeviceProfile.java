@@ -21,6 +21,11 @@ import static com.android.launcher3.GridType.GRID_TYPE_ANY;
 import static com.android.launcher3.GridType.GRID_TYPE_NON_ONE_GRID;
 import static com.android.launcher3.GridType.GRID_TYPE_ONE_GRID;
 import static com.android.launcher3.LauncherPrefsExt.ALLAPPS_THEMED_ICONS;
+import static com.android.launcher3.LauncherPrefsExt.ALL_APPS_DRAWER_COLUMNS;
+import static com.android.launcher3.LauncherPrefsExt.ALL_APPS_DRAWER_ICON_SCALE;
+import static com.android.launcher3.LauncherPrefsExt.ALL_APPS_DRAWER_LABEL_SCALE;
+import static com.android.launcher3.LauncherPrefsExt.ALL_APPS_DRAWER_ROW_SCALE;
+import static com.android.launcher3.LauncherPrefsExt.ALL_APPS_DRAWER_SIDE_PADDING_SCALE;
 import static com.android.launcher3.LauncherPrefs.DB_FILE;
 import static com.android.launcher3.LauncherPrefsExt.DRAWER_OPEN_KEYBOARD;
 import static com.android.launcher3.LauncherPrefsExt.ENABLE_TWOLINE_ALLAPPS_TOGGLE;
@@ -323,16 +328,29 @@ public class InvariantDeviceProfile {
             } else if (ENABLE_TWOLINE_ALLAPPS_TOGGLE.getSharedPrefKey().equals(key)
                     && enableTwoLinesInAllApps != prefs.get(ENABLE_TWOLINE_ALLAPPS_TOGGLE)) {
                 onConfigChanged();
-            } else if (ALLAPPS_THEMED_ICONS.getSharedPrefKey().equals(key) ||
-                    DRAWER_OPEN_KEYBOARD.getSharedPrefKey().equals(key) ||
-                    SHOW_DESKTOP_LABELS.getSharedPrefKey().equals(key) ||
-                    SHOW_DRAWER_LABELS.getSharedPrefKey().equals(key)) {
+            } else if (ALLAPPS_THEMED_ICONS.getSharedPrefKey().equals(key)
+                    || DRAWER_OPEN_KEYBOARD.getSharedPrefKey().equals(key)
+                    || SHOW_DESKTOP_LABELS.getSharedPrefKey().equals(key)
+                    || SHOW_DRAWER_LABELS.getSharedPrefKey().equals(key)
+                    || ALL_APPS_DRAWER_COLUMNS.getSharedPrefKey().equals(key)
+                    || ALL_APPS_DRAWER_ICON_SCALE.getSharedPrefKey().equals(key)
+                    || ALL_APPS_DRAWER_LABEL_SCALE.getSharedPrefKey().equals(key)
+                    || ALL_APPS_DRAWER_ROW_SCALE.getSharedPrefKey().equals(key)
+                    || ALL_APPS_DRAWER_SIDE_PADDING_SCALE.getSharedPrefKey().equals(key)) {
                 onConfigChanged();
             }
         };
-        prefs.addListener(prefListener, FIXED_LANDSCAPE_MODE, ENABLE_TWOLINE_ALLAPPS_TOGGLE);
+        prefs.addListener(prefListener, FIXED_LANDSCAPE_MODE, ENABLE_TWOLINE_ALLAPPS_TOGGLE,
+                ALLAPPS_THEMED_ICONS, DRAWER_OPEN_KEYBOARD, SHOW_DESKTOP_LABELS,
+                SHOW_DRAWER_LABELS, ALL_APPS_DRAWER_COLUMNS, ALL_APPS_DRAWER_ICON_SCALE,
+                ALL_APPS_DRAWER_LABEL_SCALE, ALL_APPS_DRAWER_ROW_SCALE,
+                ALL_APPS_DRAWER_SIDE_PADDING_SCALE);
         lifeCycle.addCloseable(() -> prefs.removeListener(prefListener,
-                FIXED_LANDSCAPE_MODE, ENABLE_TWOLINE_ALLAPPS_TOGGLE));
+                FIXED_LANDSCAPE_MODE, ENABLE_TWOLINE_ALLAPPS_TOGGLE, ALLAPPS_THEMED_ICONS,
+                DRAWER_OPEN_KEYBOARD, SHOW_DESKTOP_LABELS, SHOW_DRAWER_LABELS,
+                ALL_APPS_DRAWER_COLUMNS, ALL_APPS_DRAWER_ICON_SCALE,
+                ALL_APPS_DRAWER_LABEL_SCALE, ALL_APPS_DRAWER_ROW_SCALE,
+                ALL_APPS_DRAWER_SIDE_PADDING_SCALE));
 
         SimpleBroadcastReceiver localeReceiver = new SimpleBroadcastReceiver(context,
                 mMainExecutor, i -> onConfigChanged());

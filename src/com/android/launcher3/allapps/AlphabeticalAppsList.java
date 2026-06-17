@@ -117,6 +117,7 @@ public class AlphabeticalAppsList implements AllAppsStore.OnUpdateListener,
     private Predicate<ItemInfo> mItemFilter;
     private final boolean mSortSections;
     private final AxAllAppsListController mAxListController;
+    private final AxAllAppsDisplayPrefs mAllAppsDisplayPrefs;
 
     public AlphabeticalAppsList(ActivityContext activityContext, @Nullable AllAppsStore appsStore,
             WorkProfileManager workProfileManager, PrivateProfileManager privateProfileManager) {
@@ -127,7 +128,9 @@ public class AlphabeticalAppsList implements AllAppsStore.OnUpdateListener,
         mAppNameComparator = new AppInfoComparator(context);
         mWorkProviderManager = workProfileManager;
         mPrivateProviderManager = privateProfileManager;
-        mNumAppsPerRowAllApps = mActivityContext.getDeviceProfile().numShownAllAppsColumns;
+        mAllAppsDisplayPrefs = AxAllAppsDisplayPrefs.INSTANCE.get(context);
+        mNumAppsPerRowAllApps = mAllAppsDisplayPrefs.getDrawerColumns(context,
+                mActivityContext.getDeviceProfile().numShownAllAppsColumns);
         if (mAllAppsStore != null) {
             mAllAppsStore.addUpdateListener(this);
         }

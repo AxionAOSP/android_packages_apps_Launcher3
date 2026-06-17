@@ -53,6 +53,7 @@ import androidx.annotation.VisibleForTesting;
 
 import com.android.launcher3.CellLayout.ContainerType;
 import com.android.launcher3.InvariantDeviceProfile.DisplayOptionSpec;
+import com.android.launcher3.allapps.AxAllAppsDisplayPrefs;
 import com.android.launcher3.deviceprofile.AllAppsProfile;
 import com.android.launcher3.deviceprofile.BottomSheetProfile;
 import com.android.launcher3.deviceprofile.DeviceProperties;
@@ -870,6 +871,8 @@ public class DeviceProfile {
                             getAllAppsProfile().getIconTextSizePx())
             );
         }
+
+        AxAllAppsDisplayPrefs.INSTANCE.get(context).applyToDeviceProfile(context, this);
 
         updateHotseatSizes(getWorkspaceIconProfile().getIconSizePx());
 

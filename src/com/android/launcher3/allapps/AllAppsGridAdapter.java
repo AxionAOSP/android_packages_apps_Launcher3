@@ -72,9 +72,11 @@ public class AllAppsGridAdapter extends BaseAllAppsAdapter {
     public AllAppsGridAdapter(ActivityContext activityContext, LayoutInflater inflater,
             AlphabeticalAppsList apps, SearchAdapterProvider<?> adapterProvider) {
         super(activityContext, inflater, apps, adapterProvider);
-        mGridLayoutMgr = new AppsGridLayoutManager(mActivityContext.asContext());
+        Context context = activityContext.asContext();
+        mGridLayoutMgr = new AppsGridLayoutManager(context);
         mGridLayoutMgr.setSpanSizeLookup(new GridSpanSizer());
-        setAppsPerRow(activityContext.getDeviceProfile().numShownAllAppsColumns);
+        setAppsPerRow(AxAllAppsDisplayPrefs.INSTANCE.get(context).getDrawerColumns(context,
+                activityContext.getDeviceProfile().numShownAllAppsColumns));
     }
 
     /**

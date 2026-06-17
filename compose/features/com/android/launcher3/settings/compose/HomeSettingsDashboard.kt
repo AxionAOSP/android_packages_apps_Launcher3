@@ -28,6 +28,14 @@ internal fun DashboardScreen(
     PreferenceGroup {
         item {
             CategoryPreference(
+                titleRes = R.string.home_settings_general_title,
+                summaryRes = R.string.home_settings_general_summary,
+                iconRes = R.drawable.ic_home_settings_general,
+                onClick = { onNavigate(HomeSettingsRoutes.GENERAL) },
+            )
+        }
+        item {
+            CategoryPreference(
                 titleRes = R.string.home_screen,
                 summaryRes = R.string.home_settings_home_summary,
                 iconRes = R.drawable.ic_home_settings_home,
@@ -48,14 +56,6 @@ internal fun DashboardScreen(
                 summaryRes = R.string.home_settings_search_summary,
                 iconRes = R.drawable.ic_home_settings_search,
                 onClick = { onNavigate(HomeSettingsRoutes.SEARCH) },
-            )
-        }
-        item {
-            CategoryPreference(
-                titleRes = R.string.notifications_header,
-                summaryRes = R.string.home_settings_notifications_summary,
-                iconRes = R.drawable.ic_home_settings_notifications,
-                onClick = { onNavigate(HomeSettingsRoutes.NOTIFICATIONS) },
             )
         }
         item {

@@ -22,6 +22,7 @@ import com.android.launcher3.settings.SettingsActivity
 
 internal object HomeSettingsRoutes {
     const val ROOT = "root"
+    const val GENERAL = "general"
     const val HOME = "home"
     const val ALL_APPS = "all_apps"
     const val ALL_APPS_FOLDERS = "all_apps_folders"
@@ -31,10 +32,12 @@ internal object HomeSettingsRoutes {
 
     fun fromRootKey(rootKey: String?): String? = when (rootKey) {
         null -> ROOT
+        KEY_SCREEN_GENERAL -> GENERAL
         KEY_SCREEN_HOME -> HOME
         KEY_SCREEN_ALL_APPS -> ALL_APPS
         KEY_ALL_APPS_SEARCH_RESULTS -> SEARCH
         KEY_ALL_APPS_FOLDER_SETTINGS -> ALL_APPS_FOLDERS
+        KEY_ALL_APPS_DRAWER_OPTIONS -> ALL_APPS
         KEY_SCREEN_SEARCH -> SEARCH
         KEY_SCREEN_NOTIFICATIONS -> NOTIFICATIONS
         KEY_SCREEN_PRIVACY -> PRIVACY
@@ -53,6 +56,8 @@ internal object HomeSettingsRoutes {
 
     private fun fromLegacyPreferenceKey(key: String?): String? {
         return when (key) {
+            KEY_SCREEN_GENERAL,
+            KEY_ALL_APPS_DRAWER_ICON_SCALE -> GENERAL
             KEY_WORKSPACE_LOCK,
             KEY_SLEEP_GESTURE,
             KEY_ADD_ICON_TO_HOME,
@@ -61,7 +66,18 @@ internal object HomeSettingsRoutes {
             KEY_MINUS_ONE -> HOME
             KEY_SCREEN_ALL_APPS,
             KEY_ALLAPPS_THEMED_ICONS,
-            KEY_DRAWER_LABELS -> ALL_APPS
+            KEY_DRAWER_LABELS,
+            KEY_ALL_APPS_DRAWER_SETTINGS,
+            KEY_ALL_APPS_DRAWER_OPTIONS,
+            KEY_ALL_APPS_BG_OPACITY,
+            KEY_ALL_APPS_DRAWER_COLUMNS,
+            KEY_ALL_APPS_DRAWER_LABEL_SCALE,
+            KEY_ALL_APPS_DRAWER_ROW_SCALE,
+            KEY_ALL_APPS_DRAWER_SIDE_PADDING_SCALE,
+            KEY_ALL_APPS_REMEMBER_POSITION,
+            KEY_ALL_APPS_SHOW_SCROLLBAR,
+            KEY_ALL_APPS_HAPTIC_FEEDBACK,
+            KEY_ALL_APPS_PREDICTIONS -> ALL_APPS
             KEY_ALL_APPS_FOLDER_SETTINGS -> ALL_APPS_FOLDERS
             KEY_DRAWER_OPEN_KEYBOARD,
             KEY_SUGGESTIONS,
@@ -95,17 +111,19 @@ internal object HomeSettingsRoutes {
 }
 
 internal fun parentRoute(route: String?): String? = when (route) {
+    HomeSettingsRoutes.GENERAL,
     HomeSettingsRoutes.HOME,
     HomeSettingsRoutes.ALL_APPS,
     HomeSettingsRoutes.SEARCH,
-    HomeSettingsRoutes.PRIVACY,
-    HomeSettingsRoutes.NOTIFICATIONS -> HomeSettingsRoutes.ROOT
+    HomeSettingsRoutes.PRIVACY -> HomeSettingsRoutes.ROOT
+    HomeSettingsRoutes.NOTIFICATIONS -> HomeSettingsRoutes.GENERAL
     HomeSettingsRoutes.ALL_APPS_FOLDERS -> HomeSettingsRoutes.ALL_APPS
     else -> null
 }
 
 @StringRes
 internal fun routeTitle(route: String): Int = when (route) {
+    HomeSettingsRoutes.GENERAL -> R.string.home_settings_general_title
     HomeSettingsRoutes.HOME -> R.string.home_screen
     HomeSettingsRoutes.ALL_APPS -> R.string.all_apps_drawer_settings_title
     HomeSettingsRoutes.ALL_APPS_FOLDERS -> R.string.all_apps_folders_title

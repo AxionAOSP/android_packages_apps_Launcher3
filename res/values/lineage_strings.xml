@@ -19,16 +19,20 @@
 
     <!-- Settings -->
 
+    <string name="home_settings_general_title">General</string>
     <string name="home_settings_search_title">Search</string>
     <string name="home_settings_privacy_title">Privacy</string>
+    <string name="home_settings_general_summary">Icon sizes and notification dots</string>
     <string name="home_settings_home_summary">Labels, gestures, and behavior</string>
-    <string name="home_settings_all_apps_summary">Folders, labels, icons, and behavior</string>
+    <string name="home_settings_all_apps_summary">Grid, folders, behavior, and appearance</string>
     <string name="home_settings_search_summary">App drawer results and suggestions</string>
     <string name="home_settings_notifications_summary">Notification dots and badges</string>
     <string name="home_settings_privacy_summary">Hidden and protected app access</string>
+    <string name="home_settings_icons_category">Icons</string>
     <string name="home_settings_labels_category">Labels</string>
     <string name="home_settings_gestures_category">Gestures</string>
     <string name="home_settings_behavior_category">Behavior</string>
+    <string name="home_settings_notifications_category">Notifications</string>
 
     <!-- Edit workspace -->
     <string name="settings_lock_layout_title">Lock layout</string>
@@ -54,6 +58,8 @@
     <string name="desktop_show_labels">Show icon labels on desktop</string>
     <string name="drawer_show_labels">Show icon labels in drawer</string>
     <string name="all_apps_drawer_settings_title">All apps drawer</string>
+    <string name="all_apps_drawer_settings_summary">Layout, folders, labels, icons, and background opacity</string>
+    <string name="all_apps_drawer_behavior_category">Behavior</string>
     <string name="all_apps_drawer_layout_category">Layout</string>
     <string name="all_apps_drawer_appearance_category">Appearance</string>
     <string name="pin_to_drawer">Pin to drawer</string>
@@ -146,9 +152,26 @@
     <string name="search_results_max_external_title">Maximum results per source</string>
     <string name="home_settings_count_value">%1$d</string>
     <string name="home_settings_ms_value">%1$d ms</string>
+    <string name="drawer_opacity_title">Drawer background opacity</string>
+    <string name="all_apps_drawer_grid_category">Grid</string>
     <string name="all_apps_drawer_labels_category">Labels</string>
+    <string name="all_apps_drawer_advanced_category">Advanced</string>
+    <string name="drawer_columns_title">Columns</string>
+    <string name="drawer_row_height_title">Row height</string>
+    <string name="drawer_side_padding_title">Side padding</string>
+    <string name="drawer_icon_size_title">Icon size</string>
+    <string name="drawer_label_size_title">Label size</string>
     <string name="drawer_two_line_labels_title">Two-line labels</string>
     <string name="drawer_two_line_labels_summary">Allow app names to wrap onto a second line</string>
+    <string name="drawer_remember_position_title">Remember drawer position</string>
+    <string name="drawer_remember_position_summary">Keep the app drawer scroll position between visits</string>
+    <string name="drawer_show_scrollbar_title">Show fast scrollbar</string>
+    <string name="drawer_show_scrollbar_summary">Show the alphabet scrollbar while browsing apps</string>
+    <string name="drawer_haptic_feedback_title">Opening haptics</string>
+    <string name="drawer_haptic_feedback_summary">Vibrate when opening the app drawer</string>
+    <string name="drawer_predictions_title">App suggestions</string>
+    <string name="drawer_predictions_summary">Show predicted apps at the top of the app drawer</string>
+    <string name="home_settings_percent_value">%1$d%%</string>
 
     <!-- Open keyboard -->
     <string name="drawer_open_keyboard_title">Swipe to start search</string>

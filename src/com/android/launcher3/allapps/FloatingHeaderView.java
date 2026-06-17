@@ -382,6 +382,10 @@ public class FloatingHeaderView extends LinearLayout implements
     }
 
     public void reset(boolean animate) {
+        reset(animate, true);
+    }
+
+    public void reset(boolean animate, boolean scrollToTop) {
         if (mAnimator.isStarted()) {
             mAnimator.cancel();
         }
@@ -396,7 +400,9 @@ public class FloatingHeaderView extends LinearLayout implements
         }
         mHeaderCollapsed = false;
         mSnappedScrolledY = -mMaxTranslation;
-        mCurrentRV.scrollToTop();
+        if (scrollToTop) {
+            mCurrentRV.scrollToTop();
+        }
     }
 
     public boolean isExpanded() {
