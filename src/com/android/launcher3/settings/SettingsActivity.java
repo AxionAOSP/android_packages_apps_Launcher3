@@ -62,6 +62,7 @@ import com.android.launcher3.LauncherFiles;
 import com.android.launcher3.R;
 import com.android.launcher3.lineage.LineageUtils;
 import com.android.launcher3.lineage.trust.TrustAppsActivity;
+import com.android.launcher3.settings.compose.HomeSettingsComposeBridge;
 import com.android.launcher3.states.RotationHelper;
 import com.android.launcher3.util.DisplayController;
 import com.android.launcher3.util.SettingsCache;
@@ -97,10 +98,23 @@ public class SettingsActivity extends FragmentActivity
 
     private static final String KEY_SUGGESTIONS = "pref_suggestions";
     private static final String SUGGESTIONS_PACKAGE = "com.google.android.as";
+    private static final String KEY_DASHBOARD_HOME = "pref_home_settings_home";
+    private static final String KEY_DASHBOARD_ALL_APPS = "pref_home_settings_all_apps";
+    private static final String KEY_DASHBOARD_SEARCH = "pref_home_settings_search";
+    private static final String KEY_DASHBOARD_NOTIFICATIONS = "pref_home_settings_notifications";
+    private static final String KEY_DASHBOARD_PRIVACY = "pref_home_settings_privacy";
+    private static final String KEY_SCREEN_HOME = "settings_screen_home";
+    private static final String KEY_SCREEN_ALL_APPS = "settings_screen_all_apps";
+    private static final String KEY_SCREEN_SEARCH = "settings_screen_search";
+    private static final String KEY_SCREEN_NOTIFICATIONS = "settings_screen_notifications";
+    private static final String KEY_SCREEN_PRIVACY = "settings_screen_privacy";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        if (HomeSettingsComposeBridge.show(this)) {
+            return;
+        }
         setContentView(R.layout.settings_activity);
 
         setActionBar(findViewById(R.id.action_bar));
@@ -225,12 +239,7 @@ public class SettingsActivity extends FragmentActivity
             setPreferencesFromResource(R.xml.launcher_preferences, rootKey);
 
             PreferenceScreen screen = getPreferenceScreen();
-            for (int i = screen.getPreferenceCount() - 1; i >= 0; i--) {
-                Preference preference = screen.getPreference(i);
-                if (!initPreference(preference)) {
-                    screen.removePreference(preference);
-                }
-            }
+            initPreferenceGroup(screen);
 
             // If the target preference is not in the current preference screen, find the parent
             // preference screen that contains the target preference and set it as the preference
@@ -259,6 +268,11 @@ public class SettingsActivity extends FragmentActivity
                 if (pref.getKey() != null && pref.getKey().equals(targetKey)) {
                     return true;
                 }
+                if (pref instanceof PreferenceGroup
+                        && !(pref instanceof PreferenceScreen)
+                        && isKeyInPreferenceGroup(targetKey, (PreferenceGroup) pref)) {
+                    return true;
+                }
             }
             return false;
         }
@@ -275,16 +289,38 @@ public class SettingsActivity extends FragmentActivity
             for (int i = 0; i < parent.getPreferenceCount(); i++) {
                 Preference pref = parent.getPreference(i);
                 if (pref instanceof PreferenceScreen) {
-                    PreferenceScreen foundKey = findParentPreference((PreferenceScreen) pref,
-                            targetKey);
+                    PreferenceScreen screen = (PreferenceScreen) pref;
+                    if (isKeyInPreferenceGroup(targetKey, screen)) {
+                        return screen;
+                    }
+                    PreferenceScreen foundKey = findParentPreference(screen, targetKey);
                     if (foundKey != null) {
                         return foundKey;
                     }
                 } else if (pref.getKey() != null && pref.getKey().equals(targetKey)) {
                     return parent;
+                } else if (pref instanceof PreferenceGroup
+                        && !(pref instanceof PreferenceScreen)
+                        && isKeyInPreferenceGroup(targetKey, (PreferenceGroup) pref)) {
+                    return parent;
                 }
             }
             return null;
+        }
+
+        private void initPreferenceGroup(PreferenceGroup group) {
+            for (int i = group.getPreferenceCount() - 1; i >= 0; i--) {
+                Preference preference = group.getPreference(i);
+                boolean keep = initPreference(preference);
+                if (keep && preference instanceof PreferenceGroup) {
+                    PreferenceGroup childGroup = (PreferenceGroup) preference;
+                    initPreferenceGroup(childGroup);
+                    keep = childGroup.getPreferenceCount() > 0;
+                }
+                if (!keep) {
+                    group.removePreference(preference);
+                }
+            }
         }
 
         @Override
@@ -316,6 +352,9 @@ public class SettingsActivity extends FragmentActivity
          * will remove that preference from the list.
          */
         protected boolean initPreference(Preference preference) {
+            if (preference.getKey() == null) {
+                return true;
+            }
             DisplayController.Info info = DisplayController.INSTANCE.get(getContext()).getInfo();
             LauncherApps launcherApps = getContext().getSystemService(LauncherApps.class);
             switch (preference.getKey()) {
@@ -363,6 +402,30 @@ public class SettingsActivity extends FragmentActivity
                 case KEY_MINUS_ONE:
                     return launcherApps != null &&
                             launcherApps.isPackageEnabled(SEARCH_PACKAGE, myUserHandle());
+                case KEY_DASHBOARD_HOME:
+                    bindSettingsScreenPreference(preference, KEY_SCREEN_HOME);
+                    return true;
+                case KEY_DASHBOARD_ALL_APPS:
+                    bindSettingsScreenPreference(preference, KEY_SCREEN_ALL_APPS);
+                    return true;
+                case KEY_DASHBOARD_SEARCH:
+                    if (launcherApps == null
+                            || (!launcherApps.isPackageEnabled(SEARCH_PACKAGE, myUserHandle())
+                                    && !launcherApps.isPackageEnabled(
+                                            SUGGESTIONS_PACKAGE, myUserHandle()))) {
+                        return false;
+                    }
+                    bindSettingsScreenPreference(preference, KEY_SCREEN_SEARCH);
+                    return true;
+                case KEY_DASHBOARD_NOTIFICATIONS:
+                    if (!BuildConfig.NOTIFICATION_DOTS_ENABLED) {
+                        return false;
+                    }
+                    bindSettingsScreenPreference(preference, KEY_SCREEN_NOTIFICATIONS);
+                    return true;
+                case KEY_DASHBOARD_PRIVACY:
+                    bindSettingsScreenPreference(preference, KEY_SCREEN_PRIVACY);
+                    return true;
                 case KEY_TRUST_APPS:
                     preference.setOnPreferenceClickListener(p -> {
                         LineageUtils.showLockScreen(getActivity(),
@@ -378,6 +441,18 @@ public class SettingsActivity extends FragmentActivity
                             launcherApps.isPackageEnabled(SUGGESTIONS_PACKAGE, myUserHandle());
             }
             return true;
+        }
+
+        private void bindSettingsScreenPreference(Preference preference, String rootKey) {
+            preference.setOnPreferenceClickListener(p -> {
+                startSettingsScreen(rootKey);
+                return true;
+            });
+        }
+
+        private void startSettingsScreen(String rootKey) {
+            startActivity(new Intent(getActivity(), SettingsActivity.class)
+                    .putExtra(EXTRA_FRAGMENT_ROOT_KEY, rootKey));
         }
 
         @Override

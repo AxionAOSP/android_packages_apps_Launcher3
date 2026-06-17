@@ -242,8 +242,14 @@ launcher_compose_java_defaults {
             static_libs: [
                 "widget_picker_component",
                 // Compose dependencies
+                "androidx.activity_activity-compose",
+                "androidx.compose.animation_animation-core",
+                "androidx.compose.foundation_foundation",
+                "androidx.compose.foundation_foundation-layout",
                 "androidx.compose.runtime_runtime",
+                "androidx.compose.runtime_runtime-saveable",
                 "androidx.compose.material3_material3",
+                "androidx.compose.ui_ui",
                 "androidx.compose.ui_ui-tooling-preview",
                 "androidx.compose.ui_ui-tooling",
             ],
@@ -323,6 +329,11 @@ quickstep_compose_java_defaults {
                 "androidx.compose.ui_ui-tooling-preview",
                 "androidx.compose.ui_ui-tooling",
                 "PlatformComposeCore",
+                "androidx.compose.ui_ui",
+                "androidx.compose.foundation_foundation",
+                "androidx.compose.foundation_foundation-layout",
+                "androidx.compose.animation_animation",
+                "androidx.compose.material_material-icons-core",
             ],
 
             // By default, Compose is disabled and we compile the ComposeFacade

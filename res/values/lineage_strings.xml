@@ -19,6 +19,17 @@
 
     <!-- Settings -->
 
+    <string name="home_settings_search_title">Search</string>
+    <string name="home_settings_privacy_title">Privacy</string>
+    <string name="home_settings_home_summary">Labels, gestures, and behavior</string>
+    <string name="home_settings_all_apps_summary">Labels, icons, and behavior</string>
+    <string name="home_settings_search_summary">App drawer behavior and suggestions</string>
+    <string name="home_settings_notifications_summary">Notification dots and badges</string>
+    <string name="home_settings_privacy_summary">Hidden and protected app access</string>
+    <string name="home_settings_labels_category">Labels</string>
+    <string name="home_settings_gestures_category">Gestures</string>
+    <string name="home_settings_behavior_category">Behavior</string>
+
     <!-- Edit workspace -->
     <string name="settings_lock_layout_title">Lock layout</string>
     <string name="settings_lock_layout_summary_on">Icons and widgets can\'t be added, removed and moved on the homescreen</string>
@@ -42,6 +53,13 @@
     <!-- Hide labels -->
     <string name="desktop_show_labels">Show icon labels on desktop</string>
     <string name="drawer_show_labels">Show icon labels in drawer</string>
+    <string name="all_apps_drawer_settings_title">All apps drawer</string>
+    <string name="all_apps_drawer_appearance_category">Appearance</string>
+    <string name="search_app_drawer_category">App drawer search</string>
+    <string name="home_settings_suggestions_category">Suggestions</string>
+    <string name="all_apps_drawer_labels_category">Labels</string>
+    <string name="drawer_two_line_labels_title">Two-line labels</string>
+    <string name="drawer_two_line_labels_summary">Allow app names to wrap onto a second line</string>
 
     <!-- Open keyboard -->
     <string name="drawer_open_keyboard_title">Swipe to start search</string>
