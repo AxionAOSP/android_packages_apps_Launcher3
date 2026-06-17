@@ -117,7 +117,7 @@ public abstract class BaseDragLayer<T extends Context & ActivityContext>
     private final MultiValueAlpha mMultiValueAlpha;
 
     // All the touch controllers for the view
-    protected TouchController[] mControllers;
+    protected TouchController[] mControllers = new TouchController[0];
     // Touch controller which is currently active for the normal view dispatch
     protected TouchController mActiveController;
     // Touch controller which is being used for the proxy events

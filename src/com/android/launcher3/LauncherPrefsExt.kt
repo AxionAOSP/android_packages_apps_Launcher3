@@ -20,6 +20,14 @@ import com.android.launcher3.LauncherPrefs.Companion.backedUpItem
 object LauncherPrefsExt {
     @JvmField
     val ENABLE_TWOLINE_ALLAPPS_TOGGLE = backedUpItem("pref_enable_two_line_toggle", false)
+    @JvmField val ENABLE_MINUS_ONE =
+        backedUpItem("pref_enable_minus_one", true, EncryptionType.SECURE_SETTINGS)
+    @JvmField val ADD_ICON_TO_HOME =
+        backedUpItem(
+            SessionCommitReceiver.ADD_ICON_PREFERENCE_KEY,
+            true,
+            EncryptionType.SECURE_SETTINGS,
+        )
     @JvmField val WORKSPACE_LOCK =
         backedUpItem("pref_workspace_lock", false, EncryptionType.SECURE_SETTINGS)
     @JvmField val ALLAPPS_THEMED_ICONS =

@@ -18,6 +18,7 @@
     android:id="@+id/content_parent"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="?android:attr/colorBackground"
     android:orientation="vertical"
     android:fitsSystemWindows="true">
 
@@ -26,10 +27,12 @@
         style="?android:attr/actionBarStyle"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:background="?android:attr/colorBackground"
         android:theme="?android:attr/actionBarTheme" />
 
     <FrameLayout
         android:id="@+id/content_frame"
         android:layout_width="match_parent"
-        android:layout_height="match_parent" />
+        android:layout_height="match_parent"
+        android:background="?android:attr/colorBackground" />
 </LinearLayout>

@@ -18,96 +18,171 @@
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:launcher="http://schemas.android.com/apk/res-auto">
 
-    <SwitchPreferenceCompat
-        android:defaultValue="false"
-        android:key="pref_workspace_lock"
-        android:persistent="true"
-        android:title="@string/settings_lock_layout_title"
-        android:summaryOn="@string/settings_lock_layout_summary_on"
-        android:summaryOff="@string/settings_lock_layout_summary_off" />
-
-    <SwitchPreferenceCompat
-        android:defaultValue="false"
-        android:key="pref_sleep_gesture"
-        android:persistent="true"
-        android:title="@string/pref_sleep_gesture_title"
-        android:summary="@string/pref_sleep_gesture_summary" />
-
-    <com.android.launcher3.settings.NotificationDotsPreference
-        android:key="pref_icon_badging"
-        android:title="@string/notification_dots_title"
+    <com.android.axion.preference.AxPreference
+        android:key="pref_home_settings_home"
+        android:icon="@drawable/ic_home_settings_home"
         android:persistent="false"
-        android:widgetLayout="@layout/notification_pref_warning" />
+        android:summary="@string/home_settings_home_summary"
+        android:title="@string/home_screen" />
 
-    <!--
-      LAUNCHER_ADD_NEW_APPS_TO_HOME_SCREEN_ENABLED(613)
-      LAUNCHER_ADD_NEW_APPS_TO_HOME_SCREEN_DISABLED(614)
-    -->
-    <SwitchPreferenceCompat
-        android:key="pref_add_icon_to_home"
-        android:title="@string/auto_add_shortcuts_label"
-        android:summary="@string/auto_add_shortcuts_description"
-        android:defaultValue="true"
-        android:persistent="true"
-        launcher:logIdOn="613"
-        launcher:logIdOff="614" />
+    <com.android.axion.preference.AxPreference
+        android:key="pref_home_settings_all_apps"
+        android:icon="@drawable/ic_home_settings_all_apps"
+        android:persistent="false"
+        android:summary="@string/home_settings_all_apps_summary"
+        android:title="@string/all_apps_label" />
 
-    <!--
-      LAUNCHER_HOME_SCREEN_ROTATION_ENABLED(615)
-      LAUNCHER_HOME_SCREEN_ROTATION_DISABLED(616)
-    -->
-    <SwitchPreferenceCompat
-        android:key="pref_allowRotation"
-        android:title="@string/allow_rotation_title"
-        android:summary="@string/allow_rotation_desc"
-        android:defaultValue="@bool/config_allowRotation"
-        android:persistent="true"
-        launcher:logIdOn="615"
-        launcher:logIdOff="616" />
+    <com.android.axion.preference.AxPreference
+        android:key="pref_home_settings_search"
+        android:icon="@drawable/ic_home_settings_search"
+        android:persistent="false"
+        android:summary="@string/home_settings_search_summary"
+        android:title="@string/home_settings_search_title" />
 
-    <SwitchPreferenceCompat
-        android:defaultValue="true"
-        android:key="pref_enable_minus_one"
-        android:summary="@string/pref_show_google_now_summary"
-        android:title="@string/title_show_google_app" />
+    <com.android.axion.preference.AxPreference
+        android:key="pref_home_settings_notifications"
+        android:icon="@drawable/ic_home_settings_notifications"
+        android:persistent="false"
+        android:summary="@string/home_settings_notifications_summary"
+        android:title="@string/notifications_header" />
 
-    <Preference
-        android:key="pref_trust_apps"
-        android:title="@string/trust_apps_manager_name" />
+    <com.android.axion.preference.AxPreference
+        android:key="pref_home_settings_privacy"
+        android:icon="@drawable/ic_home_settings_privacy"
+        android:persistent="false"
+        android:summary="@string/home_settings_privacy_summary"
+        android:title="@string/home_settings_privacy_title" />
 
-    <androidx.preference.PreferenceScreen
-        android:key="pref_suggestions"
-        android:title="@string/pref_suggestions_title"
-        android:summary="@string/pref_suggestions_summary"
-        android:persistent="false">
+    <PreferenceScreen
+        android:key="settings_screen_home"
+        android:icon="@drawable/ic_home_settings_home"
+        android:summary="@string/home_settings_home_summary"
+        android:title="@string/home_screen"
+        launcher:isPreferenceVisible="false">
 
-        <intent android:action="android.settings.ACTION_CONTENT_SUGGESTIONS_SETTINGS" />
-    </androidx.preference.PreferenceScreen>
+        <com.android.axion.preference.AxSwitchPreference
+            android:defaultValue="false"
+            android:key="pref_workspace_lock"
+            android:persistent="true"
+            android:title="@string/settings_lock_layout_title"
+            android:summaryOn="@string/settings_lock_layout_summary_on"
+            android:summaryOff="@string/settings_lock_layout_summary_off" />
 
-    <SwitchPreferenceCompat
-        android:key="pref_drawer_open_keyboard"
-        android:title="@string/drawer_open_keyboard_title"
-        android:summary="@string/drawer_open_keyboard_summary"
-        android:defaultValue="false"
-        android:persistent="true" />
+        <com.android.axion.preference.AxSwitchPreference
+            android:defaultValue="false"
+            android:key="pref_sleep_gesture"
+            android:persistent="true"
+            android:title="@string/pref_sleep_gesture_title"
+            android:summary="@string/pref_sleep_gesture_summary" />
 
-    <SwitchPreferenceCompat
-        android:key="pref_allapps_themed_icons"
-        android:title="@string/pref_themed_icons_title"
-        android:summary="@string/pref_themed_icons_summary"
-        android:defaultValue="false"
-        android:persistent="true" />
+        <!--
+          LAUNCHER_ADD_NEW_APPS_TO_HOME_SCREEN_ENABLED(613)
+          LAUNCHER_ADD_NEW_APPS_TO_HOME_SCREEN_DISABLED(614)
+        -->
+        <com.android.axion.preference.AxSwitchPreference
+            android:key="pref_add_icon_to_home"
+            android:title="@string/auto_add_shortcuts_label"
+            android:summary="@string/auto_add_shortcuts_description"
+            android:defaultValue="true"
+            android:persistent="true"
+            launcher:logIdOn="613"
+            launcher:logIdOff="614" />
 
-    <SwitchPreferenceCompat
-        android:key="pref_desktop_show_labels"
-        android:title="@string/desktop_show_labels"
-        android:defaultValue="true"
-        android:persistent="true" />
+        <!--
+          LAUNCHER_HOME_SCREEN_ROTATION_ENABLED(615)
+          LAUNCHER_HOME_SCREEN_ROTATION_DISABLED(616)
+        -->
+        <com.android.axion.preference.AxSwitchPreference
+            android:key="pref_allowRotation"
+            android:title="@string/allow_rotation_title"
+            android:summary="@string/allow_rotation_desc"
+            android:defaultValue="@bool/config_allowRotation"
+            android:persistent="true"
+            launcher:logIdOn="615"
+            launcher:logIdOff="616" />
 
-    <SwitchPreferenceCompat
-        android:key="pref_drawer_show_labels"
-        android:title="@string/drawer_show_labels"
-        android:defaultValue="true"
-        android:persistent="true" />
+        <com.android.axion.preference.AxSwitchPreference
+            android:key="pref_desktop_show_labels"
+            android:title="@string/desktop_show_labels"
+            android:defaultValue="true"
+            android:persistent="true" />
+    </PreferenceScreen>
+
+    <PreferenceScreen
+        android:key="settings_screen_all_apps"
+        android:icon="@drawable/ic_home_settings_all_apps"
+        android:summary="@string/home_settings_all_apps_summary"
+        android:title="@string/all_apps_label"
+        launcher:isPreferenceVisible="false">
+
+        <SwitchPreferenceCompat
+            android:key="pref_drawer_open_keyboard"
+            android:title="@string/drawer_open_keyboard_title"
+            android:summary="@string/drawer_open_keyboard_summary"
+            android:defaultValue="false"
+            android:persistent="true" />
+
+        <com.android.axion.preference.AxSwitchPreference
+            android:key="pref_allapps_themed_icons"
+            android:title="@string/pref_themed_icons_title"
+            android:summary="@string/pref_themed_icons_summary"
+            android:defaultValue="false"
+            android:persistent="true" />
+
+        <com.android.axion.preference.AxSwitchPreference
+            android:key="pref_drawer_show_labels"
+            android:title="@string/drawer_show_labels"
+            android:defaultValue="true"
+            android:persistent="true" />
+    </PreferenceScreen>
+
+    <PreferenceScreen
+        android:key="settings_screen_search"
+        android:icon="@drawable/ic_home_settings_search"
+        android:summary="@string/home_settings_search_summary"
+        android:title="@string/home_settings_search_title"
+        launcher:isPreferenceVisible="false">
+
+        <com.android.axion.preference.AxSwitchPreference
+            android:defaultValue="true"
+            android:key="pref_enable_minus_one"
+            android:summary="@string/pref_show_google_now_summary"
+            android:title="@string/title_show_google_app" />
+
+        <com.android.axion.preference.AxPreference
+            android:key="pref_suggestions"
+            android:title="@string/pref_suggestions_title"
+            android:summary="@string/pref_suggestions_summary"
+            android:persistent="false">
+
+            <intent android:action="android.settings.ACTION_CONTENT_SUGGESTIONS_SETTINGS" />
+        </com.android.axion.preference.AxPreference>
+    </PreferenceScreen>
+
+    <PreferenceScreen
+        android:key="settings_screen_notifications"
+        android:icon="@drawable/ic_home_settings_notifications"
+        android:summary="@string/home_settings_notifications_summary"
+        android:title="@string/notifications_header"
+        launcher:isPreferenceVisible="false">
+
+        <com.android.launcher3.settings.NotificationDotsPreference
+            android:key="pref_icon_badging"
+            android:title="@string/notification_dots_title"
+            android:persistent="false"
+            android:widgetLayout="@layout/notification_pref_warning" />
+    </PreferenceScreen>
+
+    <PreferenceScreen
+        android:key="settings_screen_privacy"
+        android:icon="@drawable/ic_home_settings_privacy"
+        android:summary="@string/home_settings_privacy_summary"
+        android:title="@string/home_settings_privacy_title"
+        launcher:isPreferenceVisible="false">
+
+        <com.android.axion.preference.AxPreference
+            android:key="pref_trust_apps"
+            android:title="@string/trust_apps_manager_name" />
+    </PreferenceScreen>
 
 </androidx.preference.PreferenceScreen>
