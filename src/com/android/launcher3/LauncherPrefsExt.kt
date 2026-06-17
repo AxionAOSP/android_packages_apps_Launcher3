@@ -15,8 +15,10 @@
  */
 package com.android.launcher3
 
+import android.content.Context
 import com.android.launcher3.LauncherPrefs.Companion.backedUpItem
 import com.android.launcher3.LauncherPrefs.Companion.nonRestorableItem
+import kotlin.math.roundToInt
 
 object LauncherPrefsExt {
     @JvmField
@@ -39,6 +41,42 @@ object LauncherPrefsExt {
         backedUpItem("pref_desktop_show_labels", true, EncryptionType.SECURE_SETTINGS)
     @JvmField val SHOW_DRAWER_LABELS =
         backedUpItem("pref_drawer_show_labels", true, EncryptionType.SECURE_SETTINGS)
+    @JvmField val ALL_APPS_DRAWER_COLUMNS =
+        backedUpItem("pref_all_apps_drawer_columns", 0, EncryptionType.SECURE_SETTINGS)
+    @JvmField val ALL_APPS_DRAWER_ICON_SCALE =
+        backedUpItem(
+            "pref_all_apps_drawer_icon_scale",
+            100,
+            EncryptionType.SECURE_SETTINGS,
+        )
+    @JvmField val ALL_APPS_DRAWER_LABEL_SCALE =
+        backedUpItem(
+            "pref_all_apps_drawer_label_scale",
+            100,
+            EncryptionType.SECURE_SETTINGS,
+        )
+    @JvmField val ALL_APPS_DRAWER_ROW_SCALE =
+        backedUpItem(
+            "pref_all_apps_drawer_row_scale",
+            100,
+            EncryptionType.SECURE_SETTINGS,
+        )
+    @JvmField val ALL_APPS_DRAWER_SIDE_PADDING_SCALE =
+        backedUpItem(
+            "pref_all_apps_drawer_side_padding_scale",
+            100,
+            EncryptionType.SECURE_SETTINGS,
+        )
+    @JvmField val ALL_APPS_REMEMBER_POSITION =
+        backedUpItem(
+            "pref_all_apps_remember_position",
+            false,
+            EncryptionType.SECURE_SETTINGS,
+        )
+    @JvmField val ALL_APPS_SHOW_SCROLLBAR =
+        backedUpItem("pref_all_apps_show_scrollbar", true, EncryptionType.SECURE_SETTINGS)
+    @JvmField val ALL_APPS_HAPTIC_FEEDBACK =
+        backedUpItem("pref_all_apps_haptic_feedback", true, EncryptionType.SECURE_SETTINGS)
     @JvmField val PINNED_APPS =
         backedUpItem(
             "pref_all_apps_pinned_apps",
@@ -141,6 +179,36 @@ object LauncherPrefsExt {
             "[]",
             EncryptionType.SECURE_SETTINGS,
         )
+    const val ALL_APPS_DEFAULT_BG_OPACITY = 80
+    @JvmField val ALL_APPS_BG_OPACITY =
+        backedUpItem(
+            "pref_all_apps_bg_opacity",
+            ALL_APPS_DEFAULT_BG_OPACITY,
+            EncryptionType.SECURE_SETTINGS,
+        )
+    @JvmField val SHOW_ALLAPPS_PREDICTIONS =
+        backedUpItem("pref_all_apps_predictions", true, EncryptionType.SECURE_SETTINGS)
     @JvmField val SLEEP_GESTURE =
         backedUpItem("pref_sleep_gesture", false, EncryptionType.SECURE_SETTINGS)
+    @JvmStatic
+    fun allAppsBackgroundAlpha(context: Context): Int {
+        val opacity = allAppsOpacityPercent(context)
+        return Utilities.boundToRange((opacity * 255f / 100f).roundToInt(), 0, 255)
+    }
+
+    @JvmStatic
+    fun allAppsOpacityPercent(context: Context): Int {
+        val opacity = ALL_APPS_BG_OPACITY.get(context)
+        if (opacity > 100) {
+            val normalized = Utilities.boundToRange(
+                (opacity * 100f / 255f).roundToInt(),
+                0,
+                100,
+            )
+            LauncherPrefs.get(context).put(ALL_APPS_BG_OPACITY, normalized)
+            return normalized
+        }
+        return Utilities.boundToRange(opacity, 0, 100)
+    }
+
 }

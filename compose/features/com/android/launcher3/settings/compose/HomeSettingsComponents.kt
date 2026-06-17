@@ -56,7 +56,26 @@ import com.android.launcher3.EncryptionType
 import com.android.launcher3.Item
 import com.android.launcher3.LauncherPrefChangeListener
 import com.android.launcher3.LauncherPrefs
+import com.android.launcher3.R
 import kotlin.math.roundToInt
+
+@Composable
+internal fun PercentSliderPreference(
+    item: ConstantItem<Int>,
+    @StringRes titleRes: Int,
+    min: Int = 50,
+    max: Int = 150,
+) {
+    IntSliderPreference(
+        item = item,
+        titleRes = titleRes,
+        min = min,
+        max = max,
+        defaultValue = 100,
+        interval = 5,
+        valueLabel = { stringResource(R.string.home_settings_percent_value, it) },
+    )
+}
 
 @Composable
 internal fun IntSliderPreference(
@@ -71,6 +90,31 @@ internal fun IntSliderPreference(
     valueLabel: @Composable (Int) -> String,
 ) {
     val preference = rememberLauncherPreference(item)
+    IntSliderPreference(
+        preference = preference,
+        titleRes = titleRes,
+        min = min,
+        max = max,
+        defaultValue = defaultValue,
+        interval = interval,
+        resetValue = resetValue,
+        valueOverride = valueOverride,
+        valueLabel = valueLabel,
+    )
+}
+
+@Composable
+internal fun IntSliderPreference(
+    preference: PreferenceState<Int>,
+    @StringRes titleRes: Int,
+    min: Int,
+    max: Int,
+    defaultValue: Int,
+    interval: Int = 1,
+    resetValue: Int = defaultValue,
+    valueOverride: (Int) -> Int = { it },
+    valueLabel: @Composable (Int) -> String,
+) {
     val value = valueOverride(preference.value).coerceIn(min, max)
     SliderPreference(
         title = stringResource(titleRes),

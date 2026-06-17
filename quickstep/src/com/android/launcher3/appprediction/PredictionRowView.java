@@ -18,6 +18,8 @@ package com.android.launcher3.appprediction;
 
 import static android.os.Build.VERSION_CODES.UPSIDE_DOWN_CAKE;
 
+import static com.android.launcher3.LauncherPrefsExt.SHOW_ALLAPPS_PREDICTIONS;
+
 import android.content.Context;
 import android.graphics.Canvas;
 import android.os.Build;
@@ -35,6 +37,8 @@ import com.android.launcher3.BubbleTextView;
 import com.android.launcher3.DeviceProfile;
 import com.android.launcher3.DeviceProfile.OnDeviceProfileChangeListener;
 import com.android.launcher3.Flags;
+import com.android.launcher3.LauncherPrefChangeListener;
+import com.android.launcher3.LauncherPrefs;
 import com.android.launcher3.R;
 import com.android.launcher3.Utilities;
 import com.android.launcher3.allapps.FloatingHeaderRow;
@@ -65,6 +69,8 @@ public class PredictionRowView<T extends Context & ActivityContext>
 
     // Helper to drawing the focus indicator.
     private final FocusIndicatorHelper mFocusHelper;
+    private final LauncherPrefChangeListener mPreferenceChangeListener =
+            key -> updatePredictionsEnabledPref();
 
     // The set of predicted apps resolved from the component names and the current set of apps
     private final List<WorkspaceItemInfo> mPredictedApps = new ArrayList<>();
@@ -72,6 +78,7 @@ public class PredictionRowView<T extends Context & ActivityContext>
     private FloatingHeaderView mParent;
 
     private boolean mPredictionsEnabled = false;
+    private boolean mPredictionsAllowed;
 
     private boolean mPredictionUiUpdatePaused = false;
 
@@ -90,6 +97,7 @@ public class PredictionRowView<T extends Context & ActivityContext>
                 R.dimen.all_apps_search_top_row_extra_height);
         mVerticalPadding = getResources().getDimensionPixelSize(
                 R.dimen.all_apps_predicted_icon_vertical_padding);
+        mPredictionsAllowed = LauncherPrefs.get(context).get(SHOW_ALLAPPS_PREDICTIONS);
         updateVisibility();
     }
 
@@ -105,12 +113,16 @@ public class PredictionRowView<T extends Context & ActivityContext>
     protected void onAttachedToWindow() {
         super.onAttachedToWindow();
         mActivityContext.addOnDeviceProfileChangeListener(this);
+        LauncherPrefs.get(getContext()).addListener(mPreferenceChangeListener,
+                SHOW_ALLAPPS_PREDICTIONS);
     }
 
     @Override
     protected void onDetachedFromWindow() {
         super.onDetachedFromWindow();
         mActivityContext.removeOnDeviceProfileChangeListener(this);
+        LauncherPrefs.get(getContext()).removeListener(mPreferenceChangeListener,
+                SHOW_ALLAPPS_PREDICTIONS);
     }
 
     public void setup(FloatingHeaderView parent, FloatingHeaderRow[] rows, boolean tabsHidden) {
@@ -118,8 +130,9 @@ public class PredictionRowView<T extends Context & ActivityContext>
     }
 
     private void updateVisibility() {
-        setVisibility(mPredictionsEnabled ? VISIBLE : GONE);
-        if (mPredictionsEnabled) {
+        boolean visible = mPredictionsEnabled && mPredictionsAllowed;
+        setVisibility(visible ? VISIBLE : GONE);
+        if (visible) {
             mActivityContext.getActivityComponent().getAppsStore().registerIconContainer(this);
         } else {
             mActivityContext.getActivityComponent().getAppsStore().unregisterIconContainer(this);
@@ -161,7 +174,7 @@ public class PredictionRowView<T extends Context & ActivityContext>
 
     @Override
     public boolean hasVisibleContent() {
-        return mPredictionsEnabled;
+        return mPredictionsEnabled && mPredictionsAllowed;
     }
 
     @Override
@@ -269,6 +282,14 @@ public class PredictionRowView<T extends Context & ActivityContext>
             updateVisibility();
         }
         mParent.onHeightUpdated();
+    }
+
+    private void updatePredictionsEnabledPref() {
+        mPredictionsAllowed = LauncherPrefs.get(getContext()).get(SHOW_ALLAPPS_PREDICTIONS);
+        updateVisibility();
+        if (mParent != null) {
+            mParent.onHeightUpdated();
+        }
     }
 
     @Override

@@ -32,8 +32,9 @@ import android.util.AttributeSet;
 import android.view.View;
 
 import androidx.fragment.app.DialogFragment;
-import androidx.preference.Preference;
 import androidx.preference.PreferenceViewHolder;
+
+import com.android.axion.preference.AxPreference;
 
 import com.android.launcher3.R;
 import com.android.launcher3.notification.NotificationListener;
@@ -43,7 +44,7 @@ import com.android.launcher3.util.SettingsCache;
  * A {@link Preference} for indicating notification dots status.
  * Also has utility methods for updating UI based on dots status changes.
  */
-public class NotificationDotsPreference extends Preference
+public class NotificationDotsPreference extends AxPreference
         implements SettingsCache.OnChangeListener {
 
     private boolean mWidgetFrameVisible = false;

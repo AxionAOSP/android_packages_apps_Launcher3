@@ -17,6 +17,23 @@ package com.android.launcher3.allapps;
 
 import static com.android.launcher3.Flags.clearScrimOnReset;
 import static com.android.launcher3.Flags.enableExpandingPauseWorkButton;
+import static com.android.launcher3.LauncherPrefsExt.ALL_APPS_BG_OPACITY;
+import static com.android.launcher3.LauncherPrefsExt.ALL_APPS_SEARCH_FUZZY_APPS;
+import static com.android.launcher3.LauncherPrefsExt.ALL_APPS_SEARCH_MAX_APPS;
+import static com.android.launcher3.LauncherPrefsExt.ALL_APPS_SEARCH_MAX_APP_ACTIONS;
+import static com.android.launcher3.LauncherPrefsExt.ALL_APPS_SEARCH_MAX_EXTERNAL_RESULTS;
+import static com.android.launcher3.LauncherPrefsExt.ALL_APPS_SEARCH_RESULT_APP_ACTIONS;
+import static com.android.launcher3.LauncherPrefsExt.ALL_APPS_SEARCH_RESULT_APPS;
+import static com.android.launcher3.LauncherPrefsExt.ALL_APPS_SEARCH_RESULT_CALENDAR;
+import static com.android.launcher3.LauncherPrefsExt.ALL_APPS_SEARCH_RESULT_CONTACTS;
+import static com.android.launcher3.LauncherPrefsExt.ALL_APPS_SEARCH_RESULT_FILES;
+import static com.android.launcher3.LauncherPrefsExt.ALL_APPS_SEARCH_RESULT_IMAGES;
+import static com.android.launcher3.LauncherPrefsExt.ALL_APPS_SEARCH_RESULT_IN_APPS;
+import static com.android.launcher3.LauncherPrefsExt.ALL_APPS_SEARCH_RESULT_MEDIA;
+import static com.android.launcher3.LauncherPrefsExt.ALL_APPS_SEARCH_RESULT_QUICK_ANSWERS;
+import static com.android.launcher3.LauncherPrefsExt.ALL_APPS_SEARCH_RESULT_SETTINGS;
+import static com.android.launcher3.LauncherPrefsExt.ALL_APPS_SEARCH_RESULT_WEB;
+import static com.android.launcher3.LauncherPrefsExt.ALL_APPS_SHOW_SCROLLBAR;
 import static com.android.launcher3.allapps.ActivityAllAppsContainerView.AdapterHolder.MAIN;
 import static com.android.launcher3.allapps.ActivityAllAppsContainerView.AdapterHolder.SEARCH;
 import static com.android.launcher3.allapps.ActivityAllAppsContainerView.AdapterHolder.WORK;
@@ -75,6 +92,9 @@ import com.android.launcher3.DropTarget.DragObject;
 import com.android.launcher3.Flags;
 import com.android.launcher3.Insettable;
 import com.android.launcher3.InsettableFrameLayout;
+import com.android.launcher3.LauncherPrefChangeListener;
+import com.android.launcher3.LauncherPrefs;
+import com.android.launcher3.LauncherPrefsExt;
 import com.android.launcher3.R;
 import com.android.launcher3.Utilities;
 import com.android.launcher3.allapps.BaseAllAppsAdapter.AdapterItem;
@@ -113,7 +133,7 @@ import java.util.stream.Stream;
 public class ActivityAllAppsContainerView<T extends Context & ActivityContext>
         extends SpringRelativeLayout implements DragSource, Insettable,
         OnDeviceProfileChangeListener, PersonalWorkSlidingTabStrip.OnActivePageChangedListener,
-        ScrimView.ScrimDrawingController {
+        ScrimView.ScrimDrawingController, LauncherPrefChangeListener {
 
 
     private static final String TAG = "ActivityAllAppsContainerView";
@@ -142,6 +162,7 @@ public class ActivityAllAppsContainerView<T extends Context & ActivityContext>
     private final Paint mHeaderPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
     private final Rect mInsets = new Rect();
     private final AllAppsStore mAllAppsStore;
+    private final AxAllAppsDisplayPrefs mAllAppsDisplayPrefs;
     private final RecyclerView.OnScrollListener mScrollListener =
             new RecyclerView.OnScrollListener() {
                 @Override
@@ -199,6 +220,7 @@ public class ActivityAllAppsContainerView<T extends Context & ActivityContext>
         super(context, attrs, defStyleAttr);
         mActivityContext = ActivityContext.lookupContext(context);
         mAllAppsStore = mActivityContext.getActivityComponent().getAppsStore();
+        mAllAppsDisplayPrefs = AxAllAppsDisplayPrefs.INSTANCE.get(context);
 
         mScrimColor = Themes.getAttrColor(context, R.attr.allAppsScrimColor);
         mHeaderThreshold = getResources().getDimensionPixelSize(
@@ -339,12 +361,62 @@ public class ActivityAllAppsContainerView<T extends Context & ActivityContext>
             mSearchUiDelegate.onInitializeSearchBar();
         }
         mActivityContext.addOnDeviceProfileChangeListener(this);
+        LauncherPrefs.get(getContext()).addListener(this, ALL_APPS_BG_OPACITY,
+                ALL_APPS_SHOW_SCROLLBAR, ALL_APPS_SEARCH_RESULT_APPS,
+                ALL_APPS_SEARCH_RESULT_APP_ACTIONS, ALL_APPS_SEARCH_RESULT_QUICK_ANSWERS,
+                ALL_APPS_SEARCH_RESULT_SETTINGS, ALL_APPS_SEARCH_RESULT_CONTACTS,
+                ALL_APPS_SEARCH_RESULT_IMAGES, ALL_APPS_SEARCH_RESULT_FILES,
+                ALL_APPS_SEARCH_RESULT_CALENDAR, ALL_APPS_SEARCH_RESULT_WEB,
+                ALL_APPS_SEARCH_RESULT_IN_APPS, ALL_APPS_SEARCH_RESULT_MEDIA,
+                ALL_APPS_SEARCH_FUZZY_APPS, ALL_APPS_SEARCH_MAX_APPS,
+                ALL_APPS_SEARCH_MAX_APP_ACTIONS, ALL_APPS_SEARCH_MAX_EXTERNAL_RESULTS);
+        setScrollbarVisibility(!isSearching());
     }
 
     @Override
     protected void onDetachedFromWindow() {
         super.onDetachedFromWindow();
+        LauncherPrefs.get(getContext()).removeListener(this, ALL_APPS_BG_OPACITY,
+                ALL_APPS_SHOW_SCROLLBAR, ALL_APPS_SEARCH_RESULT_APPS,
+                ALL_APPS_SEARCH_RESULT_APP_ACTIONS, ALL_APPS_SEARCH_RESULT_QUICK_ANSWERS,
+                ALL_APPS_SEARCH_RESULT_SETTINGS, ALL_APPS_SEARCH_RESULT_CONTACTS,
+                ALL_APPS_SEARCH_RESULT_IMAGES, ALL_APPS_SEARCH_RESULT_FILES,
+                ALL_APPS_SEARCH_RESULT_CALENDAR, ALL_APPS_SEARCH_RESULT_WEB,
+                ALL_APPS_SEARCH_RESULT_IN_APPS, ALL_APPS_SEARCH_RESULT_MEDIA,
+                ALL_APPS_SEARCH_FUZZY_APPS, ALL_APPS_SEARCH_MAX_APPS,
+                ALL_APPS_SEARCH_MAX_APP_ACTIONS, ALL_APPS_SEARCH_MAX_EXTERNAL_RESULTS);
         mActivityContext.removeOnDeviceProfileChangeListener(this);
+    }
+
+    @Override
+    public void onPrefChanged(String key) {
+        if (ALL_APPS_BG_OPACITY.getSharedPrefKey().equals(key)) {
+            updateBackgroundVisibility(mActivityContext.getDeviceProfile());
+            invalidate();
+            invalidateHeader();
+        } else if (ALL_APPS_SHOW_SCROLLBAR.getSharedPrefKey().equals(key)) {
+            setScrollbarVisibility(!isSearching());
+        } else if (isSearchPreference(key)) {
+            mSearchUiManager.refreshResults();
+        }
+    }
+
+    private boolean isSearchPreference(String key) {
+        return ALL_APPS_SEARCH_RESULT_APPS.getSharedPrefKey().equals(key)
+                || ALL_APPS_SEARCH_RESULT_APP_ACTIONS.getSharedPrefKey().equals(key)
+                || ALL_APPS_SEARCH_RESULT_QUICK_ANSWERS.getSharedPrefKey().equals(key)
+                || ALL_APPS_SEARCH_RESULT_SETTINGS.getSharedPrefKey().equals(key)
+                || ALL_APPS_SEARCH_RESULT_CONTACTS.getSharedPrefKey().equals(key)
+                || ALL_APPS_SEARCH_RESULT_IMAGES.getSharedPrefKey().equals(key)
+                || ALL_APPS_SEARCH_RESULT_FILES.getSharedPrefKey().equals(key)
+                || ALL_APPS_SEARCH_RESULT_CALENDAR.getSharedPrefKey().equals(key)
+                || ALL_APPS_SEARCH_RESULT_WEB.getSharedPrefKey().equals(key)
+                || ALL_APPS_SEARCH_RESULT_IN_APPS.getSharedPrefKey().equals(key)
+                || ALL_APPS_SEARCH_RESULT_MEDIA.getSharedPrefKey().equals(key)
+                || ALL_APPS_SEARCH_FUZZY_APPS.getSharedPrefKey().equals(key)
+                || ALL_APPS_SEARCH_MAX_APPS.getSharedPrefKey().equals(key)
+                || ALL_APPS_SEARCH_MAX_APP_ACTIONS.getSharedPrefKey().equals(key)
+                || ALL_APPS_SEARCH_MAX_EXTERNAL_RESULTS.getSharedPrefKey().equals(key);
     }
 
     public SearchUiManager getSearchUiManager() {
@@ -474,17 +546,19 @@ public class ActivityAllAppsContainerView<T extends Context & ActivityContext>
      * @param clearScrim Whether to clear the all apps scrim.
      */
     public void reset(boolean animate, boolean exitSearch, boolean clearScrim) {
-        // Scroll Main and Work RV to top. Search RV is done in `resetSearch`.
-        for (int i = 0; i < mAH.size(); i++) {
-            if (i != SEARCH && mAH.get(i).mRecyclerView != null) {
-                mAH.get(i).mRecyclerView.scrollToTop();
+        boolean scrollToTop = !mAllAppsDisplayPrefs.shouldRememberPosition(getContext());
+        if (scrollToTop) {
+            for (int i = 0; i < mAH.size(); i++) {
+                if (i != SEARCH && mAH.get(i).mRecyclerView != null) {
+                    mAH.get(i).mRecyclerView.scrollToTop();
+                }
             }
         }
         if (mTouchHandler != null) {
             mTouchHandler.endFastScrolling();
         }
         if (mHeader != null && mHeader.getVisibility() == VISIBLE) {
-            mHeader.reset(animate);
+            mHeader.reset(animate, scrollToTop);
         }
         updateBackgroundVisibility(mActivityContext.getDeviceProfile());
         // Reset the base recycler view after transitioning home.
@@ -577,6 +651,7 @@ public class ActivityAllAppsContainerView<T extends Context & ActivityContext>
         }
         // Header keeps track of active recycler view to properly render header protection.
         mHeader.setActiveRV(currentActivePage);
+        setScrollbarVisibility(!isSearching());
 
         mWorkManager.onActivePageChanged(currentActivePage);
     }
@@ -766,7 +841,8 @@ public class ActivityAllAppsContainerView<T extends Context & ActivityContext>
                 adapterHolder.mPadding.top = padding;
             }
             adapterHolder.applyPadding();
-            if (adapterHolder.mRecyclerView != null) {
+            if (adapterHolder.mRecyclerView != null
+                    && !mAllAppsDisplayPrefs.shouldRememberPosition(getContext())) {
                 adapterHolder.mRecyclerView.scrollToTop();
             }
         }
@@ -838,7 +914,8 @@ public class ActivityAllAppsContainerView<T extends Context & ActivityContext>
         }
         return isBackgroundBlurEnabled()
                 ? ColorUtils.setAlphaComponent(mHeaderProtectionColor, (int) (blendRatio * 255))
-                : ColorUtils.blendARGB(getBackgroundColor(), mHeaderProtectionColor, blendRatio);
+                : ColorUtils.blendARGB(getBackgroundColor(), getHeaderProtectionColor(),
+                        blendRatio);
     }
 
     private int getBackgroundColor() {
@@ -848,17 +925,29 @@ public class ActivityAllAppsContainerView<T extends Context & ActivityContext>
 
     int getBottomSheetBackgroundColor() {
         if (!Flags.allAppsBlur()) {
-            return mBottomSheetBackgroundColorLegacy;
+            return applyAllAppsBackgroundOpacity(mBottomSheetBackgroundColorLegacy);
         }
         if (!mActivityContext.isAllAppsBackgroundBlurEnabled()) {
             // Don't apply any alpha if the blur is disabled.
             return mBottomSheetBackgroundColorBlurFallback;
         }
-        return mBottomSheetBackgroundColorOverBlur;
+        return applyAllAppsBackgroundOpacity(mBottomSheetBackgroundColorOverBlur);
     }
 
     boolean isBackgroundBlurEnabled() {
         return Flags.allAppsBlur() && mActivityContext.isAllAppsBackgroundBlurEnabled();
+    }
+
+    private int getHeaderProtectionColor() {
+        return ColorUtils.setAlphaComponent(mHeaderProtectionColor, getAllAppsBackgroundOpacity());
+    }
+
+    private int applyAllAppsBackgroundOpacity(int color) {
+        return ColorUtils.setAlphaComponent(color, getAllAppsBackgroundOpacity());
+    }
+
+    private int getAllAppsBackgroundOpacity() {
+        return LauncherPrefsExt.allAppsBackgroundAlpha(getContext());
     }
 
     /**
@@ -1037,8 +1126,10 @@ public class ActivityAllAppsContainerView<T extends Context & ActivityContext>
     @Override
     public void onDeviceProfileChanged(DeviceProfile dp) {
         for (AdapterHolder holder : mAH) {
-            holder.mAdapter.setAppsPerRow(dp.numShownAllAppsColumns);
-            holder.mAppsList.setNumAppsPerRowAllApps(dp.numShownAllAppsColumns);
+            int drawerColumns = mAllAppsDisplayPrefs.getDrawerColumns(getContext(),
+                    dp.numShownAllAppsColumns);
+            holder.mAdapter.setAppsPerRow(drawerColumns);
+            holder.mAppsList.setNumAppsPerRowAllApps(drawerColumns);
             if (holder.mRecyclerView != null) {
                 // Remove all views and clear the pool, while keeping the data same. After this
                 // call, all the viewHolders will be recreated.
@@ -1267,7 +1358,8 @@ public class ActivityAllAppsContainerView<T extends Context & ActivityContext>
     protected void setScrollbarVisibility(boolean visible) {
         AllAppsRecyclerView rv = getActiveRecyclerView();
         if (rv != null && rv.getScrollbar() != null) {
-            rv.getScrollbar().setVisibility(visible ? VISIBLE : GONE);
+            rv.getScrollbar().setVisibility(visible
+                    && mAllAppsDisplayPrefs.shouldShowScrollbar(getContext()) ? VISIBLE : GONE);
         }
     }
 

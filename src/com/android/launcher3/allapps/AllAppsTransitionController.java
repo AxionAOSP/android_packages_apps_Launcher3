@@ -189,6 +189,7 @@ public class AllAppsTransitionController
 
     private boolean mHasScaleEffect;
     private final MSDLPlayerWrapper mMSDLPlayerWrapper;
+    private final AxAllAppsDisplayPrefs mAllAppsDisplayPrefs;
     // Indicates whether this transition should scale the allapps header in addition to its content.
     private boolean mShouldScaleHeader;
 
@@ -205,6 +206,7 @@ public class AllAppsTransitionController
         mAllAppScale.value = 1;
         mLauncher.addOnDeviceProfileChangeListener(this);
         mMSDLPlayerWrapper = MSDLPlayerWrapper.INSTANCE.get(mLauncher.getApplicationContext());
+        mAllAppsDisplayPrefs = AxAllAppsDisplayPrefs.INSTANCE.get(mLauncher);
     }
 
     public float getShiftRange() {
@@ -402,7 +404,8 @@ public class AllAppsTransitionController
 
         setAlphas(toState, config, builder);
         // This controls both haptics for tapping on QSB and going to all apps.
-        if (ALL_APPS.equals(toState) && mLauncher.isInState(NORMAL)) {
+        if (ALL_APPS.equals(toState) && mLauncher.isInState(NORMAL)
+                && mAllAppsDisplayPrefs.shouldPlayOpenHaptic(mLauncher)) {
             if (Flags.msdlFeedback()) {
                 if (config.isUserControlled()) {
                     mMSDLPlayerWrapper.playToken(MSDLToken.SWIPE_THRESHOLD_INDICATOR);

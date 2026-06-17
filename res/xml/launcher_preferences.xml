@@ -267,6 +267,15 @@
             </PreferenceCategory>
         </PreferenceScreen>
 
+        <com.android.axion.preference.AxSeekBarPreference
+            android:key="pref_all_apps_bg_opacity"
+            android:title="@string/drawer_opacity_title"
+            android:defaultValue="80"
+            android:max="100"
+            android:persistent="true"
+            launcher:min="0"
+            launcher:valueSuffix="%"
+            launcher:showSeekBarValue="true" />
     </PreferenceScreen>
 
     <PreferenceScreen

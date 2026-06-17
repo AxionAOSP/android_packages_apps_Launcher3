@@ -79,6 +79,7 @@ internal fun HomeSettingsScreen(
                 SettingsContentColumn {
                     when (targetRoute) {
                         HomeSettingsRoutes.ROOT -> DashboardScreen(activity, navigator::navigateTo)
+                        HomeSettingsRoutes.GENERAL -> GeneralScreen(activity)
                         HomeSettingsRoutes.HOME -> HomeScreen(activity)
                         HomeSettingsRoutes.ALL_APPS -> AllAppsDrawerScreen(navigator::navigateTo)
                         HomeSettingsRoutes.ALL_APPS_FOLDERS -> AllAppsFoldersScreen()

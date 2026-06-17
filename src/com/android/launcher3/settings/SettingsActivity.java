@@ -62,6 +62,8 @@ import com.android.launcher3.BuildConfig;
 import com.android.launcher3.Flags;
 import com.android.launcher3.InvariantDeviceProfile;
 import com.android.launcher3.LauncherFiles;
+import com.android.launcher3.LauncherPrefs;
+import com.android.launcher3.LauncherPrefsExt;
 import com.android.launcher3.R;
 import com.android.launcher3.lineage.LineageUtils;
 import com.android.launcher3.lineage.trust.TrustAppsActivity;
@@ -372,6 +374,11 @@ public class SettingsActivity extends FragmentActivity
          */
         protected boolean initPreference(Preference preference) {
             if (preference.getKey() == null) {
+                return true;
+            }
+            if (LauncherPrefsExt.ALL_APPS_BG_OPACITY.getSharedPrefKey()
+                    .equals(preference.getKey())) {
+                LauncherPrefsExt.allAppsOpacityPercent(getContext());
                 return true;
             }
             DisplayController.Info info = DisplayController.INSTANCE.get(getContext()).getInfo();
