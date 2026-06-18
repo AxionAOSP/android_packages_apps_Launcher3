@@ -42,7 +42,7 @@
     <string name="recent_task_option_aspect_ratio">Ubah aspek rasio</string>
     <string name="split_app_info_accessibility">Aplikasi info untuk %1$s</string>
     <string name="split_app_usage_settings">Setelan penggunaan untuk %1$s</string>
-    <string name="close_task_accessibility">Close %1$s</string>
+    <string name="close_task_accessibility">Tutup %1$s</string>
     <!-- Title for an option to open a new window for a given app   -->
     <string name="new_window_option_taskbar">Jendela Baru</string>
     <!-- Title for an option to manage open windows for a given app   -->
@@ -219,34 +219,34 @@
     <!-- Label for widget settings shows in the long press menu for widgets. [CHAR_LIMIT=20] -->
     <string name="widget_settings">Setelan</string>
     <!-- Label for pinning an item to the taskbar. [CHAR_LIMIT=20] -->
-    <string name="pin_to_taskbar">Pin to Taskbar</string>
+    <string name="pin_to_taskbar">Sematkan ke Taskbar</string>
     <!-- Label for unpinning an item from the taskbar. [CHAR_LIMIT=20] -->
-    <string name="unpin_from_taskbar">Unpin from Taskbar</string>
+    <string name="unpin_from_taskbar">Lepas sematan dari Taskbar</string>
     <string name="action_enlarge">Memperbesar</string>
     <string name="action_minimize">Memperkecil</string>
     <string name="action_customize_folder">Sesuaikan</string>
-    <string name="custom_icon_shortcut_label">Change icon</string>
-    <string name="custom_icon_picker_title">Select icon pack</string>
-    <string name="custom_icon_no_packs">No icon packs installed</string>
-    <string name="custom_icon_no_drawables">No icons found in this pack</string>
+    <string name="custom_icon_shortcut_label">Ganti ikon</string>
+    <string name="custom_icon_picker_title">Pilih paket ikon</string>
+    <string name="custom_icon_no_packs">Tidak ada paket ikon yang terpasang</string>
+    <string name="custom_icon_no_drawables">Tidak ada ikon yang ditemukan dalam paket ini</string>
     <string name="custom_icon_reset">Atur ulang ke default</string>
     <string name="custom_icon_back">Kembali</string>
-    <string name="custom_icon_search_hint">Search icons</string>
-    <string name="custom_icon_no_search_results">No icons match your search</string>
-    <string name="action_customize_icon">Customize icons</string>
-    <string name="icon_pack_picker_title">Customize icons</string>
+    <string name="custom_icon_search_hint">Cari ikon</string>
+    <string name="custom_icon_no_search_results">Tidak ada ikon yang cocok dari pencarian Anda</string>
+    <string name="action_customize_icon">Sesuaikan ikon</string>
+    <string name="icon_pack_picker_title">Sesuaikan ikon</string>
     <string name="icon_pack_picker_default">Bawaan</string>
     <string name="icon_pack_picker_reset">Atur ulang ke default</string>
-    <string name="icon_pack_title">Icon Pack</string>
-    <string name="themed_icons_card_title">Themed Icons</string>
-    <string name="themed_icons_description">Monochrome icons that adapt to your colors</string>
+    <string name="icon_pack_title">Paket ikon</string>
+    <string name="themed_icons_card_title">Ikon bertema</string>
+    <string name="themed_icons_description">Ikon monokrom yang beradaptasi dengan warnamu</string>
     <string name="themed_icon_size_title">Icon size</string>
     <string name="themed_icon_size_summary">Scale monochrome artwork inside themed icon backgrounds</string>
     <string name="themed_icon_size_percent">%d%%</string>
     <string name="themed_icon_background_title">Background icon color</string>
     <string name="themed_icon_foreground_title">Foreground icon color</string>
-    <string name="icon_shape_title">Icon Shape</string>
-    <string name="themed_icon_pack_title">Themed Icon Pack</string>
+    <string name="icon_shape_title">Bentuk Ikon</string>
+    <string name="themed_icon_pack_title">Paket Ikon Bertema</string>
     <string name="themed_icon_pack_none">Tidak ada</string>
     <string name="folder_style_picker_title">Gaya Folder</string>
     <string name="folder_style_quadrant">Kuadran</string>
@@ -293,7 +293,7 @@
         }
     </string>
     <!-- content description for hotseat items -->
-    <string name="hotseat_prediction_content_description">Predicted app: <xliff:g id="title" example="Chrome">%1$s</xliff:g></string>
+    <string name="hotseat_prediction_content_description">Aplikasi yang diprediksi: <xliff:g id="title" example="Chrome">%1$s</xliff:g></string>
     <!-- The format string for default page scroll text [CHAR_LIMIT=none] -->
     <string name="default_scroll_format">Halaman %1$d dari %2$d</string>
     <!-- The format string for Workspace page scroll text [CHAR_LIMIT=none] -->
@@ -316,11 +316,11 @@
     <!-- Folder name format when folder has less than 4 items -->
     <string name="folder_name_format_exact">Folder: <xliff:g id="name" example="Games">%1$s</xliff:g>, <xliff:g id="size" example="2">%2$d</xliff:g> item</string>
     <!-- Folder name format when folder has less than 4 items and a notification dot -->
-    <string name="folder_name_format_exact_with_dot">Folder: <xliff:g id="name" example="Games">%1$s</xliff:g>, <xliff:g id="size" example="2">%2$d</xliff:g> items, has notifications</string>
+    <string name="folder_name_format_exact_with_dot">Folder: <xliff:g id="name" example="Games">%1$s</xliff:g>, <xliff:g id="size" example="2">%2$d</xliff:g> item, memiliki pemberitahuan</string>
     <!-- Folder name format when folder has 4 or more items shown in preview-->
     <string name="folder_name_format_overflow">Folder: <xliff:g id="name" example="Games">%1$s</xliff:g>, <xliff:g id="size" example="2">%2$d</xliff:g> item atau lebih</string>
     <!-- Folder name format when folder has 4 or more items shown in preview and a notification dot -->
-    <string name="folder_name_format_overflow_with_dot">Folder: <xliff:g id="name" example="Games">%1$s</xliff:g>, <xliff:g id="size" example="2">%2$d</xliff:g> or more items, has notifications</string>
+    <string name="folder_name_format_overflow_with_dot">Folder: <xliff:g id="name" example="Games">%1$s</xliff:g>, <xliff:g id="size" example="2">%2$d</xliff:g> atau item selebihnya, memiliki pemberitahuan</string>
     <!-- Accessibility announement for unnamed folders -->
     <string name="unnamed_folder">Folder tanpa nama</string>
     <!-- App pair accessibility -->
@@ -513,29 +513,29 @@ Anda dapat menghapusnya, atau mencari aplikasi tersebut dan memasangnya secara m
     <string name="ps_add_button_content_description">Pasang aplikasi ke Ruang Privasi</string>
     <string name="ps_app_content_description">Tambahkan berkas dan lainnya ke Ruang Privasi</string>
     <!-- Label for private apps section in private space page -->
-    <string name="ps_private_apps_label">Private apps</string>
+    <string name="ps_private_apps_label">Aplikasi pribadi</string>
     <!-- Label shown when there are no private apps -->
-    <string name="ps_no_private_apps">No private apps</string>
+    <string name="ps_no_private_apps">Tidak ada aplikasi pribadi</string>
     <!-- Label for add app button in private space -->
-    <string name="ps_add_app_button">Add app</string>
+    <string name="ps_add_app_button">Tambahkan aplikasi</string>
     <!-- Short label for add app grid icon in private space -->
     <string name="ps_add_app_short">Tambah</string>
     <!-- Content description for private space settings button -->
-    <string name="ps_settings_content_description">Private space settings</string>
+    <string name="ps_settings_content_description">Pengaturan ruang pribadi</string>
     <!-- Label for unlock button on private space veil -->
     <string name="ps_unlock_button">Buka kunci</string>
-    <string name="ps_swipe_hint">Swipe for Private space</string>
+    <string name="ps_swipe_hint">Geser untuk Ruang pribadi</string>
     <string name="ps_swipe_hint_dismiss">Mengerti</string>
-    <string name="folder_delete_title">Delete \"%1$s\"?</string>
-    <string name="folder_delete_message">%1$d apps will return to their default categories.</string>
+    <string name="folder_delete_title">Hapus \"%1$s\"?</string>
+    <string name="folder_delete_message">%1$d aplikasi akan kembali ke kategori default mereka.</string>
     <string name="folder_delete_confirm">Hapus</string>
-    <string name="folder_add_title">Add to folder</string>
-    <string name="folder_name_hint">Folder name</string>
+    <string name="folder_add_title">Tambahkan ke folder</string>
+    <string name="folder_name_hint">Nama folder</string>
     <string name="folder_create_button">Buat</string>
-    <string name="folder_new_button">New folder</string>
-    <string name="folder_remove_button">Remove from folder</string>
-    <string name="folder_rename_title">Rename folder</string>
-    <string name="folder_rename_confirm">Rename</string>
+    <string name="folder_new_button">Folder baru</string>
+    <string name="folder_remove_button">Hapus dari folder</string>
+    <string name="folder_rename_title">Ubah nama folder</string>
+    <string name="folder_rename_confirm">Ubah nama</string>
     <string name="folder_selected_description">Dipilih</string>
     <string name="action_cancel">Batal</string>
     <string name="action_back">Kembali</string>
