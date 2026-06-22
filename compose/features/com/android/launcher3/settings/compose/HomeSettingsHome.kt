@@ -57,6 +57,20 @@ internal fun HomeScreen(
             )
         }
     }
+    PreferenceGroup(title = stringResource(R.string.home_settings_style_category)) {
+        item {
+            BooleanPreference(
+                item = LauncherPrefsExt.WORKSPACE_WALLPAPER_SCROLLING,
+                titleRes = R.string.home_wallpaper_scrolling_title,
+            )
+        }
+        item {
+            BooleanPreference(
+                item = LauncherPrefsExt.WORKSPACE_SHOW_TOP_SHADOW,
+                titleRes = R.string.home_top_bar_shadow_title,
+            )
+        }
+    }
     PreferenceGroup(title = stringResource(R.string.home_settings_gestures_category)) {
         item {
             BooleanPreference(

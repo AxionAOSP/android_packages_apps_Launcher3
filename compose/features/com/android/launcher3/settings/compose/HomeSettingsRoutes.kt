@@ -70,7 +70,9 @@ internal object HomeSettingsRoutes {
             KEY_ALLOW_ROTATION,
             KEY_DESKTOP_LABELS,
             KEY_MINUS_ONE,
-            KEY_WORKSPACE_LABEL_SCALE -> HOME
+            KEY_WORKSPACE_LABEL_SCALE,
+            KEY_WORKSPACE_WALLPAPER_SCROLLING,
+            KEY_WORKSPACE_SHOW_TOP_SHADOW -> HOME
             KEY_SCREEN_ALL_APPS,
             KEY_ALLAPPS_THEMED_ICONS,
             KEY_DRAWER_LABELS,
