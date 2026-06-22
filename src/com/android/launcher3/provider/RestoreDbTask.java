@@ -185,7 +185,7 @@ public class RestoreDbTask {
     @VisibleForTesting
     public static List<String> existingDbs(Context context) {
         // At this point idp.dbFile contains the name of the dbFile from the previous phone
-        return LauncherFiles.GRID_DB_FILES.stream()
+        return LauncherFiles.getGridDbFiles(context).stream()
                 .filter(dbName -> context.getDatabasePath(dbName).exists())
                 .collect(Collectors.toList());
     }
@@ -196,7 +196,7 @@ public class RestoreDbTask {
     @VisibleForTesting
     public static void removeOldDBs(Context context, String oldPhoneDbFileName) {
         // At this point idp.dbFile contains the name of the dbFile from the previous phone
-        LauncherFiles.GRID_DB_FILES.stream()
+        LauncherFiles.getGridDbFiles(context).stream()
                 .filter(dbName -> !dbName.equals(oldPhoneDbFileName))
                 .forEach(dbName -> {
                     if (context.deleteDatabase(dbName)) {

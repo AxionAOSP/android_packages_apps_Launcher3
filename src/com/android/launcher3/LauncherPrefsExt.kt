@@ -33,6 +33,48 @@ object LauncherPrefsExt {
         )
     @JvmField val WORKSPACE_LOCK =
         backedUpItem("pref_workspace_lock", false, EncryptionType.SECURE_SETTINGS)
+    @JvmField val WORKSPACE_GRID_COLUMNS =
+        backedUpItem("pref_workspace_grid_columns", 0, EncryptionType.SECURE_SETTINGS)
+    @JvmField val WORKSPACE_GRID_ROWS =
+        backedUpItem("pref_workspace_grid_rows", 0, EncryptionType.SECURE_SETTINGS)
+    @JvmField val WORKSPACE_HOTSEAT_ICONS =
+        backedUpItem("pref_workspace_hotseat_icons", 0, EncryptionType.SECURE_SETTINGS)
+    @JvmField val WORKSPACE_TABLET_PORTRAIT_GRID_COLUMNS =
+        backedUpItem(
+            "pref_workspace_tablet_portrait_grid_columns",
+            0,
+            EncryptionType.SECURE_SETTINGS,
+        )
+    @JvmField val WORKSPACE_TABLET_PORTRAIT_GRID_ROWS =
+        backedUpItem(
+            "pref_workspace_tablet_portrait_grid_rows",
+            0,
+            EncryptionType.SECURE_SETTINGS,
+        )
+    @JvmField val WORKSPACE_TABLET_PORTRAIT_HOTSEAT_ICONS =
+        backedUpItem(
+            "pref_workspace_tablet_portrait_hotseat_icons",
+            0,
+            EncryptionType.SECURE_SETTINGS,
+        )
+    @JvmField val WORKSPACE_TABLET_LANDSCAPE_GRID_COLUMNS =
+        backedUpItem(
+            "pref_workspace_tablet_landscape_grid_columns",
+            0,
+            EncryptionType.SECURE_SETTINGS,
+        )
+    @JvmField val WORKSPACE_TABLET_LANDSCAPE_GRID_ROWS =
+        backedUpItem(
+            "pref_workspace_tablet_landscape_grid_rows",
+            0,
+            EncryptionType.SECURE_SETTINGS,
+        )
+    @JvmField val WORKSPACE_TABLET_LANDSCAPE_HOTSEAT_ICONS =
+        backedUpItem(
+            "pref_workspace_tablet_landscape_hotseat_icons",
+            0,
+            EncryptionType.SECURE_SETTINGS,
+        )
     @JvmField val ALLAPPS_THEMED_ICONS =
         backedUpItem("pref_allapps_themed_icons", false, EncryptionType.SECURE_SETTINGS)
     @JvmField val DRAWER_OPEN_KEYBOARD =

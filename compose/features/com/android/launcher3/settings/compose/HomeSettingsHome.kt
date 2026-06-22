@@ -30,9 +30,19 @@ import com.android.launcher3.util.DisplayController
 @Composable
 internal fun HomeScreen(
     activity: Activity,
+    onNavigate: (String) -> Unit,
 ) {
     val showRotation = remember { shouldShowRotationPreference(activity) }
     val googleSearchVisible = rememberPackageEnabled(SEARCH_PACKAGE)
+    PreferenceGroup(title = stringResource(R.string.home_settings_layout_category)) {
+        item {
+            CategoryPreference(
+                titleRes = R.string.home_grid_title,
+                summaryRes = R.string.home_grid_summary,
+                onClick = { onNavigate(HomeSettingsRoutes.HOME_GRID) },
+            )
+        }
+    }
     PreferenceGroup(title = stringResource(R.string.home_settings_labels_category)) {
         item {
             BooleanPreference(

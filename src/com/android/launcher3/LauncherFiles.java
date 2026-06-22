@@ -1,5 +1,7 @@
 package com.android.launcher3;
 
+import android.content.Context;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -71,6 +73,10 @@ public class LauncherFiles {
             MANAGED_USER_PREFERENCES_KEY + XML,
             DEVICE_PREFERENCES_KEY + XML,
             APP_ICONS_DB));
+
+    public static List<String> getGridDbFiles(Context context) {
+        return AxWorkspaceGridDb.getGridDbFiles(context, GRID_DB_FILES);
+    }
 
     private static List<String> createAllFiles() {
         ArrayList<String> result = new ArrayList<>();
