@@ -30,6 +30,18 @@
     <string name="home_settings_privacy_summary">Hidden and protected app access</string>
     <string name="home_settings_backup_title">Backup and restore</string>
     <string name="home_settings_backup_summary">Export or import the home screen layout</string>
+    <string name="home_settings_about_title">About</string>
+    <string name="home_settings_about_summary">Trebuchet Launcher</string>
+    <string name="home_settings_about_version_title">Version</string>
+    <string name="home_settings_about_unknown_version">Unknown</string>
+    <string name="home_settings_about_github">GitHub</string>
+    <string name="home_settings_about_translate">Translate</string>
+    <string name="home_settings_about_donate">Donate</string>
+    <string name="home_settings_about_based_on_title">Based on Launcher3</string>
+    <string name="home_settings_about_based_on_summary">AOSP Launcher3</string>
+    <string name="home_settings_about_contributors_category">Contributors</string>
+    <string name="home_settings_about_contributor_rmp22" translatable="false">rmp22</string>
+    <string name="home_settings_about_role_development">Development</string>
     <string name="home_settings_layout_category">Layout</string>
     <string name="home_settings_icons_category">Icons</string>
     <string name="home_settings_labels_category">Labels</string>

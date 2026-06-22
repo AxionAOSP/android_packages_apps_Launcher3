@@ -24,6 +24,7 @@ internal const val KEY_SCREEN_SEARCH = "settings_screen_search"
 internal const val KEY_SCREEN_NOTIFICATIONS = "settings_screen_notifications"
 internal const val KEY_SCREEN_PRIVACY = "settings_screen_privacy"
 internal const val KEY_SCREEN_BACKUP = "settings_screen_backup"
+internal const val KEY_SCREEN_ABOUT = "settings_screen_about"
 internal const val KEY_WORKSPACE_LOCK = "pref_workspace_lock"
 internal const val KEY_WORKSPACE_ICON_SCALE = "pref_workspace_icon_scale"
 internal const val KEY_WORKSPACE_LABEL_SCALE = "pref_workspace_label_scale"
@@ -88,3 +89,7 @@ internal const val NOTIFICATION_ENABLED_LISTENERS = "enabled_notification_listen
 internal const val REQUEST_SEARCH_CONTACTS_PERMISSION = 1
 internal const val REQUEST_SEARCH_STORAGE_PERMISSION = 2
 internal const val REQUEST_SEARCH_CALENDAR_PERMISSION = 3
+internal const val AXION_LAUNCHER_SOURCE_URL =
+    "https://github.com/AxionAOSP/android_packages_apps_Launcher3"
+internal const val AXION_TRANSLATE_URL = "https://crowdin.com/project/axionos"
+internal const val AXION_DONATE_URL = "https://buymeacoffee.com/rmp22"
