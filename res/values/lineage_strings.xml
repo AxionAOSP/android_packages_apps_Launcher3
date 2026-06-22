@@ -28,6 +28,8 @@
     <string name="home_settings_search_summary">App drawer results and suggestions</string>
     <string name="home_settings_notifications_summary">Notification dots and badges</string>
     <string name="home_settings_privacy_summary">Hidden and protected app access</string>
+    <string name="home_settings_backup_title">Backup and restore</string>
+    <string name="home_settings_backup_summary">Export or import the home screen layout</string>
     <string name="home_settings_layout_category">Layout</string>
     <string name="home_settings_icons_category">Icons</string>
     <string name="home_settings_labels_category">Labels</string>
@@ -35,6 +37,14 @@
     <string name="home_settings_gestures_category">Gestures</string>
     <string name="home_settings_behavior_category">Behavior</string>
     <string name="home_settings_notifications_category">Notifications</string>
+    <string name="home_settings_backup_export_title">Export layout</string>
+    <string name="home_settings_backup_export_summary">Save the current home screen layout as XML</string>
+    <string name="home_settings_backup_import_title">Import layout</string>
+    <string name="home_settings_backup_import_summary">Restore a home screen layout from XML</string>
+    <string name="home_settings_backup_export_success">Layout exported</string>
+    <string name="home_settings_backup_export_failure">Couldn\'t export layout</string>
+    <string name="home_settings_backup_import_success">Layout imported</string>
+    <string name="home_settings_backup_import_failure">Couldn\'t import layout</string>
     <string name="home_grid_title">Home grid</string>
     <string name="home_grid_summary">Rows, columns, and layout preview</string>
     <string name="home_grid_category">Layout</string>

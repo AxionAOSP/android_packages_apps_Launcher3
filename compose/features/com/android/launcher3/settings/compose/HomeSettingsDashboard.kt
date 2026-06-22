@@ -66,5 +66,13 @@ internal fun DashboardScreen(
                 onClick = { onNavigate(HomeSettingsRoutes.PRIVACY) },
             )
         }
+        item {
+            CategoryPreference(
+                titleRes = R.string.home_settings_backup_title,
+                summaryRes = R.string.home_settings_backup_summary,
+                iconRes = R.drawable.ic_ps_settings,
+                onClick = { onNavigate(HomeSettingsRoutes.BACKUP) },
+            )
+        }
     }
 }

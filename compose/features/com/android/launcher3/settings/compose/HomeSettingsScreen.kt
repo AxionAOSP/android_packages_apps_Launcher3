@@ -87,6 +87,7 @@ internal fun HomeSettingsScreen(
                         HomeSettingsRoutes.SEARCH -> SearchScreen(activity)
                         HomeSettingsRoutes.NOTIFICATIONS -> NotificationsScreen(activity)
                         HomeSettingsRoutes.PRIVACY -> PrivacyScreen(activity)
+                        HomeSettingsRoutes.BACKUP -> BackupScreen()
                         else -> DashboardScreen(activity, navigator::navigateTo)
                     }
                 }
