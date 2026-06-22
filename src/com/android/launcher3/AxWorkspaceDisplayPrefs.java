@@ -19,6 +19,8 @@ import static com.android.launcher3.InvariantDeviceProfile.TYPE_TABLET;
 import static com.android.launcher3.LauncherPrefsExt.WORKSPACE_GRID_COLUMNS;
 import static com.android.launcher3.LauncherPrefsExt.WORKSPACE_GRID_ROWS;
 import static com.android.launcher3.LauncherPrefsExt.WORKSPACE_HOTSEAT_ICONS;
+import static com.android.launcher3.LauncherPrefsExt.WORKSPACE_ICON_SCALE;
+import static com.android.launcher3.LauncherPrefsExt.WORKSPACE_LABEL_SCALE;
 import static com.android.launcher3.LauncherPrefsExt.WORKSPACE_TABLET_LANDSCAPE_GRID_COLUMNS;
 import static com.android.launcher3.LauncherPrefsExt.WORKSPACE_TABLET_LANDSCAPE_GRID_ROWS;
 import static com.android.launcher3.LauncherPrefsExt.WORKSPACE_TABLET_LANDSCAPE_HOTSEAT_ICONS;
@@ -40,6 +42,9 @@ public final class AxWorkspaceDisplayPrefs extends AxPreferenceFeature {
     public static final int MIN_GRID_SIZE = 3;
     public static final int MAX_GRID_SIZE = 10;
     public static final int MAX_TABLET_GRID_SIZE = 16;
+    private static final int DEFAULT_PERCENT = 100;
+    private static final int MIN_PERCENT = 50;
+    private static final int MAX_PERCENT = 150;
     private static final List<Item> WORKSPACE_DISPLAY_ITEMS = List.of(
             WORKSPACE_GRID_COLUMNS,
             WORKSPACE_GRID_ROWS,
@@ -49,7 +54,9 @@ public final class AxWorkspaceDisplayPrefs extends AxPreferenceFeature {
             WORKSPACE_TABLET_PORTRAIT_HOTSEAT_ICONS,
             WORKSPACE_TABLET_LANDSCAPE_GRID_COLUMNS,
             WORKSPACE_TABLET_LANDSCAPE_GRID_ROWS,
-            WORKSPACE_TABLET_LANDSCAPE_HOTSEAT_ICONS);
+            WORKSPACE_TABLET_LANDSCAPE_HOTSEAT_ICONS,
+            WORKSPACE_ICON_SCALE,
+            WORKSPACE_LABEL_SCALE);
 
     @Inject
     public AxWorkspaceDisplayPrefs() {
@@ -87,6 +94,9 @@ public final class AxWorkspaceDisplayPrefs extends AxPreferenceFeature {
         }
         profile.numSearchContainerColumns = Math.min(profile.numSearchContainerColumns,
                 profile.numColumns);
+        profile.iconSize = scale(profile.iconSize, getPercent(context, WORKSPACE_ICON_SCALE), 0f);
+        profile.iconTextSize = scale(profile.iconTextSize,
+                getPercent(context, WORKSPACE_LABEL_SCALE), 1f);
     }
 
     public boolean usesOrientationSpecificGrid(InvariantDeviceProfile profile) {
@@ -161,4 +171,16 @@ public final class AxWorkspaceDisplayPrefs extends AxPreferenceFeature {
         return profile.displayInfo.realBounds.isLandscape();
     }
 
+    private int getPercent(Context context, ConstantItem<Integer> item) {
+        return Utilities.boundToRange(LauncherPrefs.get(context).get(item), MIN_PERCENT,
+                MAX_PERCENT);
+    }
+
+    private static float[] scale(float[] values, int percent, float minValue) {
+        float[] scaled = values.clone();
+        for (int i = 0; i < scaled.length; i++) {
+            scaled[i] = Math.max(minValue, scaled[i] * percent / (float) DEFAULT_PERCENT);
+        }
+        return scaled;
+    }
 }

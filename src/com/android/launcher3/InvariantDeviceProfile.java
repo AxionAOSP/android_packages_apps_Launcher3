@@ -455,14 +455,6 @@ public class InvariantDeviceProfile {
         inlineNavButtonsEndSpacing = closestProfile.inlineNavButtonsEndSpacing;
 
         iconSize = displayOption.iconSizes;
-        float maxIconSize = iconSize[0];
-        for (int i = 1; i < iconSize.length; i++) {
-            maxIconSize = Math.max(maxIconSize, iconSize[i]);
-        }
-        iconBitmapSize = ResourceUtils.pxFromDp(maxIconSize, metrics);
-
-        fillResIconDpi = getLauncherIconDensity(iconBitmapSize);
-
         iconTextSize = displayOption.textSizes;
 
         minCellSize = displayOption.minCellSize;
@@ -502,6 +494,7 @@ public class InvariantDeviceProfile {
         // Supported overrides: numRows, numColumns, iconSize
         applyPartnerDeviceProfileOverrides(context, metrics);
         mWorkspaceDisplayPrefs.applyToInvariantProfile(context, this);
+        updateIconBitmapSize(metrics);
 
         final List<DeviceProfile> localSupportedProfiles = new ArrayList<>();
         defaultWallpaperSize = new Point(displayInfo.currentSize);
@@ -548,6 +541,15 @@ public class InvariantDeviceProfile {
 
     DeviceProfile.Builder newDPBuilder(Info info) {
         return new DeviceProfile.Builder(this, info, mWMProxy);
+    }
+
+    private void updateIconBitmapSize(DisplayMetrics metrics) {
+        float maxIconSize = iconSize[0];
+        for (int i = 1; i < iconSize.length; i++) {
+            maxIconSize = Math.max(maxIconSize, iconSize[i]);
+        }
+        iconBitmapSize = ResourceUtils.pxFromDp(maxIconSize, metrics);
+        fillResIconDpi = getLauncherIconDensity(iconBitmapSize);
     }
 
     public void addOnChangeListener(OnIDPChangeListener listener) {

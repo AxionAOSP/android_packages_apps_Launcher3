@@ -50,6 +50,12 @@ internal fun HomeScreen(
                 titleRes = R.string.desktop_show_labels,
             )
         }
+        item {
+            PercentSliderPreference(
+                item = LauncherPrefsExt.WORKSPACE_LABEL_SCALE,
+                titleRes = R.string.home_label_size_title,
+            )
+        }
     }
     PreferenceGroup(title = stringResource(R.string.home_settings_gestures_category)) {
         item {

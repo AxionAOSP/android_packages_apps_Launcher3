@@ -196,6 +196,8 @@ private fun rememberHomePreviewState(): HomePreviewState {
     val tabletLandscapeHotseatIcons = rememberLauncherPreference(
         LauncherPrefsExt.WORKSPACE_TABLET_LANDSCAPE_HOTSEAT_ICONS,
     )
+    val iconScale = rememberLauncherPreference(LauncherPrefsExt.WORKSPACE_ICON_SCALE)
+    val labelScale = rememberLauncherPreference(LauncherPrefsExt.WORKSPACE_LABEL_SCALE)
     val showLabels = rememberLauncherPreference(LauncherPrefsExt.SHOW_DESKTOP_LABELS)
     val previewColumns = if (!isTablet) {
         columns.value
@@ -234,8 +236,8 @@ private fun rememberHomePreviewState(): HomePreviewState {
         ),
         defaultHotseatIcons = defaultHotseatIcons,
         commonHotseatIcons = hotseatIcons.value,
-        iconPercent = 100,
-        labelPercent = 100,
+        iconPercent = iconScale.value,
+        labelPercent = labelScale.value,
         showLabels = showLabels.value,
         showSearchBar = BuildConfig.QSB_ON_FIRST_SCREEN,
     )
