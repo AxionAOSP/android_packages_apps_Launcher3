@@ -41,6 +41,7 @@ import androidx.annotation.Nullable;
 import androidx.annotation.WorkerThread;
 
 import com.android.launcher3.AutoInstallsLayout;
+import com.android.launcher3.AxWorkspaceGridDb;
 import com.android.launcher3.ConstantItem;
 import com.android.launcher3.DefaultLayoutParser;
 import com.android.launcher3.EncryptionType;
@@ -328,6 +329,33 @@ public class ModelDbController {
         return false;
     }
 
+    private static boolean canMigrateGrid(DeviceGridState source, DeviceGridState destination,
+            boolean isAfterRestore) {
+        GridMigrationOption sourceGridMigrationOption =
+                GridMigrationOption.Companion.from(source.getColumns(), source.getRows());
+        GridMigrationOption destinationGridMigrationOption =
+                GridMigrationOption.Companion.from(destination.getColumns(), destination.getRows());
+        if (sourceGridMigrationOption != null && destinationGridMigrationOption != null
+                && sourceGridMigrationOption.canMigrate(destinationGridMigrationOption,
+                        isAfterRestore)) {
+            return true;
+        }
+        return (isAxionGrid(source) || isAxionGrid(destination))
+                && hasGridMetrics(source)
+                && hasGridMetrics(destination);
+    }
+
+    private static boolean isAxionGrid(DeviceGridState state) {
+        return AxWorkspaceGridDb.isFileName(state.getDbFile())
+                && AxWorkspaceGridDb.isValidGridSize(state.getColumns())
+                && AxWorkspaceGridDb.isValidGridSize(state.getRows())
+                && AxWorkspaceGridDb.isValidGridSize(state.getNumHotseat());
+    }
+
+    private static boolean hasGridMetrics(DeviceGridState state) {
+        return state.getColumns() > 0 && state.getRows() > 0 && state.getNumHotseat() > 0;
+    }
+
     /**
      * Migrates the DB. If the migration failed, it clears the DB.
      */
@@ -343,7 +371,7 @@ public class ModelDbController {
 
         // We save the existing db's before creating the destination db helper so we know what logic
         // to run in grid migration based on if that grid already existed before migration or not.
-        List<String> existingDBs = LauncherFiles.GRID_DB_FILES.stream()
+        List<String> existingDBs = LauncherFiles.getGridDbFiles(mContext).stream()
                 .filter(dbName -> mContext.getDatabasePath(dbName).exists())
                 .collect(Collectors.toList());
 
@@ -360,15 +388,7 @@ public class ModelDbController {
             GridSizeMigrationLogic gridSizeMigrationLogic = mMigrationLogicFactory.get();
 
             // Check if the migration path from source to destination is valid before migrating.
-            GridMigrationOption sourceGridMigrationOption =
-                    GridMigrationOption.Companion.from(
-                            srcDeviceState.getColumns(), srcDeviceState.getRows());
-            GridMigrationOption destinationGridMigrationOption =
-                    GridMigrationOption.Companion.from(
-                            destDeviceState.getColumns(), destDeviceState.getRows());
-            if (sourceGridMigrationOption != null && destinationGridMigrationOption != null
-                    && sourceGridMigrationOption.canMigrate(destinationGridMigrationOption,
-                    isAfterRestore)) {
+            if (canMigrateGrid(srcDeviceState, destDeviceState, isAfterRestore)) {
                 mOpenHelper = createDatabaseHelper(true, new DeviceGridState(mIdp).getDbFile());
                 gridSizeMigrationLogic.migrateGrid(srcDeviceState, destDeviceState,
                         mOpenHelper, oldHelper.getWritableDatabase(), isDestNewDb, modelDelegate);

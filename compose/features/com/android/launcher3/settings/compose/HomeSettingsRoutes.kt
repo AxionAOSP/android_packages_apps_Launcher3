@@ -24,6 +24,7 @@ internal object HomeSettingsRoutes {
     const val ROOT = "root"
     const val GENERAL = "general"
     const val HOME = "home"
+    const val HOME_GRID = "home_grid"
     const val ALL_APPS = "all_apps"
     const val ALL_APPS_FOLDERS = "all_apps_folders"
     const val SEARCH = "search"
@@ -34,6 +35,7 @@ internal object HomeSettingsRoutes {
         null -> ROOT
         KEY_SCREEN_GENERAL -> GENERAL
         KEY_SCREEN_HOME -> HOME
+        HomeGridSettingsKeys.OPTIONS -> HOME_GRID
         KEY_SCREEN_ALL_APPS -> ALL_APPS
         KEY_ALL_APPS_SEARCH_RESULTS -> SEARCH
         KEY_ALL_APPS_FOLDER_SETTINGS -> ALL_APPS_FOLDERS
@@ -55,6 +57,9 @@ internal object HomeSettingsRoutes {
     }
 
     private fun fromLegacyPreferenceKey(key: String?): String? {
+        if (HomeGridSettingsKeys.contains(key)) {
+            return HOME
+        }
         return when (key) {
             KEY_SCREEN_GENERAL,
             KEY_ALL_APPS_DRAWER_ICON_SCALE -> GENERAL
@@ -117,6 +122,7 @@ internal fun parentRoute(route: String?): String? = when (route) {
     HomeSettingsRoutes.SEARCH,
     HomeSettingsRoutes.PRIVACY -> HomeSettingsRoutes.ROOT
     HomeSettingsRoutes.NOTIFICATIONS -> HomeSettingsRoutes.GENERAL
+    HomeSettingsRoutes.HOME_GRID -> HomeSettingsRoutes.HOME
     HomeSettingsRoutes.ALL_APPS_FOLDERS -> HomeSettingsRoutes.ALL_APPS
     else -> null
 }
@@ -125,6 +131,7 @@ internal fun parentRoute(route: String?): String? = when (route) {
 internal fun routeTitle(route: String): Int = when (route) {
     HomeSettingsRoutes.GENERAL -> R.string.home_settings_general_title
     HomeSettingsRoutes.HOME -> R.string.home_screen
+    HomeSettingsRoutes.HOME_GRID -> R.string.home_grid_title
     HomeSettingsRoutes.ALL_APPS -> R.string.all_apps_drawer_settings_title
     HomeSettingsRoutes.ALL_APPS_FOLDERS -> R.string.all_apps_folders_title
     HomeSettingsRoutes.SEARCH -> R.string.home_settings_search_title

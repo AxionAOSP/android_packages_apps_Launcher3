@@ -21,11 +21,6 @@ import static com.android.launcher3.GridType.GRID_TYPE_ANY;
 import static com.android.launcher3.GridType.GRID_TYPE_NON_ONE_GRID;
 import static com.android.launcher3.GridType.GRID_TYPE_ONE_GRID;
 import static com.android.launcher3.LauncherPrefsExt.ALLAPPS_THEMED_ICONS;
-import static com.android.launcher3.LauncherPrefsExt.ALL_APPS_DRAWER_COLUMNS;
-import static com.android.launcher3.LauncherPrefsExt.ALL_APPS_DRAWER_ICON_SCALE;
-import static com.android.launcher3.LauncherPrefsExt.ALL_APPS_DRAWER_LABEL_SCALE;
-import static com.android.launcher3.LauncherPrefsExt.ALL_APPS_DRAWER_ROW_SCALE;
-import static com.android.launcher3.LauncherPrefsExt.ALL_APPS_DRAWER_SIDE_PADDING_SCALE;
 import static com.android.launcher3.LauncherPrefs.DB_FILE;
 import static com.android.launcher3.LauncherPrefsExt.DRAWER_OPEN_KEYBOARD;
 import static com.android.launcher3.LauncherPrefsExt.ENABLE_TWOLINE_ALLAPPS_TOGGLE;
@@ -39,6 +34,7 @@ import static com.android.launcher3.testing.shared.ResourceUtils.INVALID_RESOURC
 import static com.android.launcher3.util.DisplayController.CHANGE_DENSITY;
 import static com.android.launcher3.util.DisplayController.CHANGE_DESKTOP_MODE;
 import static com.android.launcher3.util.DisplayController.CHANGE_NAVIGATION_MODE;
+import static com.android.launcher3.util.DisplayController.CHANGE_ROTATION;
 import static com.android.launcher3.util.DisplayController.CHANGE_SUPPORTED_BOUNDS;
 import static com.android.launcher3.util.DisplayController.CHANGE_TASKBAR_PINNING;
 import static com.android.launcher3.util.SimpleBroadcastReceiver.actionsFilter;
@@ -68,6 +64,7 @@ import androidx.annotation.StyleRes;
 import androidx.annotation.VisibleForTesting;
 import androidx.annotation.XmlRes;
 
+import com.android.launcher3.allapps.AxAllAppsDisplayPrefs;
 import com.android.launcher3.config.FeatureFlags;
 import com.android.launcher3.dagger.ApplicationContext;
 import com.android.launcher3.dagger.LauncherAppComponent;
@@ -157,6 +154,8 @@ public class InvariantDeviceProfile {
     private final WindowManagerProxy mWMProxy;
     private final LauncherPrefs mPrefs;
     private final ThemeManager mThemeManager;
+    private final AxWorkspaceDisplayPrefs mWorkspaceDisplayPrefs;
+    private final AxAllAppsDisplayPrefs mAllAppsDisplayPrefs;
 
     /**
      * Number of icons per row and column in the workspace.
@@ -290,6 +289,8 @@ public class InvariantDeviceProfile {
             DisplayController dc,
             WindowManagerProxy wmProxy,
             ThemeManager themeManager,
+            AxWorkspaceDisplayPrefs workspaceDisplayPrefs,
+            AxAllAppsDisplayPrefs allAppsDisplayPrefs,
             DaggerSingletonTracker lifeCycle,
             TaskbarModeUtil taskbarModeUtil,
             @Ui final LooperExecutor mainExecutor) {
@@ -298,6 +299,8 @@ public class InvariantDeviceProfile {
         this.taskbarModeUtil = taskbarModeUtil;
         mPrefs = prefs;
         mThemeManager = themeManager;
+        mWorkspaceDisplayPrefs = workspaceDisplayPrefs;
+        mAllAppsDisplayPrefs = allAppsDisplayPrefs;
         mMainExecutor = mainExecutor;
 
         String gridName = prefs.get(GRID_NAME);
@@ -308,7 +311,9 @@ public class InvariantDeviceProfile {
                 (displayContext, info, flags) -> {
                     if ((flags & (CHANGE_DENSITY | CHANGE_SUPPORTED_BOUNDS
                             | CHANGE_NAVIGATION_MODE | CHANGE_TASKBAR_PINNING
-                            | CHANGE_DESKTOP_MODE)) != 0) {
+                            | CHANGE_DESKTOP_MODE)) != 0
+                            || ((flags & CHANGE_ROTATION) != 0
+                                    && mWorkspaceDisplayPrefs.usesOrientationSpecificGrid(this))) {
                         onConfigChanged();
                     }
                 });
@@ -332,25 +337,23 @@ public class InvariantDeviceProfile {
                     || DRAWER_OPEN_KEYBOARD.getSharedPrefKey().equals(key)
                     || SHOW_DESKTOP_LABELS.getSharedPrefKey().equals(key)
                     || SHOW_DRAWER_LABELS.getSharedPrefKey().equals(key)
-                    || ALL_APPS_DRAWER_COLUMNS.getSharedPrefKey().equals(key)
-                    || ALL_APPS_DRAWER_ICON_SCALE.getSharedPrefKey().equals(key)
-                    || ALL_APPS_DRAWER_LABEL_SCALE.getSharedPrefKey().equals(key)
-                    || ALL_APPS_DRAWER_ROW_SCALE.getSharedPrefKey().equals(key)
-                    || ALL_APPS_DRAWER_SIDE_PADDING_SCALE.getSharedPrefKey().equals(key)) {
+                    || mWorkspaceDisplayPrefs.hasPreferenceKey(key)
+                    || mAllAppsDisplayPrefs.hasPreferenceKey(key)) {
                 onConfigChanged();
             }
         };
         prefs.addListener(prefListener, FIXED_LANDSCAPE_MODE, ENABLE_TWOLINE_ALLAPPS_TOGGLE,
                 ALLAPPS_THEMED_ICONS, DRAWER_OPEN_KEYBOARD, SHOW_DESKTOP_LABELS,
-                SHOW_DRAWER_LABELS, ALL_APPS_DRAWER_COLUMNS, ALL_APPS_DRAWER_ICON_SCALE,
-                ALL_APPS_DRAWER_LABEL_SCALE, ALL_APPS_DRAWER_ROW_SCALE,
-                ALL_APPS_DRAWER_SIDE_PADDING_SCALE);
-        lifeCycle.addCloseable(() -> prefs.removeListener(prefListener,
-                FIXED_LANDSCAPE_MODE, ENABLE_TWOLINE_ALLAPPS_TOGGLE, ALLAPPS_THEMED_ICONS,
-                DRAWER_OPEN_KEYBOARD, SHOW_DESKTOP_LABELS, SHOW_DRAWER_LABELS,
-                ALL_APPS_DRAWER_COLUMNS, ALL_APPS_DRAWER_ICON_SCALE,
-                ALL_APPS_DRAWER_LABEL_SCALE, ALL_APPS_DRAWER_ROW_SCALE,
-                ALL_APPS_DRAWER_SIDE_PADDING_SCALE));
+                SHOW_DRAWER_LABELS);
+        mWorkspaceDisplayPrefs.addChangeListener(prefs, prefListener);
+        mAllAppsDisplayPrefs.addChangeListener(prefs, prefListener);
+        lifeCycle.addCloseable(() -> {
+            prefs.removeListener(prefListener,
+                    FIXED_LANDSCAPE_MODE, ENABLE_TWOLINE_ALLAPPS_TOGGLE, ALLAPPS_THEMED_ICONS,
+                    DRAWER_OPEN_KEYBOARD, SHOW_DESKTOP_LABELS, SHOW_DRAWER_LABELS);
+            mWorkspaceDisplayPrefs.removeChangeListener(prefs, prefListener);
+            mAllAppsDisplayPrefs.removeChangeListener(prefs, prefListener);
+        });
 
         SimpleBroadcastReceiver localeReceiver = new SimpleBroadcastReceiver(context,
                 mMainExecutor, i -> onConfigChanged());
@@ -498,6 +501,7 @@ public class InvariantDeviceProfile {
         // If the partner customization apk contains any grid overrides, apply them
         // Supported overrides: numRows, numColumns, iconSize
         applyPartnerDeviceProfileOverrides(context, metrics);
+        mWorkspaceDisplayPrefs.applyToInvariantProfile(context, this);
 
         final List<DeviceProfile> localSupportedProfiles = new ArrayList<>();
         defaultWallpaperSize = new Point(displayInfo.currentSize);

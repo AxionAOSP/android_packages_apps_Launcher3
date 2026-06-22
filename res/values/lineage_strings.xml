@@ -23,16 +23,25 @@
     <string name="home_settings_search_title">Search</string>
     <string name="home_settings_privacy_title">Privacy</string>
     <string name="home_settings_general_summary">Icon sizes and notification dots</string>
-    <string name="home_settings_home_summary">Labels, gestures, and behavior</string>
+    <string name="home_settings_home_summary">Grid, labels, gestures, and behavior</string>
     <string name="home_settings_all_apps_summary">Grid, folders, behavior, and appearance</string>
     <string name="home_settings_search_summary">App drawer results and suggestions</string>
     <string name="home_settings_notifications_summary">Notification dots and badges</string>
     <string name="home_settings_privacy_summary">Hidden and protected app access</string>
+    <string name="home_settings_layout_category">Layout</string>
     <string name="home_settings_icons_category">Icons</string>
     <string name="home_settings_labels_category">Labels</string>
     <string name="home_settings_gestures_category">Gestures</string>
     <string name="home_settings_behavior_category">Behavior</string>
     <string name="home_settings_notifications_category">Notifications</string>
+    <string name="home_grid_title">Home grid</string>
+    <string name="home_grid_summary">Rows, columns, and layout preview</string>
+    <string name="home_grid_category">Layout</string>
+    <string name="home_grid_tablet_portrait_category">Portrait</string>
+    <string name="home_grid_tablet_landscape_category">Landscape</string>
+    <string name="home_grid_columns_title">Columns</string>
+    <string name="home_grid_rows_title">Rows</string>
+    <string name="home_grid_hotseat_icons_title">Dock icons</string>
 
     <!-- Edit workspace -->
     <string name="settings_lock_layout_title">Lock layout</string>
