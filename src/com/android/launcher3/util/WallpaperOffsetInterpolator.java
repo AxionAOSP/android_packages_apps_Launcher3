@@ -18,6 +18,9 @@ import androidx.annotation.AnyThread;
 import androidx.annotation.WorkerThread;
 
 import com.android.app.animation.Interpolators;
+import com.android.launcher3.AxWorkspaceStylePrefs;
+import com.android.launcher3.LauncherPrefChangeListener;
+import com.android.launcher3.LauncherPrefs;
 import com.android.launcher3.Utilities;
 import com.android.launcher3.Workspace;
 
@@ -36,8 +39,13 @@ public class WallpaperOffsetInterpolator {
     private final SimpleBroadcastReceiver mWallpaperChangeReceiver;
     private final Context mContext;
     private final Workspace<?> mWorkspace;
+    private final AxWorkspaceStylePrefs mWorkspaceStylePrefs;
     private final boolean mIsRtl;
     private final Handler mHandler;
+    private final LauncherPrefChangeListener mPreferenceChangeListener = key -> {
+        syncWithScroll();
+        jumpToFinal();
+    };
 
     private boolean mRegistered = false;
     private IBinder mWindowToken;
@@ -49,6 +57,7 @@ public class WallpaperOffsetInterpolator {
     public WallpaperOffsetInterpolator(Workspace<?> workspace) {
         mContext = workspace.getContext();
         mWorkspace = workspace;
+        mWorkspaceStylePrefs = AxWorkspaceStylePrefs.INSTANCE.get(mContext);
         mWallpaperChangeReceiver = new SimpleBroadcastReceiver(
                 workspace.getContext(), UI_HELPER_EXECUTOR, i -> onWallpaperChanged());
         mIsRtl = Utilities.isRtl(workspace.getResources());
@@ -76,7 +85,8 @@ public class WallpaperOffsetInterpolator {
 
         // To match the default wallpaper behavior in the system, we default to either the left
         // or right edge on initialization
-        if (mLockedToDefaultPage || numScrollableScreens <= 1) {
+        if (mLockedToDefaultPage || numScrollableScreens <= 1
+                || !mWorkspaceStylePrefs.shouldScrollWallpaper(mContext)) {
             out[0] =  mIsRtl ? 1 : 0;
             return;
         }
@@ -183,6 +193,9 @@ public class WallpaperOffsetInterpolator {
 
     /** Returns the number of pages used for the wallpaper parallax. */
     public int getNumPagesForWallpaperParallax() {
+        if (!mWorkspaceStylePrefs.shouldScrollWallpaper(mContext)) {
+            return 1;
+        }
         if (mWallpaperIsLiveWallpaper) {
             return mNumScreens;
         } else {
@@ -204,6 +217,8 @@ public class WallpaperOffsetInterpolator {
         mWindowToken = token;
         if (mWindowToken == null && mRegistered) {
             mWallpaperChangeReceiver.close();
+            mWorkspaceStylePrefs.removeChangeListener(LauncherPrefs.get(mContext),
+                    mPreferenceChangeListener);
             mRegistered = false;
         } else if (mWindowToken != null && !mRegistered) {
             mWallpaperChangeReceiver.register(
@@ -211,6 +226,8 @@ public class WallpaperOffsetInterpolator {
                     0 /* flags */,
                     null /* permission */,
                     this::onWallpaperChanged);
+            mWorkspaceStylePrefs.addChangeListener(LauncherPrefs.get(mContext),
+                    mPreferenceChangeListener);
             mRegistered = true;
         }
     }

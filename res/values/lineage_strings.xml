@@ -31,6 +31,7 @@
     <string name="home_settings_layout_category">Layout</string>
     <string name="home_settings_icons_category">Icons</string>
     <string name="home_settings_labels_category">Labels</string>
+    <string name="home_settings_style_category">Style</string>
     <string name="home_settings_gestures_category">Gestures</string>
     <string name="home_settings_behavior_category">Behavior</string>
     <string name="home_settings_notifications_category">Notifications</string>
@@ -44,6 +45,8 @@
     <string name="home_grid_hotseat_icons_title">Dock icons</string>
     <string name="home_icon_size_title">Icon size</string>
     <string name="home_label_size_title">Label size</string>
+    <string name="home_wallpaper_scrolling_title">Wallpaper scrolling</string>
+    <string name="home_top_bar_shadow_title">Top bar shadow</string>
 
     <!-- Edit workspace -->
     <string name="settings_lock_layout_title">Lock layout</string>

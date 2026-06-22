@@ -240,7 +240,6 @@ import com.android.launcher3.util.ScreenOnTracker;
 import com.android.launcher3.util.ScreenOnTracker.ScreenOnListener;
 import com.android.launcher3.util.SettingsCache;
 import com.android.launcher3.util.StableViewInfo;
-import com.android.launcher3.util.SystemUiController;
 import com.android.launcher3.util.Themes;
 import com.android.launcher3.util.Thunk;
 import com.android.launcher3.util.TouchController;
@@ -383,6 +382,7 @@ public class Launcher extends StatefulActivity<LauncherState>
     // We only want to get the SharedPreferences once since it does an FS stat each time we get
     // it from the context.
     private SharedPreferences mSharedPrefs;
+    private AxWorkspaceStylePrefs mWorkspaceStylePrefs;
 
     // Activity result which needs to be processed after workspace has loaded.
     private ActivityResultInfo mPendingActivityResult;
@@ -424,6 +424,8 @@ public class Launcher extends StatefulActivity<LauncherState>
 
     private final SettingsCache.OnChangeListener mNaturalScrollingChangedListener =
             enabled -> mIsNaturalScrollingEnabled = enabled;
+    private final LauncherPrefChangeListener mWorkspaceStylePreferenceListener =
+            key -> applyWorkspaceStylePrefs();
 
     private StartupLatencyLogger mStartupLatencyLogger;
 
@@ -531,8 +533,10 @@ public class Launcher extends StatefulActivity<LauncherState>
 
         // Listen for screen turning off
         ScreenOnTracker.INSTANCE.get(this).addListener(mScreenOnListener);
-        getSystemUiController().updateUiState(SystemUiController.UI_STATE_BASE_WINDOW,
-                Themes.getAttrBoolean(this, R.attr.isWorkspaceDarkText));
+        mWorkspaceStylePrefs = AxWorkspaceStylePrefs.INSTANCE.get(this);
+        mWorkspaceStylePrefs.addChangeListener(LauncherPrefs.get(this),
+                mWorkspaceStylePreferenceListener);
+        applyWorkspaceStylePrefs();
 
         mOverlayManager = getDefaultOverlay();
         PluginManagerWrapper.INSTANCE.get(this)
@@ -1193,6 +1197,7 @@ public class Launcher extends StatefulActivity<LauncherState>
             getAppsView().getSearchUiManager().focusSearchField();
         }
         setTitle(state);
+        applyWorkspaceStylePrefs();
     }
 
     protected void setTitle(@NonNull LauncherState state) {
@@ -1217,9 +1222,18 @@ public class Launcher extends StatefulActivity<LauncherState>
         } else {
             mOverlayManager.onActivityResumed();
         }
+        applyWorkspaceStylePrefs();
 
         DragView.removeAllViews(this);
         TraceHelper.INSTANCE.endSection();
+    }
+
+    @Override
+    public void onWindowFocusChanged(boolean hasFocus) {
+        super.onWindowFocusChanged(hasFocus);
+        if (hasFocus) {
+            applyWorkspaceStylePrefs();
+        }
     }
 
     @Override
@@ -1726,6 +1740,8 @@ public class Launcher extends StatefulActivity<LauncherState>
         SettingsCache.INSTANCE.get(this).unregister(TOUCHPAD_NATURAL_SCROLLING,
                 mNaturalScrollingChangedListener);
         ScreenOnTracker.INSTANCE.get(this).removeListener(mScreenOnListener);
+        mWorkspaceStylePrefs.removeChangeListener(LauncherPrefs.get(this),
+                mWorkspaceStylePreferenceListener);
         PluginManagerWrapper.INSTANCE.get(this).removePluginListener(this);
 
         mModel.removeCallbacks(this);
@@ -1746,6 +1762,13 @@ public class Launcher extends StatefulActivity<LauncherState>
         getRootView().getViewTreeObserver().removeOnPreDrawListener(mOnInitialBindListener);
         mOverlayManager.onActivityDestroyed();
         PillColorProvider.getInstance(mWorkspace.getContext()).unregisterObserver();
+    }
+
+    private void applyWorkspaceStylePrefs() {
+        if (mWorkspaceStylePrefs == null) {
+            return;
+        }
+        mWorkspaceStylePrefs.applySystemBars(this);
     }
 
     /**

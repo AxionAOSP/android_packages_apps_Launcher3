@@ -21,6 +21,7 @@ import android.content.Context;
 import androidx.annotation.Nullable;
 import androidx.annotation.VisibleForTesting;
 
+import com.android.launcher3.AxWorkspaceStylePrefs;
 import com.android.launcher3.InvariantDeviceProfile;
 import com.android.launcher3.LauncherAppState;
 import com.android.launcher3.LauncherPrefs;
@@ -106,6 +107,7 @@ public interface LauncherBaseAppComponent {
     DisplayController getDisplayController();
     WallpaperColorHints getWallpaperColorHints();
     AxAllAppsDisplayPrefs getAllAppsDisplayPrefs();
+    AxWorkspaceStylePrefs getWorkspaceStylePrefs();
     LockedUserState getLockedUserState();
     InvariantDeviceProfile getIDP();
     IconPool getIconPool();

@@ -79,6 +79,18 @@ object LauncherPrefsExt {
         backedUpItem("pref_workspace_icon_scale", 100, EncryptionType.SECURE_SETTINGS)
     @JvmField val WORKSPACE_LABEL_SCALE =
         backedUpItem("pref_workspace_label_scale", 100, EncryptionType.SECURE_SETTINGS)
+    @JvmField val WORKSPACE_WALLPAPER_SCROLLING =
+        backedUpItem(
+            "pref_workspace_wallpaper_scrolling",
+            true,
+            EncryptionType.SECURE_SETTINGS,
+        )
+    @JvmField val WORKSPACE_SHOW_TOP_SHADOW =
+        backedUpItem(
+            "pref_workspace_show_top_shadow",
+            true,
+            EncryptionType.SECURE_SETTINGS,
+        )
     @JvmField val ALLAPPS_THEMED_ICONS =
         backedUpItem("pref_allapps_themed_icons", false, EncryptionType.SECURE_SETTINGS)
     @JvmField val DRAWER_OPEN_KEYBOARD =

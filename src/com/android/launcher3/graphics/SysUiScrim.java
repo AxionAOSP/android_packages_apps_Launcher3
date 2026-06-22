@@ -33,6 +33,9 @@ import androidx.annotation.ColorInt;
 import androidx.annotation.VisibleForTesting;
 
 import com.android.launcher3.DeviceProfile;
+import com.android.launcher3.LauncherPrefChangeListener;
+import com.android.launcher3.LauncherPrefs;
+import com.android.launcher3.LauncherPrefsExt;
 import com.android.launcher3.R;
 import com.android.launcher3.anim.AnimatedFloat;
 import com.android.launcher3.statemanager.StatefulContainer;
@@ -45,7 +48,7 @@ import com.android.launcher3.views.ActivityContext;
 /**
  * View scrim which draws behind hotseat and workspace
  */
-public class SysUiScrim implements View.OnAttachStateChangeListener {
+public class SysUiScrim implements View.OnAttachStateChangeListener, LauncherPrefChangeListener {
 
     /**
      * Receiver used to get a signal that the user unlocked their device.
@@ -86,7 +89,9 @@ public class SysUiScrim implements View.OnAttachStateChangeListener {
 
     private final View mRoot;
     private final StatefulContainer mContainer;
+    private final LauncherPrefs mLauncherPrefs;
     private final boolean mHideSysUiScrim;
+    private boolean mShowTopScrim;
     private boolean mSkipScrimAnimationForTest = false;
 
     private boolean mAnimateScrimOnNextDraw = false;
@@ -96,11 +101,13 @@ public class SysUiScrim implements View.OnAttachStateChangeListener {
     public SysUiScrim(View view) {
         mRoot = view;
         mContainer = ActivityContext.lookupContext(view.getContext());
+        mLauncherPrefs = LauncherPrefs.get(view.getContext());
         DisplayMetrics dm = mContainer.asContext().getResources().getDisplayMetrics();
 
         mTopMaskHeight = ResourceUtils.pxFromDp(TOP_MASK_HEIGHT_DP, dm);
         mBottomMaskHeight = ResourceUtils.pxFromDp(BOTTOM_MASK_HEIGHT_DP, dm);
         mHideSysUiScrim = Themes.getAttrBoolean(view.getContext(), R.attr.isWorkspaceDarkText);
+        mShowTopScrim = mLauncherPrefs.get(LauncherPrefsExt.WORKSPACE_SHOW_TOP_SHADOW);
 
         mTopMaskBitmap = mHideSysUiScrim ? null : createDitheredAlphaMask(mTopMaskHeight,
                 new int[]{0x3DFFFFFF, 0x0AFFFFFF, 0x00FFFFFF},
@@ -136,7 +143,7 @@ public class SysUiScrim implements View.OnAttachStateChangeListener {
                 mAnimateScrimOnNextDraw = false;
             }
 
-            if (mDrawTopScrim) {
+            if (mShowTopScrim && mDrawTopScrim) {
                 canvas.drawBitmap(mTopMaskBitmap, null, mTopMaskRect, mTopMaskPaint);
             }
             if (mDrawBottomScrim) {
@@ -175,11 +182,22 @@ public class SysUiScrim implements View.OnAttachStateChangeListener {
     @Override
     public void onViewAttachedToWindow(View view) {
         ScreenOnTracker.INSTANCE.get(mContainer.asContext()).addListener(mScreenOnListener);
+        mLauncherPrefs.addListener(this, LauncherPrefsExt.WORKSPACE_SHOW_TOP_SHADOW);
     }
 
     @Override
     public void onViewDetachedFromWindow(View view) {
         ScreenOnTracker.INSTANCE.get(mContainer.asContext()).removeListener(mScreenOnListener);
+        mLauncherPrefs.removeListener(this, LauncherPrefsExt.WORKSPACE_SHOW_TOP_SHADOW);
+    }
+
+    @Override
+    public void onPrefChanged(String key) {
+        if (!LauncherPrefsExt.WORKSPACE_SHOW_TOP_SHADOW.getSharedPrefKey().equals(key)) {
+            return;
+        }
+        mShowTopScrim = mLauncherPrefs.get(LauncherPrefsExt.WORKSPACE_SHOW_TOP_SHADOW);
+        mRoot.invalidate();
     }
 
     /**
