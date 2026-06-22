@@ -47,6 +47,9 @@
     <string name="home_label_size_title">Label size</string>
     <string name="home_wallpaper_scrolling_title">Wallpaper scrolling</string>
     <string name="home_top_bar_shadow_title">Top bar shadow</string>
+    <string name="home_double_tap_action_title">Double tap action</string>
+    <string name="home_double_tap_action_none">Do nothing</string>
+    <string name="home_double_tap_action_sleep">Sleep</string>
 
     <!-- Edit workspace -->
     <string name="settings_lock_layout_title">Lock layout</string>

@@ -39,11 +39,10 @@ import android.view.View.OnTouchListener;
 import android.view.ViewConfiguration;
 
 import com.android.launcher3.AbstractFloatingView;
+import com.android.launcher3.AxWorkspaceGesturePrefs;
 import com.android.launcher3.CellLayout;
 import com.android.launcher3.DeviceProfile;
 import com.android.launcher3.Launcher;
-import com.android.launcher3.LauncherPrefs;
-import com.android.launcher3.LauncherPrefsExt;
 import com.android.launcher3.Workspace;
 import com.android.launcher3.dragndrop.DragLayer;
 import com.android.launcher3.logger.LauncherAtom;
@@ -71,6 +70,7 @@ public class WorkspaceTouchListener extends GestureDetector.SimpleOnGestureListe
     private final Rect mTempRect = new Rect();
     private final Launcher mLauncher;
     private final Workspace<?> mWorkspace;
+    private final AxWorkspaceGesturePrefs mWorkspaceGesturePrefs;
     private final PointF mTouchDownPoint = new PointF();
     private final float mTouchSlop;
 
@@ -81,6 +81,7 @@ public class WorkspaceTouchListener extends GestureDetector.SimpleOnGestureListe
     public WorkspaceTouchListener(Launcher launcher, Workspace<?> workspace) {
         mLauncher = launcher;
         mWorkspace = workspace;
+        mWorkspaceGesturePrefs = AxWorkspaceGesturePrefs.INSTANCE.get(launcher);
         // Use twice the touch slop as we are looking for long press which is more
         // likely to cause movement.
         mTouchSlop = 2 * ViewConfiguration.get(launcher).getScaledTouchSlop();
@@ -227,10 +228,6 @@ public class WorkspaceTouchListener extends GestureDetector.SimpleOnGestureListe
 
     @Override
     public boolean onDoubleTap(MotionEvent event) {
-        if (LauncherPrefsExt.SLEEP_GESTURE.get(mWorkspace.getContext())) {
-            mLauncher.onSleepEvent(event);
-            return true;
-        }
-        return false;
+        return mWorkspaceGesturePrefs.handleDoubleTap(mLauncher, event);
     }
 }

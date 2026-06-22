@@ -20,7 +20,9 @@ import android.content.Context
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.res.stringResource
+import com.android.axion.compose.preferences.ListPreference
 import com.android.axion.compose.preferences.PreferenceGroup
+import com.android.launcher3.AxWorkspaceGesturePrefs
 import com.android.launcher3.Flags
 import com.android.launcher3.LauncherPrefs
 import com.android.launcher3.LauncherPrefsExt
@@ -73,11 +75,7 @@ internal fun HomeScreen(
     }
     PreferenceGroup(title = stringResource(R.string.home_settings_gestures_category)) {
         item {
-            BooleanPreference(
-                item = LauncherPrefsExt.SLEEP_GESTURE,
-                titleRes = R.string.pref_sleep_gesture_title,
-                summaryRes = R.string.pref_sleep_gesture_summary,
-            )
+            DoubleTapActionPreference()
         }
     }
     PreferenceGroup(title = stringResource(R.string.home_settings_behavior_category)) {
@@ -115,6 +113,39 @@ internal fun HomeScreen(
             }
         }
     }
+}
+
+@Composable
+private fun DoubleTapActionPreference() {
+    val actionPreference = rememberLauncherPreference(LauncherPrefsExt.WORKSPACE_DOUBLE_TAP_ACTION)
+    val sleepPreference = rememberLauncherPreference(LauncherPrefsExt.SLEEP_GESTURE)
+    val storedAction = if (actionPreference.value == AxWorkspaceGesturePrefs.ACTION_NONE ||
+        actionPreference.value == AxWorkspaceGesturePrefs.ACTION_SLEEP) {
+        actionPreference.value
+    } else {
+        AxWorkspaceGesturePrefs.ACTION_NONE
+    }
+    val value = when {
+        sleepPreference.value ->
+            AxWorkspaceGesturePrefs.ACTION_SLEEP
+        storedAction == AxWorkspaceGesturePrefs.ACTION_SLEEP ->
+            AxWorkspaceGesturePrefs.ACTION_NONE
+        else -> storedAction
+    }
+    ListPreference(
+        title = stringResource(R.string.home_double_tap_action_title),
+        options = listOf(
+            AxWorkspaceGesturePrefs.ACTION_NONE to
+                stringResource(R.string.home_double_tap_action_none),
+            AxWorkspaceGesturePrefs.ACTION_SLEEP to
+                stringResource(R.string.home_double_tap_action_sleep),
+        ),
+        value = value,
+        onValueChange = {
+            actionPreference.onChange(it)
+            sleepPreference.onChange(it == AxWorkspaceGesturePrefs.ACTION_SLEEP)
+        },
+    )
 }
 
 private fun shouldShowRotationPreference(context: Context): Boolean {
