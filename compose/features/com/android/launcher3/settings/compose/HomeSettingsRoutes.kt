@@ -72,7 +72,8 @@ internal object HomeSettingsRoutes {
             KEY_MINUS_ONE,
             KEY_WORKSPACE_LABEL_SCALE,
             KEY_WORKSPACE_WALLPAPER_SCROLLING,
-            KEY_WORKSPACE_SHOW_TOP_SHADOW -> HOME
+            KEY_WORKSPACE_SHOW_TOP_SHADOW,
+            KEY_WORKSPACE_DOUBLE_TAP_ACTION -> HOME
             KEY_SCREEN_ALL_APPS,
             KEY_ALLAPPS_THEMED_ICONS,
             KEY_DRAWER_LABELS,

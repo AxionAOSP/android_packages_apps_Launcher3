@@ -91,6 +91,12 @@ object LauncherPrefsExt {
             true,
             EncryptionType.SECURE_SETTINGS,
         )
+    @JvmField val WORKSPACE_DOUBLE_TAP_ACTION =
+        backedUpItem(
+            "pref_workspace_double_tap_action",
+            "none",
+            EncryptionType.SECURE_SETTINGS,
+        )
     @JvmField val ALLAPPS_THEMED_ICONS =
         backedUpItem("pref_allapps_themed_icons", false, EncryptionType.SECURE_SETTINGS)
     @JvmField val DRAWER_OPEN_KEYBOARD =
