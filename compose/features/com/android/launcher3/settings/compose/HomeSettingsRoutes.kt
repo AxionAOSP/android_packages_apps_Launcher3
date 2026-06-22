@@ -30,6 +30,7 @@ internal object HomeSettingsRoutes {
     const val SEARCH = "search"
     const val NOTIFICATIONS = "notifications"
     const val PRIVACY = "privacy"
+    const val BACKUP = "backup"
 
     fun fromRootKey(rootKey: String?): String? = when (rootKey) {
         null -> ROOT
@@ -43,6 +44,7 @@ internal object HomeSettingsRoutes {
         KEY_SCREEN_SEARCH -> SEARCH
         KEY_SCREEN_NOTIFICATIONS -> NOTIFICATIONS
         KEY_SCREEN_PRIVACY -> PRIVACY
+        KEY_SCREEN_BACKUP -> BACKUP
         else -> null
     }
 
@@ -115,6 +117,8 @@ internal object HomeSettingsRoutes {
             KEY_SEARCH_PERMISSION_CALENDAR -> SEARCH
             KEY_NOTIFICATION_DOTS -> NOTIFICATIONS
             KEY_TRUST_APPS -> PRIVACY
+            KEY_BACKUP_EXPORT,
+            KEY_BACKUP_IMPORT -> BACKUP
             else -> fromRootKey(key)
         }
     }
@@ -125,7 +129,8 @@ internal fun parentRoute(route: String?): String? = when (route) {
     HomeSettingsRoutes.HOME,
     HomeSettingsRoutes.ALL_APPS,
     HomeSettingsRoutes.SEARCH,
-    HomeSettingsRoutes.PRIVACY -> HomeSettingsRoutes.ROOT
+    HomeSettingsRoutes.PRIVACY,
+    HomeSettingsRoutes.BACKUP -> HomeSettingsRoutes.ROOT
     HomeSettingsRoutes.NOTIFICATIONS -> HomeSettingsRoutes.GENERAL
     HomeSettingsRoutes.HOME_GRID -> HomeSettingsRoutes.HOME
     HomeSettingsRoutes.ALL_APPS_FOLDERS -> HomeSettingsRoutes.ALL_APPS
@@ -142,5 +147,6 @@ internal fun routeTitle(route: String): Int = when (route) {
     HomeSettingsRoutes.SEARCH -> R.string.home_settings_search_title
     HomeSettingsRoutes.NOTIFICATIONS -> R.string.notifications_header
     HomeSettingsRoutes.PRIVACY -> R.string.home_settings_privacy_title
+    HomeSettingsRoutes.BACKUP -> R.string.home_settings_backup_title
     else -> R.string.settings_button_text
 }
