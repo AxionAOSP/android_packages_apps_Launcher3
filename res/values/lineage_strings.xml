@@ -42,6 +42,8 @@
     <string name="home_grid_columns_title">Columns</string>
     <string name="home_grid_rows_title">Rows</string>
     <string name="home_grid_hotseat_icons_title">Dock icons</string>
+    <string name="home_icon_size_title">Icon size</string>
+    <string name="home_label_size_title">Label size</string>
 
     <!-- Edit workspace -->
     <string name="settings_lock_layout_title">Lock layout</string>

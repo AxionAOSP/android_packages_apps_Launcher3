@@ -27,6 +27,12 @@ internal fun GeneralScreen(activity: SettingsActivity) {
     PreferenceGroup(title = stringResource(R.string.home_settings_icons_category)) {
         item {
             PercentSliderPreference(
+                item = LauncherPrefsExt.WORKSPACE_ICON_SCALE,
+                titleRes = R.string.home_icon_size_title,
+            )
+        }
+        item {
+            PercentSliderPreference(
                 item = LauncherPrefsExt.ALL_APPS_DRAWER_ICON_SCALE,
                 titleRes = R.string.drawer_icon_size_title,
             )

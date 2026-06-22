@@ -62,13 +62,15 @@ internal object HomeSettingsRoutes {
         }
         return when (key) {
             KEY_SCREEN_GENERAL,
-            KEY_ALL_APPS_DRAWER_ICON_SCALE -> GENERAL
+            KEY_ALL_APPS_DRAWER_ICON_SCALE,
+            KEY_WORKSPACE_ICON_SCALE -> GENERAL
             KEY_WORKSPACE_LOCK,
             KEY_SLEEP_GESTURE,
             KEY_ADD_ICON_TO_HOME,
             KEY_ALLOW_ROTATION,
             KEY_DESKTOP_LABELS,
-            KEY_MINUS_ONE -> HOME
+            KEY_MINUS_ONE,
+            KEY_WORKSPACE_LABEL_SCALE -> HOME
             KEY_SCREEN_ALL_APPS,
             KEY_ALLAPPS_THEMED_ICONS,
             KEY_DRAWER_LABELS,
