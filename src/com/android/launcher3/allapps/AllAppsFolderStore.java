@@ -22,6 +22,7 @@ import android.content.Context;
 import android.os.UserHandle;
 import android.util.Log;
 
+import com.android.launcher3.ConstantItem;
 import com.android.launcher3.LauncherPrefs;
 import com.android.launcher3.R;
 import com.android.launcher3.model.data.AppInfo;
@@ -62,6 +63,11 @@ public final class AllAppsFolderStore {
     }
 
     public static List<AllAppsFolderInfo> getFolders(Context context, List<AppInfo> apps) {
+        return getFolders(context, apps, ALL_APPS_FOLDERS);
+    }
+
+    static List<AllAppsFolderInfo> getFolders(Context context, List<AppInfo> apps,
+            ConstantItem<String> item) {
         Map<String, AppInfo> appMap = new HashMap<>();
         for (AppInfo appInfo : apps) {
             String key = PinnedApps.encode(context, appInfo);
@@ -70,7 +76,7 @@ public final class AllAppsFolderStore {
             }
         }
 
-        JSONArray folders = readFolders(context);
+        JSONArray folders = readFolders(context, item);
         List<AllAppsFolderInfo> folderInfos = new ArrayList<>();
         for (int i = 0; i < folders.length(); i++) {
             JSONObject folder = folders.optJSONObject(i);
@@ -94,6 +100,11 @@ public final class AllAppsFolderStore {
     }
 
     public static Set<String> getFolderedAppKeys(Context context, List<AppInfo> apps) {
+        return getFolderedAppKeys(context, apps, ALL_APPS_FOLDERS);
+    }
+
+    static Set<String> getFolderedAppKeys(Context context, List<AppInfo> apps,
+            ConstantItem<String> item) {
         Set<String> appKeys = new HashSet<>();
         for (AppInfo appInfo : apps) {
             String key = PinnedApps.encode(context, appInfo);
@@ -103,7 +114,7 @@ public final class AllAppsFolderStore {
         }
 
         Set<String> folderedKeys = new HashSet<>();
-        JSONArray folders = readFolders(context);
+        JSONArray folders = readFolders(context, item);
         for (int i = 0; i < folders.length(); i++) {
             JSONObject folder = folders.optJSONObject(i);
             JSONArray folderApps = folder == null ? null : folder.optJSONArray(KEY_APPS);
@@ -121,7 +132,11 @@ public final class AllAppsFolderStore {
     }
 
     public static List<FolderRecord> getFolderRecords(Context context) {
-        JSONArray folders = readFolders(context);
+        return getFolderRecords(context, ALL_APPS_FOLDERS);
+    }
+
+    static List<FolderRecord> getFolderRecords(Context context, ConstantItem<String> item) {
+        JSONArray folders = readFolders(context, item);
         List<FolderRecord> records = new ArrayList<>(folders.length());
         for (int i = 0; i < folders.length(); i++) {
             JSONObject folder = folders.optJSONObject(i);
@@ -135,11 +150,15 @@ public final class AllAppsFolderStore {
     }
 
     public static int createFolder(Context context, CharSequence title) {
-        JSONArray folders = readFolders(context);
+        return createFolder(context, title, ALL_APPS_FOLDERS);
+    }
+
+    static int createFolder(Context context, CharSequence title, ConstantItem<String> item) {
+        JSONArray folders = readFolders(context, item);
         int folderId = nextFolderId(folders);
         try {
             folders.put(createFolder(folderId, getStoredTitle(title), new JSONArray()));
-            writeFolders(context, folders);
+            writeFolders(context, folders, item);
         } catch (JSONException e) {
             Log.w(TAG, "Unable to create all apps folder", e);
             return NO_FOLDER_ID;
@@ -148,7 +167,12 @@ public final class AllAppsFolderStore {
     }
 
     public static CharSequence setFolderTitle(Context context, int folderId, CharSequence title) {
-        JSONArray folders = readFolders(context);
+        return setFolderTitle(context, folderId, title, ALL_APPS_FOLDERS);
+    }
+
+    static CharSequence setFolderTitle(Context context, int folderId, CharSequence title,
+            ConstantItem<String> item) {
+        JSONArray folders = readFolders(context, item);
         CharSequence displayTitle = getDisplayTitle(context, title);
         for (int i = 0; i < folders.length(); i++) {
             JSONObject folder = folders.optJSONObject(i);
@@ -157,7 +181,7 @@ public final class AllAppsFolderStore {
             }
             try {
                 folder.put(KEY_TITLE, getStoredTitle(title));
-                writeFolders(context, folders);
+                writeFolders(context, folders, item);
             } catch (JSONException e) {
                 Log.w(TAG, "Unable to rename all apps folder", e);
             }
@@ -167,7 +191,11 @@ public final class AllAppsFolderStore {
     }
 
     public static void deleteFolder(Context context, int folderId) {
-        JSONArray folders = readFolders(context);
+        deleteFolder(context, folderId, ALL_APPS_FOLDERS);
+    }
+
+    static void deleteFolder(Context context, int folderId, ConstantItem<String> item) {
+        JSONArray folders = readFolders(context, item);
         JSONArray updatedFolders = new JSONArray();
         for (int i = 0; i < folders.length(); i++) {
             JSONObject folder = folders.optJSONObject(i);
@@ -175,11 +203,16 @@ public final class AllAppsFolderStore {
                 updatedFolders.put(folder);
             }
         }
-        writeFolders(context, updatedFolders);
+        writeFolders(context, updatedFolders, item);
     }
 
     public static void moveFolder(Context context, int fromPosition, int toPosition) {
-        JSONArray folders = readFolders(context);
+        moveFolder(context, fromPosition, toPosition, ALL_APPS_FOLDERS);
+    }
+
+    static void moveFolder(Context context, int fromPosition, int toPosition,
+            ConstantItem<String> item) {
+        JSONArray folders = readFolders(context, item);
         if (fromPosition == toPosition || fromPosition < 0 || toPosition < 0
                 || fromPosition >= folders.length() || toPosition >= folders.length()) {
             return;
@@ -199,11 +232,15 @@ public final class AllAppsFolderStore {
         for (JSONObject folder : orderedFolders) {
             updatedFolders.put(folder);
         }
-        writeFolders(context, updatedFolders);
+        writeFolders(context, updatedFolders, item);
     }
 
     public static List<String> getFolderAppKeys(Context context, int folderId) {
-        JSONArray folders = readFolders(context);
+        return getFolderAppKeys(context, folderId, ALL_APPS_FOLDERS);
+    }
+
+    static List<String> getFolderAppKeys(Context context, int folderId, ConstantItem<String> item) {
+        JSONArray folders = readFolders(context, item);
         for (int i = 0; i < folders.length(); i++) {
             JSONObject folder = folders.optJSONObject(i);
             if (folder == null || folder.optInt(KEY_ID) != folderId) {
@@ -220,7 +257,12 @@ public final class AllAppsFolderStore {
     }
 
     public static void setFolderAppKeys(Context context, int folderId, List<String> appKeys) {
-        JSONArray folders = readFolders(context);
+        setFolderAppKeys(context, folderId, appKeys, ALL_APPS_FOLDERS);
+    }
+
+    static void setFolderAppKeys(Context context, int folderId, List<String> appKeys,
+            ConstantItem<String> item) {
+        JSONArray folders = readFolders(context, item);
         LinkedHashSet<String> selectedKeys = new LinkedHashSet<>();
         for (String appKey : appKeys) {
             if (appKey != null && !appKey.isEmpty()) {
@@ -246,12 +288,17 @@ public final class AllAppsFolderStore {
             }
         }
         if (foundFolder) {
-            writeFolders(context, folders);
+            writeFolders(context, folders, item);
         }
     }
 
     public static Map<String, CharSequence> getFolderTitlesByAppKey(Context context) {
-        JSONArray folders = readFolders(context);
+        return getFolderTitlesByAppKey(context, ALL_APPS_FOLDERS);
+    }
+
+    static Map<String, CharSequence> getFolderTitlesByAppKey(Context context,
+            ConstantItem<String> item) {
+        JSONArray folders = readFolders(context, item);
         Map<String, CharSequence> titlesByKey = new LinkedHashMap<>();
         for (int i = 0; i < folders.length(); i++) {
             JSONObject folder = folders.optJSONObject(i);
@@ -323,15 +370,23 @@ public final class AllAppsFolderStore {
     }
 
     static JSONArray readFolders(Context context) {
+        return readFolders(context, ALL_APPS_FOLDERS);
+    }
+
+    static JSONArray readFolders(Context context, ConstantItem<String> item) {
         try {
-            return new JSONArray(LauncherPrefs.get(context).get(ALL_APPS_FOLDERS));
+            return new JSONArray(LauncherPrefs.get(context).get(item));
         } catch (JSONException e) {
             return new JSONArray();
         }
     }
 
     private static void writeFolders(Context context, JSONArray folders) {
-        LauncherPrefs.get(context).put(ALL_APPS_FOLDERS, folders.toString());
+        writeFolders(context, folders, ALL_APPS_FOLDERS);
+    }
+
+    static void writeFolders(Context context, JSONArray folders, ConstantItem<String> item) {
+        LauncherPrefs.get(context).put(item, folders.toString());
     }
 
     public static final class FolderRecord {

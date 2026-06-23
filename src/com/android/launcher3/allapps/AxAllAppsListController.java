@@ -34,32 +34,56 @@ final class AxAllAppsListController {
 
     private final Context mContext;
     private final AlphabeticIndexCompat mIndex;
+    private final AxSmartDrawerManager mSmartDrawerManager;
 
     AxAllAppsListController(Context context) {
         mContext = context;
         mIndex = new AlphabeticIndexCompat(context);
+        mSmartDrawerManager = AxSmartDrawerManager.INSTANCE.get(context);
     }
 
     void addPreferenceListener(LauncherPrefChangeListener listener) {
-        LauncherPrefs.get(mContext).addListener(listener, ALL_APPS_FOLDERS, PINNED_APPS);
+        LauncherPrefs prefs = LauncherPrefs.get(mContext);
+        prefs.addListener(listener, ALL_APPS_FOLDERS);
+        mSmartDrawerManager.addChangeListener(prefs, listener);
     }
 
     boolean handlesPrefChange(String key) {
         return PINNED_APPS.getSharedPrefKey().equals(key)
-                || ALL_APPS_FOLDERS.getSharedPrefKey().equals(key);
+                || ALL_APPS_FOLDERS.getSharedPrefKey().equals(key)
+                || mSmartDrawerManager.hasPreferenceKey(key);
     }
 
     boolean shouldShowApp(AppInfo info) {
-        return !PinnedApps.isPinned(mContext, info);
+        return mSmartDrawerManager.isEnabled() || !PinnedApps.isPinned(mContext, info);
     }
 
-    List<Object> getEntries(List<AppInfo> appList, boolean hasPrivateApps) {
-        List<Object> entries = new ArrayList<>();
+    boolean isSmartDrawerMode() {
+        return mSmartDrawerManager.isEnabled();
+    }
+
+    List<Object> getEntries(List<AppInfo> appList, boolean hasPrivateApps,
+            String expandedSmartCategoryId) {
         if (hasPrivateApps) {
-            entries.addAll(appList);
-            return entries;
+            return new ArrayList<>(appList);
+        }
+        if (mSmartDrawerManager.isEnabled()) {
+            List<AxSmartDrawerCategory> smartEntries = mSmartDrawerManager.getEntries(appList);
+            if (expandedSmartCategoryId != null) {
+                for (AxSmartDrawerCategory category : smartEntries) {
+                    if (category.isExpandable()
+                            && expandedSmartCategoryId.equals(category.getId())) {
+                        List<Object> expandedEntries = new ArrayList<>();
+                        expandedEntries.add(new SmartDrawerHeader(category));
+                        expandedEntries.addAll(category.getApps());
+                        return expandedEntries;
+                    }
+                }
+            }
+            return new ArrayList<>(smartEntries);
         }
 
+        List<Object> entries = new ArrayList<>();
         Set<String> folderedKeys = AllAppsFolderStore.getFolderedAppKeys(mContext, appList);
         List<AllAppsFolderInfo> folders = AllAppsFolderStore.getFolders(mContext, appList);
         entries.addAll(folders);
@@ -80,7 +104,27 @@ final class AxAllAppsListController {
         return AdapterItem.asFolder((AllAppsFolderInfo) entry);
     }
 
+    boolean isSmartDrawerEntry(Object entry) {
+        return entry instanceof AxSmartDrawerCategory || entry instanceof SmartDrawerHeader;
+    }
+
+    AdapterItem createSmartDrawerItem(Object entry) {
+        if (entry instanceof SmartDrawerHeader header) {
+            return AdapterItem.asSmartDrawerHeader(header.category);
+        }
+        AxSmartDrawerCategory category = (AxSmartDrawerCategory) entry;
+        return category.isRow()
+                ? AdapterItem.asSmartDrawerRow(category)
+                : AdapterItem.asSmartDrawerCategory(category);
+    }
+
     String getSectionName(Object entry) {
+        if (entry instanceof SmartDrawerHeader header) {
+            return mIndex.computeSectionName(header.category.getTitle());
+        }
+        if (entry instanceof AxSmartDrawerCategory category) {
+            return mIndex.computeSectionName(category.getTitle());
+        }
         if (entry instanceof AllAppsFolderInfo folderInfo) {
             return mIndex.computeSectionName(folderInfo.getTitle());
         }
@@ -88,10 +132,24 @@ final class AxAllAppsListController {
     }
 
     String getEntryTitle(Object entry) {
+        if (entry instanceof SmartDrawerHeader header) {
+            return String.valueOf(header.category.getTitle());
+        }
+        if (entry instanceof AxSmartDrawerCategory category) {
+            return String.valueOf(category.getTitle());
+        }
         if (entry instanceof AllAppsFolderInfo folderInfo) {
             return String.valueOf(folderInfo.getTitle());
         }
         AppInfo info = (AppInfo) entry;
         return info.title == null ? "" : info.title.toString();
+    }
+
+    private static final class SmartDrawerHeader {
+        final AxSmartDrawerCategory category;
+
+        SmartDrawerHeader(AxSmartDrawerCategory category) {
+            this.category = category;
+        }
     }
 }

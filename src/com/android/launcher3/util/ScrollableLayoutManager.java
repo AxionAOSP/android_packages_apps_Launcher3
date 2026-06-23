@@ -107,7 +107,8 @@ public class ScrollableLayoutManager extends GridLayoutManager {
         if (itemPosition < 0) {
             return 0;
         }
-        return getPaddingTop() + getItemsHeight(adapter, itemPosition) - getDecoratedTop(child);
+        return Math.max(0,
+                getPaddingTop() + getItemsHeight(adapter, itemPosition) - getDecoratedTop(child));
     }
 
     @Override

@@ -47,14 +47,22 @@ public final class AxAllAppsFolderAdapter {
         BaseAllAppsAdapter.AdapterItem adapterItem = apps.getAdapterItems().get(position);
         FrameLayout folderIconContainer = (FrameLayout) holder.itemView;
         folderIconContainer.removeAllViews();
-        FolderIcon folderIcon = FolderIcon.inflateFolderAndIcon(R.layout.all_apps_folder_icon,
-                getContextActivity(activityContext), null,
-                adapterItem.folderInfo.toFolderInfo(activityContext.asContext()));
-        folderIcon.onTitleChanged(adapterItem.folderInfo.getTitle());
-        folderIcon.setTextVisible(true);
-        folderIcon.setOnFocusChangeListener(focusListener);
+        FolderIcon folderIcon = createFolderIcon(activityContext, folderIconContainer,
+                adapterItem.folderInfo, focusListener, true);
         folderIconContainer.addView(folderIcon, new FrameLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
+    }
+
+    private static FolderIcon createFolderIcon(ActivityContext activityContext, ViewGroup parent,
+            AllAppsFolderInfo folderInfo, OnFocusChangeListener focusListener,
+            boolean textVisible) {
+        FolderIcon folderIcon = FolderIcon.inflateFolderAndIcon(R.layout.all_apps_folder_icon,
+                getContextActivity(activityContext), parent,
+                folderInfo.toFolderInfo(activityContext.asContext()));
+        folderIcon.onTitleChanged(folderInfo.getTitle());
+        folderIcon.setTextVisible(textVisible);
+        folderIcon.setOnFocusChangeListener(focusListener);
+        return folderIcon;
     }
 
     @SuppressWarnings("unchecked")

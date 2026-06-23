@@ -141,6 +141,8 @@ object LauncherPrefsExt {
         backedUpItem("pref_all_apps_show_scrollbar", true, EncryptionType.SECURE_SETTINGS)
     @JvmField val ALL_APPS_HAPTIC_FEEDBACK =
         backedUpItem("pref_all_apps_haptic_feedback", true, EncryptionType.SECURE_SETTINGS)
+    @JvmField val ALL_APPS_DRAWER_LAYOUT_MODE =
+        backedUpItem("pref_app_drawer_layout_mode", 0, EncryptionType.SECURE_SETTINGS)
     @JvmField val PINNED_APPS =
         backedUpItem(
             "pref_all_apps_pinned_apps",
@@ -149,6 +151,12 @@ object LauncherPrefsExt {
         )
     @JvmField val ALL_APPS_FOLDERS =
         backedUpItem("pref_all_apps_folders", "[]", EncryptionType.SECURE_SETTINGS)
+    @JvmField val ALL_APPS_SMART_DRAWER_FOLDERS =
+        backedUpItem(
+            "pref_all_apps_smart_drawer_folders",
+            "[]",
+            EncryptionType.SECURE_SETTINGS,
+        )
     @JvmField val ALL_APPS_SEARCH_RESULT_APPS =
         backedUpItem(
             "pref_all_apps_search_result_apps",
@@ -284,8 +292,10 @@ object LauncherPrefsExt {
         ALL_APPS_REMEMBER_POSITION,
         ALL_APPS_SHOW_SCROLLBAR,
         ALL_APPS_HAPTIC_FEEDBACK,
+        ALL_APPS_DRAWER_LAYOUT_MODE,
         PINNED_APPS,
         ALL_APPS_FOLDERS,
+        ALL_APPS_SMART_DRAWER_FOLDERS,
         ALL_APPS_SEARCH_RESULT_APPS,
         ALL_APPS_SEARCH_RESULT_APP_ACTIONS,
         ALL_APPS_SEARCH_RESULT_QUICK_ANSWERS,

@@ -63,6 +63,9 @@ public class AllAppsState extends LauncherState {
 
     @Override
     public void onBackStarted(Launcher launcher) {
+        if (launcher.getAppsView().isSmartDrawerExpanded()) {
+            return;
+        }
         // Because the back gesture can take longer time depending on when user release the finger,
         // we pass BACK_CUJ_TIMEOUT_MS as timeout to the jank monitor.
         InteractionJankMonitorWrapper.begin(launcher.getAppsView(),
@@ -72,6 +75,9 @@ public class AllAppsState extends LauncherState {
 
     @Override
     public void onBackInvoked(Launcher launcher) {
+        if (launcher.getAppsView().collapseSmartDrawerCategory()) {
+            return;
+        }
         // In predictive back swipe, onBackInvoked() will be called after onBackStarted().
         // In 3 button mode, onBackStarted() is not called but onBackInvoked() will be called.
         // Thus In onBackInvoked(), we should only begin instrumenting if we didn't call
@@ -83,9 +89,20 @@ public class AllAppsState extends LauncherState {
         super.onBackInvoked(launcher);
     }
 
+    @Override
+    public void onBackProgressed(Launcher launcher, float backProgress) {
+        if (launcher.getAppsView().isSmartDrawerExpanded()) {
+            return;
+        }
+        super.onBackProgressed(launcher, backProgress);
+    }
+
     /** Called when predictive back swipe is cancelled. */
     @Override
     public void onBackCancelled(Launcher launcher) {
+        if (launcher.getAppsView().isSmartDrawerExpanded()) {
+            return;
+        }
         super.onBackCancelled(launcher);
         InteractionJankMonitorWrapper.cancel(Cuj.CUJ_LAUNCHER_CLOSE_ALL_APPS_BACK);
     }

@@ -84,6 +84,8 @@ internal fun HomeSettingsScreen(
                         HomeSettingsRoutes.HOME_GRID -> HomeGridScreen()
                         HomeSettingsRoutes.ALL_APPS -> AllAppsDrawerScreen(navigator::navigateTo)
                         HomeSettingsRoutes.ALL_APPS_FOLDERS -> AllAppsFoldersScreen()
+                        HomeSettingsRoutes.ALL_APPS_SMART_DRAWER ->
+                            AllAppsFoldersScreen(smartDrawer = true)
                         HomeSettingsRoutes.SEARCH -> SearchScreen(activity)
                         HomeSettingsRoutes.NOTIFICATIONS -> NotificationsScreen(activity)
                         HomeSettingsRoutes.PRIVACY -> PrivacyScreen(activity)

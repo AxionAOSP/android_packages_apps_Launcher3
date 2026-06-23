@@ -55,24 +55,31 @@ public final class PinnedApps {
 
     public static List<WorkspaceItemInfo> getPinnedWorkspaceItems(
             Context context, AllAppsStore allAppsStore) {
-        Set<String> pinnedApps = LauncherPrefs.get(context).get(PINNED_APPS);
-        if (pinnedApps.isEmpty()) {
-            return Collections.emptyList();
-        }
-
         List<AppInfo> appInfos = new ArrayList<>();
-        for (AppInfo appInfo : allAppsStore.getApps()) {
-            if (pinnedApps.contains(encode(context, appInfo))) {
-                appInfos.add(appInfo);
-            }
-        }
-        appInfos.sort(new AppInfoComparator(context));
+        Collections.addAll(appInfos, allAppsStore.getApps());
+        appInfos = getPinnedApps(context, appInfos);
 
         List<WorkspaceItemInfo> items = new ArrayList<>(appInfos.size());
         for (AppInfo appInfo : appInfos) {
             items.add(appInfo.makeWorkspaceItem(context));
         }
         return items;
+    }
+
+    public static List<AppInfo> getPinnedApps(Context context, List<AppInfo> apps) {
+        Set<String> pinnedApps = LauncherPrefs.get(context).get(PINNED_APPS);
+        if (pinnedApps.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        List<AppInfo> appInfos = new ArrayList<>();
+        for (AppInfo appInfo : apps) {
+            if (pinnedApps.contains(encode(context, appInfo))) {
+                appInfos.add(appInfo);
+            }
+        }
+        appInfos.sort(new AppInfoComparator(context));
+        return appInfos;
     }
 
     @Nullable

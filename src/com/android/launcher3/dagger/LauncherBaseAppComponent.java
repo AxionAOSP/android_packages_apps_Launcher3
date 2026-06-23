@@ -29,6 +29,7 @@ import com.android.launcher3.LauncherPrefs;
 import com.android.launcher3.MainProcessInitializer;
 import com.android.launcher3.RemoveAnimationSettingsTracker;
 import com.android.launcher3.allapps.AxAllAppsDisplayPrefs;
+import com.android.launcher3.allapps.AxSmartDrawerManager;
 import com.android.launcher3.backuprestore.LauncherRestoreEventLogger;
 import com.android.launcher3.compose.core.widgetpicker.WidgetPickerComposeWrapper;
 import com.android.launcher3.dragndrop.SystemDragController;
@@ -109,6 +110,7 @@ public interface LauncherBaseAppComponent {
     DisplayController getDisplayController();
     WallpaperColorHints getWallpaperColorHints();
     AxAllAppsDisplayPrefs getAllAppsDisplayPrefs();
+    AxSmartDrawerManager getSmartDrawerManager();
     AxWorkspaceGesturePrefs getWorkspaceGesturePrefs();
     AxWorkspaceStylePrefs getWorkspaceStylePrefs();
     LockedUserState getLockedUserState();

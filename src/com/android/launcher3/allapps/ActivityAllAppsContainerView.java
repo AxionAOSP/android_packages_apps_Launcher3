@@ -547,6 +547,11 @@ public class ActivityAllAppsContainerView<T extends Context & ActivityContext>
      */
     public void reset(boolean animate, boolean exitSearch, boolean clearScrim) {
         boolean scrollToTop = !mAllAppsDisplayPrefs.shouldRememberPosition(getContext());
+        for (int i = 0; i < mAH.size(); i++) {
+            if (i != SEARCH) {
+                mAH.get(i).mAppsList.collapseSmartDrawerCategory();
+            }
+        }
         if (scrollToTop) {
             for (int i = 0; i < mAH.size(); i++) {
                 if (i != SEARCH && mAH.get(i).mRecyclerView != null) {
@@ -637,6 +642,25 @@ public class ActivityAllAppsContainerView<T extends Context & ActivityContext>
       */
     public boolean shouldBackExitSearch() {
         return isSearching();
+    }
+
+    public boolean isSmartDrawerExpanded() {
+        for (int i = 0; i < mAH.size(); i++) {
+            if (i != SEARCH && mAH.get(i).mAppsList.isSmartDrawerExpanded()) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public boolean collapseSmartDrawerCategory() {
+        boolean collapsed = false;
+        for (int i = 0; i < mAH.size(); i++) {
+            if (i != SEARCH) {
+                collapsed |= mAH.get(i).mAppsList.collapseSmartDrawerCategory();
+            }
+        }
+        return collapsed;
     }
 
     @Override
