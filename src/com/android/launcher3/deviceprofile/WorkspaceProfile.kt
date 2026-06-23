@@ -150,6 +150,7 @@ data class WorkspaceProfile(
                 workspaceBottomPadding = workspaceBottomPadding,
                 hotseatBarBottomSpacePx = hotseatBarBottomSpacePx,
                 hotseatQsbSpace = hotseatQsbSpace,
+                hotseatBarSizePx = hotseatBarSizePx,
                 iconSize = iconSizePx,
             )
         val cellLayoutPadding =

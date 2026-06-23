@@ -25,7 +25,7 @@
     <string name="home_settings_general_summary">Icon sizes and notification dots</string>
     <string name="home_settings_home_summary">Grid, labels, gestures, and behavior</string>
     <string name="home_settings_all_apps_summary">Layout, folders, behavior, and appearance</string>
-    <string name="home_settings_search_summary">App drawer results and suggestions</string>
+    <string name="home_settings_search_summary">App drawer search, dock provider, and suggestions</string>
     <string name="home_settings_notifications_summary">Notification dots and badges</string>
     <string name="home_settings_privacy_summary">Hidden and protected app access</string>
     <string name="home_settings_backup_title">Backup and restore</string>
@@ -72,6 +72,12 @@
     <string name="home_double_tap_action_title">Double tap action</string>
     <string name="home_double_tap_action_none">Do nothing</string>
     <string name="home_double_tap_action_sleep">Sleep</string>
+    <string name="home_settings_search_bar_category">Dock search</string>
+    <string name="dock_search_bar_title">Dock Search Provider</string>
+    <string name="dock_search_bar_summary">Choose a search widget for the dock</string>
+    <string name="dock_search_bar_disabled">None</string>
+    <string name="dock_search_provider_settings_title">Provider settings</string>
+    <string name="dock_search_provider_settings_summary">Configure the selected dock search widget</string>
 
     <!-- Edit workspace -->
     <string name="settings_lock_layout_title">Lock layout</string>

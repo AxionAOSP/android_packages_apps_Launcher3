@@ -91,6 +91,10 @@ object LauncherPrefsExt {
             true,
             EncryptionType.SECURE_SETTINGS,
         )
+    @JvmField val HOTSEAT_SEARCH_BAR =
+        backedUpItem("pref_hotseat_search_bar", true, EncryptionType.SECURE_SETTINGS)
+    @JvmField val HOTSEAT_SEARCH_PROVIDER =
+        backedUpItem("pref_hotseat_search_provider", "none", EncryptionType.SECURE_SETTINGS)
     @JvmField val WORKSPACE_DOUBLE_TAP_ACTION =
         backedUpItem(
             "pref_workspace_double_tap_action",
@@ -279,6 +283,8 @@ object LauncherPrefsExt {
         WORKSPACE_LABEL_SCALE,
         WORKSPACE_WALLPAPER_SCROLLING,
         WORKSPACE_SHOW_TOP_SHADOW,
+        HOTSEAT_SEARCH_BAR,
+        HOTSEAT_SEARCH_PROVIDER,
         WORKSPACE_DOUBLE_TAP_ACTION,
         ALLAPPS_THEMED_ICONS,
         DRAWER_OPEN_KEYBOARD,

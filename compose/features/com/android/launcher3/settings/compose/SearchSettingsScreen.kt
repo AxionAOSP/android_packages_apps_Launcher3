@@ -17,6 +17,8 @@ package com.android.launcher3.settings.compose
 
 import android.Manifest
 import android.app.Activity
+import android.appwidget.AppWidgetProviderInfo
+import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
@@ -28,10 +30,16 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import com.android.axion.compose.preferences.ClickablePreference
+import com.android.axion.compose.preferences.ListPreference
 import com.android.axion.compose.preferences.PreferenceGroup
+import com.android.axion.util.PackageManagerUtils
+import com.android.launcher3.LauncherPrefs
 import com.android.launcher3.LauncherPrefsExt
 import com.android.launcher3.R
 import com.android.launcher3.allapps.search.AxSearchHistory
+import com.android.launcher3.dagger.LauncherComponentProvider.appComponent
+import com.android.launcher3.qsb.OseWidgetManager
 
 @Composable
 internal fun SearchResultsSettings(activity: Activity) {
@@ -297,7 +305,38 @@ private fun PermissionGroup(
 
 @Composable
 internal fun SearchScreen(activity: Activity) {
+    val context = LocalContext.current
+    val resumeVersion = rememberResumeVersion()
+    val dockSearchPreference = rememberLauncherPreference(LauncherPrefsExt.HOTSEAT_SEARCH_BAR)
+    val dockSearchProviderPreference = rememberLauncherPreference(
+        LauncherPrefsExt.HOTSEAT_SEARCH_PROVIDER,
+    )
+    val oseWidgetManager = remember(context) { context.appComponent.oseWidgetManager }
+    val canConfigureSearchWidget = remember(
+        dockSearchPreference.value,
+        dockSearchProviderPreference.value,
+        oseWidgetManager,
+        resumeVersion,
+    ) {
+        dockSearchPreference.value &&
+            dockSearchProviderPreference.value != OseWidgetManager.SEARCH_PROVIDER_NONE &&
+            oseWidgetManager.canConfigure()
+    }
     val suggestionsVisible = rememberPackageEnabled(SUGGESTIONS_PACKAGE)
+    PreferenceGroup(title = stringResource(R.string.home_settings_search_bar_category)) {
+        item {
+            DockSearchProviderPreference(resumeVersion)
+        }
+        if (canConfigureSearchWidget) {
+            item {
+                ClickablePreference(
+                    title = stringResource(R.string.dock_search_provider_settings_title),
+                    summary = stringResource(R.string.dock_search_provider_settings_summary),
+                    onClick = { oseWidgetManager.startConfigActivity(activity) },
+                )
+            }
+        }
+    }
     PreferenceGroup(title = stringResource(R.string.search_app_drawer_category)) {
         item {
             BooleanPreference(
@@ -319,6 +358,74 @@ internal fun SearchScreen(activity: Activity) {
             }
         }
     }
+}
+
+@Composable
+private fun DockSearchProviderPreference(resumeVersion: Int) {
+    val context = LocalContext.current
+    val enabledPreference = rememberLauncherPreference(LauncherPrefsExt.HOTSEAT_SEARCH_BAR)
+    val providerPreference = rememberLauncherPreference(LauncherPrefsExt.HOTSEAT_SEARCH_PROVIDER)
+    val disabledLabel = stringResource(R.string.dock_search_bar_disabled)
+    val availableProviders = remember(context, resumeVersion) {
+        OseWidgetManager.getAvailableSearchWidgets(context)
+            .sortedBy { searchProviderLabel(context, it).lowercase() }
+    }
+    val options = remember(context, availableProviders, disabledLabel) {
+        listOf(OseWidgetManager.SEARCH_PROVIDER_NONE to disabledLabel) +
+            availableProviders.map {
+                it.provider.flattenToString() to searchProviderLabel(context, it)
+            }
+    }
+    val selectedProvider = providerPreference.value
+    val selectedValue = remember(
+        enabledPreference.value,
+        selectedProvider,
+        availableProviders,
+        options,
+    ) {
+        when {
+            !enabledPreference.value -> OseWidgetManager.SEARCH_PROVIDER_NONE
+            selectedProvider == OseWidgetManager.SEARCH_PROVIDER_NONE ->
+                OseWidgetManager.SEARCH_PROVIDER_NONE
+            options.any { it.first == selectedProvider } -> selectedProvider
+            else -> selectedOptionForPackage(availableProviders, selectedProvider)
+        }
+    }
+    ListPreference(
+        title = stringResource(R.string.dock_search_bar_title),
+        summary = stringResource(R.string.dock_search_bar_summary),
+        options = options,
+        value = selectedValue,
+        enabled = availableProviders.isNotEmpty(),
+        onValueChange = {
+            if (it == OseWidgetManager.SEARCH_PROVIDER_NONE) {
+                enabledPreference.onChange(false)
+                providerPreference.onChange(OseWidgetManager.SEARCH_PROVIDER_NONE)
+            } else {
+                providerPreference.onChange(it)
+                enabledPreference.onChange(true)
+            }
+        },
+    )
+}
+
+private fun searchProviderLabel(context: Context, info: AppWidgetProviderInfo): String {
+    PackageManagerUtils.getApplicationInfo(context, info.provider.packageName)?.let {
+        return PackageManagerUtils.loadApplicationLabel(context.packageManager, it).toString()
+    }
+    return PackageManagerUtils.loadAppWidgetProviderLabel(context, info).toString()
+}
+
+private fun selectedOptionForPackage(
+    providers: List<AppWidgetProviderInfo>,
+    selectedProvider: String,
+): String {
+    val packageName = ComponentName.unflattenFromString(selectedProvider)?.packageName
+        ?: return OseWidgetManager.SEARCH_PROVIDER_NONE
+    return providers.firstOrNull { it.provider.packageName == packageName }
+        ?.provider
+        ?.flattenToString()
+        ?: OseWidgetManager.SEARCH_PROVIDER_NONE
 }
 
 private fun hasStorageSearchPermission(context: Context): Boolean {

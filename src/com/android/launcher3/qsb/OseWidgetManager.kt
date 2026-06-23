@@ -16,22 +16,29 @@
 
 package com.android.launcher3.qsb
 
+import android.app.Activity
+import android.app.SearchManager
 import android.appwidget.AppWidgetManager
 import android.appwidget.AppWidgetManager.INVALID_APPWIDGET_ID
 import android.appwidget.AppWidgetProviderInfo
 import android.appwidget.AppWidgetProviderInfo.WIDGET_CATEGORY_SEARCHBOX
 import android.appwidget.AppWidgetProviderInfo.WIDGET_FEATURE_CONFIGURATION_OPTIONAL
 import android.content.ActivityNotFoundException
+import android.content.ComponentName
 import android.content.Context
 import android.os.Process.myUserHandle
+import android.provider.Settings
 import android.util.Log
-import android.widget.RemoteViews
+import android.window.SplashScreen.SPLASH_SCREEN_STYLE_UNDEFINED
 import android.widget.Toast
 import androidx.annotation.VisibleForTesting
 import com.android.launcher3.BaseActivity
 import com.android.launcher3.InvariantDeviceProfile
 import com.android.launcher3.InvariantDeviceProfile.OnIDPChangeListener
 import com.android.launcher3.LauncherConstants.ActivityCodes.REQUEST_RECONFIGURE_APPWIDGET
+import com.android.launcher3.LauncherPrefChangeListener
+import com.android.launcher3.LauncherPrefs
+import com.android.launcher3.LauncherPrefsExt
 import com.android.launcher3.R
 import com.android.launcher3.dagger.ApplicationContext
 import com.android.launcher3.dagger.LauncherAppSingleton
@@ -59,16 +66,19 @@ constructor(
     private val widgetHost: QsbAppWidgetHost,
     private val sizeHandler: WidgetSizeHandler,
     private val idp: InvariantDeviceProfile,
+    private val launcherPrefs: LauncherPrefs,
     tracker: DaggerSingletonTracker,
 ) {
 
     private val mutableProviderInfo = MutableListenableRef<AppWidgetProviderInfo?>(null)
     val providerInfo = mutableProviderInfo.asListenable()
 
-    private val mutableViews = MutableListenableRef<RemoteViews?>(null)
-    val views = mutableViews.asListenable()
-
     private val executor = OSE_LOOPER
+    private var lastOseInfo = OSEInfo()
+    private val searchPreferenceListener =
+        LauncherPrefChangeListener {
+            executor.execute { updateSearchWidget(lastOseInfo) }
+        }
 
     init {
         widgetHost.setCallbacks(
@@ -76,28 +86,37 @@ constructor(
 
                 override fun onProviderChanged(appWidget: AppWidgetProviderInfo?) =
                     mutableProviderInfo.dispatchValue(appWidget)
-
-                override fun onViewsChanged(views: RemoteViews?) = mutableViews.dispatchValue(views)
             }
         )
         widgetHost.startListening()
 
         tracker.addCloseable(oseManager.oseInfo.forEach(executor, this::handleOseInfoUpdate))
+        launcherPrefs.addListener(
+            searchPreferenceListener,
+            LauncherPrefsExt.HOTSEAT_SEARCH_BAR,
+            LauncherPrefsExt.HOTSEAT_SEARCH_PROVIDER,
+        )
 
         val idpListener = OnIDPChangeListener { updateWidgetSizeAsync() }
         idp.addOnChangeListener(idpListener)
         tracker.addCloseable {
+            launcherPrefs.removeListener(
+                searchPreferenceListener,
+                LauncherPrefsExt.HOTSEAT_SEARCH_BAR,
+                LauncherPrefsExt.HOTSEAT_SEARCH_PROVIDER,
+            )
             idp.removeOnChangeListener(idpListener)
             widgetHost.stopListening()
         }
     }
 
     private fun handleOseInfoUpdate(info: OSEInfo) {
-        // If the package is null, leave it to the current value as the OSEManager
-        // may not have initialized yet
-        val providerPkg = info.pkg ?: return
-        val searchWidget = findSearchWidgetForPackage(context, providerPkg)
+        lastOseInfo = info
+        updateSearchWidget(info)
+    }
 
+    private fun updateSearchWidget(info: OSEInfo) {
+        val searchWidget = resolveSearchWidget(context, launcherPrefs, info.pkg)
         val currentWidgetId = widgetHost.getBoundWidgetId()
         val currentInfo =
             if (currentWidgetId != INVALID_APPWIDGET_ID)
@@ -120,9 +139,15 @@ constructor(
 
         // Try to bind a new search widget
         val widgetId = widgetHost.allocateAppWidgetId()
+        val bindOptions = sizeHandler.getHotseatQsbSizeOptions()
         val bindSuccess =
             AppWidgetManager.getInstance(context)
-                .bindAppWidgetIdIfAllowed(widgetId, searchWidget.provider)
+                .bindAppWidgetIdIfAllowed(
+                    widgetId,
+                    searchWidget.profile,
+                    searchWidget.provider,
+                    bindOptions,
+                )
 
         if (bindSuccess) {
             widgetHost.setActiveWidget(widgetId, searchWidget)
@@ -137,30 +162,40 @@ constructor(
     private fun updateWidgetSizeAsync() {
         val widgetId = widgetHost.getActiveWidgetId()
         if (widgetId != INVALID_APPWIDGET_ID) {
-            sizeHandler.updateSizeRangesAsync(widgetId, idp.numColumns, 1, executor)
+            sizeHandler.updateHotseatQsbSizeRangesAsync(widgetId, executor)
         }
     }
 
     private fun dispatchNullValues() {
         if (mutableProviderInfo.value != null) mutableProviderInfo.dispatchValue(null)
-        if (mutableViews.value != null) mutableViews.dispatchValue(null)
     }
 
-    fun startConfigActivity(activity: BaseActivity): Boolean {
+    fun getActiveWidgetId() = widgetHost.getActiveWidgetId()
+
+    fun createWidgetView(context: Context): QsbWidgetHostView? =
+        widgetHost.createActiveWidgetView(context)
+
+    fun canConfigure(): Boolean =
+        widgetHost.getActiveWidgetId() != INVALID_APPWIDGET_ID &&
+            providerInfo.value?.configure != null
+
+    fun startConfigActivity(activity: Activity): Boolean {
         val widgetId = widgetHost.getActiveWidgetId()
-        if (widgetId == 0) {
+        if (widgetId == INVALID_APPWIDGET_ID) {
             Log.e(TAG, "Couldn't find a valid widgetId")
             return false
         }
         try {
+            val options =
+                (activity as? BaseActivity)
+                    ?.makeDefaultActivityOptions(SPLASH_SCREEN_STYLE_UNDEFINED)
+                    ?.toBundle()
             widgetHost.startAppWidgetConfigureActivityForResult(
                 activity,
                 widgetId,
                 0,
                 REQUEST_RECONFIGURE_APPWIDGET,
-                activity
-                    .makeDefaultActivityOptions(-1 /* SPLASH_SCREEN_STYLE_UNDEFINED */)
-                    .toBundle(),
+                options,
             )
             return true
         } catch (e: ActivityNotFoundException) {
@@ -173,19 +208,82 @@ constructor(
 
     companion object {
         private const val TAG = "OseWidgetManager"
+        const val SEARCH_PROVIDER_NONE = "none"
+
+        @JvmStatic
+        fun isSearchBarEnabled(context: Context): Boolean =
+            isSearchBarEnabled(LauncherPrefs.get(context))
+
+        @JvmStatic
+        fun isSearchBarEnabled(launcherPrefs: LauncherPrefs): Boolean {
+            val provider = launcherPrefs.get(LauncherPrefsExt.HOTSEAT_SEARCH_PROVIDER)
+            return launcherPrefs.get(LauncherPrefsExt.HOTSEAT_SEARCH_BAR) &&
+                provider.isNotBlank() &&
+                provider != SEARCH_PROVIDER_NONE
+        }
+
+        @JvmStatic
+        fun getAvailableSearchWidgets(context: Context): List<AppWidgetProviderInfo> =
+            getSearchWidgets(context, null)
+                .distinctBy { it.provider.packageName }
+
+        @JvmStatic
+        fun getSearchWidgetPackageName(context: Context): String? {
+            if (!isSearchBarEnabled(context)) return null
+            return getSearchWidgetProviderInfo(context)?.provider?.packageName
+                ?: getSelectedSearchPackageName(context)
+        }
+
+        @JvmStatic
+        fun getSearchWidgetProviderInfo(context: Context): AppWidgetProviderInfo? =
+            resolveSearchWidget(
+                context,
+                LauncherPrefs.get(context),
+                getSelectedSearchPackageName(context),
+            )
 
         @VisibleForTesting
         fun findSearchWidgetForPackage(context: Context, pkg: String): AppWidgetProviderInfo? {
-            val allEligibleWidgets =
-                WidgetManagerHelper(context)
-                    .getAllProviders(PackageUserKey(pkg, myUserHandle()))
-                    .filter {
-                        it.configure == null ||
-                            ((it.widgetFeatures and WIDGET_FEATURE_CONFIGURATION_OPTIONAL) != 0)
-                    }
-            return allEligibleWidgets.firstOrNull {
-                (it.widgetCategory and WIDGET_CATEGORY_SEARCHBOX) != 0
-            } ?: allEligibleWidgets.firstOrNull()
+            return getSearchWidgets(context, PackageUserKey(pkg, myUserHandle())).firstOrNull()
         }
+
+        private fun resolveSearchWidget(
+            context: Context,
+            launcherPrefs: LauncherPrefs,
+            fallbackPackage: String?,
+        ): AppWidgetProviderInfo? {
+            if (!isSearchBarEnabled(launcherPrefs)) return null
+            val selectedProvider = launcherPrefs.get(LauncherPrefsExt.HOTSEAT_SEARCH_PROVIDER)
+            ComponentName.unflattenFromString(selectedProvider)?.let {
+                findSearchWidgetForPackage(context, it.packageName)?.let { widget -> return widget }
+            }
+            return fallbackPackage?.let { findSearchWidgetForPackage(context, it) }
+                ?: getAvailableSearchWidgets(context).firstOrNull()
+        }
+
+        private fun getSelectedSearchPackageName(context: Context): String? {
+            Settings.Secure.getString(
+                context.contentResolver,
+                OSEManager.SEARCH_ENGINE_SETTINGS_KEY,
+            )?.let { return it }
+            return context.getSystemService(SearchManager::class.java)
+                ?.globalSearchActivity
+                ?.packageName
+        }
+
+        private fun isEligibleSearchWidget(info: AppWidgetProviderInfo): Boolean =
+            isEligibleWidget(info) && (info.widgetCategory and WIDGET_CATEGORY_SEARCHBOX) != 0
+
+        private fun getSearchWidgets(
+            context: Context,
+            packageUserKey: PackageUserKey?,
+        ): List<AppWidgetProviderInfo> =
+            WidgetManagerHelper(context)
+                .getAllProviders(packageUserKey)
+                .filter { isEligibleSearchWidget(it) }
+
+        private fun isEligibleWidget(info: AppWidgetProviderInfo): Boolean =
+            info.configure == null ||
+                ((info.widgetFeatures and WIDGET_FEATURE_CONFIGURATION_OPTIONAL) != 0)
     }
 }

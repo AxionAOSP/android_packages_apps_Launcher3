@@ -19,7 +19,6 @@ package com.android.launcher3.qsb
 import android.appwidget.AppWidgetManager
 import android.appwidget.AppWidgetManager.INVALID_APPWIDGET_ID
 import android.appwidget.AppWidgetProviderInfo
-import android.widget.RemoteViews
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.SmallTest
 import com.android.launcher3.util.SandboxApplication
@@ -75,24 +74,17 @@ class QsbAppWidgetHostTest {
         )
 
         var providerUpdated = false
-        var viewsUpdated = false
         host.setCallbacks(
             object : QsbAppWidgetHost.Callbacks {
                 override fun onProviderChanged(appWidget: AppWidgetProviderInfo?) {
                     providerUpdated = true
                 }
-
-                override fun onViewsChanged(views: RemoteViews?) {
-                    // Provider should be updated before views
-                    assertTrue(providerUpdated)
-
-                    viewsUpdated = true
-                }
             }
         )
         host.setActiveWidget(widgetId, widgetInfo)
-        assertTrue(viewsUpdated)
+        assertTrue(providerUpdated)
         assertEquals(widgetId, host.getActiveWidgetId())
+        assertTrue(host.createActiveWidgetView(context) is QsbWidgetHostView)
         assertContentEquals(host.appWidgetIds, intArrayOf(widgetId))
     }
 
@@ -109,10 +101,6 @@ class QsbAppWidgetHostTest {
         host.setCallbacks(
             object : QsbAppWidgetHost.Callbacks {
                 override fun onProviderChanged(appWidget: AppWidgetProviderInfo?) {
-                    updateReceived = true
-                }
-
-                override fun onViewsChanged(views: RemoteViews?) {
                     updateReceived = true
                 }
             }

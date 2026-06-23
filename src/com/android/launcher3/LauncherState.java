@@ -225,7 +225,7 @@ public abstract class LauncherState implements BaseState<LauncherState> {
         DeviceProfile dp = launcher.getDeviceProfile();
         return areElementsVisible(launcher.getLauncherUiState(), FLOATING_SEARCH_BAR)
                 ? dp.getQsbOffsetY()
-                : -dp.getHotseatProfile().getQsbHeight();
+                : -dp.getHotseatQsbHeight();
     }
 
     /**

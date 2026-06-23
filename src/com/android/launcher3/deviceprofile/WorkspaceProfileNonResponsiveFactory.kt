@@ -66,10 +66,7 @@ object WorkspaceProfileNonResponsiveFactory {
         hotseatProfile: HotseatProfile,
         hotseatBarBottomSpacePx: Int,
         hotseatQsbSpace: Int,
-    ): Rect {
-        // TODO : This is to update updateHotseatSizes, we need a better way to do
-        // this
-        val hotseatBarSizePx =
+        hotseatBarSizePx: Int =
             calculateHotseatBarSizePx(
                 iconSizePx = iconSize,
                 isVerticalLayout = isVerticalLayout,
@@ -77,7 +74,10 @@ object WorkspaceProfileNonResponsiveFactory {
                 hotseatBarBottomSpacePx = hotseatBarBottomSpacePx,
                 hotseatQsbSpace = hotseatQsbSpace,
                 isQsbInline = isFixedLandscape,
-            )
+            ),
+    ): Rect {
+        // TODO : This is to update updateHotseatSizes, we need a better way to do
+        // this
         if (isVerticalLayout) {
             return Rect(
                 /* left */ if (isSeascape) hotseatBarSizePx else hotseatProfile.barEdgePaddingPx,
