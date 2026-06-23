@@ -22,8 +22,10 @@ import android.appwidget.AppWidgetProviderInfo
 import android.appwidget.AppWidgetProviderInfo.WIDGET_CATEGORY_SEARCHBOX
 import android.appwidget.AppWidgetProviderInfo.WIDGET_FEATURE_CONFIGURATION_OPTIONAL
 import android.content.ComponentName
+import android.os.Bundle
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.SmallTest
+import com.android.launcher3.LauncherPrefs
 import com.android.launcher3.qsb.OSEManager.Companion.OSE_LOOPER
 import com.android.launcher3.qsb.OSEManager.OSEInfo
 import com.android.launcher3.util.DaggerSingletonTracker
@@ -69,7 +71,9 @@ class OseWidgetManagerTest {
     fun setup() {
         widgetManager = context.spyService(AppWidgetManager::class.java)
         doReturn(mockOseInfo).whenever(oseManager).oseInfo
-        doReturn(true).whenever(widgetManager).bindAppWidgetIdIfAllowed(any(), any())
+        doReturn(Bundle()).whenever(sizeHandler).getHotseatQsbSizeOptions()
+        doReturn(true).whenever(widgetManager).bindAppWidgetIdIfAllowed(any(), any(), any(), any())
+        context.appComponent.launcherPrefs.put(LauncherPrefs.HOTSEAT_SEARCH_PROVIDER, TEST_PKG)
     }
 
     @Test
@@ -210,7 +214,7 @@ class OseWidgetManagerTest {
             .whenever(widgetManager)
             .getInstalledProvidersForPackage(eq(newPackage), any())
         // bindAppWidgetIdIfAllowed fails.
-        doReturn(false).whenever(widgetManager).bindAppWidgetIdIfAllowed(any(), any())
+        doReturn(false).whenever(widgetManager).bindAppWidgetIdIfAllowed(any(), any(), any(), any())
 
         mockOseInfo.dispatchValue(OSEInfo(newPackage))
         TestUtil.runOnExecutorSync(executor) {}
@@ -225,6 +229,7 @@ class OseWidgetManagerTest {
             widgetHost,
             sizeHandler,
             context.appComponent.idp,
+            context.appComponent.launcherPrefs,
             tracker,
         )
 

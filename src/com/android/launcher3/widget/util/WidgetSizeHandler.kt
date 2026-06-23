@@ -27,6 +27,8 @@ import com.android.launcher3.InvariantDeviceProfile
 import com.android.launcher3.dagger.ApplicationContext
 import com.android.launcher3.dagger.LauncherComponentProvider.appComponent
 import com.android.launcher3.dagger.LauncherComponentProvider.get
+import com.android.launcher3.graphics.theme.ThemePreference
+import com.android.launcher3.graphics.theme.ThemePreference.Companion.MONO_THEME_VALUE
 import com.android.launcher3.util.Executors
 import java.util.concurrent.Executor
 import javax.inject.Inject
@@ -37,6 +39,7 @@ open class WidgetSizeHandler
 constructor(
     @ApplicationContext private val context: Context,
     private val idp: InvariantDeviceProfile,
+    private val themePreference: ThemePreference,
 ) {
 
     /**
@@ -87,7 +90,54 @@ constructor(
         return options
     }
 
+    @JvmOverloads
+    open fun updateHotseatQsbSizeRangesAsync(
+        widgetId: Int,
+        executor: Executor = Executors.UI_HELPER_EXECUTOR,
+    ) {
+        if (widgetId <= 0) return
+        executor.execute {
+            val widgetManager = AppWidgetManager.getInstance(context)
+            if (widgetManager.getAppWidgetInfo(widgetId) == null) return@execute
+
+            val sizeOptions = getHotseatQsbSizeOptions()
+            val appWidgetOptions = widgetManager.getAppWidgetOptions(widgetId)
+            if (
+                sizeOptions.getWidgetSizeList() == appWidgetOptions.getWidgetSizeList() &&
+                    sizeOptions.getBoolean(MONO_THEME_ENABLED_OPTION) ==
+                        appWidgetOptions.getBoolean(MONO_THEME_ENABLED_OPTION) &&
+                    sizeOptions.getBoolean(USE_DISABLED_PREVIEW_WHEN_MASKED_OPTION) ==
+                        appWidgetOptions.getBoolean(USE_DISABLED_PREVIEW_WHEN_MASKED_OPTION)
+            ) {
+                return@execute
+            }
+            widgetManager.updateAppWidgetOptions(widgetId, sizeOptions)
+        }
+    }
+
+    fun getHotseatQsbSizeOptions(): Bundle {
+        val density = context.resources.displayMetrics.density
+        val paddedSizes =
+            idp.supportedProfiles.mapTo(ArrayList()) {
+                val widgetSizePx = WidgetSizes.getWidgetSizePx(it, idp.numColumns, 1)
+                SizeF(widgetSizePx.width / density, it.hotseatProfile.qsbHeight / density)
+            }
+
+        val rect = getMinMaxSizes(paddedSizes)
+        val options = Bundle()
+        options.putInt(AppWidgetManager.OPTION_APPWIDGET_MIN_WIDTH, rect.left)
+        options.putInt(AppWidgetManager.OPTION_APPWIDGET_MIN_HEIGHT, rect.top)
+        options.putInt(AppWidgetManager.OPTION_APPWIDGET_MAX_WIDTH, rect.right)
+        options.putInt(AppWidgetManager.OPTION_APPWIDGET_MAX_HEIGHT, rect.bottom)
+        options.putParcelableArrayList(OPTION_APPWIDGET_SIZES, paddedSizes)
+        options.putBoolean(MONO_THEME_ENABLED_OPTION, MONO_THEME_VALUE == themePreference.value)
+        options.putBoolean(USE_DISABLED_PREVIEW_WHEN_MASKED_OPTION, true)
+        return options
+    }
+
     companion object {
+        private const val MONO_THEME_ENABLED_OPTION = "monoThemeEnabled"
+        private const val USE_DISABLED_PREVIEW_WHEN_MASKED_OPTION = "useDisabledPreviewWhenMasked"
 
         fun Bundle.getWidgetSizeList() = getParcelableArrayList<SizeF>(OPTION_APPWIDGET_SIZES)
 

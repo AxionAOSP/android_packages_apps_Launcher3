@@ -22,7 +22,6 @@ import static android.appwidget.AppWidgetManager.EXTRA_APPWIDGET_PROVIDER;
 
 import android.app.Activity;
 import android.app.Fragment;
-import android.app.SearchManager;
 import android.appwidget.AppWidgetHost;
 import android.appwidget.AppWidgetHostView;
 import android.appwidget.AppWidgetManager;
@@ -31,7 +30,6 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
-import android.provider.Settings;
 import android.util.AttributeSet;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -45,7 +43,9 @@ import androidx.annotation.WorkerThread;
 import com.android.launcher3.BuildConfig;
 import com.android.launcher3.InvariantDeviceProfile;
 import com.android.launcher3.LauncherAppState;
+import com.android.launcher3.LauncherPrefChangeListener;
 import com.android.launcher3.LauncherPrefs;
+import com.android.launcher3.LauncherPrefsExt;
 import com.android.launcher3.R;
 import com.android.launcher3.dagger.LauncherComponentProvider;
 import com.android.launcher3.graphics.FragmentWithPreview;
@@ -59,8 +59,6 @@ import com.android.launcher3.graphics.FragmentWithPreview;
  */
 public class QsbContainerView extends FrameLayout {
 
-    public static final String SEARCH_ENGINE_SETTINGS_KEY = "selected_search_engine";
-
     /**
      * Returns the package name for user configured search provider or from searchManager
      * @param context
@@ -69,16 +67,7 @@ public class QsbContainerView extends FrameLayout {
     @WorkerThread
     @Nullable
     public static String getSearchWidgetPackageName(@NonNull Context context) {
-        String providerPkg = Settings.Secure.getString(context.getContentResolver(),
-                SEARCH_ENGINE_SETTINGS_KEY);
-        if (providerPkg == null) {
-            SearchManager searchManager = context.getSystemService(SearchManager.class);
-            ComponentName componentName = searchManager.getGlobalSearchActivity();
-            if (componentName != null) {
-                providerPkg = searchManager.getGlobalSearchActivity().getPackageName();
-            }
-        }
-        return providerPkg;
+        return OseWidgetManager.getSearchWidgetPackageName(context);
     }
 
     /**
@@ -89,25 +78,7 @@ public class QsbContainerView extends FrameLayout {
     @WorkerThread
     @Nullable
     public static AppWidgetProviderInfo getSearchWidgetProviderInfo(@NonNull Context context) {
-        String providerPkg = getSearchWidgetPackageName(context);
-        if (providerPkg == null) {
-            return null;
-        }
-
-        AppWidgetProviderInfo defaultWidgetForSearchPackage = null;
-        AppWidgetManager appWidgetManager = AppWidgetManager.getInstance(context);
-        for (AppWidgetProviderInfo info :
-                appWidgetManager.getInstalledProvidersForPackage(providerPkg, null)) {
-            if (info.provider.getPackageName().equals(providerPkg) && info.configure == null) {
-                if ((info.widgetCategory
-                        & AppWidgetProviderInfo.WIDGET_CATEGORY_SEARCHBOX) != 0) {
-                    return info;
-                } else if (defaultWidgetForSearchPackage == null) {
-                    defaultWidgetForSearchPackage = info;
-                }
-            }
-        }
-        return defaultWidgetForSearchPackage;
+        return OseWidgetManager.getSearchWidgetProviderInfo(context);
     }
 
     /**
@@ -163,6 +134,8 @@ public class QsbContainerView extends FrameLayout {
         private QsbWidgetHost mQsbWidgetHost;
         protected AppWidgetProviderInfo mWidgetInfo;
         private QsbWidgetHostView mQsb;
+        private final LauncherPrefChangeListener mQsbPreferenceListener =
+                key -> rebindFragment();
 
         // We need to store the orientation here, due to a bug (b/64916689) that results in widgets
         // being inflated in the wrong orientation.
@@ -172,6 +145,8 @@ public class QsbContainerView extends FrameLayout {
         public void onInit(Bundle savedInstanceState) {
             mQsbWidgetHost = createHost();
             mOrientation = getContext().getResources().getConfiguration().orientation;
+            LauncherPrefs.get(getContext()).addListener(mQsbPreferenceListener,
+                    LauncherPrefsExt.HOTSEAT_SEARCH_BAR, LauncherPrefsExt.HOTSEAT_SEARCH_PROVIDER);
         }
 
         protected QsbWidgetHost createHost() {
@@ -273,24 +248,33 @@ public class QsbContainerView extends FrameLayout {
 
         @Override
         public void onDestroy() {
+            Context context = getContext();
+            if (context != null) {
+                LauncherPrefs.get(context).removeListener(mQsbPreferenceListener,
+                        LauncherPrefsExt.HOTSEAT_SEARCH_BAR, LauncherPrefsExt.HOTSEAT_SEARCH_PROVIDER);
+            }
             mQsbWidgetHost.stopListening();
             super.onDestroy();
         }
 
         private void rebindFragment() {
-            // Exit if the embedded qsb is disabled
-            if (!isQsbEnabled()) {
-                return;
-            }
-
             if (mWrapper != null && getContext() != null) {
                 mWrapper.removeAllViews();
+                // Exit if the embedded qsb is disabled
+                if (!isQsbEnabled()) {
+                    mQsbWidgetHost.stopListening();
+                    mQsb = null;
+                    return;
+                }
+                mQsbWidgetHost.startListening();
                 mWrapper.addView(createQsb(mWrapper));
             }
         }
 
         public boolean isQsbEnabled() {
-            return BuildConfig.QSB_ON_FIRST_SCREEN;
+            Context context = getContext();
+            return BuildConfig.QSB_ON_FIRST_SCREEN && context != null
+                    && OseWidgetManager.isSearchBarEnabled(context);
         }
 
         protected Bundle createBindOptions() {

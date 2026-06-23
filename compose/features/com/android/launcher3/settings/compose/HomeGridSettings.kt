@@ -23,12 +23,13 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import com.android.axion.compose.preferences.PreferenceGroup
 import com.android.launcher3.AxWorkspaceDisplayPrefs
-import com.android.launcher3.BuildConfig
 import com.android.launcher3.ConstantItem
 import com.android.launcher3.InvariantDeviceProfile
 import com.android.launcher3.LauncherAppState
+import com.android.launcher3.LauncherPrefs
 import com.android.launcher3.LauncherPrefsExt
 import com.android.launcher3.R
+import com.android.launcher3.qsb.OseWidgetManager
 
 internal object HomeGridSettingsKeys {
     const val OPTIONS = "settings_screen_home_grid_options"
@@ -199,6 +200,8 @@ private fun rememberHomePreviewState(): HomePreviewState {
     val iconScale = rememberLauncherPreference(LauncherPrefsExt.WORKSPACE_ICON_SCALE)
     val labelScale = rememberLauncherPreference(LauncherPrefsExt.WORKSPACE_LABEL_SCALE)
     val showLabels = rememberLauncherPreference(LauncherPrefsExt.SHOW_DESKTOP_LABELS)
+    val showSearchBar = rememberLauncherPreference(LauncherPrefsExt.HOTSEAT_SEARCH_BAR)
+    val searchProvider = rememberLauncherPreference(LauncherPrefsExt.HOTSEAT_SEARCH_PROVIDER)
     val previewColumns = if (!isTablet) {
         columns.value
     } else if (isLandscape) {
@@ -239,7 +242,8 @@ private fun rememberHomePreviewState(): HomePreviewState {
         iconPercent = iconScale.value,
         labelPercent = labelScale.value,
         showLabels = showLabels.value,
-        showSearchBar = BuildConfig.QSB_ON_FIRST_SCREEN,
+        showSearchBar = showSearchBar.value &&
+            searchProvider.value != OseWidgetManager.SEARCH_PROVIDER_NONE,
     )
 }
 

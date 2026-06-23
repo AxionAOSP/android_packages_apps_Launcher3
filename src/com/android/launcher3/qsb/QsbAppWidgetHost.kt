@@ -21,44 +21,52 @@ import android.appwidget.AppWidgetHostView
 import android.appwidget.AppWidgetManager.INVALID_APPWIDGET_ID
 import android.appwidget.AppWidgetProviderInfo
 import android.content.Context
-import android.content.ContextWrapper
-import android.widget.RemoteViews
+import android.view.GestureDetector
+import android.view.MotionEvent
+import com.android.launcher3.R
 import com.android.launcher3.dagger.ApplicationContext
-import com.android.launcher3.qsb.OSEManager.Companion.OSE_LOOPER
+import com.android.launcher3.dagger.LauncherAppSingleton
 import javax.inject.Inject
 
-/** AppWidgetHost used for QSB */
+@LauncherAppSingleton
 class QsbAppWidgetHost @Inject constructor(@ApplicationContext private val ctx: Context) :
-    AppWidgetHost(WrappedContext(ctx), HOST_ID) {
+    AppWidgetHost(ctx, HOST_ID) {
 
     private var callbacks: Callbacks? = null
+    @Volatile
     private var activeWidgetId = INVALID_APPWIDGET_ID
+    @Volatile
+    private var activeProviderInfo: AppWidgetProviderInfo? = null
 
     fun setCallbacks(c: Callbacks) {
         callbacks = c
     }
 
-    /** Starts listening for any updates for the provided widget id */
     fun setActiveWidget(appWidgetId: Int, info: AppWidgetProviderInfo?) {
-        if (activeWidgetId == appWidgetId) return
-        if (activeWidgetId != INVALID_APPWIDGET_ID) deleteAppWidgetId(activeWidgetId)
+        val isSameWidget = activeWidgetId == appWidgetId
+        val isSameProvider = activeProviderInfo?.provider == info?.provider
+        if (isSameWidget && isSameProvider) return
+        if (activeWidgetId != INVALID_APPWIDGET_ID && activeWidgetId != appWidgetId) {
+            deleteAppWidgetId(activeWidgetId)
+        }
 
         activeWidgetId = appWidgetId
-        if (appWidgetId != INVALID_APPWIDGET_ID) {
-            createView(ctx, appWidgetId, info)
-        }
+        activeProviderInfo = info
+        callbacks?.onProviderChanged(info)
     }
 
     fun getActiveWidgetId() = activeWidgetId
 
-    /**
-     * Returns the currently bound widget id to this host or [INVALID_APPWIDGET_ID] if none are
-     * bound. In multiple widgets are bounds, it deletes all except the last one.
-     */
+    fun createActiveWidgetView(context: Context): QsbWidgetHostView? {
+        val widgetId = activeWidgetId
+        val info = activeProviderInfo ?: return null
+        if (widgetId == INVALID_APPWIDGET_ID) return null
+        return createView(context, widgetId, info) as? QsbWidgetHostView
+    }
+
     fun getBoundWidgetId(): Int {
         val currentWidgets = appWidgetIds
         if (currentWidgets.isNotEmpty()) {
-            // Delete all widgets except the last
             for (i in 0..(currentWidgets.size - 2)) deleteAppWidgetId(currentWidgets[i])
             return currentWidgets.last()
         } else {
@@ -70,33 +78,35 @@ class QsbAppWidgetHost @Inject constructor(@ApplicationContext private val ctx: 
         context: Context?,
         appWidgetId: Int,
         appWidget: AppWidgetProviderInfo?,
-    ): AppWidgetHostView = DelegateHostView(appWidgetId)
+    ): AppWidgetHostView = HostView(context ?: ctx)
 
-    private inner class DelegateHostView(val widgetId: Int) : AppWidgetHostView(ctx) {
-
-        override fun setAppWidget(appWidgetId: Int, info: AppWidgetProviderInfo?) {
-            if (activeWidgetId == widgetId) callbacks?.onProviderChanged(info)
+    private class HostView(context: Context) : QsbWidgetHostView(context) {
+        init {
+            id = R.id.qsb_widget
         }
 
-        override fun updateAppWidget(remoteViews: RemoteViews?) {
-            if (activeWidgetId == widgetId) callbacks?.onViewsChanged(remoteViews)
+        private val gestureDetector =
+            GestureDetector(
+                context,
+                object : GestureDetector.SimpleOnGestureListener() {
+                    override fun onLongPress(e: MotionEvent) {
+                        performLongClick()
+                    }
+                },
+            )
+
+        override fun dispatchTouchEvent(ev: MotionEvent): Boolean {
+            gestureDetector.onTouchEvent(ev)
+            return super.dispatchTouchEvent(ev)
         }
     }
 
     interface Callbacks {
 
         fun onProviderChanged(appWidget: AppWidgetProviderInfo?)
-
-        fun onViewsChanged(views: RemoteViews?)
-    }
-
-    private class WrappedContext(ctx: Context) : ContextWrapper(ctx) {
-
-        override fun getMainLooper() = OSE_LOOPER.looper
     }
 
     companion object {
-        // Any fixed integer as long as it doesn't conflict with other widget hosts
         const val HOST_ID = 1025
     }
 }
