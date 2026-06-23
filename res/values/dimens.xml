@@ -155,6 +155,8 @@
 
     <dimen name="all_apps_icon_drawable_padding">8dp</dimen>
     <dimen name="all_apps_predicted_icon_vertical_padding">8dp</dimen>
+    <dimen name="all_apps_smart_drawer_icon_size">56dp</dimen>
+    <dimen name="all_apps_smart_drawer_icon_small_size">24dp</dimen>
     <dimen name="universal_search_card_radius">28dp</dimen>
     <dimen name="universal_search_card_margin_horizontal">16dp</dimen>
     <dimen name="universal_search_card_margin_vertical">4dp</dimen>

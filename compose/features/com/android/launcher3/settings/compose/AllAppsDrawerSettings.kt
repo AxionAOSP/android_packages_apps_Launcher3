@@ -15,16 +15,177 @@
  */
 package com.android.launcher3.settings.compose
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.dp
+import com.android.axion.compose.preferences.FeatureCard
 import com.android.axion.compose.preferences.PreferenceGroup
 import com.android.launcher3.LauncherAppState
 import com.android.launcher3.LauncherPrefs
 import com.android.launcher3.LauncherPrefsExt
 import com.android.launcher3.R
 import com.android.launcher3.allapps.AxAllAppsDisplayPrefs
+import com.android.launcher3.allapps.AxSmartDrawerManager
+
+@Composable
+private fun DrawerLayoutFeatureCards(
+    selectedLayout: Int,
+    onLayoutSelected: (Int) -> Unit,
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(190.dp),
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
+    ) {
+        FeatureCard(
+            title = stringResource(R.string.drawer_layout_default_title),
+            summary = stringResource(R.string.drawer_layout_default_summary),
+            selected = selectedLayout == AxSmartDrawerManager.DRAWER_LAYOUT_DEFAULT,
+            onClick = { onLayoutSelected(AxSmartDrawerManager.DRAWER_LAYOUT_DEFAULT) },
+            modifier = Modifier.weight(1f),
+        ) {
+            DefaultDrawerMiniIllustration(
+                selected = selectedLayout == AxSmartDrawerManager.DRAWER_LAYOUT_DEFAULT,
+            )
+        }
+        FeatureCard(
+            title = stringResource(R.string.drawer_layout_smart_title),
+            summary = stringResource(R.string.drawer_layout_smart_summary),
+            selected = selectedLayout == AxSmartDrawerManager.DRAWER_LAYOUT_SMART,
+            onClick = { onLayoutSelected(AxSmartDrawerManager.DRAWER_LAYOUT_SMART) },
+            modifier = Modifier.weight(1f),
+        ) {
+            SmartDrawerMiniIllustration(
+                selected = selectedLayout == AxSmartDrawerManager.DRAWER_LAYOUT_SMART,
+            )
+        }
+    }
+}
+
+@Composable
+private fun DefaultDrawerMiniIllustration(selected: Boolean) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(10.dp),
+        verticalArrangement = Arrangement.spacedBy(6.dp),
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(12.dp)
+                .clip(CircleShape)
+                .background(miniIllustrationAccent(selected, 0.72f)),
+        )
+        repeat(2) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+            ) {
+                repeat(4) {
+                    MiniIllustrationDot(selected = selected)
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun SmartDrawerMiniIllustration(selected: Boolean) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(10.dp),
+        verticalArrangement = Arrangement.spacedBy(6.dp),
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(12.dp)
+                .clip(CircleShape)
+                .background(miniIllustrationAccent(selected, 0.72f)),
+        )
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(6.dp),
+        ) {
+            repeat(2) {
+                MiniSmartDrawerCard(
+                    selected = selected,
+                    modifier = Modifier.weight(1f),
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun MiniSmartDrawerCard(
+    selected: Boolean,
+    modifier: Modifier = Modifier,
+) {
+    Column(
+        modifier = modifier
+            .height(42.dp)
+            .clip(RoundedCornerShape(12.dp))
+            .background(miniIllustrationAccent(selected, 0.22f))
+            .padding(6.dp),
+        verticalArrangement = Arrangement.spacedBy(4.dp),
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth(0.62f)
+                .height(4.dp)
+                .clip(CircleShape)
+                .background(miniIllustrationAccent(selected, 0.62f)),
+        )
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+        ) {
+            MiniIllustrationDot(selected = selected)
+            MiniIllustrationDot(selected = selected)
+        }
+    }
+}
+
+@Composable
+private fun MiniIllustrationDot(
+    selected: Boolean,
+    modifier: Modifier = Modifier,
+) {
+    Box(
+        modifier = modifier
+            .size(14.dp)
+            .clip(CircleShape)
+            .background(miniIllustrationAccent(selected, 0.88f)),
+    )
+}
+
+@Composable
+private fun miniIllustrationAccent(selected: Boolean, alpha: Float) =
+    if (selected) {
+        MaterialTheme.colorScheme.onPrimary.copy(alpha = alpha)
+    } else {
+        MaterialTheme.colorScheme.primary.copy(alpha = alpha)
+    }
 
 @Composable
 internal fun AllAppsDrawerScreen(onNavigate: (String) -> Unit) {
@@ -32,6 +193,7 @@ internal fun AllAppsDrawerScreen(onNavigate: (String) -> Unit) {
     val defaultColumns = remember(context) {
         LauncherAppState.getIDP(context).getDeviceProfile(context).numShownAllAppsColumns
     }
+    val layoutPreference = rememberLauncherPreference(LauncherPrefsExt.ALL_APPS_DRAWER_LAYOUT_MODE)
     val opacityPreference = rememberLauncherPreference(
         item = LauncherPrefsExt.ALL_APPS_BG_OPACITY,
         read = { LauncherPrefsExt.allAppsOpacityPercent(context) },
@@ -39,13 +201,27 @@ internal fun AllAppsDrawerScreen(onNavigate: (String) -> Unit) {
             prefs.put(LauncherPrefsExt.ALL_APPS_BG_OPACITY, value.coerceIn(0, 100))
         },
     )
+    DrawerLayoutFeatureCards(
+        selectedLayout = layoutPreference.value,
+        onLayoutSelected = layoutPreference.onChange,
+    )
     PreferenceGroup(title = stringResource(R.string.all_apps_drawer_layout_category)) {
-        item {
-            CategoryPreference(
-                titleRes = R.string.all_apps_folders_title,
-                summaryRes = R.string.all_apps_folders_summary,
-                onClick = { onNavigate(HomeSettingsRoutes.ALL_APPS_FOLDERS) },
-            )
+        if (layoutPreference.value == AxSmartDrawerManager.DRAWER_LAYOUT_SMART) {
+            item {
+                CategoryPreference(
+                    titleRes = R.string.smart_drawer_folders_title,
+                    summaryRes = R.string.smart_drawer_folders_summary,
+                    onClick = { onNavigate(HomeSettingsRoutes.ALL_APPS_SMART_DRAWER) },
+                )
+            }
+        } else {
+            item {
+                CategoryPreference(
+                    titleRes = R.string.all_apps_folders_title,
+                    summaryRes = R.string.all_apps_folders_summary,
+                    onClick = { onNavigate(HomeSettingsRoutes.ALL_APPS_FOLDERS) },
+                )
+            }
         }
     }
     PreferenceGroup(title = stringResource(R.string.all_apps_drawer_behavior_category)) {

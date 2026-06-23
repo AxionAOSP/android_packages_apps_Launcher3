@@ -18,6 +18,7 @@ package com.android.launcher3.appprediction;
 
 import static android.os.Build.VERSION_CODES.UPSIDE_DOWN_CAKE;
 
+import static com.android.launcher3.LauncherPrefsExt.ALL_APPS_DRAWER_LAYOUT_MODE;
 import static com.android.launcher3.LauncherPrefsExt.SHOW_ALLAPPS_PREDICTIONS;
 
 import android.content.Context;
@@ -41,6 +42,7 @@ import com.android.launcher3.LauncherPrefChangeListener;
 import com.android.launcher3.LauncherPrefs;
 import com.android.launcher3.R;
 import com.android.launcher3.Utilities;
+import com.android.launcher3.allapps.AxSmartDrawerManager;
 import com.android.launcher3.allapps.FloatingHeaderRow;
 import com.android.launcher3.allapps.FloatingHeaderView;
 import com.android.launcher3.anim.AlphaUpdateListener;
@@ -114,7 +116,7 @@ public class PredictionRowView<T extends Context & ActivityContext>
         super.onAttachedToWindow();
         mActivityContext.addOnDeviceProfileChangeListener(this);
         LauncherPrefs.get(getContext()).addListener(mPreferenceChangeListener,
-                SHOW_ALLAPPS_PREDICTIONS);
+                SHOW_ALLAPPS_PREDICTIONS, ALL_APPS_DRAWER_LAYOUT_MODE);
     }
 
     @Override
@@ -122,7 +124,7 @@ public class PredictionRowView<T extends Context & ActivityContext>
         super.onDetachedFromWindow();
         mActivityContext.removeOnDeviceProfileChangeListener(this);
         LauncherPrefs.get(getContext()).removeListener(mPreferenceChangeListener,
-                SHOW_ALLAPPS_PREDICTIONS);
+                SHOW_ALLAPPS_PREDICTIONS, ALL_APPS_DRAWER_LAYOUT_MODE);
     }
 
     public void setup(FloatingHeaderView parent, FloatingHeaderRow[] rows, boolean tabsHidden) {
@@ -130,7 +132,8 @@ public class PredictionRowView<T extends Context & ActivityContext>
     }
 
     private void updateVisibility() {
-        boolean visible = mPredictionsEnabled && mPredictionsAllowed;
+        boolean visible = mPredictionsEnabled && mPredictionsAllowed
+                && !AxSmartDrawerManager.isEnabled(getContext());
         setVisibility(visible ? VISIBLE : GONE);
         if (visible) {
             mActivityContext.getActivityComponent().getAppsStore().registerIconContainer(this);

@@ -158,7 +158,7 @@ public class AllAppsGridAdapter extends BaseAllAppsAdapter {
             adapterPosition = Math.max(adapterPosition, items.size() - 1);
             int extraRows = 0;
             for (int i = 0; i <= adapterPosition && i < items.size(); i++) {
-                if (!isViewType(items.get(i).viewType, VIEW_TYPE_MASK_ICON)) {
+                if (!items.get(i).isCountedForAccessibility()) {
                     extraRows++;
                 }
             }
@@ -177,7 +177,9 @@ public class AllAppsGridAdapter extends BaseAllAppsAdapter {
         protected int incrementTotalHeight(Adapter adapter, int position, int heightUntilLastPos) {
             AllAppsGridAdapter.AdapterItem item = mApps.getAdapterItems().get(position);
             // only account for the first icon in the row since they are the same size within a row
-            return (isIconViewType(item.viewType) && item.rowAppIndex != 0)
+            return ((isIconViewType(item.viewType)
+                    || AxSmartDrawerAdapter.isSmartDrawerCategoryViewType(item.viewType))
+                    && item.rowAppIndex != 0)
                     ? heightUntilLastPos
                     : (heightUntilLastPos + mCachedSizes.get(item.viewType));
         }
@@ -188,6 +190,12 @@ public class AllAppsGridAdapter extends BaseAllAppsAdapter {
         mAppsPerRow = appsPerRow;
         int totalSpans = mAppsPerRow;
         for (int itemPerRow : mAdapterProvider.getSupportedItemsPerRowArray()) {
+            if (totalSpans % itemPerRow != 0) {
+                totalSpans *= itemPerRow;
+            }
+        }
+        for (int itemPerRow : new int[] {AxSmartDrawerAdapter.SMART_CARD_COLUMNS,
+                AxSmartDrawerAdapter.EXPANDED_APP_COLUMNS}) {
             if (totalSpans % itemPerRow != 0) {
                 totalSpans *= itemPerRow;
             }
@@ -214,7 +222,11 @@ public class AllAppsGridAdapter extends BaseAllAppsAdapter {
             }
             int viewType = items.get(position).viewType;
             if (isIconViewType(viewType)) {
-                return totalSpans / mAppsPerRow;
+                int appsPerRow = mApps.isSmartDrawerExpanded()
+                        ? AxSmartDrawerAdapter.EXPANDED_APP_COLUMNS : mAppsPerRow;
+                return totalSpans / appsPerRow;
+            } else if (AxSmartDrawerAdapter.isSmartDrawerViewType(viewType)) {
+                return totalSpans / AxSmartDrawerAdapter.getItemsPerRow(viewType);
             } else {
                 if (mAdapterProvider.isViewSupported(viewType)) {
                     return totalSpans / mAdapterProvider.getItemsPerRow(viewType, mAppsPerRow);

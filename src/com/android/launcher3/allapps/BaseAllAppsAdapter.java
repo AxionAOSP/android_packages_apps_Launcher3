@@ -76,7 +76,10 @@ public abstract class BaseAllAppsAdapter
     public static final int VIEW_TYPE_SEARCH_ACTION = 1 << 11;
     public static final int VIEW_TYPE_SEARCH_PILL = 1 << 12;
     public static final int VIEW_TYPE_SEARCH_SECTION = 1 << 13;
-    public static final int NEXT_ID = 14;
+    public static final int VIEW_TYPE_SMART_DRAWER_ROW = 1 << 14;
+    public static final int VIEW_TYPE_SMART_DRAWER_CATEGORY = 1 << 15;
+    public static final int VIEW_TYPE_SMART_DRAWER_HEADER = 1 << 16;
+    public static final int NEXT_ID = 17;
 
     // Common view type masks
     public static final int VIEW_TYPE_MASK_DIVIDER = VIEW_TYPE_ALL_APPS_DIVIDER;
@@ -123,6 +126,7 @@ public abstract class BaseAllAppsAdapter
         // The associated ItemInfoWithIcon for the item
         public AppInfo itemInfo = null;
         public AllAppsFolderInfo folderInfo = null;
+        public AxSmartDrawerCategory smartDrawerInfo = null;
         public CharSequence searchActionTitle = null;
         public CharSequence searchActionSubtitle = null;
         public Drawable searchActionIcon = null;
@@ -162,6 +166,24 @@ public abstract class BaseAllAppsAdapter
         public static AdapterItem asFolder(AllAppsFolderInfo folderInfo) {
             AdapterItem item = new AdapterItem(VIEW_TYPE_FOLDER_ICON);
             item.folderInfo = folderInfo;
+            return item;
+        }
+
+        public static AdapterItem asSmartDrawerRow(AxSmartDrawerCategory category) {
+            AdapterItem item = new AdapterItem(VIEW_TYPE_SMART_DRAWER_ROW);
+            item.smartDrawerInfo = category;
+            return item;
+        }
+
+        public static AdapterItem asSmartDrawerCategory(AxSmartDrawerCategory category) {
+            AdapterItem item = new AdapterItem(VIEW_TYPE_SMART_DRAWER_CATEGORY);
+            item.smartDrawerInfo = category;
+            return item;
+        }
+
+        public static AdapterItem asSmartDrawerHeader(AxSmartDrawerCategory category) {
+            AdapterItem item = new AdapterItem(VIEW_TYPE_SMART_DRAWER_HEADER);
+            item.smartDrawerInfo = category;
             return item;
         }
 
@@ -235,7 +257,9 @@ public abstract class BaseAllAppsAdapter
         }
 
         protected boolean isCountedForAccessibility() {
-            return viewType == VIEW_TYPE_ICON || viewType == VIEW_TYPE_FOLDER_ICON;
+            return viewType == VIEW_TYPE_ICON || viewType == VIEW_TYPE_FOLDER_ICON
+                    || viewType == VIEW_TYPE_SMART_DRAWER_ROW
+                    || viewType == VIEW_TYPE_SMART_DRAWER_CATEGORY;
         }
 
         /**
@@ -247,6 +271,11 @@ public abstract class BaseAllAppsAdapter
             }
             if (viewType == VIEW_TYPE_FOLDER_ICON) {
                 return Objects.equals(folderInfo, other.folderInfo);
+            }
+            if (viewType == VIEW_TYPE_SMART_DRAWER_ROW
+                    || viewType == VIEW_TYPE_SMART_DRAWER_CATEGORY
+                    || viewType == VIEW_TYPE_SMART_DRAWER_HEADER) {
+                return Objects.equals(smartDrawerInfo, other.smartDrawerInfo);
             }
             if (viewType == VIEW_TYPE_SEARCH_ACTION || viewType == VIEW_TYPE_SEARCH_PILL
                     || viewType == VIEW_TYPE_SEARCH_SECTION) {
@@ -274,6 +303,11 @@ public abstract class BaseAllAppsAdapter
         public boolean isContentSame(AdapterItem other) {
             if (viewType == VIEW_TYPE_FOLDER_ICON) {
                 return Objects.equals(folderInfo, other.folderInfo);
+            }
+            if (viewType == VIEW_TYPE_SMART_DRAWER_ROW
+                    || viewType == VIEW_TYPE_SMART_DRAWER_CATEGORY
+                    || viewType == VIEW_TYPE_SMART_DRAWER_HEADER) {
+                return Objects.equals(smartDrawerInfo, other.smartDrawerInfo);
             }
             if (viewType == VIEW_TYPE_SEARCH_ACTION || viewType == VIEW_TYPE_SEARCH_PILL
                     || viewType == VIEW_TYPE_SEARCH_SECTION) {
@@ -363,6 +397,10 @@ public abstract class BaseAllAppsAdapter
                 return new ViewHolder(getIconOnCreateSetup(parent));
             case VIEW_TYPE_FOLDER_ICON:
                 return AxAllAppsFolderAdapter.onCreateViewHolder(mActivityContext, parent);
+            case VIEW_TYPE_SMART_DRAWER_ROW:
+            case VIEW_TYPE_SMART_DRAWER_CATEGORY:
+            case VIEW_TYPE_SMART_DRAWER_HEADER:
+                return AxSmartDrawerAdapter.onCreateViewHolder(mActivityContext, parent, viewType);
             case VIEW_TYPE_PRIVATE_SPACE_APP_ICON:
                 BubbleTextView icon = getIconOnCreateSetup(parent);
                 icon.setOnClickListener(v ->
@@ -405,10 +443,20 @@ public abstract class BaseAllAppsAdapter
                 AxAllAppsFolderAdapter.onBindViewHolder(mActivityContext, mApps,
                         mIconFocusListener, holder, position);
                 break;
+            case VIEW_TYPE_SMART_DRAWER_ROW:
+            case VIEW_TYPE_SMART_DRAWER_CATEGORY:
+            case VIEW_TYPE_SMART_DRAWER_HEADER:
+                AxSmartDrawerAdapter.onBindViewHolder(mActivityContext, mApps,
+                        mIconFocusListener, holder, position);
+                break;
             case VIEW_TYPE_PRIVATE_SPACE_APP_ICON:
             case VIEW_TYPE_ICON: {
                 AdapterItem adapterItem = mApps.getAdapterItems().get(position);
                 BubbleTextView icon = (BubbleTextView) holder.itemView;
+                icon.animate().cancel();
+                icon.setScaleX(1f);
+                icon.setScaleY(1f);
+                icon.setAlpha(1f);
                 icon.reset();
                 icon.applyFromApplicationInfo(adapterItem.itemInfo);
                 icon.setOnFocusChangeListener(mIconFocusListener);
@@ -443,6 +491,18 @@ public abstract class BaseAllAppsAdapter
                         adapterItem.decorationInfo = null;
                         icon.setVisibility(GONE);
                     }
+                }
+                if (mApps.isSmartDrawerExpanded() && icon.getVisibility() == View.VISIBLE) {
+                    icon.setAlpha(0f);
+                    icon.setScaleX(0.92f);
+                    icon.setScaleY(0.92f);
+                    icon.animate()
+                            .alpha(1f)
+                            .scaleX(1f)
+                            .scaleY(1f)
+                            .setDuration(180)
+                            .setStartDelay(Math.min(adapterItem.rowIndex, 4) * 25L)
+                            .start();
                 }
                 break;
             }

@@ -135,6 +135,7 @@ import com.android.launcher3.Utilities;
 import com.android.launcher3.Workspace;
 import com.android.launcher3.accessibility.LauncherAccessibilityDelegate;
 import com.android.launcher3.allapps.AllAppsRecyclerView;
+import com.android.launcher3.allapps.AxSmartDrawerManager;
 import com.android.launcher3.anim.AnimatorPlaybackController;
 import com.android.launcher3.anim.PendingAnimation;
 import com.android.launcher3.apppairs.AppPairIcon;
@@ -669,8 +670,12 @@ public class QuickstepLauncher extends Launcher implements RecentsViewContainer,
         switch (info.id) {
             case Favorites.CONTAINER_ALL_APPS_PREDICTION:
                 mAllAppsPredictions = info;
+                AxSmartDrawerManager.INSTANCE.get(this).setPredictedItems(info.getContents());
                 getAppsView().getFloatingHeaderView().findFixedRowByType(
                         PredictionRowView.class).setPredictedApps(info.getContents());
+                if (AxSmartDrawerManager.isEnabled(this)) {
+                    getAppsView().onAppsUpdated();
+                }
                 break;
             case Favorites.CONTAINER_HOTSEAT_PREDICTION:
                 mHotseatPredictionController.setPredictedItems(info);

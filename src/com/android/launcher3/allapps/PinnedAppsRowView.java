@@ -16,6 +16,7 @@
 package com.android.launcher3.allapps;
 
 import static android.os.Build.VERSION_CODES.UPSIDE_DOWN_CAKE;
+import static com.android.launcher3.LauncherPrefsExt.ALL_APPS_DRAWER_LAYOUT_MODE;
 import static com.android.launcher3.LauncherPrefsExt.PINNED_APPS;
 import static com.android.launcher3.LauncherSettings.Favorites.CONTAINER_ALL_APPS;
 
@@ -96,13 +97,14 @@ public class PinnedAppsRowView extends LinearLayout implements OnDeviceProfileCh
         super.onAttachedToWindow();
         mActivityContext.addOnDeviceProfileChangeListener(this);
         mAllAppsStore.addUpdateListener(this);
-        LauncherPrefs.get(getContext()).addListener(this, PINNED_APPS);
+        LauncherPrefs.get(getContext()).addListener(this, PINNED_APPS, ALL_APPS_DRAWER_LAYOUT_MODE);
         updatePinnedApps();
     }
 
     @Override
     protected void onDetachedFromWindow() {
-        LauncherPrefs.get(getContext()).removeListener(this, PINNED_APPS);
+        LauncherPrefs.get(getContext()).removeListener(this, PINNED_APPS,
+                ALL_APPS_DRAWER_LAYOUT_MODE);
         mAllAppsStore.removeUpdateListener(this);
         mActivityContext.removeOnDeviceProfileChangeListener(this);
         mAllAppsStore.unregisterIconContainer(this);
@@ -178,7 +180,8 @@ public class PinnedAppsRowView extends LinearLayout implements OnDeviceProfileCh
 
     @Override
     public void onPrefChanged(String key) {
-        if (PINNED_APPS.getSharedPrefKey().equals(key)) {
+        if (PINNED_APPS.getSharedPrefKey().equals(key)
+                || ALL_APPS_DRAWER_LAYOUT_MODE.getSharedPrefKey().equals(key)) {
             updatePinnedApps();
         }
     }
@@ -276,8 +279,9 @@ public class PinnedAppsRowView extends LinearLayout implements OnDeviceProfileCh
     }
 
     private void updateVisibility() {
-        setVisibility(mPinnedAppsVisible ? VISIBLE : GONE);
-        if (mPinnedAppsVisible) {
+        boolean visible = mPinnedAppsVisible && !AxSmartDrawerManager.isEnabled(getContext());
+        setVisibility(visible ? VISIBLE : GONE);
+        if (visible) {
             mAllAppsStore.registerIconContainer(this);
         } else {
             mAllAppsStore.unregisterIconContainer(this);

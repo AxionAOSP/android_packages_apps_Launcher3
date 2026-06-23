@@ -15,30 +15,31 @@
  */
 package com.android.launcher3.allapps;
 
-import static com.android.launcher3.LauncherSettings.Favorites.CONTAINER_ALL_APPS;
-
-import android.content.Context;
-
 import com.android.launcher3.model.data.AppInfo;
-import com.android.launcher3.model.data.FolderInfo;
-import com.android.launcher3.model.data.WorkspaceItemInfo;
 
 import java.util.List;
 import java.util.Objects;
 
-public final class AllAppsFolderInfo {
+public final class AxSmartDrawerCategory {
 
-    private final int mId;
+    public static final int TYPE_CATEGORY = 0;
+    public static final int TYPE_PINNED = 1;
+    public static final int TYPE_PREDICTIONS = 2;
+    public static final int TYPE_CUSTOM_FOLDER = 3;
+
+    private final String mId;
     private final CharSequence mTitle;
     private final List<AppInfo> mApps;
+    private final int mType;
 
-    public AllAppsFolderInfo(int id, CharSequence title, List<AppInfo> apps) {
+    AxSmartDrawerCategory(String id, CharSequence title, List<AppInfo> apps, int type) {
         mId = id;
         mTitle = title;
         mApps = List.copyOf(apps);
+        mType = type;
     }
 
-    public int getId() {
+    public String getId() {
         return mId;
     }
 
@@ -50,18 +51,16 @@ public final class AllAppsFolderInfo {
         return mApps;
     }
 
-    public FolderInfo toFolderInfo(Context context) {
-        FolderInfo folderInfo = new FolderInfo();
-        folderInfo.id = mId;
-        folderInfo.container = CONTAINER_ALL_APPS;
-        folderInfo.title = mTitle;
-        for (int i = 0; i < mApps.size(); i++) {
-            WorkspaceItemInfo item = mApps.get(i).makeWorkspaceItem(context);
-            item.container = mId;
-            item.rank = i;
-            folderInfo.add(item);
-        }
-        return folderInfo;
+    public boolean isRow() {
+        return mType == TYPE_PINNED || mType == TYPE_PREDICTIONS;
+    }
+
+    public boolean isExpandable() {
+        return !isRow();
+    }
+
+    public int getType() {
+        return mType;
     }
 
     @Override
@@ -69,16 +68,17 @@ public final class AllAppsFolderInfo {
         if (this == obj) {
             return true;
         }
-        if (!(obj instanceof AllAppsFolderInfo other)) {
+        if (!(obj instanceof AxSmartDrawerCategory other)) {
             return false;
         }
-        return mId == other.mId
+        return mType == other.mType
+                && Objects.equals(mId, other.mId)
                 && Objects.equals(mTitle, other.mTitle)
                 && Objects.equals(mApps, other.mApps);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(mId, mTitle, mApps);
+        return Objects.hash(mId, mTitle, mApps, mType);
     }
 }

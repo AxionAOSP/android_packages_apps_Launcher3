@@ -27,6 +27,7 @@ internal object HomeSettingsRoutes {
     const val HOME_GRID = "home_grid"
     const val ALL_APPS = "all_apps"
     const val ALL_APPS_FOLDERS = "all_apps_folders"
+    const val ALL_APPS_SMART_DRAWER = "all_apps_smart_drawer"
     const val SEARCH = "search"
     const val NOTIFICATIONS = "notifications"
     const val PRIVACY = "privacy"
@@ -42,6 +43,7 @@ internal object HomeSettingsRoutes {
         KEY_ALL_APPS_SEARCH_RESULTS -> SEARCH
         KEY_ALL_APPS_FOLDER_SETTINGS -> ALL_APPS_FOLDERS
         KEY_ALL_APPS_DRAWER_OPTIONS -> ALL_APPS
+        KEY_ALL_APPS_SMART_DRAWER_FOLDERS -> ALL_APPS_SMART_DRAWER
         KEY_SCREEN_SEARCH -> SEARCH
         KEY_SCREEN_NOTIFICATIONS -> NOTIFICATIONS
         KEY_SCREEN_PRIVACY -> PRIVACY
@@ -91,7 +93,9 @@ internal object HomeSettingsRoutes {
             KEY_ALL_APPS_REMEMBER_POSITION,
             KEY_ALL_APPS_SHOW_SCROLLBAR,
             KEY_ALL_APPS_HAPTIC_FEEDBACK,
-            KEY_ALL_APPS_PREDICTIONS -> ALL_APPS
+            KEY_ALL_APPS_PREDICTIONS,
+            KEY_ALL_APPS_SMART_DRAWER_FOLDERS,
+            KEY_ALL_APPS_DRAWER_LAYOUT_MODE -> ALL_APPS
             KEY_ALL_APPS_FOLDER_SETTINGS -> ALL_APPS_FOLDERS
             KEY_DRAWER_OPEN_KEYBOARD,
             KEY_SUGGESTIONS,
@@ -137,7 +141,8 @@ internal fun parentRoute(route: String?): String? = when (route) {
     HomeSettingsRoutes.ABOUT -> HomeSettingsRoutes.ROOT
     HomeSettingsRoutes.NOTIFICATIONS -> HomeSettingsRoutes.GENERAL
     HomeSettingsRoutes.HOME_GRID -> HomeSettingsRoutes.HOME
-    HomeSettingsRoutes.ALL_APPS_FOLDERS -> HomeSettingsRoutes.ALL_APPS
+    HomeSettingsRoutes.ALL_APPS_FOLDERS,
+    HomeSettingsRoutes.ALL_APPS_SMART_DRAWER -> HomeSettingsRoutes.ALL_APPS
     else -> null
 }
 
@@ -148,6 +153,7 @@ internal fun routeTitle(route: String): Int = when (route) {
     HomeSettingsRoutes.HOME_GRID -> R.string.home_grid_title
     HomeSettingsRoutes.ALL_APPS -> R.string.all_apps_drawer_settings_title
     HomeSettingsRoutes.ALL_APPS_FOLDERS -> R.string.all_apps_folders_title
+    HomeSettingsRoutes.ALL_APPS_SMART_DRAWER -> R.string.smart_drawer_folders_title
     HomeSettingsRoutes.SEARCH -> R.string.home_settings_search_title
     HomeSettingsRoutes.NOTIFICATIONS -> R.string.notifications_header
     HomeSettingsRoutes.PRIVACY -> R.string.home_settings_privacy_title

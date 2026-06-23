@@ -118,6 +118,7 @@ public class AlphabeticalAppsList implements AllAppsStore.OnUpdateListener,
     private final boolean mSortSections;
     private final AxAllAppsListController mAxListController;
     private final AxAllAppsDisplayPrefs mAllAppsDisplayPrefs;
+    private String mExpandedSmartCategoryId;
 
     public AlphabeticalAppsList(ActivityContext activityContext, @Nullable AllAppsStore appsStore,
             WorkProfileManager workProfileManager, PrivateProfileManager privateProfileManager) {
@@ -243,6 +244,7 @@ public class AlphabeticalAppsList implements AllAppsStore.OnUpdateListener,
     @Override
     public void onPrefChanged(String key) {
         if (mAxListController.handlesPrefChange(key)) {
+            mExpandedSmartCategoryId = null;
             onAppsUpdated();
         }
     }
@@ -351,14 +353,21 @@ public class AlphabeticalAppsList implements AllAppsStore.OnUpdateListener,
             int numAppsInSection = 0;
             int numAppsInRow = 0;
             int rowIndex = -1;
+            int itemsPerRow = mNumAppsPerRowAllApps;
             for (AdapterItem item : mAdapterItems) {
                 item.rowIndex = 0;
+                int itemItemsPerRow = getItemsPerRow(item.viewType);
                 if (BaseAllAppsAdapter.isDividerViewType(item.viewType)
                         || BaseAllAppsAdapter.isPrivateSpaceHeaderView(item.viewType)
                         || BaseAllAppsAdapter.isPrivateSpaceSysAppsDividerView(item.viewType)) {
                     numAppsInSection = 0;
-                } else if (BaseAllAppsAdapter.isIconViewType(item.viewType)) {
-                    if (numAppsInSection % mNumAppsPerRowAllApps == 0) {
+                    itemsPerRow = mNumAppsPerRowAllApps;
+                } else if (itemItemsPerRow > 0) {
+                    if (itemItemsPerRow != itemsPerRow) {
+                        numAppsInSection = 0;
+                        itemsPerRow = itemItemsPerRow;
+                    }
+                    if (numAppsInSection % itemsPerRow == 0) {
                         numAppsInRow = 0;
                         rowIndex++;
                     }
@@ -375,6 +384,17 @@ public class AlphabeticalAppsList implements AllAppsStore.OnUpdateListener,
             DiffUtil.calculateDiff(new MyDiffCallback(oldItems, mAdapterItems), false)
                     .dispatchUpdatesTo(mAdapter);
         }
+    }
+
+    private int getItemsPerRow(int viewType) {
+        if (BaseAllAppsAdapter.isIconViewType(viewType)) {
+            return isSmartDrawerExpanded()
+                    ? AxSmartDrawerAdapter.EXPANDED_APP_COLUMNS : mNumAppsPerRowAllApps;
+        }
+        if (AxSmartDrawerAdapter.isSmartDrawerViewType(viewType)) {
+            return AxSmartDrawerAdapter.getItemsPerRow(viewType);
+        }
+        return 0;
     }
 
     int addPrivateSpaceItems(int position) {
@@ -483,10 +503,13 @@ public class AlphabeticalAppsList implements AllAppsStore.OnUpdateListener,
         }
         Log.d(TAG, "Adding apps with sections. HasPrivateApps: " + hasPrivateApps);
 
-        List<Object> entries = mAxListController.getEntries(appList, hasPrivateApps);
+        List<Object> entries = mAxListController.getEntries(appList, hasPrivateApps,
+                mExpandedSmartCategoryId);
         for (int i = 0; i < entries.size(); i++) {
             Object entry = entries.get(i);
-            if (mAxListController.isFolderEntry(entry)) {
+            if (mAxListController.isSmartDrawerEntry(entry)) {
+                mAdapterItems.add(mAxListController.createSmartDrawerItem(entry));
+            } else if (mAxListController.isFolderEntry(entry)) {
                 mAdapterItems.add(mAxListController.createFolderItem(entry));
             } else {
                 AppInfo info = (AppInfo) entry;
@@ -556,6 +579,27 @@ public class AlphabeticalAppsList implements AllAppsStore.OnUpdateListener,
             }
         }
         return roundRegion;
+    }
+
+    public void expandSmartDrawerCategory(AxSmartDrawerCategory category) {
+        if (!mAxListController.isSmartDrawerMode() || category == null || !category.isExpandable()) {
+            return;
+        }
+        mExpandedSmartCategoryId = category.getId();
+        updateAdapterItems();
+    }
+
+    public boolean collapseSmartDrawerCategory() {
+        if (mExpandedSmartCategoryId == null) {
+            return false;
+        }
+        mExpandedSmartCategoryId = null;
+        updateAdapterItems();
+        return true;
+    }
+
+    public boolean isSmartDrawerExpanded() {
+        return mExpandedSmartCategoryId != null;
     }
 
     public PrivateProfileManager getPrivateProfileManager() {
