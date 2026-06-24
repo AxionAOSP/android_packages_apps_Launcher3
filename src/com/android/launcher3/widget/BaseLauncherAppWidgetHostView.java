@@ -26,6 +26,7 @@ import android.widget.RemoteViews;
 
 import androidx.annotation.UiThread;
 
+import com.android.launcher3.AxWorkspaceWidgetPrefs;
 import com.android.launcher3.R;
 import com.android.launcher3.util.Executors;
 
@@ -49,6 +50,7 @@ public abstract class BaseLauncherAppWidgetHostView extends NavigableAppWidgetHo
 
     private final Rect mEnforcedRectangle = new Rect();
     private final float mEnforcedCornerRadius;
+    private final AxWorkspaceWidgetPrefs mWorkspaceWidgetPrefs;
     private final ViewOutlineProvider mCornerRadiusEnforcementOutline = new ViewOutlineProvider() {
         @Override
         public void getOutline(View view, Outline outline) {
@@ -66,7 +68,8 @@ public abstract class BaseLauncherAppWidgetHostView extends NavigableAppWidgetHo
         super(context);
 
         setExecutor(Executors.THREAD_POOL_EXECUTOR);
-        setClipToOutline(true);
+        mWorkspaceWidgetPrefs = AxWorkspaceWidgetPrefs.INSTANCE.get(context);
+        setClipToOutline(!mWorkspaceWidgetPrefs.shouldAllowWidgetOverlap(context));
 
         mInflater = LayoutInflater.from(context);
         mEnforcedCornerRadius = RoundedCornerEnforcement.computeEnforcedRadius(getContext());
@@ -99,12 +102,13 @@ public abstract class BaseLauncherAppWidgetHostView extends NavigableAppWidgetHo
     @UiThread
     private void resetRoundedCorners() {
         setOutlineProvider(VIEW_OUTLINE_PROVIDER);
+        setClipToOutline(!mWorkspaceWidgetPrefs.shouldAllowWidgetOverlap(getContext()));
         mIsCornerRadiusEnforced = false;
     }
 
     @UiThread
     private void enforceRoundedCorners() {
-        if (mEnforcedCornerRadius <= 0) {
+        if (!mWorkspaceWidgetPrefs.shouldRoundWidgets(getContext()) || mEnforcedCornerRadius <= 0) {
             resetRoundedCorners();
             return;
         }
@@ -118,8 +122,13 @@ public abstract class BaseLauncherAppWidgetHostView extends NavigableAppWidgetHo
                 background,
                 mEnforcedRectangle);
         setOutlineProvider(mCornerRadiusEnforcementOutline);
+        setClipToOutline(!mWorkspaceWidgetPrefs.shouldAllowWidgetOverlap(getContext()));
         mIsCornerRadiusEnforced = true;
         invalidateOutline();
+    }
+
+    public void updateWidgetClipping() {
+        enforceRoundedCorners();
     }
 
     /** Returns the corner radius currently enforced, in pixels. */

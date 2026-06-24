@@ -383,6 +383,7 @@ public class Launcher extends StatefulActivity<LauncherState>
     // it from the context.
     private SharedPreferences mSharedPrefs;
     private AxWorkspaceStylePrefs mWorkspaceStylePrefs;
+    private AxWorkspaceWidgetPrefs mWorkspaceWidgetPrefs;
 
     // Activity result which needs to be processed after workspace has loaded.
     private ActivityResultInfo mPendingActivityResult;
@@ -426,6 +427,8 @@ public class Launcher extends StatefulActivity<LauncherState>
             enabled -> mIsNaturalScrollingEnabled = enabled;
     private final LauncherPrefChangeListener mWorkspaceStylePreferenceListener =
             key -> applyWorkspaceStylePrefs();
+    private final LauncherPrefChangeListener mWorkspaceWidgetPreferenceListener =
+            key -> applyWorkspaceWidgetPrefs();
 
     private StartupLatencyLogger mStartupLatencyLogger;
 
@@ -537,6 +540,10 @@ public class Launcher extends StatefulActivity<LauncherState>
         mWorkspaceStylePrefs.addChangeListener(LauncherPrefs.get(this),
                 mWorkspaceStylePreferenceListener);
         applyWorkspaceStylePrefs();
+        mWorkspaceWidgetPrefs = AxWorkspaceWidgetPrefs.INSTANCE.get(this);
+        mWorkspaceWidgetPrefs.addChangeListener(LauncherPrefs.get(this),
+                mWorkspaceWidgetPreferenceListener);
+        applyWorkspaceWidgetPrefs();
 
         mOverlayManager = getDefaultOverlay();
         PluginManagerWrapper.INSTANCE.get(this)
@@ -1742,6 +1749,8 @@ public class Launcher extends StatefulActivity<LauncherState>
         ScreenOnTracker.INSTANCE.get(this).removeListener(mScreenOnListener);
         mWorkspaceStylePrefs.removeChangeListener(LauncherPrefs.get(this),
                 mWorkspaceStylePreferenceListener);
+        mWorkspaceWidgetPrefs.removeChangeListener(LauncherPrefs.get(this),
+                mWorkspaceWidgetPreferenceListener);
         PluginManagerWrapper.INSTANCE.get(this).removePluginListener(this);
 
         mModel.removeCallbacks(this);
@@ -1769,6 +1778,18 @@ public class Launcher extends StatefulActivity<LauncherState>
             return;
         }
         mWorkspaceStylePrefs.applySystemBars(this);
+    }
+
+    private void applyWorkspaceWidgetPrefs() {
+        if (mWorkspace == null) {
+            return;
+        }
+        mWorkspace.mapOverItems((info, view) -> {
+            if (view instanceof LauncherAppWidgetHostView widgetView) {
+                widgetView.updateWidgetClipping();
+            }
+            return false;
+        });
     }
 
     /**

@@ -15,6 +15,7 @@ import android.os.UserHandle;
 
 import androidx.annotation.Nullable;
 
+import com.android.launcher3.AxWorkspaceWidgetPrefs;
 import com.android.launcher3.DeviceProfile;
 import com.android.launcher3.Flags;
 import com.android.launcher3.InvariantDeviceProfile;
@@ -103,7 +104,7 @@ public class LauncherAppWidgetProviderInfo extends AppWidgetProviderInfo impleme
     public void initSpans(Context context, InvariantDeviceProfile idp) {
         mPM = context.getApplicationContext().getPackageManager();
         int minSpanX = 0;
-        int minSpanY = 0;
+        int minSpanY = 1;
         int maxSpanX = idp.numColumns;
         int maxSpanY = idp.numRows;
         int spanX = 0;
@@ -152,6 +153,13 @@ public class LauncherAppWidgetProviderInfo extends AppWidgetProviderInfo impleme
         // Ensures maxSpan >= minSpan
         maxSpanX = Math.max(maxSpanX, minSpanX);
         maxSpanY = Math.max(maxSpanY, minSpanY);
+
+        if (AxWorkspaceWidgetPrefs.INSTANCE.get(context).shouldUseUnlimitedSize(context)) {
+            minSpanX = 1;
+            minSpanY = 1;
+            maxSpanX = idp.numColumns;
+            maxSpanY = idp.numRows;
+        }
 
         // Use targetCellWidth/Height if it is within the min/max ranges.
         // Otherwise, use the span of minWidth/Height.

@@ -73,6 +73,36 @@ internal fun HomeScreen(
             )
         }
     }
+    PreferenceGroup(title = stringResource(R.string.widget_button_text)) {
+        item {
+            BooleanPreference(
+                item = LauncherPrefsExt.WORKSPACE_ROUNDED_WIDGETS,
+                titleRes = R.string.home_widgets_rounded_title,
+                summaryRes = R.string.home_widgets_rounded_summary,
+            )
+        }
+        item {
+            BooleanPreference(
+                item = LauncherPrefsExt.WORKSPACE_ALLOW_WIDGET_OVERLAP,
+                titleRes = R.string.home_widgets_overlap_title,
+                summaryRes = R.string.home_widgets_overlap_summary,
+            )
+        }
+        item {
+            BooleanPreference(
+                item = LauncherPrefsExt.WORKSPACE_WIDGET_UNLIMITED_SIZE,
+                titleRes = R.string.home_widgets_unlimited_size_title,
+                summaryRes = R.string.home_widgets_unlimited_size_summary,
+            )
+        }
+        item {
+            BooleanPreference(
+                item = LauncherPrefsExt.WORKSPACE_FORCE_WIDGET_RESIZE,
+                titleRes = R.string.home_widgets_force_resize_title,
+                summaryRes = R.string.home_widgets_force_resize_summary,
+            )
+        }
+    }
     PreferenceGroup(title = stringResource(R.string.home_settings_gestures_category)) {
         item {
             DoubleTapActionPreference()
