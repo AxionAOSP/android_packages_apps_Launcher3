@@ -156,6 +156,7 @@ public class InvariantDeviceProfile {
     private final ThemeManager mThemeManager;
     private final AxWorkspaceDisplayPrefs mWorkspaceDisplayPrefs;
     private final AxAllAppsDisplayPrefs mAllAppsDisplayPrefs;
+    private final AxWorkspaceWidgetPrefs mWorkspaceWidgetPrefs;
 
     /**
      * Number of icons per row and column in the workspace.
@@ -291,6 +292,7 @@ public class InvariantDeviceProfile {
             ThemeManager themeManager,
             AxWorkspaceDisplayPrefs workspaceDisplayPrefs,
             AxAllAppsDisplayPrefs allAppsDisplayPrefs,
+            AxWorkspaceWidgetPrefs workspaceWidgetPrefs,
             DaggerSingletonTracker lifeCycle,
             TaskbarModeUtil taskbarModeUtil,
             @Ui final LooperExecutor mainExecutor) {
@@ -301,6 +303,7 @@ public class InvariantDeviceProfile {
         mThemeManager = themeManager;
         mWorkspaceDisplayPrefs = workspaceDisplayPrefs;
         mAllAppsDisplayPrefs = allAppsDisplayPrefs;
+        mWorkspaceWidgetPrefs = workspaceWidgetPrefs;
         mMainExecutor = mainExecutor;
 
         String gridName = prefs.get(GRID_NAME);
@@ -337,6 +340,7 @@ public class InvariantDeviceProfile {
                     || DRAWER_OPEN_KEYBOARD.getSharedPrefKey().equals(key)
                     || SHOW_DESKTOP_LABELS.getSharedPrefKey().equals(key)
                     || SHOW_DRAWER_LABELS.getSharedPrefKey().equals(key)
+                    || mWorkspaceWidgetPrefs.hasSizePreferenceKey(key)
                     || mWorkspaceDisplayPrefs.hasPreferenceKey(key)
                     || mAllAppsDisplayPrefs.hasPreferenceKey(key)) {
                 onConfigChanged();
@@ -347,12 +351,14 @@ public class InvariantDeviceProfile {
                 SHOW_DRAWER_LABELS);
         mWorkspaceDisplayPrefs.addChangeListener(prefs, prefListener);
         mAllAppsDisplayPrefs.addChangeListener(prefs, prefListener);
+        mWorkspaceWidgetPrefs.addChangeListener(prefs, prefListener);
         lifeCycle.addCloseable(() -> {
             prefs.removeListener(prefListener,
                     FIXED_LANDSCAPE_MODE, ENABLE_TWOLINE_ALLAPPS_TOGGLE, ALLAPPS_THEMED_ICONS,
                     DRAWER_OPEN_KEYBOARD, SHOW_DESKTOP_LABELS, SHOW_DRAWER_LABELS);
             mWorkspaceDisplayPrefs.removeChangeListener(prefs, prefListener);
             mAllAppsDisplayPrefs.removeChangeListener(prefs, prefListener);
+            mWorkspaceWidgetPrefs.removeChangeListener(prefs, prefListener);
         });
 
         SimpleBroadcastReceiver localeReceiver = new SimpleBroadcastReceiver(context,

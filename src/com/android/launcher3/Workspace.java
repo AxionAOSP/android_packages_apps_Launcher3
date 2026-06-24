@@ -320,6 +320,7 @@ public class Workspace<T extends View & PageIndicator> extends PagedView<T>
     private final StatsLogManager mStatsLogManager;
 
     private final MSDLPlayerWrapper mMSDLPlayerWrapper;
+    private final AxWorkspaceWidgetPrefs mWorkspaceWidgetPrefs;
 
     private final StateManager.StateListener<LauncherState> mAccessibilityDropListener =
             new StateListener<>() {
@@ -368,6 +369,7 @@ public class Workspace<T extends View & PageIndicator> extends PagedView<T>
         setOnTouchListener(new WorkspaceTouchListener(mLauncher, this));
         mStatsLogManager = StatsLogManager.newInstance(context);
         mMSDLPlayerWrapper = MSDLPlayerWrapper.INSTANCE.get(context);
+        mWorkspaceWidgetPrefs = AxWorkspaceWidgetPrefs.INSTANCE.get(context);
     }
 
     @Override
@@ -2329,14 +2331,18 @@ public class Workspace<T extends View & PageIndicator> extends PagedView<T>
     private Runnable getWidgetResizeFrameRunnable(DragOptions options,
             LauncherAppWidgetHostView hostView, CellLayout cellLayout) {
         AppWidgetProviderInfo pInfo = hostView.getAppWidgetInfo();
-        if (pInfo != null) {
-            return () -> {
-                if (!isPageInTransition()) {
-                    AppWidgetResizeFrame.showForWidget(hostView, cellLayout);
-                }
-            };
+        if (pInfo == null || options.isAccessibleDrag) {
+            return null;
         }
-        return null;
+        if (pInfo.resizeMode == AppWidgetProviderInfo.RESIZE_NONE
+                && !mWorkspaceWidgetPrefs.shouldForceWidgetResize(mLauncher)) {
+            return null;
+        }
+        return () -> {
+            if (!isPageInTransition()) {
+                AppWidgetResizeFrame.showForWidget(hostView, cellLayout);
+            }
+        };
     }
 
     public void onNoCellFound(

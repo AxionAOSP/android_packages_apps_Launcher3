@@ -23,6 +23,7 @@ import androidx.annotation.VisibleForTesting;
 
 import com.android.launcher3.AxWorkspaceGesturePrefs;
 import com.android.launcher3.AxWorkspaceStylePrefs;
+import com.android.launcher3.AxWorkspaceWidgetPrefs;
 import com.android.launcher3.InvariantDeviceProfile;
 import com.android.launcher3.LauncherAppState;
 import com.android.launcher3.LauncherPrefs;
@@ -113,6 +114,7 @@ public interface LauncherBaseAppComponent {
     AxSmartDrawerManager getSmartDrawerManager();
     AxWorkspaceGesturePrefs getWorkspaceGesturePrefs();
     AxWorkspaceStylePrefs getWorkspaceStylePrefs();
+    AxWorkspaceWidgetPrefs getWorkspaceWidgetPrefs();
     LockedUserState getLockedUserState();
     InvariantDeviceProfile getIDP();
     IconPool getIconPool();

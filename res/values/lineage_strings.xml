@@ -23,7 +23,7 @@
     <string name="home_settings_search_title">Search</string>
     <string name="home_settings_privacy_title">Privacy</string>
     <string name="home_settings_general_summary">Icon sizes and notification dots</string>
-    <string name="home_settings_home_summary">Grid, labels, gestures, and behavior</string>
+    <string name="home_settings_home_summary">Grid, labels, widgets, and gestures</string>
     <string name="home_settings_all_apps_summary">Layout, folders, behavior, and appearance</string>
     <string name="home_settings_search_summary">App drawer search, dock provider, and suggestions</string>
     <string name="home_settings_notifications_summary">Notification dots and badges</string>
@@ -69,6 +69,14 @@
     <string name="home_label_size_title">Label size</string>
     <string name="home_wallpaper_scrolling_title">Wallpaper scrolling</string>
     <string name="home_top_bar_shadow_title">Top bar shadow</string>
+    <string name="home_widgets_rounded_title">Rounded widget corners</string>
+    <string name="home_widgets_rounded_summary">Apply launcher corner clipping to home screen widgets</string>
+    <string name="home_widgets_overlap_title">Allow widget overlap</string>
+    <string name="home_widgets_overlap_summary">Let widgets draw beyond their grid bounds when supported</string>
+    <string name="home_widgets_unlimited_size_title">Remove widget size limits</string>
+    <string name="home_widgets_unlimited_size_summary">Allow widgets to use the full home screen grid while resizing</string>
+    <string name="home_widgets_force_resize_title">Force widget resizing</string>
+    <string name="home_widgets_force_resize_summary">Show resize controls even for widgets that do not advertise resizing</string>
     <string name="home_double_tap_action_title">Double tap action</string>
     <string name="home_double_tap_action_none">Do nothing</string>
     <string name="home_double_tap_action_sleep">Sleep</string>

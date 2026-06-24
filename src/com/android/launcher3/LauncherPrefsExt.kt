@@ -91,6 +91,30 @@ object LauncherPrefsExt {
             true,
             EncryptionType.SECURE_SETTINGS,
         )
+    @JvmField val WORKSPACE_ROUNDED_WIDGETS =
+        backedUpItem(
+            "pref_workspace_rounded_widgets",
+            true,
+            EncryptionType.SECURE_SETTINGS,
+        )
+    @JvmField val WORKSPACE_ALLOW_WIDGET_OVERLAP =
+        backedUpItem(
+            "pref_workspace_allow_widget_overlap",
+            false,
+            EncryptionType.SECURE_SETTINGS,
+        )
+    @JvmField val WORKSPACE_FORCE_WIDGET_RESIZE =
+        backedUpItem(
+            "pref_workspace_force_widget_resize",
+            false,
+            EncryptionType.SECURE_SETTINGS,
+        )
+    @JvmField val WORKSPACE_WIDGET_UNLIMITED_SIZE =
+        backedUpItem(
+            "pref_workspace_widget_unlimited_size",
+            false,
+            EncryptionType.SECURE_SETTINGS,
+        )
     @JvmField val HOTSEAT_SEARCH_BAR =
         backedUpItem("pref_hotseat_search_bar", true, EncryptionType.SECURE_SETTINGS)
     @JvmField val HOTSEAT_SEARCH_PROVIDER =
@@ -283,6 +307,10 @@ object LauncherPrefsExt {
         WORKSPACE_LABEL_SCALE,
         WORKSPACE_WALLPAPER_SCROLLING,
         WORKSPACE_SHOW_TOP_SHADOW,
+        WORKSPACE_ROUNDED_WIDGETS,
+        WORKSPACE_ALLOW_WIDGET_OVERLAP,
+        WORKSPACE_FORCE_WIDGET_RESIZE,
+        WORKSPACE_WIDGET_UNLIMITED_SIZE,
         HOTSEAT_SEARCH_BAR,
         HOTSEAT_SEARCH_PROVIDER,
         WORKSPACE_DOUBLE_TAP_ACTION,
