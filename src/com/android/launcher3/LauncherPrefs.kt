@@ -18,6 +18,11 @@ package com.android.launcher3
 import android.content.Context
 import android.content.Context.MODE_PRIVATE
 import android.content.SharedPreferences
+import android.database.ContentObserver
+import android.net.Uri
+import android.os.Handler
+import android.os.Looper
+import android.provider.Settings
 import androidx.annotation.VisibleForTesting
 import com.android.launcher3.GridType.Companion.GRID_TYPE_ANY
 import com.android.launcher3.InvariantDeviceProfile.GRID_NAME_PREFS_KEY
@@ -36,6 +41,8 @@ import com.android.launcher3.states.RotationHelper
 import com.android.launcher3.util.DaggerSingletonObject
 import com.android.launcher3.util.DisplayController
 import java.util.concurrent.ConcurrentHashMap
+import org.json.JSONArray
+import org.json.JSONException
 import javax.inject.Inject
 
 /**
@@ -53,6 +60,8 @@ constructor(@ApplicationContext private val encryptedContext: Context) {
             .createDeviceProtectedStorageContext()
             .getSharedPreferences(BOOT_AWARE_PREFS_KEY, MODE_PRIVATE)
     }
+    private val settingsObserverHandler = Handler(Looper.getMainLooper())
+    private val settingsObservers = ConcurrentHashMap<SettingsObserverKey, ContentObserver>()
 
     open protected fun getSharedPrefs(item: Item): SharedPreferences =
         item.run {
@@ -82,6 +91,9 @@ constructor(@ApplicationContext private val encryptedContext: Context) {
      */
     @Suppress("IMPLICIT_CAST_TO_ANY", "UNCHECKED_CAST")
     private fun <T> getInner(item: Item, default: T): T {
+        if (item.encryptionType == EncryptionType.SECURE_SETTINGS) {
+            return getSecureSetting(item, default)
+        }
         val sp = getSharedPrefs(item)
         return when {
             item.type == String::class.java -> sp.getString(item.sharedPrefKey, default as? String)
@@ -112,8 +124,10 @@ constructor(@ApplicationContext private val encryptedContext: Context) {
      * prepareToPutValue(itemsToValues) for every distinct `SharedPreferences` file present in the
      * provided item configurations.
      */
-    fun put(vararg itemsToValues: Pair<Item, Any>): Unit =
+    fun put(vararg itemsToValues: Pair<Item, Any>) {
+        putSecureSettings(itemsToValues)
         prepareToPutValues(itemsToValues).forEach { it.apply() }
+    }
 
     /** See referenced `put` method above. */
     fun <T : Any> put(item: Item, value: T): Unit = put(item.to(value))
@@ -122,8 +136,10 @@ constructor(@ApplicationContext private val encryptedContext: Context) {
      * Synchronously stores all the values provided according to their associated Item
      * configuration.
      */
-    fun putSync(vararg itemsToValues: Pair<Item, Any>): Unit =
+    fun putSync(vararg itemsToValues: Pair<Item, Any>) {
+        putSecureSettings(itemsToValues)
         prepareToPutValues(itemsToValues).forEach { it.commit() }
+    }
 
     /**
      * Updates the values stored in `SharedPreferences` for each corresponding Item-value pair. If
@@ -138,7 +154,10 @@ constructor(@ApplicationContext private val encryptedContext: Context) {
     private fun prepareToPutValues(
         updates: Array<out Pair<Item, Any>>
     ): List<SharedPreferences.Editor> {
-        val updatesPerPrefFile = updates.groupBy { getSharedPrefs(it.first) }.toMap()
+        val updatesPerPrefFile = updates
+            .filterNot { it.first.encryptionType == EncryptionType.SECURE_SETTINGS }
+            .groupBy { getSharedPrefs(it.first) }
+            .toMap()
 
         return updatesPerPrefFile.map { (sharedPref, itemList) ->
             sharedPref.edit().apply { itemList.forEach { (item, value) -> putValue(item, value) } }
@@ -173,6 +192,121 @@ constructor(@ApplicationContext private val encryptedContext: Context) {
                 )
         }
 
+
+    @Suppress("IMPLICIT_CAST_TO_ANY", "UNCHECKED_CAST")
+    private fun <T> getSecureSetting(item: Item, default: T): T {
+        val resolver = encryptedContext.contentResolver
+        val key = item.sharedPrefKey
+        return when {
+            item.type == String::class.java -> Settings.Secure.getString(resolver, key)
+                ?: default as? String
+            item.type == Boolean::class.java || item.type == java.lang.Boolean::class.java ->
+                Settings.Secure.getInt(resolver, key, if (default as Boolean) 1 else 0) != 0
+            item.type == Int::class.java || item.type == java.lang.Integer::class.java ->
+                Settings.Secure.getInt(resolver, key, default as Int)
+            item.type == Float::class.java || item.type == java.lang.Float::class.java ->
+                Settings.Secure.getFloat(resolver, key, default as Float)
+            item.type == Long::class.java || item.type == java.lang.Long::class.java ->
+                Settings.Secure.getLong(resolver, key, default as Long)
+            Set::class.java.isAssignableFrom(item.type) ->
+                Settings.Secure.getString(resolver, key)?.let {
+                    decodeStringSet(it, default as? Set<String>)
+                } ?: default
+            else ->
+                throw IllegalArgumentException(
+                    "item type: ${item.type} is not compatible with secure settings"
+                )
+        }
+            as T
+    }
+
+    private fun putSecureSettings(updates: Array<out Pair<Item, Any>>) {
+        updates
+            .filter { it.first.encryptionType == EncryptionType.SECURE_SETTINGS }
+            .forEach { (item, value) -> putSecureSetting(item, value) }
+    }
+
+    private fun putSecureSetting(item: Item, value: Any) {
+        val resolver = encryptedContext.contentResolver
+        val key = item.sharedPrefKey
+        when {
+            item.type == String::class.java -> Settings.Secure.putString(
+                resolver,
+                key,
+                value as String,
+            )
+            item.type == Boolean::class.java || item.type == java.lang.Boolean::class.java ->
+                Settings.Secure.putInt(resolver, key, if (value as Boolean) 1 else 0)
+            item.type == Int::class.java || item.type == java.lang.Integer::class.java ->
+                Settings.Secure.putInt(resolver, key, value as Int)
+            item.type == Float::class.java || item.type == java.lang.Float::class.java ->
+                Settings.Secure.putFloat(resolver, key, value as Float)
+            item.type == Long::class.java || item.type == java.lang.Long::class.java ->
+                Settings.Secure.putLong(resolver, key, value as Long)
+            Set::class.java.isAssignableFrom(item.type) ->
+                Settings.Secure.putString(resolver, key, encodeStringSet(value as Set<*>))
+            else ->
+                throw IllegalArgumentException(
+                    "item type: ${item.type} is not compatible with secure settings"
+                )
+        }
+    }
+
+    private fun removeSecureSettings(items: Array<out Item>) {
+        items
+            .filter { it.encryptionType == EncryptionType.SECURE_SETTINGS }
+            .forEach {
+                Settings.Secure.putString(encryptedContext.contentResolver, it.sharedPrefKey, null)
+            }
+    }
+
+    private fun registerSecureSettingsObserver(listener: LauncherPrefChangeListener, item: Item) {
+        val observerKey = SettingsObserverKey(listener, item.sharedPrefKey)
+        if (settingsObservers.containsKey(observerKey)) {
+            return
+        }
+        val observer = object : ContentObserver(settingsObserverHandler) {
+            override fun onChange(selfChange: Boolean) {
+                listener.onPrefChanged(item.sharedPrefKey)
+            }
+
+            override fun onChange(selfChange: Boolean, uri: Uri?) {
+                listener.onPrefChanged(item.sharedPrefKey)
+            }
+        }
+        if (settingsObservers.putIfAbsent(observerKey, observer) == null) {
+            encryptedContext.contentResolver.registerContentObserver(
+                Settings.Secure.getUriFor(item.sharedPrefKey),
+                false,
+                observer,
+            )
+        }
+    }
+
+    private fun unregisterSecureSettingsObserver(listener: LauncherPrefChangeListener, item: Item) {
+        settingsObservers.remove(SettingsObserverKey(listener, item.sharedPrefKey))?.let {
+            encryptedContext.contentResolver.unregisterContentObserver(it)
+        }
+    }
+
+    private fun decodeStringSet(value: String, default: Set<String>?): Set<String>? =
+        try {
+            val array = JSONArray(value)
+            val set = LinkedHashSet<String>(array.length())
+            for (i in 0 until array.length()) {
+                set.add(array.optString(i))
+            }
+            set
+        } catch (e: JSONException) {
+            default
+        }
+
+    private fun encodeStringSet(value: Set<*>): String {
+        val array = JSONArray()
+        value.forEach { array.put(it?.toString().orEmpty()) }
+        return array.toString()
+    }
+
     /**
      * After calling this method, the listener will be notified of any future updates to the
      * `SharedPreferences` files associated with the provided list of items. The listener will need
@@ -180,9 +314,14 @@ constructor(@ApplicationContext private val encryptedContext: Context) {
      */
     fun addListener(listener: LauncherPrefChangeListener, vararg items: Item) {
         items
+            .filterNot { it.encryptionType == EncryptionType.SECURE_SETTINGS }
             .map { getSharedPrefs(it) }
             .distinct()
             .forEach { it.registerOnSharedPreferenceChangeListener(listener) }
+        items
+            .filter { it.encryptionType == EncryptionType.SECURE_SETTINGS }
+            .distinctBy { it.sharedPrefKey }
+            .forEach { registerSecureSettingsObserver(listener, it) }
     }
 
     /**
@@ -192,9 +331,14 @@ constructor(@ApplicationContext private val encryptedContext: Context) {
     fun removeListener(listener: LauncherPrefChangeListener, vararg items: Item) {
         // If a listener is not registered to a SharedPreference, unregistering it does nothing
         items
+            .filterNot { it.encryptionType == EncryptionType.SECURE_SETTINGS }
             .map { getSharedPrefs(it) }
             .distinct()
             .forEach { it.unregisterOnSharedPreferenceChangeListener(listener) }
+        items
+            .filter { it.encryptionType == EncryptionType.SECURE_SETTINGS }
+            .distinctBy { it.sharedPrefKey }
+            .forEach { unregisterSecureSettingsObserver(listener, it) }
     }
 
     /**
@@ -203,20 +347,34 @@ constructor(@ApplicationContext private val encryptedContext: Context) {
      */
     fun has(vararg items: Item): Boolean {
         items
+            .filterNot { it.encryptionType == EncryptionType.SECURE_SETTINGS }
             .groupBy { getSharedPrefs(it) }
             .forEach { (prefs, itemsSublist) ->
                 if (!itemsSublist.none { !prefs.contains(it.sharedPrefKey) }) return false
             }
-        return true
+        return items
+            .filter { it.encryptionType == EncryptionType.SECURE_SETTINGS }
+            .none {
+                Settings.Secure.getString(
+                    encryptedContext.contentResolver,
+                    it.sharedPrefKey,
+                ) == null
+            }
     }
 
     /**
      * Asynchronously removes the [Item]'s value from its corresponding `SharedPreferences` file.
      */
-    fun remove(vararg items: Item) = prepareToRemove(items).forEach { it.apply() }
+    fun remove(vararg items: Item) {
+        removeSecureSettings(items)
+        prepareToRemove(items).forEach { it.apply() }
+    }
 
     /** Synchronously removes the [Item]'s value from its corresponding `SharedPreferences` file. */
-    fun removeSync(vararg items: Item) = prepareToRemove(items).forEach { it.commit() }
+    fun removeSync(vararg items: Item) {
+        removeSecureSettings(items)
+        prepareToRemove(items).forEach { it.commit() }
+    }
 
     /**
      * Removes the key value pairs stored in `SharedPreferences` for each corresponding Item. If the
@@ -227,7 +385,10 @@ constructor(@ApplicationContext private val encryptedContext: Context) {
      *   .apply() or .commit()
      */
     private fun prepareToRemove(items: Array<out Item>): List<SharedPreferences.Editor> {
-        val itemsPerFile = items.groupBy { getSharedPrefs(it) }.toMap()
+        val itemsPerFile = items
+            .filterNot { it.encryptionType == EncryptionType.SECURE_SETTINGS }
+            .groupBy { getSharedPrefs(it) }
+            .toMap()
 
         return itemsPerFile.map { (prefs, items) ->
             prefs.edit().also { editor ->
@@ -246,16 +407,7 @@ constructor(@ApplicationContext private val encryptedContext: Context) {
         const val TASKBAR_PINNING_KEY = "TASKBAR_PINNING_KEY"
         const val TASKBAR_PINNING_DESKTOP_MODE_KEY = "TASKBAR_PINNING_DESKTOP_MODE_KEY"
 
-        @JvmField
-        val ENABLE_TWOLINE_ALLAPPS_TOGGLE = backedUpItem("pref_enable_two_line_toggle", false)
-        @JvmField val WORKSPACE_LOCK = backedUpItem("pref_workspace_lock", false)
-        @JvmField val ALLAPPS_THEMED_ICONS = backedUpItem("pref_allapps_themed_icons", false)
-        @JvmField val DRAWER_OPEN_KEYBOARD = backedUpItem("pref_drawer_open_keyboard", false)
-        @JvmField val SHOW_DESKTOP_LABELS = backedUpItem("pref_desktop_show_labels", true)
-        @JvmField val SHOW_DRAWER_LABELS = backedUpItem("pref_drawer_show_labels", true)
-        @JvmField val SLEEP_GESTURE = backedUpItem("pref_sleep_gesture", false)
-        @JvmField
-        val PROMISE_ICON_IDS = nonRestorableItem(InstallSessionHelper.PROMISE_ICON_IDS, "")
+        @JvmField val PROMISE_ICON_IDS = nonRestorableItem(InstallSessionHelper.PROMISE_ICON_IDS, "")
         @JvmField val WORK_EDU_STEP = backedUpItem("showed_work_profile_edu", 0)
         @JvmField
         val WORKSPACE_SIZE =
@@ -413,7 +565,13 @@ data class ContextualItem<T>(
 enum class EncryptionType {
     ENCRYPTED,
     DEVICE_PROTECTED,
+    SECURE_SETTINGS,
 }
+
+private data class SettingsObserverKey(
+    val listener: LauncherPrefChangeListener,
+    val key: String,
+)
 
 /**
  * LauncherPrefs which delegates all lookup to [prefs] but uses the real prefs for initial values

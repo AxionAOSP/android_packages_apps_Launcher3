@@ -53,7 +53,7 @@ import static com.android.launcher3.LauncherConstants.TraceEvents.ON_NEW_INTENT_
 import static com.android.launcher3.LauncherConstants.TraceEvents.ON_RESUME_EVT;
 import static com.android.launcher3.LauncherConstants.TraceEvents.ON_START_EVT;
 import static com.android.launcher3.LauncherConstants.TraceEvents.SINGLE_TRACE_COOKIE;
-import static com.android.launcher3.LauncherPrefs.DRAWER_OPEN_KEYBOARD;
+import static com.android.launcher3.LauncherPrefsExt.DRAWER_OPEN_KEYBOARD;
 import static com.android.launcher3.LauncherPrefs.FIXED_LANDSCAPE_MODE;
 import static com.android.launcher3.LauncherSettings.Favorites.CONTAINER_ALL_APPS;
 import static com.android.launcher3.LauncherSettings.Favorites.CONTAINER_ALL_APPS_PREDICTION;

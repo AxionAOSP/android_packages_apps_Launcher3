@@ -1063,6 +1063,6 @@ public final class Utilities {
     }
 
     public static boolean isWorkspaceEditAllowed(Context context) {
-        return !LauncherPrefs.WORKSPACE_LOCK.get(context);
+        return !LauncherPrefsExt.WORKSPACE_LOCK.get(context);
     }
 }
