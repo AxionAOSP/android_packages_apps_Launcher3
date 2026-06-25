@@ -183,6 +183,9 @@ public class TaskbarManagerImpl implements DisplayDecorationListener {
     public static final Uri NAV_BAR_IME_URI = Settings.Secure.getUriFor(
             "sysui_show_nav_bar_ime");
 
+    public static final Uri AX_PC_MODE = Settings.Secure.getUriFor(
+            "ax_pc_mode");
+
     public static final LooperExecutor TASKBAR_UI_THREAD =
             new LooperExecutor("TASKBAR_UI_THREAD", THREAD_PRIORITY_FOREGROUND);
 
@@ -491,6 +494,8 @@ public class TaskbarManagerImpl implements DisplayDecorationListener {
                 .register(FORCE_SHOW_NAVBAR_URI, mOnTaskBarChangeListener);
         SettingsCache.INSTANCE.get(mPrimaryWindowContext)
                 .register(NAV_BAR_IME_URI, mOnTaskBarChangeListener);
+        SettingsCache.INSTANCE.get(mPrimaryWindowContext)
+                .register(AX_PC_MODE, mOnTaskBarChangeListener);
         if (DesktopExperienceFlags.ENABLE_SYS_DECORS_CALLBACKS_VIA_WM.isTrue()
                 && DesktopExperienceFlags.ENABLE_DISPLAY_CONTENT_MODE_MANAGEMENT.isTrue()) {
             displaysWithDecorationsRepositoryCompat
@@ -1230,6 +1235,8 @@ public class TaskbarManagerImpl implements DisplayDecorationListener {
                 .unregister(FORCE_SHOW_NAVBAR_URI, mOnTaskBarChangeListener);
         SettingsCache.INSTANCE.get(mPrimaryWindowContext)
                 .unregister(NAV_BAR_IME_URI, mOnTaskBarChangeListener);
+        SettingsCache.INSTANCE.get(mPrimaryWindowContext)
+                .unregister(AX_PC_MODE, mOnTaskBarChangeListener);
         if (DesktopExperienceFlags.ENABLE_SYS_DECORS_CALLBACKS_VIA_WM.isTrue()
                 && DesktopExperienceFlags.ENABLE_DISPLAY_CONTENT_MODE_MANAGEMENT.isTrue()) {
             mDisplaysWithDecorationsRepositoryCompat.unregisterDisplayDecorationListener(this);

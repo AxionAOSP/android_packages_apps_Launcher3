@@ -73,6 +73,7 @@ import com.android.launcher3.statemanager.StatefulActivity;
 import com.android.launcher3.taskbar.TaskbarInteractor;
 import com.android.launcher3.taskbar.TaskbarManager;
 import com.android.launcher3.util.ActivityOptionsWrapper;
+import com.android.launcher3.util.AxPcModeUtils;
 import com.android.launcher3.util.ContextTracker;
 import com.android.launcher3.util.RunnableList;
 import com.android.launcher3.util.SystemUiController;
@@ -121,6 +122,7 @@ public final class RecentsActivity extends StatefulActivity<RecentsState> implem
     private @Nullable TaskbarInteractor mTaskbarInteractor;
 
     private StateManager<RecentsState, RecentsActivity> mStateManager;
+    private boolean mLaunchedPcModeOverview;
 
     // Strong refs to runners which are cleared when the activity is destroyed
     private RemoteAnimationFactory mActivityLaunchAnimationRunner;
@@ -381,6 +383,9 @@ public final class RecentsActivity extends StatefulActivity<RecentsState> implem
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        if (launchPcModeOverviewIfNeeded()) {
+            return;
+        }
         setWallpaperDependentTheme(this);
         mStateManager = new StateManager<>(this, RecentsState.BG_LAUNCHER);
 
@@ -396,6 +401,15 @@ public final class RecentsActivity extends StatefulActivity<RecentsState> implem
         setTitle(R.string.accessibility_recent_apps);
 
         restoreState(savedInstanceState);
+    }
+
+    private boolean launchPcModeOverviewIfNeeded() {
+        if (!AxPcModeUtils.startTasksOverview(this)) {
+            return false;
+        }
+        mLaunchedPcModeOverview = true;
+        finish();
+        return true;
     }
 
     @Override
@@ -462,6 +476,11 @@ public final class RecentsActivity extends StatefulActivity<RecentsState> implem
 
     @Override
     protected void onDestroy() {
+        if (mLaunchedPcModeOverview) {
+            super.onDestroy();
+            return;
+        }
+
         RecentsView recentsView = getOverviewPanel();
         if (recentsView != null) {
             recentsView.destroy();
