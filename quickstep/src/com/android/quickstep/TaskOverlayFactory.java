@@ -436,6 +436,13 @@ public class TaskOverlayFactory {
                 endLiveTileMode(TaskOverlay.this::saveAppPair);
             }
 
+            public void onLock() {
+                TaskView taskView = mTaskContainer.getTaskView();
+                RecentsView recentsView = taskView.getRecentsView();
+                if (recentsView == null) return;
+                recentsView.setTaskLocked(taskView, !taskView.isLocked());
+            }
+
             public void onClearAll() {
                 RecentsView recentsView = mTaskContainer.getTaskView().getRecentsView();
                 if (recentsView == null) return;
@@ -457,6 +464,8 @@ public class TaskOverlayFactory {
 
         /** User wants to save an app pair with current group of apps. */
         void onSaveAppPair();
+
+        void onLock();
 
         void onClearAll();
     }

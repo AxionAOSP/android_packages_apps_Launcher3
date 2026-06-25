@@ -325,12 +325,21 @@ constructor(
         val allDismissSprings =
             recentsView.mUtils.taskViews
                 .reversed()
-                .filter { taskView -> recentsView.isTaskViewVisible(taskView) }
+                .filter { taskView ->
+                    recentsView.isTaskViewVisible(taskView) && !taskView.isLocked
+                }
                 .mapNotNull { createDismissedTaskViewSpringAnimation(it) }
+        val hasLockedTaskViews = recentsView.hasLockedTaskViews()
         SpringSet(SpringAnimation(FloatValueHolder()).setSpring(SpringForce(1f)))
             .playTogether(allDismissSprings)
             .addEndListener {
                 with(recentsView) {
+                    if (hasLockedTaskViews) {
+                        removeUnlockedTaskViews()
+                        onDismissAnimationEnds()
+                        InteractionJankMonitorWrapper.end(Cuj.CUJ_LAUNCHER_OVERVIEW_CLEAR_ALL)
+                        return@with
+                    }
                     // Remove desktops first, since desks can be empty (so they have no recent
                     // tasks), and closing all tasks on a desk doesn't always necessarily mean that
                     // the desk will be removed. So, there are no guarantees that the below call to

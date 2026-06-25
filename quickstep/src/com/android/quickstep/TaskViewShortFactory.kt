@@ -42,6 +42,26 @@ interface TaskViewShortFactory {
 
     fun showForDesktopTask() = false
 
+    class LockTaskSystemShortcut(
+        iconResId: Int,
+        textResId: Int,
+        container: RecentsViewContainer,
+        private val taskView: TaskView,
+    ) :
+        SystemShortcut<ActivityContext>(
+            iconResId,
+            textResId,
+            container,
+            taskView.itemInfo,
+            taskView,
+        ) {
+        override fun onClick(view: View) {
+            val recentsView = taskView.recentsView ?: return
+            dismissTaskMenuView()
+            recentsView.setTaskLocked(taskView, !taskView.isLocked)
+        }
+    }
+
     class RemoveTaskSystemShortcut(
         iconResId: Int,
         textResId: Int,
@@ -75,6 +95,32 @@ interface TaskViewShortFactory {
                 .filter { taskView !is DesktopTaskView || it.showForDesktopTask() }
                 .flatMap { it.getShortcuts(containerFromContext(taskView.context), taskView) }
 
+        private val LOCK_TASK: TaskViewShortFactory =
+            object : TaskViewShortFactory {
+                override fun getShortcuts(
+                    container: RecentsViewContainer,
+                    taskView: TaskView,
+                ): List<SystemShortcut<ActivityContext>> {
+                    if (taskView.firstTask == null) {
+                        return emptyList()
+                    }
+                    val isLocked = taskView.isLocked
+                    return listOf(
+                        LockTaskSystemShortcut(
+                            if (isLocked) {
+                                R.drawable.ic_app_locked
+                            } else {
+                                R.drawable.ic_app_unlocked
+                            },
+                            if (isLocked) R.string.recent_task_option_unlock
+                            else R.string.recent_task_option_lock,
+                            container,
+                            taskView,
+                        )
+                    )
+                }
+            }
+
         private val REMOVE_TASK: TaskViewShortFactory =
             object : TaskViewShortFactory {
                 override fun getShortcuts(
@@ -100,6 +146,7 @@ interface TaskViewShortFactory {
                 override fun showForDesktopTask() = true
             }
 
-        private val TASK_VIEW_MENU_OPTIONS: Array<TaskViewShortFactory> = arrayOf(REMOVE_TASK)
+        private val TASK_VIEW_MENU_OPTIONS: Array<TaskViewShortFactory> =
+            arrayOf(LOCK_TASK, REMOVE_TASK)
     }
 }

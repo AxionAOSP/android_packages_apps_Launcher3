@@ -148,6 +148,7 @@ public class OverviewActionsView<T extends OverlayUICallbacks> extends FrameLayo
 
     /** Container for the action buttons below a focused, non-split Overview tile. */
     protected LinearLayout mActionButtons;
+    private ImageButton mLockButton;
     private ImageButton mSplitButton;
     /**
      * The "save app pair" button. Currently this is the only button that is not contained in
@@ -210,6 +211,8 @@ public class OverviewActionsView<T extends OverlayUICallbacks> extends FrameLayo
             }, 1f /* initialValue */);
         }
 
+        mLockButton = findViewById(R.id.action_lock);
+        mLockButton.setOnClickListener(this);
         View screenshotButton = findViewById(R.id.action_screenshot);
         screenshotButton.setOnClickListener(this);
         mSplitButton = findViewById(R.id.action_split);
@@ -233,7 +236,9 @@ public class OverviewActionsView<T extends OverlayUICallbacks> extends FrameLayo
             return;
         }
         int id = view.getId();
-        if (id == R.id.action_screenshot) {
+        if (id == R.id.action_lock) {
+            mCallbacks.onLock();
+        } else if (id == R.id.action_screenshot) {
             mCallbacks.onScreenshot();
         } else if (id == R.id.action_split) {
             mCallbacks.onSplit();
@@ -331,6 +336,18 @@ public class OverviewActionsView<T extends OverlayUICallbacks> extends FrameLayo
      */
     public void updateFor3pLauncher(boolean is3pLauncher) {
         getGroupActionsAlphas().get(INDEX_3P_LAUNCHER).setValue(is3pLauncher ? 0 : 1);
+    }
+
+    public void updateLockState(boolean isLocked) {
+        if (mLockButton == null) {
+            return;
+        }
+        mLockButton.setImageResource(isLocked
+                ? R.drawable.ic_app_locked
+                : R.drawable.ic_app_unlocked);
+        mLockButton.setContentDescription(getContext().getString(isLocked
+                ? R.string.recent_task_option_unlock
+                : R.string.recent_task_option_lock));
     }
 
     private MultiValueAlpha getActionsAlphas() {

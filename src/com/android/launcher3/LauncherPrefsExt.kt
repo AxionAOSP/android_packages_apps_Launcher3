@@ -297,6 +297,12 @@ object LauncherPrefsExt {
         backedUpItem("pref_all_apps_predictions", true, EncryptionType.SECURE_SETTINGS)
     @JvmField val SLEEP_GESTURE =
         backedUpItem("pref_sleep_gesture", false, EncryptionType.SECURE_SETTINGS)
+    @JvmField val RECENTS_LOCKED_APPS =
+        nonRestorableItem(
+            "pref_recents_locked_apps",
+            emptySet<String>(),
+            EncryptionType.SECURE_SETTINGS,
+        )
     @JvmField val AXION_SETTINGS_BACKUP_ITEMS: List<Item> = listOf(
         ENABLE_MINUS_ONE,
         ADD_ICON_TO_HOME,
