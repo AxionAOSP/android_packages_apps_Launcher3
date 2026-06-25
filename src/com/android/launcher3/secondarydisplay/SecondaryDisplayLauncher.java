@@ -65,6 +65,7 @@ import com.android.launcher3.model.data.PredictedContainerInfo;
 import com.android.launcher3.model.data.WorkspaceData;
 import com.android.launcher3.popup.PopupContainerWithArrow;
 import com.android.launcher3.touch.ItemClickHandler.ItemClickProxy;
+import com.android.launcher3.util.AxPcModeUtils;
 import com.android.launcher3.util.PackageUserKey;
 import com.android.launcher3.util.Preconditions;
 import com.android.launcher3.util.Themes;
@@ -138,6 +139,11 @@ public class SecondaryDisplayLauncher extends BaseActivity
         );
 
         mSecondaryDisplayDelegate.onCreate();
+        launchPcModeIfNeeded();
+    }
+
+    private void launchPcModeIfNeeded() {
+        AxPcModeUtils.startSecondaryLauncher(this, getDisplayId());
     }
 
     /** Set the status bar icon colours depending on wallpaper hint. */
@@ -160,6 +166,7 @@ public class SecondaryDisplayLauncher extends BaseActivity
     @Override
     public void onNewIntent(Intent intent) {
         super.onNewIntent(intent);
+        launchPcModeIfNeeded();
 
         if (Intent.ACTION_MAIN.equals(intent.getAction())) {
             // Hide keyboard.
@@ -207,9 +214,15 @@ public class SecondaryDisplayLauncher extends BaseActivity
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        mSecondaryDisplayDelegate.onDestroy();
-        mModel.removeCallbacks(this);
-        mWallpaperManager.removeOnColorsChangedListener(mWallpaperColorsListener);
+        if (mSecondaryDisplayDelegate != null) {
+            mSecondaryDisplayDelegate.onDestroy();
+        }
+        if (mModel != null) {
+            mModel.removeCallbacks(this);
+        }
+        if (mWallpaperManager != null) {
+            mWallpaperManager.removeOnColorsChangedListener(mWallpaperColorsListener);
+        }
     }
 
     public boolean isAppDrawerShown() {
