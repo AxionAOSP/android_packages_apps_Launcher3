@@ -16,29 +16,18 @@
 
 package com.android.quickstep;
 
-import static android.app.WindowConfiguration.WINDOWING_MODE_FREEFORM;
 import static android.content.Intent.FLAG_ACTIVITY_EXCLUDE_FROM_RECENTS;
 import static android.view.Display.DEFAULT_DISPLAY;
 
 import static com.android.launcher3.util.OverviewReleaseFlags.enableGridOnlyOverview;
-import static com.android.launcher3.Flags.enableRefactorTaskThumbnail;
 import static com.android.launcher3.logging.StatsLogManager.LauncherEvent.LAUNCHER_SYSTEM_SHORTCUT_FREE_FORM_TAP;
 import static com.android.launcher3.util.SplitConfigurationOptions.STAGE_POSITION_BOTTOM_OR_RIGHT;
 
-import android.app.ActivityOptions;
-import android.graphics.Bitmap;
-import android.graphics.Color;
-import android.graphics.Rect;
-import android.os.Handler;
-import android.os.Looper;
-import android.os.RemoteException;
+import android.app.FreeformLauncher;
+import android.content.ComponentName;
 import android.provider.Settings;
-import android.util.Log;
 import android.view.View;
-import android.view.WindowInsets;
-import android.view.WindowManagerGlobal;
 import android.window.DesktopExperienceFlags;
-import android.window.SplashScreen;
 
 import androidx.annotation.Nullable;
 
@@ -59,9 +48,6 @@ import com.android.quickstep.views.RecentsViewContainer;
 import com.android.quickstep.views.TaskContainer;
 import com.android.quickstep.views.TaskView;
 import com.android.systemui.shared.recents.model.Task;
-import com.android.systemui.shared.recents.view.AppTransitionAnimationSpecCompat;
-import com.android.systemui.shared.recents.view.AppTransitionAnimationSpecsFuture;
-import com.android.systemui.shared.recents.view.RecentsTransition;
 import com.android.systemui.shared.system.ActivityManagerWrapper;
 import com.android.wm.shell.shared.desktopmode.DesktopModeStatus;
 
@@ -102,6 +88,14 @@ public interface TaskShortcutFactory {
             return Collections.singletonList(shortcut);
         }
         return null;
+    }
+
+    static boolean isFreeformAvailable(RecentsViewContainer container, Task task) {
+        return task.isDockable
+                && Settings.Global.getInt(
+                        container.asContext().getContentResolver(),
+                        Settings.Global.DEVELOPMENT_ENABLE_FREEFORM_WINDOWS_SUPPORT, 0) != 0
+                && !DesktopModeStatus.canEnterDesktopMode(container.asContext());
     }
 
     TaskShortcutFactory APP_INFO = new TaskShortcutFactory() {
@@ -176,13 +170,7 @@ public interface TaskShortcutFactory {
     }
 
     class FreeformSystemShortcut extends SystemShortcut<RecentsViewContainer> {
-        private static final String TAG = "FreeformSystemShortcut";
-
-        private Handler mHandler;
-
-        private final RecentsView mRecentsView;
         private final TaskContainer mTaskContainer;
-        private final TaskView mTaskView;
         private final LauncherEvent mLauncherEvent;
 
         public FreeformSystemShortcut(int iconRes, int textRes, RecentsViewContainer container,
@@ -190,9 +178,6 @@ public interface TaskShortcutFactory {
             super(iconRes, textRes, container, taskContainer.getItemInfo(),
                     taskContainer.getTaskView());
             mLauncherEvent = launcherEvent;
-            mHandler = new Handler(Looper.getMainLooper());
-            mTaskView = taskContainer.getTaskView();
-            mRecentsView = container.getOverviewPanel();
             mTaskContainer = taskContainer;
         }
 
@@ -209,89 +194,18 @@ public interface TaskShortcutFactory {
         }
 
         private void startActivity() {
-            final ActivityOptions options = makeLaunchOptions(mTarget);
-            if (options == null) {
-                return;
-            }
             final Task.TaskKey taskKey = mTaskContainer.getTask().key;
-            final int taskId = taskKey.id;
-            options.setSplashScreenStyle(SplashScreen.SPLASH_SCREEN_STYLE_ICON);
-            if (ActivityManagerWrapper.getInstance().startActivityFromRecents(taskId,
-                    options)) {
-                final Runnable animStartedListener = () -> {
-                    // Hide the task view and wait for the window to be resized
-                    // TODO: Consider animating in launcher and do an in-place start activity
-                    //       afterwards
-                    mRecentsView.setIgnoreResetTask(taskId);
-                    mTaskView.setAlpha(0f);
-                };
-
-                final int[] position = new int[2];
-                View snapShotView = mTaskContainer.getSnapshotView();
-                snapShotView.getLocationOnScreen(position);
-                final int width = (int) (snapShotView.getWidth() * mTaskView.getScaleX());
-                final int height = (int) (snapShotView.getHeight() * mTaskView.getScaleY());
-                final Rect taskBounds = new Rect(position[0], position[1],
-                        position[0] + width, position[1] + height);
-
-                // Take the thumbnail of the task without a scrim and apply it back after
-                Bitmap thumbnail;
-                if (enableRefactorTaskThumbnail()) {
-                    thumbnail = mTaskContainer.getThumbnail();
-                } else {
-                    float alpha = mTaskContainer.getThumbnailViewDeprecated().getDimAlpha();
-                    mTaskContainer.getThumbnailViewDeprecated().setDimAlpha(0);
-                    thumbnail = RecentsTransition.drawViewIntoHardwareBitmap(
-                            taskBounds.width(), taskBounds.height(), snapShotView, 1f, Color.BLACK);
-                    mTaskContainer.getThumbnailViewDeprecated().setDimAlpha(alpha);
+            ComponentName component = taskKey.getComponent();
+            if (component != null) {
+                FreeformLauncher.launch(component.getPackageName(), component.getClassName());
+            } else {
+                String packageName = taskKey.getPackageName();
+                if (packageName != null) {
+                    FreeformLauncher.launch(packageName);
                 }
-
-                AppTransitionAnimationSpecsFuture future =
-                        new AppTransitionAnimationSpecsFuture(mHandler) {
-                            @Override
-                            public List<AppTransitionAnimationSpecCompat> composeSpecs() {
-                                return Collections.singletonList(
-                                        new AppTransitionAnimationSpecCompat(
-                                                taskId, thumbnail, taskBounds));
-                            }
-                        };
-                overridePendingAppTransitionMultiThumbFuture(
-                        future, animStartedListener, mHandler, true /* scaleUp */,
-                        taskKey.displayId);
-                mTarget.getStatsLogManager().logger().withItemInfo(mTaskContainer.getItemInfo())
-                            .log(mLauncherEvent);
             }
-        }
-
-        /**
-         * Overrides a pending app transition.
-         */
-        private void overridePendingAppTransitionMultiThumbFuture(
-                AppTransitionAnimationSpecsFuture animationSpecFuture, Runnable animStartedCallback,
-                Handler animStartedCallbackHandler, boolean scaleUp, int displayId) {
-            try {
-                WindowManagerGlobal.getWindowManagerService()
-                        .overridePendingAppTransitionMultiThumbFuture(
-                                animationSpecFuture.getFuture(),
-                                RecentsTransition.wrapStartedListener(animStartedCallbackHandler,
-                                        animStartedCallback), scaleUp, displayId);
-            } catch (RemoteException e) {
-                Log.w(TAG, "Failed to override pending app transition (multi-thumbnail future): ",
-                        e);
-            }
-        }
-
-        private ActivityOptions makeLaunchOptions(RecentsViewContainer container) {
-            ActivityOptions activityOptions = ActivityOptions.makeBasic();
-            activityOptions.setLaunchWindowingMode(WINDOWING_MODE_FREEFORM);
-            // Arbitrary bounds only because freeform is in dev mode right now
-            final View decorView = container.getWindow().getDecorView();
-            final WindowInsets insets = decorView.getRootWindowInsets();
-            final Rect r = new Rect(0, 0, decorView.getWidth() / 2, decorView.getHeight() / 2);
-            r.offsetTo(insets.getSystemWindowInsetLeft() + 50,
-                    insets.getSystemWindowInsetTop() + 50);
-            activityOptions.setLaunchBounds(r);
-            return activityOptions;
+            mTarget.getStatsLogManager().logger().withItemInfo(mTaskContainer.getItemInfo())
+                    .log(mLauncherEvent);
         }
     }
 
@@ -384,10 +298,7 @@ public interface TaskShortcutFactory {
         public List<SystemShortcut> getShortcuts(RecentsViewContainer container,
                 TaskContainer taskContainer) {
             final Task task = taskContainer.getTask();
-            if (!task.isDockable) {
-                return null;
-            }
-            if (!isAvailable(container)) {
+            if (!isFreeformAvailable(container, task)) {
                 return null;
             }
 
@@ -395,13 +306,6 @@ public interface TaskShortcutFactory {
                     R.drawable.ic_caption_desktop_button_foreground,
                     R.string.recent_task_option_freeform, container, taskContainer,
                     LAUNCHER_SYSTEM_SHORTCUT_FREE_FORM_TAP));
-        }
-
-        private boolean isAvailable(RecentsViewContainer container) {
-            return Settings.Global.getInt(
-                    container.asContext().getContentResolver(),
-                    Settings.Global.DEVELOPMENT_ENABLE_FREEFORM_WINDOWS_SUPPORT, 0) != 0
-                    && !DesktopModeStatus.canEnterDesktopMode(container.asContext());
         }
     };
 

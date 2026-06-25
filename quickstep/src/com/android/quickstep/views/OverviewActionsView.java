@@ -149,6 +149,7 @@ public class OverviewActionsView<T extends OverlayUICallbacks> extends FrameLayo
     /** Container for the action buttons below a focused, non-split Overview tile. */
     protected LinearLayout mActionButtons;
     private ImageButton mLockButton;
+    private ImageButton mFreeformButton;
     private ImageButton mSplitButton;
     /**
      * The "save app pair" button. Currently this is the only button that is not contained in
@@ -217,6 +218,8 @@ public class OverviewActionsView<T extends OverlayUICallbacks> extends FrameLayo
         screenshotButton.setOnClickListener(this);
         mSplitButton = findViewById(R.id.action_split);
         mSplitButton.setOnClickListener(this);
+        mFreeformButton = findViewById(R.id.action_freeform);
+        mFreeformButton.setOnClickListener(this);
         findViewById(R.id.action_clear_all).setOnClickListener(this);
         mSaveAppPairButton.setOnClickListener(this);
     }
@@ -242,6 +245,8 @@ public class OverviewActionsView<T extends OverlayUICallbacks> extends FrameLayo
             mCallbacks.onScreenshot();
         } else if (id == R.id.action_split) {
             mCallbacks.onSplit();
+        } else if (id == R.id.action_freeform) {
+            mCallbacks.onFreeform();
         } else if (id == R.id.action_clear_all) {
             mCallbacks.onClearAll();
         } else if (id == R.id.action_save_app_pair) {
@@ -375,6 +380,17 @@ public class OverviewActionsView<T extends OverlayUICallbacks> extends FrameLayo
         int desiredVisibility = mSplitButtonHiddenFlags == 0 ? VISIBLE : GONE;
         if (mSplitButton.getVisibility() != desiredVisibility) {
             mSplitButton.setVisibility(desiredVisibility);
+            mActionButtons.requestLayout();
+        }
+    }
+
+    public void setFreeformVisible(boolean visible) {
+        if (mFreeformButton == null) {
+            return;
+        }
+        int desiredVisibility = visible ? VISIBLE : GONE;
+        if (mFreeformButton.getVisibility() != desiredVisibility) {
+            mFreeformButton.setVisibility(desiredVisibility);
             mActionButtons.requestLayout();
         }
     }

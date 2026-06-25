@@ -17,11 +17,14 @@
 package com.android.quickstep;
 
 import static com.android.launcher3.Flags.enableRefactorTaskThumbnail;
+import static com.android.launcher3.logging.StatsLogManager.LauncherEvent.LAUNCHER_SYSTEM_SHORTCUT_FREE_FORM_TAP;
 import static com.android.quickstep.views.OverviewActionsView.DISABLED_NO_THUMBNAIL;
 import static com.android.quickstep.views.OverviewActionsView.DISABLED_ROTATED;
 import static com.android.quickstep.views.RecentsViewContainer.containerFromContext;
 
 import android.annotation.SuppressLint;
+import android.app.FreeformLauncher;
+import android.content.ComponentName;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.Insets;
@@ -270,6 +273,22 @@ public class TaskOverlayFactory {
                     .saveAppPair(taskView);
         }
 
+        protected void launchFreeform() {
+            Task task = mTaskContainer.getTask();
+            ComponentName component = task.key.getComponent();
+            if (component != null) {
+                FreeformLauncher.launch(component.getPackageName(), component.getClassName());
+            } else {
+                String packageName = task.key.getPackageName();
+                if (packageName != null) {
+                    FreeformLauncher.launch(packageName);
+                }
+            }
+            RecentsViewContainer container = containerFromContext(getTaskView().getContext());
+            container.getStatsLogManager().logger().withItemInfo(mTaskContainer.getItemInfo())
+                    .log(LAUNCHER_SYSTEM_SHORTCUT_FREE_FORM_TAP);
+        }
+
         /**
          * Called when the overlay is no longer used.
          */
@@ -443,6 +462,10 @@ public class TaskOverlayFactory {
                 recentsView.setTaskLocked(taskView, !taskView.isLocked());
             }
 
+            public void onFreeform() {
+                endLiveTileMode(TaskOverlay.this::launchFreeform);
+            }
+
             public void onClearAll() {
                 RecentsView recentsView = mTaskContainer.getTaskView().getRecentsView();
                 if (recentsView == null) return;
@@ -466,6 +489,8 @@ public class TaskOverlayFactory {
         void onSaveAppPair();
 
         void onLock();
+
+        void onFreeform();
 
         void onClearAll();
     }

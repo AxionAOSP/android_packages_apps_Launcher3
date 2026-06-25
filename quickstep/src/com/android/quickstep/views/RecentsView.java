@@ -4474,6 +4474,9 @@ public abstract class RecentsView<
 
         boolean isCurrentDesktop = taskView instanceof DesktopTaskView;
         mActionsView.updateHiddenFlags(HIDDEN_DESKTOP, isCurrentDesktop);
+        mActionsView.setFreeformVisible(!isCurrentSplit
+                && !isCurrentDesktop
+                && taskView != null);
         if (!isCurrentSplit && taskView != null) {
             taskView.updateLockState();
             mActionsView.updateLockState(taskView.isLocked());
