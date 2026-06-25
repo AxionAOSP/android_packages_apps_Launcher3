@@ -4652,6 +4652,10 @@ public abstract class RecentsView<
 
     @SuppressWarnings("unused")
     private void dismissAllTasks(View view) {
+        dismissAllTasks();
+    }
+
+    public void dismissAllTasks() {
         InteractionJankMonitorWrapper.begin(this, Cuj.CUJ_LAUNCHER_OVERVIEW_CLEAR_ALL);
         if (enableExpressiveDismissTaskMotion()) {
             mDismissUtils.dismissAllTasks();

@@ -27,8 +27,10 @@ import android.util.Log;
 import android.view.KeyEvent;
 import android.view.View;
 import android.view.View.OnClickListener;
+import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.FrameLayout;
+import android.widget.ImageButton;
 import android.widget.LinearLayout;
 
 import androidx.annotation.IntDef;
@@ -146,7 +148,7 @@ public class OverviewActionsView<T extends OverlayUICallbacks> extends FrameLayo
 
     /** Container for the action buttons below a focused, non-split Overview tile. */
     protected LinearLayout mActionButtons;
-    private Button mSplitButton;
+    private ImageButton mSplitButton;
     /**
      * The "save app pair" button. Currently this is the only button that is not contained in
      * mActionButtons, since it is the sole button that appears for a grouped task.
@@ -208,13 +210,11 @@ public class OverviewActionsView<T extends OverlayUICallbacks> extends FrameLayo
             }, 1f /* initialValue */);
         }
 
-        // The screenshot button is implemented as a Button in launcher3 and NexusLauncher, but is
-        // an ImageButton in go launcher (does not share a common class with Button). Take care when
-        // casting this.
         View screenshotButton = findViewById(R.id.action_screenshot);
         screenshotButton.setOnClickListener(this);
         mSplitButton = findViewById(R.id.action_split);
         mSplitButton.setOnClickListener(this);
+        findViewById(R.id.action_clear_all).setOnClickListener(this);
         mSaveAppPairButton.setOnClickListener(this);
     }
 
@@ -237,6 +237,8 @@ public class OverviewActionsView<T extends OverlayUICallbacks> extends FrameLayo
             mCallbacks.onScreenshot();
         } else if (id == R.id.action_split) {
             mCallbacks.onSplit();
+        } else if (id == R.id.action_clear_all) {
+            mCallbacks.onClearAll();
         } else if (id == R.id.action_save_app_pair) {
             mCallbacks.onSaveAppPair();
         }
@@ -411,10 +413,10 @@ public class OverviewActionsView<T extends OverlayUICallbacks> extends FrameLayo
         LayoutParams actionParams = (LayoutParams) actionBar.getLayoutParams();
         actionParams.setMargins(
                 actionParams.leftMargin, mDp.getOverviewProfile().getActionsTopMarginPx(),
-                actionParams.rightMargin, getBottomMargin());
+                actionParams.rightMargin, getBottomMargin(actionBar));
     }
 
-    private int getBottomMargin() {
+    private int getBottomMargin(View actionBar) {
         if (mDp == null) {
             return 0;
         }
@@ -426,11 +428,22 @@ public class OverviewActionsView<T extends OverlayUICallbacks> extends FrameLayo
             return modalTaskbarHeight + mDp.getOverviewProfile().getActionsTopMarginPx();
         }
 
-        // Align to bottom of task Rect.
-        return mDp.getDeviceProperties().getHeightPx()
+        int bottomMargin = mDp.getDeviceProperties().getHeightPx()
                 - mTaskSize.bottom
                 - mDp.getOverviewProfile().getActionsTopMarginPx()
-                - mDp.getOverviewProfile().getActionsHeight();
+                - getActionBarHeight(actionBar);
+        return Math.max(mDp.getOverviewActionsClaimedSpaceBelow(), bottomMargin);
+    }
+
+    private int getActionBarHeight(View actionBar) {
+        ViewGroup.LayoutParams layoutParams = actionBar.getLayoutParams();
+        if (layoutParams.height > 0) {
+            return layoutParams.height;
+        }
+        int measuredHeight = actionBar.getMeasuredHeight();
+        return measuredHeight > 0
+                ? measuredHeight
+                : mDp.getOverviewProfile().getActionsHeight();
     }
 
     /**
@@ -447,7 +460,7 @@ public class OverviewActionsView<T extends OverlayUICallbacks> extends FrameLayo
         int splitIconRes = dp.isLeftRightSplit
                 ? R.drawable.ic_split_horizontal
                 : R.drawable.ic_split_vertical;
-        mSplitButton.setCompoundDrawablesRelativeWithIntrinsicBounds(splitIconRes, 0, 0, 0);
+        mSplitButton.setImageResource(splitIconRes);
 
         int appPairIconRes = dp.isLeftRightSplit
                 ? R.drawable.ic_save_app_pair_left_right

@@ -55,6 +55,7 @@
     <attr name="overviewScrimForegroundSecondary" format="color" />
     <attr name="overviewActionsContainerStyle" format="reference" />
     <attr name="overviewActionButtonStyle" format="reference" />
+    <attr name="overviewActionCircleButtonBackground" format="reference" />
     <attr name="addDesktopButtonBackgroundDrawable" format="reference" />
     <attr name="popupNotificationDotColor" format="color" />
     <attr name="notificationDotColor" format="color" />
