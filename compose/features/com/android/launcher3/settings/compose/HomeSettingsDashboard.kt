@@ -44,6 +44,14 @@ internal fun DashboardScreen(
         }
         item {
             CategoryPreference(
+                titleRes = R.string.home_settings_overview_category,
+                summaryRes = R.string.home_settings_overview_summary,
+                iconRes = R.drawable.ic_home_settings_overview,
+                onClick = { onNavigate(HomeSettingsRoutes.OVERVIEW) },
+            )
+        }
+        item {
+            CategoryPreference(
                 titleRes = R.string.all_apps_drawer_settings_title,
                 summaryRes = R.string.home_settings_all_apps_summary,
                 iconRes = R.drawable.ic_home_settings_all_apps,

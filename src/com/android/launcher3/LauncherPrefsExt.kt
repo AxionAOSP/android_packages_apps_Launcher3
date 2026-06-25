@@ -297,6 +297,18 @@ object LauncherPrefsExt {
         backedUpItem("pref_all_apps_predictions", true, EncryptionType.SECURE_SETTINGS)
     @JvmField val SLEEP_GESTURE =
         backedUpItem("pref_sleep_gesture", false, EncryptionType.SECURE_SETTINGS)
+    @JvmField val RECENTS_SHOW_LOCK_BUTTON =
+        backedUpItem(
+            "pref_recents_show_lock_button",
+            true,
+            EncryptionType.SECURE_SETTINGS,
+        )
+    @JvmField val RECENTS_SHOW_FREEFORM_BUTTON =
+        backedUpItem(
+            "pref_recents_show_freeform_button",
+            true,
+            EncryptionType.SECURE_SETTINGS,
+        )
     @JvmField val RECENTS_LOCKED_APPS =
         nonRestorableItem(
             "pref_recents_locked_apps",
@@ -363,6 +375,8 @@ object LauncherPrefsExt {
         ALL_APPS_BG_OPACITY,
         SHOW_ALLAPPS_PREDICTIONS,
         SLEEP_GESTURE,
+        RECENTS_SHOW_LOCK_BUTTON,
+        RECENTS_SHOW_FREEFORM_BUTTON,
     )
     @JvmStatic
     fun allAppsBackgroundAlpha(context: Context): Int {

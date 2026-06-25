@@ -4474,10 +4474,13 @@ public abstract class RecentsView<
 
         boolean isCurrentDesktop = taskView instanceof DesktopTaskView;
         mActionsView.updateHiddenFlags(HIDDEN_DESKTOP, isCurrentDesktop);
-        mActionsView.setFreeformVisible(!isCurrentSplit
-                && !isCurrentDesktop
-                && taskView != null);
-        if (!isCurrentSplit && taskView != null) {
+        LauncherPrefs launcherPrefs = LauncherPrefs.get(getContext());
+        boolean showLockButton = launcherPrefs.get(LauncherPrefsExt.RECENTS_SHOW_LOCK_BUTTON);
+        boolean showFreeformButton = launcherPrefs.get(LauncherPrefsExt.RECENTS_SHOW_FREEFORM_BUTTON);
+        boolean hasSingleTaskActions = !isCurrentSplit && !isCurrentDesktop && taskView != null;
+        mActionsView.setLockVisible(showLockButton && hasSingleTaskActions);
+        mActionsView.setFreeformVisible(showFreeformButton && hasSingleTaskActions);
+        if (hasSingleTaskActions) {
             taskView.updateLockState();
             mActionsView.updateLockState(taskView.isLocked());
         } else {

@@ -82,6 +82,7 @@ internal fun HomeSettingsScreen(
                         HomeSettingsRoutes.GENERAL -> GeneralScreen(activity)
                         HomeSettingsRoutes.HOME -> HomeScreen(activity, navigator::navigateTo)
                         HomeSettingsRoutes.HOME_GRID -> HomeGridScreen()
+                        HomeSettingsRoutes.OVERVIEW -> OverviewScreen()
                         HomeSettingsRoutes.ALL_APPS -> AllAppsDrawerScreen(navigator::navigateTo)
                         HomeSettingsRoutes.ALL_APPS_FOLDERS -> AllAppsFoldersScreen()
                         HomeSettingsRoutes.ALL_APPS_SMART_DRAWER ->

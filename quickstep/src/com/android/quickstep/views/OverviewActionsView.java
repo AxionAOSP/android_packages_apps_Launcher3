@@ -355,6 +355,10 @@ public class OverviewActionsView<T extends OverlayUICallbacks> extends FrameLayo
                 : R.string.recent_task_option_lock));
     }
 
+    public void setLockVisible(boolean visible) {
+        setActionButtonVisible(mLockButton, visible);
+    }
+
     private MultiValueAlpha getActionsAlphas() {
         return mMultiValueAlphas[ACTIONS_ALPHAS];
     }
@@ -385,12 +389,16 @@ public class OverviewActionsView<T extends OverlayUICallbacks> extends FrameLayo
     }
 
     public void setFreeformVisible(boolean visible) {
-        if (mFreeformButton == null) {
+        setActionButtonVisible(mFreeformButton, visible);
+    }
+
+    private void setActionButtonVisible(@Nullable View button, boolean visible) {
+        if (button == null) {
             return;
         }
         int desiredVisibility = visible ? VISIBLE : GONE;
-        if (mFreeformButton.getVisibility() != desiredVisibility) {
-            mFreeformButton.setVisibility(desiredVisibility);
+        if (button.getVisibility() != desiredVisibility) {
+            button.setVisibility(desiredVisibility);
             mActionButtons.requestLayout();
         }
     }
