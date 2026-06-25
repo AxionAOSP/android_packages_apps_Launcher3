@@ -50,6 +50,7 @@
     <string name="home_settings_gestures_category">Gestures</string>
     <string name="home_settings_overview_category">Overview</string>
     <string name="home_settings_overview_actions_category">Actions</string>
+    <string name="home_settings_overview_appearance_category">Appearance</string>
     <string name="home_settings_behavior_category">Behavior</string>
     <string name="home_settings_notifications_category">Notifications</string>
     <string name="home_settings_backup_export_title">Export layout</string>
@@ -90,6 +91,8 @@
     <string name="home_recents_lock_button_summary">Show the task lock action in overview</string>
     <string name="home_recents_freeform_button_title">Freeform button</string>
     <string name="home_recents_freeform_button_summary">Show the freeform action in overview when supported</string>
+    <string name="pref_recents_overview_scrim_opacity_title">Overview scrim opacity</string>
+    <string name="pref_recents_overview_scrim_opacity_percent">%1$d%%</string>
     <string name="home_settings_search_bar_category">Dock search</string>
     <string name="dock_search_bar_title">Dock Search Provider</string>
     <string name="dock_search_bar_summary">Choose a search widget for the dock</string>
