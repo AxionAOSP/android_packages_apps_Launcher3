@@ -79,6 +79,21 @@
                 android:tint="@color/overview_button"
                 android:visibility="gone" />
 
+            <ImageButton
+                android:id="@+id/action_freeform"
+                android:layout_width="@dimen/overview_actions_btn_size"
+                android:layout_height="@dimen/overview_actions_btn_size"
+                android:layout_marginStart="@dimen/overview_actions_button_spacing"
+                android:background="?attr/overviewActionCircleButtonBackground"
+                android:contentDescription="@string/recent_task_option_freeform"
+                android:minWidth="0dp"
+                android:minHeight="0dp"
+                android:padding="0dp"
+                android:scaleType="center"
+                android:src="@drawable/ic_overview_freeform"
+                android:tint="@color/overview_button"
+                android:visibility="gone" />
+
         </LinearLayout>
 
         <Button
