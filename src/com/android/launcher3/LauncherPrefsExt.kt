@@ -16,6 +16,8 @@
 package com.android.launcher3
 
 import android.content.Context
+import android.graphics.Color
+import androidx.core.graphics.ColorUtils
 import com.android.launcher3.LauncherPrefs.Companion.backedUpItem
 import com.android.launcher3.LauncherPrefs.Companion.nonRestorableItem
 import kotlin.math.roundToInt
@@ -309,6 +311,13 @@ object LauncherPrefsExt {
             true,
             EncryptionType.SECURE_SETTINGS,
         )
+    const val RECENTS_OVERVIEW_SCRIM_DEFAULT_OPACITY = 70
+    @JvmField val RECENTS_OVERVIEW_SCRIM_OPACITY =
+        backedUpItem(
+            "pulse_recents_overview_scrim_opacity",
+            RECENTS_OVERVIEW_SCRIM_DEFAULT_OPACITY,
+            EncryptionType.SECURE_SETTINGS,
+        )
     @JvmField val RECENTS_LOCKED_APPS =
         nonRestorableItem(
             "pref_recents_locked_apps",
@@ -377,6 +386,7 @@ object LauncherPrefsExt {
         SLEEP_GESTURE,
         RECENTS_SHOW_LOCK_BUTTON,
         RECENTS_SHOW_FREEFORM_BUTTON,
+        RECENTS_OVERVIEW_SCRIM_OPACITY,
     )
     @JvmStatic
     fun allAppsBackgroundAlpha(context: Context): Int {
@@ -399,4 +409,18 @@ object LauncherPrefsExt {
         return Utilities.boundToRange(opacity, 0, 100)
     }
 
+    @JvmStatic
+    fun applyRecentsOverviewScrimOpacity(context: Context, color: Int): Int {
+        val opacity = Utilities.boundToRange(
+            RECENTS_OVERVIEW_SCRIM_OPACITY.get(context),
+            0,
+            100,
+        )
+        val alpha = Utilities.boundToRange(
+            (Color.alpha(color) * opacity / 100f).roundToInt(),
+            0,
+            255,
+        )
+        return ColorUtils.setAlphaComponent(color, alpha)
+    }
 }

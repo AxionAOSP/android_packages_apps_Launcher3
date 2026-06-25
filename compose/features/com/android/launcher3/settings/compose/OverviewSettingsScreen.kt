@@ -39,4 +39,19 @@ internal fun OverviewScreen() {
             )
         }
     }
+    PreferenceGroup(title = stringResource(R.string.home_settings_overview_appearance_category)) {
+        item {
+            IntSliderPreference(
+                item = LauncherPrefsExt.RECENTS_OVERVIEW_SCRIM_OPACITY,
+                titleRes = R.string.pref_recents_overview_scrim_opacity_title,
+                min = 0,
+                max = 100,
+                defaultValue = LauncherPrefsExt.RECENTS_OVERVIEW_SCRIM_DEFAULT_OPACITY,
+                interval = 10,
+                valueLabel = {
+                    stringResource(R.string.pref_recents_overview_scrim_opacity_percent, it)
+                },
+            )
+        }
+    }
 }
