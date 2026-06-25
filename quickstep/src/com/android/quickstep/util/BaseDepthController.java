@@ -39,8 +39,10 @@ import androidx.annotation.VisibleForTesting;
 import com.android.app.animation.Interpolators;
 import com.android.launcher3.Flags;
 import com.android.launcher3.Launcher;
+import com.android.launcher3.LauncherPrefChangeListener;
+import com.android.launcher3.LauncherPrefs;
+import com.android.launcher3.LauncherPrefsExt;
 import com.android.launcher3.LauncherState;
-import com.android.launcher3.R;
 import com.android.launcher3.Utilities;
 import com.android.launcher3.statemanager.StateManager;
 import com.android.launcher3.uioverrides.QuickstepLauncher;
@@ -51,7 +53,7 @@ import com.android.systemui.shared.system.BlurUtils;
 /**
  * Utility class for applying depth effect
  */
-public class BaseDepthController {
+public class BaseDepthController implements LauncherPrefChangeListener {
     public static final float DEPTH_0_PERCENT = 0f;
     public static final float DEPTH_60_PERCENT = 0.6f;
     public static final float DEPTH_70_PERCENT = 0.7f;
@@ -85,7 +87,7 @@ public class BaseDepthController {
     /**
      * Blur radius when completely zoomed out, in pixels.
      */
-    protected final int mMaxBlurRadius;
+    protected int mMaxBlurRadius;
     protected final WallpaperManager mWallpaperManager;
     protected boolean mCrossWindowBlursEnabled;
 
@@ -126,17 +128,17 @@ public class BaseDepthController {
      * Info for early wakeup requests to SurfaceFlinger.
      */
     private EarlyWakeupInfo mEarlyWakeupInfo = new EarlyWakeupInfo();
+    private final LauncherPrefs mLauncherPrefs;
 
     public BaseDepthController(QuickstepLauncher activity) {
         mLauncher = activity;
+        mLauncherPrefs = LauncherPrefs.get(activity);
         if (Flags.allAppsBlur() || enableOverviewBackgroundWallpaperBlur()) {
             mCrossWindowBlursEnabled =
                     CrossWindowBlurListeners.getInstance().isCrossWindowBlurEnabled();
-            mMaxBlurRadius = activity.getResources().getDimensionPixelSize(
-                    R.dimen.max_depth_blur_radius_enhanced);
-        } else {
-            mMaxBlurRadius = activity.getResources().getInteger(R.integer.max_depth_blur_radius);
         }
+        mMaxBlurRadius = getConfiguredMaxBlurRadius();
+        mLauncherPrefs.addListener(this, LauncherPrefsExt.LAUNCHER_BLUR_RADIUS);
         mWallpaperManager = activity.getSystemService(WallpaperManager.class);
 
         MultiPropertyFactory<BaseDepthController> depthProperty =
@@ -145,6 +147,34 @@ public class BaseDepthController {
         widgetDepth = depthProperty.get(DEPTH_INDEX_WIDGET);
         mEarlyWakeupInfo.token = new Binder();
         mEarlyWakeupInfo.trace = BaseDepthController.class.getName();
+    }
+
+    public void destroy() {
+        mLauncherPrefs.removeListener(this, LauncherPrefsExt.LAUNCHER_BLUR_RADIUS);
+    }
+
+    @Override
+    public void onPrefChanged(String key) {
+        if (LauncherPrefsExt.LAUNCHER_BLUR_RADIUS.getSharedPrefKey().equals(key)) {
+            updateMaxBlurRadius();
+        }
+    }
+
+    private void updateMaxBlurRadius() {
+        int maxBlurRadius = getConfiguredMaxBlurRadius();
+        if (mMaxBlurRadius == maxBlurRadius) {
+            return;
+        }
+        boolean wasCrossWindowBlursEnabled = isCrossWindowBlursEnabled();
+        mMaxBlurRadius = maxBlurRadius;
+        if (wasCrossWindowBlursEnabled != isCrossWindowBlursEnabled()) {
+            mLauncher.updateBlurStyle();
+        }
+        applyDepthAndBlur(null, false, false);
+    }
+
+    private int getConfiguredMaxBlurRadius() {
+        return Utilities.boundToRange(LauncherPrefsExt.LAUNCHER_BLUR_RADIUS.get(mLauncher), 0, 100);
     }
 
     /**
@@ -161,7 +191,7 @@ public class BaseDepthController {
      * style UI or fallback style UI.
      */
     public boolean isCrossWindowBlursEnabled() {
-        return mCrossWindowBlursEnabled;
+        return mCrossWindowBlursEnabled && mMaxBlurRadius > 0;
     }
 
     protected void setCrossWindowBlursEnabled(boolean isEnabled) {

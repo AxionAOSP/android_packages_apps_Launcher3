@@ -91,6 +91,13 @@ object LauncherPrefsExt {
             true,
             EncryptionType.SECURE_SETTINGS,
         )
+    const val LAUNCHER_BLUR_DEFAULT_RADIUS = 30
+    @JvmField val LAUNCHER_BLUR_RADIUS =
+        backedUpItem(
+            "pulse_launcher_blur_radius",
+            LAUNCHER_BLUR_DEFAULT_RADIUS,
+            EncryptionType.SECURE_SETTINGS,
+        )
     @JvmField val WORKSPACE_ROUNDED_WIDGETS =
         backedUpItem(
             "pref_workspace_rounded_widgets",
@@ -307,6 +314,7 @@ object LauncherPrefsExt {
         WORKSPACE_LABEL_SCALE,
         WORKSPACE_WALLPAPER_SCROLLING,
         WORKSPACE_SHOW_TOP_SHADOW,
+        LAUNCHER_BLUR_RADIUS,
         WORKSPACE_ROUNDED_WIDGETS,
         WORKSPACE_ALLOW_WIDGET_OVERLAP,
         WORKSPACE_FORCE_WIDGET_RESIZE,

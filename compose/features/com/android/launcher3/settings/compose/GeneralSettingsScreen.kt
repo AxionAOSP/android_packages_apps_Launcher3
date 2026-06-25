@@ -18,13 +18,21 @@ package com.android.launcher3.settings.compose
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.res.stringResource
 import com.android.axion.compose.preferences.PreferenceGroup
+import com.android.launcher3.BuildConfig
 import com.android.launcher3.LauncherPrefsExt
 import com.android.launcher3.R
 import com.android.launcher3.settings.SettingsActivity
 
 @Composable
 internal fun GeneralScreen(activity: SettingsActivity) {
+    val iconPacks = rememberInstalledIconPacks()
     PreferenceGroup(title = stringResource(R.string.home_settings_icons_category)) {
+        item {
+            IconPackPreference(iconPacks)
+        }
+        item {
+            ThemedIconPackPreference(iconPacks)
+        }
         item {
             PercentSliderPreference(
                 item = LauncherPrefsExt.WORKSPACE_ICON_SCALE,
@@ -38,11 +46,24 @@ internal fun GeneralScreen(activity: SettingsActivity) {
             )
         }
     }
-    if (com.android.launcher3.BuildConfig.NOTIFICATION_DOTS_ENABLED) {
+    if (BuildConfig.NOTIFICATION_DOTS_ENABLED) {
         PreferenceGroup(title = stringResource(R.string.home_settings_notifications_category)) {
             item {
                 NotificationDotsPreferenceItem(activity)
             }
+        }
+    }
+    PreferenceGroup(title = stringResource(R.string.pref_launcher_blur_category)) {
+        item {
+            IntSliderPreference(
+                item = LauncherPrefsExt.LAUNCHER_BLUR_RADIUS,
+                titleRes = R.string.pref_launcher_blur_radius_title,
+                min = 0,
+                max = 100,
+                defaultValue = LauncherPrefsExt.LAUNCHER_BLUR_DEFAULT_RADIUS,
+                interval = 10,
+                valueLabel = { stringResource(R.string.pref_launcher_blur_radius_pixels, it) },
+            )
         }
     }
 }
