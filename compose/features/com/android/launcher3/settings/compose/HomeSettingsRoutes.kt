@@ -25,6 +25,7 @@ internal object HomeSettingsRoutes {
     const val GENERAL = "general"
     const val HOME = "home"
     const val HOME_GRID = "home_grid"
+    const val OVERVIEW = "overview"
     const val ALL_APPS = "all_apps"
     const val ALL_APPS_FOLDERS = "all_apps_folders"
     const val ALL_APPS_SMART_DRAWER = "all_apps_smart_drawer"
@@ -39,6 +40,7 @@ internal object HomeSettingsRoutes {
         KEY_SCREEN_GENERAL -> GENERAL
         KEY_SCREEN_HOME -> HOME
         HomeGridSettingsKeys.OPTIONS -> HOME_GRID
+        KEY_SCREEN_OVERVIEW -> OVERVIEW
         KEY_SCREEN_ALL_APPS -> ALL_APPS
         KEY_ALL_APPS_SEARCH_RESULTS -> SEARCH
         KEY_ALL_APPS_FOLDER_SETTINGS -> ALL_APPS_FOLDERS
@@ -85,6 +87,9 @@ internal object HomeSettingsRoutes {
             KEY_WORKSPACE_ALLOW_WIDGET_OVERLAP,
             KEY_WORKSPACE_FORCE_WIDGET_RESIZE,
             KEY_WORKSPACE_WIDGET_UNLIMITED_SIZE -> HOME
+            KEY_SCREEN_OVERVIEW,
+            KEY_RECENTS_SHOW_LOCK_BUTTON,
+            KEY_RECENTS_SHOW_FREEFORM_BUTTON -> OVERVIEW
             KEY_SCREEN_ALL_APPS,
             KEY_ALLAPPS_THEMED_ICONS,
             KEY_DRAWER_LABELS,
@@ -141,6 +146,7 @@ internal object HomeSettingsRoutes {
 internal fun parentRoute(route: String?): String? = when (route) {
     HomeSettingsRoutes.GENERAL,
     HomeSettingsRoutes.HOME,
+    HomeSettingsRoutes.OVERVIEW,
     HomeSettingsRoutes.ALL_APPS,
     HomeSettingsRoutes.SEARCH,
     HomeSettingsRoutes.PRIVACY,
@@ -158,6 +164,7 @@ internal fun routeTitle(route: String): Int = when (route) {
     HomeSettingsRoutes.GENERAL -> R.string.home_settings_general_title
     HomeSettingsRoutes.HOME -> R.string.home_screen
     HomeSettingsRoutes.HOME_GRID -> R.string.home_grid_title
+    HomeSettingsRoutes.OVERVIEW -> R.string.home_settings_overview_category
     HomeSettingsRoutes.ALL_APPS -> R.string.all_apps_drawer_settings_title
     HomeSettingsRoutes.ALL_APPS_FOLDERS -> R.string.all_apps_folders_title
     HomeSettingsRoutes.ALL_APPS_SMART_DRAWER -> R.string.smart_drawer_folders_title
