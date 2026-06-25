@@ -151,6 +151,8 @@ import com.android.launcher3.AbstractFloatingView;
 import com.android.launcher3.BuildConfig;
 import com.android.launcher3.DeviceProfile;
 import com.android.launcher3.Insettable;
+import com.android.launcher3.LauncherPrefs;
+import com.android.launcher3.LauncherPrefsExt;
 import com.android.launcher3.MotionEventsUtils;
 import com.android.launcher3.PagedView;
 import com.android.launcher3.R;
@@ -2236,6 +2238,44 @@ public abstract class RecentsView<
             removeView(mAddDesktopButton);
             removeView(mClearAllButton);
         }
+    }
+
+    public void removeUnlockedTaskViews() {
+        List<TaskView> taskViews = CollectionsKt.filter(getTaskViews(),
+                taskView -> !taskView.isLocked());
+        for (TaskView taskView : taskViews) {
+            GroupTask groupTask = taskView.getGroupTask();
+            if (groupTask != null) {
+                removeGroupTaskInternal(groupTask);
+            }
+            removeView(taskView);
+            mTopRowIdSet.remove(taskView.getTaskViewId());
+        }
+        if (!hasTaskViews()) {
+            removeView(mAddDesktopButton);
+            removeView(mClearAllButton);
+        }
+        updateTaskSize();
+        updateScrollSynchronously();
+        updateCurrentTaskActionsVisibility();
+    }
+
+    public boolean hasLockedTaskViews() {
+        for (TaskView taskView : getTaskViews()) {
+            if (taskView.isLocked()) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private boolean hasDismissableTaskViews() {
+        for (TaskView taskView : getTaskViews()) {
+            if (!taskView.isLocked()) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /** Returns true if there are at least one TaskView has been added to the RecentsView. */
@@ -4434,6 +4474,31 @@ public abstract class RecentsView<
 
         boolean isCurrentDesktop = taskView instanceof DesktopTaskView;
         mActionsView.updateHiddenFlags(HIDDEN_DESKTOP, isCurrentDesktop);
+        if (!isCurrentSplit && taskView != null) {
+            taskView.updateLockState();
+            mActionsView.updateLockState(taskView.isLocked());
+        } else {
+            mActionsView.updateLockState(false);
+        }
+    }
+
+    public void setTaskLocked(TaskView taskView, boolean isLocked) {
+        Task task = taskView.getFirstTask();
+        if (task == null) return;
+        String packageName = task.key.getPackageName();
+        LauncherPrefs launcherPrefs = LauncherPrefs.get(getContext());
+        Set<String> lockedApps = new HashSet<>(
+                launcherPrefs.get(LauncherPrefsExt.RECENTS_LOCKED_APPS));
+        boolean changed = isLocked ? lockedApps.add(packageName) : lockedApps.remove(packageName);
+        if (!changed) return;
+        launcherPrefs.put(LauncherPrefsExt.RECENTS_LOCKED_APPS, lockedApps);
+        for (TaskView visibleTaskView : getTaskViews()) {
+            Task visibleTask = visibleTaskView.getFirstTask();
+            if (visibleTask != null && packageName.equals(visibleTask.key.getPackageName())) {
+                visibleTaskView.setLocked(isLocked);
+            }
+        }
+        updateCurrentTaskActionsVisibility();
     }
 
     /**
@@ -4502,14 +4567,25 @@ public abstract class RecentsView<
             throw new IllegalStateException("Another pending animation is still running");
         }
         PendingAnimation anim = new PendingAnimation(duration);
+        boolean hasLockedTaskViews = hasLockedTaskViews();
 
         for (TaskView taskView : getTaskViews()) {
+            if (taskView.isLocked()) {
+                continue;
+            }
             addDismissedTaskAnimations(taskView, duration, anim);
         }
 
         mPendingAnimation = anim;
         mPendingAnimation.addEndListener(isSuccess -> {
             if (isSuccess) {
+                if (hasLockedTaskViews) {
+                    removeUnlockedTaskViews();
+                    onDismissAnimationEnds();
+                    InteractionJankMonitorWrapper.end(Cuj.CUJ_LAUNCHER_OVERVIEW_CLEAR_ALL);
+                    mPendingAnimation = null;
+                    return;
+                }
                 // Remove desktops first, since desks can be empty (so they have no recent tasks),
                 // and closing all tasks on a desk doesn't always necessarily mean that the desk
                 // will be removed. So, there are no guarantees that the below call to
@@ -4638,6 +4714,9 @@ public abstract class RecentsView<
 
     /** Dismisses the entire [taskView]. */
     public void dismissTaskView(TaskView taskView, boolean animateTaskView, boolean removeTask) {
+        if (removeTask && taskView.isLocked()) {
+            return;
+        }
         if (enableExpressiveDismissTaskMotion() && (!showAsGrid() || enableGridOnlyOverview())) {
             mDismissUtils.createTaskDismissSpringAnimation(taskView, removeTask,
                     false /* isSplitSelection */);
@@ -4656,6 +4735,9 @@ public abstract class RecentsView<
     }
 
     public void dismissAllTasks() {
+        if (!hasDismissableTaskViews()) {
+            return;
+        }
         InteractionJankMonitorWrapper.begin(this, Cuj.CUJ_LAUNCHER_OVERVIEW_CLEAR_ALL);
         if (enableExpressiveDismissTaskMotion()) {
             mDismissUtils.dismissAllTasks();

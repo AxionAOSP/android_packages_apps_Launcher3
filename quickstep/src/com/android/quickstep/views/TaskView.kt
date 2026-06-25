@@ -24,6 +24,7 @@ import android.app.ActivityOptions
 import android.app.ActivityTaskManager.INVALID_TASK_ID
 import android.app.WindowConfiguration.WINDOWING_MODE_FULLSCREEN
 import android.content.Context
+import android.content.res.ColorStateList
 import android.graphics.Canvas
 import android.graphics.PointF
 import android.graphics.Rect
@@ -33,6 +34,7 @@ import android.util.AttributeSet
 import android.util.FloatProperty
 import android.util.Log
 import android.view.Display
+import android.view.Gravity
 import android.view.MotionEvent
 import android.view.View
 import android.view.View.OnClickListener
@@ -40,6 +42,7 @@ import android.view.ViewGroup
 import android.view.ViewStub
 import android.view.accessibility.AccessibilityNodeInfo
 import android.widget.FrameLayout
+import android.widget.ImageView
 import android.widget.Toast
 import androidx.annotation.IntDef
 import androidx.annotation.VisibleForTesting
@@ -54,6 +57,8 @@ import com.android.launcher3.Flags.enableDesktopExplodedView
 import com.android.launcher3.Flags.enableRefactorDigitalWellbeingToast
 import com.android.launcher3.Flags.enableRefactorTaskContentView
 import com.android.launcher3.Flags.enableRefactorTaskThumbnail
+import com.android.launcher3.LauncherPrefs
+import com.android.launcher3.LauncherPrefsExt
 import com.android.launcher3.R
 import com.android.launcher3.Utilities
 import com.android.launcher3.anim.AnimatedFloat
@@ -324,6 +329,12 @@ constructor(
     var isEndQuickSwitchCuj = false
     var isBeingDraggedForDismissal = false
     var isBeingDismissed: Boolean = false
+    var isLocked: Boolean = false
+        set(value) {
+            field = value
+            updateLockBadge()
+        }
+    private var lockBadgeView: ImageView? = null
 
     private val systemGestureExclusionRectList = listOf(Rect()) // We only need 1 exclusion Rect
 
@@ -777,6 +788,7 @@ constructor(
         borderEnabled = false
         hoverBorderVisible = false
         taskViewId = UNBOUND_TASK_VIEW_ID
+        isLocked = false
         // TODO(b/390583187): Clean the components UI State when TaskView is recycled.
         taskContainers.forEach { it.destroy() }
 
@@ -1161,7 +1173,54 @@ constructor(
                 }
             }
             setOrientationState(orientedState)
+            updateLockState()
         }
+
+    fun updateLockState() {
+        isLocked =
+            firstTask?.key?.getPackageName()?.let { packageName ->
+                LauncherPrefs.get(context).get(LauncherPrefsExt.RECENTS_LOCKED_APPS).contains(
+                    packageName
+                )
+            } ?: false
+    }
+
+    private fun updateLockBadge() {
+        if (!isLocked || !container.deviceProfile.deviceProperties.isTablet) {
+            clearLockBadge()
+            return
+        }
+        if (lockBadgeView != null) {
+            return
+        }
+        val badgeSize = resources.getDimensionPixelSize(R.dimen.recent_task_lock_badge_size)
+        val iconSize = resources.getDimensionPixelSize(R.dimen.recent_task_lock_badge_icon_size)
+        val padding = (badgeSize - iconSize) / 2
+        val badgeView =
+            ImageView(context).apply {
+                setBackgroundResource(R.drawable.overview_action_circle_bg)
+                setImageResource(R.drawable.ic_app_locked)
+                imageTintList =
+                    ColorStateList.valueOf(context.getColor(R.color.materialColorOnSurface))
+                importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_NO
+                scaleType = ImageView.ScaleType.CENTER_INSIDE
+                elevation = resources.getDimension(R.dimen.task_thumbnail_icon_menu_elevation)
+                setPadding(padding, padding, padding, padding)
+            }
+        val margin = resources.getDimensionPixelSize(R.dimen.recent_task_lock_badge_margin)
+        lockBadgeView = badgeView
+        addView(
+            badgeView,
+            FrameLayout.LayoutParams(badgeSize, badgeSize, Gravity.BOTTOM or Gravity.END).apply {
+                setMargins(margin, margin, margin, margin)
+            },
+        )
+    }
+
+    private fun clearLockBadge() {
+        lockBadgeView?.let { removeView(it) }
+        lockBadgeView = null
+    }
 
     private fun applyThumbnailSplashAlpha() {
         val alpha = getSplashAlphaProgress()
