@@ -74,6 +74,8 @@
     <string name="home_wallpaper_scrolling_title">Wallpaper scrolling</string>
     <string name="home_top_bar_shadow_title">Top bar shadow</string>
     <string name="pref_launcher_blur_category">Launcher blur</string>
+    <string name="pref_launcher_blur_title">Enable launcher blur</string>
+    <string name="pref_launcher_blur_summary">Blur wallpaper behind launcher surfaces</string>
     <string name="pref_launcher_blur_radius_title">Blur radius</string>
     <string name="pref_launcher_blur_radius_pixels">%1$d px</string>
     <string name="home_widgets_rounded_title">Rounded widget corners</string>

@@ -43,6 +43,7 @@ import android.graphics.Canvas;
 import android.graphics.Insets;
 import android.graphics.Path;
 import android.graphics.Rect;
+import android.graphics.RectF;
 import android.graphics.Typeface;
 import android.graphics.drawable.Drawable;
 import android.graphics.drawable.GradientDrawable;
@@ -74,6 +75,8 @@ import androidx.annotation.Nullable;
 import androidx.annotation.VisibleForTesting;
 import androidx.core.content.res.ResourcesCompat;
 
+import com.android.axion.blur.AxBlurBackgroundRenderer;
+import com.android.axion.blur.AxBlurColors;
 import com.android.launcher3.AbstractFloatingView;
 import com.android.launcher3.Alarm;
 import com.android.launcher3.CellLayout;
@@ -224,6 +227,7 @@ public class Folder extends AbstractFloatingView implements ClipPathView, DragSo
     int mTargetRank, mPrevTargetRank, mEmptyCellRank;
 
     private Path mClipPath;
+    private final RectF mClipBounds = new RectF();
 
     @ViewDebug.ExportedProperty(category = "launcher",
             mapping = {
@@ -266,6 +270,8 @@ public class Folder extends AbstractFloatingView implements ClipPathView, DragSo
     private KeyboardInsetAnimationCallback mKeyboardInsetAnimationCallback;
 
     private final @NonNull GradientDrawable mBackground;
+    private final AxBlurBackgroundRenderer mBlurBackgroundRenderer;
+    private final int mFolderBlurOverlayColor;
 
     /**
      * Used to inflate the Workspace from XML.
@@ -287,9 +293,14 @@ public class Folder extends AbstractFloatingView implements ClipPathView, DragSo
         // click).
         setFocusableInTouchMode(true);
 
-        mBackground = (GradientDrawable) Objects.requireNonNull(
+        GradientDrawable background = (GradientDrawable) Objects.requireNonNull(
                 ResourcesCompat.getDrawable(getResources(),
                         R.drawable.round_rect_folder, getContext().getTheme()));
+        mFolderBlurOverlayColor = AxBlurColors.surfaceContainerTint(getContext());
+        mBlurBackgroundRenderer = AxBlurBackgroundRenderer.launcher(
+                this, getResources().getDimension(R.dimen.folder_blur_radius));
+        mBackground = mBlurBackgroundRenderer.createBackgroundDrawable(
+                background, mFolderBlurOverlayColor);
         mBackground.setCallback(this);
     }
 
@@ -413,7 +424,8 @@ public class Folder extends AbstractFloatingView implements ClipPathView, DragSo
 
     @Override
     protected boolean verifyDrawable(@NonNull Drawable who) {
-        return super.verifyDrawable(who) || (who == mBackground);
+        return super.verifyDrawable(who) || (who == mBackground)
+                || mBlurBackgroundRenderer.verifyDrawable(who);
     }
 
     void callBeginDragShared(View v, DragOptions options) {
@@ -550,12 +562,20 @@ public class Folder extends AbstractFloatingView implements ClipPathView, DragSo
         requestFocus();
         super.onAttachedToWindow();
         mFolderName.addOnFocusChangeListener(this);
+        mBlurBackgroundRenderer.onAttachedToWindow();
     }
 
     @Override
     protected void onDetachedFromWindow() {
-        super.onDetachedFromWindow();
+        mBlurBackgroundRenderer.onDetachedFromWindow();
         mFolderName.removeOnFocusChangeListener(this);
+        super.onDetachedFromWindow();
+    }
+
+    @Override
+    public void onVisibilityAggregated(boolean isVisible) {
+        super.onVisibilityAggregated(isVisible);
+        mBlurBackgroundRenderer.onVisibilityAggregated(isVisible);
     }
 
     @Override
@@ -1873,12 +1893,34 @@ public class Folder extends AbstractFloatingView implements ClipPathView, DragSo
         if (mClipPath != null) {
             int count = canvas.save();
             canvas.clipPath(mClipPath);
-            mBackground.draw(canvas);
+            mClipPath.computeBounds(mClipBounds, true);
+            boolean drewBlur = mBlurBackgroundRenderer.draw(
+                    canvas,
+                    mClipBounds,
+                    mClipPath,
+                    mBackground.getCornerRadius(),
+                    mFolderBlurOverlayColor);
+            drawBackground(canvas, drewBlur);
+            super.dispatchDraw(canvas);
             canvas.restoreToCount(count);
-            super.dispatchDraw(canvas);
         } else {
-            mBackground.draw(canvas);
+            Rect bounds = mBackground.getBounds();
+            boolean drewBlur = mBlurBackgroundRenderer.draw(
+                    canvas,
+                    bounds.left,
+                    bounds.top,
+                    bounds.right,
+                    bounds.bottom,
+                    mBackground.getCornerRadius(),
+                    mFolderBlurOverlayColor);
+            drawBackground(canvas, drewBlur);
             super.dispatchDraw(canvas);
+        }
+    }
+
+    private void drawBackground(Canvas canvas, boolean drewBlur) {
+        if (!mBlurBackgroundRenderer.isCrossWindowBlurActive()) {
+            mBackground.draw(canvas);
         }
     }
 

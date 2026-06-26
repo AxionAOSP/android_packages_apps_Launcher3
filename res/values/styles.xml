@@ -54,9 +54,9 @@
         <item name="popupColorSecondary">@color/popup_color_secondary_light</item>
         <item name="popupColorTertiary">@color/popup_color_tertiary_light</item>
         <item name="popupTextColor">@color/system_on_surface_light</item>
-        <item name="popupShadeFirst">@color/popup_shade_first_light</item>
-        <item name="popupShadeSecond">@color/popup_shade_second_light</item>
-        <item name="popupShadeThird">@color/popup_shade_third_light</item>
+        <item name="popupShadeFirst">@color/ax_blur_surface_container_expressive</item>
+        <item name="popupShadeSecond">@color/ax_blur_surface_container_expressive</item>
+        <item name="popupShadeThird">@color/ax_blur_surface_container_expressive</item>
         <item name="popupNotificationDotColor">@color/popup_notification_dot_light</item>
         <item name="notificationDotColor">@color/notification_dot_color_light</item>
         <item name="isMainColorDark">false</item>
@@ -134,9 +134,9 @@
         <item name="popupColorTertiary">@color/popup_color_tertiary_dark</item>
         <item name="popupTextColor">@color/system_on_surface_dark</item>
         <item name="popupNotificationDotColor">@color/popup_notification_dot_dark</item>
-        <item name="popupShadeFirst">@color/popup_shade_first_dark</item>
-        <item name="popupShadeSecond">@color/popup_shade_second_dark</item>
-        <item name="popupShadeThird">@color/popup_shade_third_dark</item>
+        <item name="popupShadeFirst">@color/ax_blur_surface_container_expressive</item>
+        <item name="popupShadeSecond">@color/ax_blur_surface_container_expressive</item>
+        <item name="popupShadeThird">@color/ax_blur_surface_container_expressive</item>
         <item name="notificationDotColor">@color/notification_dot_color_dark</item>
         <item name="widgetsTheme">@style/WidgetContainerTheme.Dark</item>
         <item name="pageIndicatorDotColor">@color/page_indicator_dot_color_dark</item>

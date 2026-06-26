@@ -363,6 +363,7 @@
     <dimen name="folder_cell_y_padding">6dp</dimen>
     <!-- label text size = workspace text size multiplied by this scale -->
     <dimen name="folder_label_text_scale">1.14</dimen>
+    <dimen name="folder_blur_radius">20dp</dimen>
     <dimen name="folder_footer_height_default">56dp</dimen>
     <dimen name="folder_arrow_gap_width">8dp</dimen>
     <dimen name="folder_arrow_icon_length">24dp</dimen>

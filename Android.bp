@@ -437,6 +437,7 @@ android_library {
         "LauncherPluginLib",
         "ax_preferences",
         "ax_utils",
+        "ax_blur",
         "launcher_quickstep_log_protos_lite",
         "androidx-constraintlayout_constraintlayout",
         "androidx.recyclerview_recyclerview",
