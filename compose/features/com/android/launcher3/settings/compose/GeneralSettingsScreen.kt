@@ -18,6 +18,7 @@ package com.android.launcher3.settings.compose
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.res.stringResource
 import com.android.axion.compose.preferences.PreferenceGroup
+import com.android.axion.compose.preferences.SwitchPreference
 import com.android.launcher3.BuildConfig
 import com.android.launcher3.LauncherPrefsExt
 import com.android.launcher3.R
@@ -55,6 +56,16 @@ internal fun GeneralScreen(activity: SettingsActivity) {
     }
     PreferenceGroup(title = stringResource(R.string.pref_launcher_blur_category)) {
         item {
+            val blurEnabled = rememberLauncherPreference(LauncherPrefsExt.LAUNCHER_BLUR_ENABLED)
+            SwitchPreference(
+                title = stringResource(R.string.pref_launcher_blur_title),
+                summary = stringResource(R.string.pref_launcher_blur_summary),
+                checked = blurEnabled.value,
+                onCheckedChange = blurEnabled.onChange,
+            )
+        }
+        item {
+            val blurEnabled = rememberLauncherPreference(LauncherPrefsExt.LAUNCHER_BLUR_ENABLED)
             IntSliderPreference(
                 item = LauncherPrefsExt.LAUNCHER_BLUR_RADIUS,
                 titleRes = R.string.pref_launcher_blur_radius_title,
@@ -62,6 +73,7 @@ internal fun GeneralScreen(activity: SettingsActivity) {
                 max = 100,
                 defaultValue = LauncherPrefsExt.LAUNCHER_BLUR_DEFAULT_RADIUS,
                 interval = 10,
+                enabled = blurEnabled.value,
                 valueLabel = { stringResource(R.string.pref_launcher_blur_radius_pixels, it) },
             )
         }

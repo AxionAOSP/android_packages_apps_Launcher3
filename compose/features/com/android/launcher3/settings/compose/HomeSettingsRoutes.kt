@@ -72,7 +72,8 @@ internal object HomeSettingsRoutes {
             KEY_SCREEN_GENERAL,
             KEY_ALL_APPS_DRAWER_ICON_SCALE,
             KEY_WORKSPACE_ICON_SCALE,
-            KEY_LAUNCHER_BLUR_RADIUS -> GENERAL
+            KEY_LAUNCHER_BLUR_RADIUS,
+            KEY_LAUNCHER_BLUR_ENABLED -> GENERAL
             KEY_WORKSPACE_LOCK,
             KEY_SLEEP_GESTURE,
             KEY_ADD_ICON_TO_HOME,

@@ -87,6 +87,7 @@ internal fun IntSliderPreference(
     interval: Int = 1,
     resetValue: Int = defaultValue,
     valueOverride: (Int) -> Int = { it },
+    enabled: Boolean = true,
     valueLabel: @Composable (Int) -> String,
 ) {
     val preference = rememberLauncherPreference(item)
@@ -99,6 +100,7 @@ internal fun IntSliderPreference(
         interval = interval,
         resetValue = resetValue,
         valueOverride = valueOverride,
+        enabled = enabled,
         valueLabel = valueLabel,
     )
 }
@@ -113,6 +115,7 @@ internal fun IntSliderPreference(
     interval: Int = 1,
     resetValue: Int = defaultValue,
     valueOverride: (Int) -> Int = { it },
+    enabled: Boolean = true,
     valueLabel: @Composable (Int) -> String,
 ) {
     val value = valueOverride(preference.value).coerceIn(min, max)
@@ -126,6 +129,7 @@ internal fun IntSliderPreference(
         steps = ((max - min) / interval - 1).coerceAtLeast(0),
         displayValue = valueLabel(value),
         onReset = { preference.onChange(resetValue) },
+        enabled = enabled,
     )
 }
 

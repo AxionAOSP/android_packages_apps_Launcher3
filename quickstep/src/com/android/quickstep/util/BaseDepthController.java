@@ -138,7 +138,9 @@ public class BaseDepthController implements LauncherPrefChangeListener {
                     CrossWindowBlurListeners.getInstance().isCrossWindowBlurEnabled();
         }
         mMaxBlurRadius = getConfiguredMaxBlurRadius();
-        mLauncherPrefs.addListener(this, LauncherPrefsExt.LAUNCHER_BLUR_RADIUS);
+        mLauncherPrefs.addListener(this,
+                LauncherPrefsExt.LAUNCHER_BLUR_ENABLED,
+                LauncherPrefsExt.LAUNCHER_BLUR_RADIUS);
         mWallpaperManager = activity.getSystemService(WallpaperManager.class);
 
         MultiPropertyFactory<BaseDepthController> depthProperty =
@@ -150,12 +152,15 @@ public class BaseDepthController implements LauncherPrefChangeListener {
     }
 
     public void destroy() {
-        mLauncherPrefs.removeListener(this, LauncherPrefsExt.LAUNCHER_BLUR_RADIUS);
+        mLauncherPrefs.removeListener(this,
+                LauncherPrefsExt.LAUNCHER_BLUR_ENABLED,
+                LauncherPrefsExt.LAUNCHER_BLUR_RADIUS);
     }
 
     @Override
     public void onPrefChanged(String key) {
-        if (LauncherPrefsExt.LAUNCHER_BLUR_RADIUS.getSharedPrefKey().equals(key)) {
+        if (LauncherPrefsExt.LAUNCHER_BLUR_ENABLED.getSharedPrefKey().equals(key)
+                || LauncherPrefsExt.LAUNCHER_BLUR_RADIUS.getSharedPrefKey().equals(key)) {
             updateMaxBlurRadius();
         }
     }
@@ -174,6 +179,9 @@ public class BaseDepthController implements LauncherPrefChangeListener {
     }
 
     private int getConfiguredMaxBlurRadius() {
+        if (!LauncherPrefsExt.LAUNCHER_BLUR_ENABLED.get(mLauncher)) {
+            return 0;
+        }
         return Utilities.boundToRange(LauncherPrefsExt.LAUNCHER_BLUR_RADIUS.get(mLauncher), 0, 100);
     }
 
