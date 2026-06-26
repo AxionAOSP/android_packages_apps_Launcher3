@@ -17,10 +17,12 @@ package com.android.launcher3.popup;
 
 import android.view.View;
 
+import com.android.launcher3.R;
 import com.android.launcher3.model.data.ItemInfo;
 import com.android.launcher3.splitscreen.SplitShortcut;
 import com.android.launcher3.uioverrides.QuickstepLauncher;
 import com.android.launcher3.util.SplitConfigurationOptions.SplitPositionOption;
+import com.android.quickstep.SystemUiProxy;
 
 /** {@link SystemShortcut.Factory} implementation to create workspace split shortcuts */
 public interface QuickstepSystemShortcut {
@@ -34,12 +36,40 @@ public interface QuickstepSystemShortcut {
                         originalView, position);
     }
 
+    SystemShortcut.Factory<QuickstepLauncher> FORCE_STOP =
+            (activity, itemInfo, originalView) -> {
+                if (originalView == null || itemInfo.getTargetPackage() == null
+                        || !SystemUiProxy.INSTANCE.get(activity).isActive()) {
+                    return null;
+                }
+                return new ForceStopSystemShortcut(activity, itemInfo, originalView);
+            };
+
     class SplitSelectSystemShortcut extends SplitShortcut<QuickstepLauncher> {
 
         public SplitSelectSystemShortcut(QuickstepLauncher launcher, ItemInfo itemInfo,
                 View originalView, SplitPositionOption position) {
             super(position.iconResId, position.textResId, launcher, itemInfo, originalView,
                     position);
+        }
+    }
+
+    class ForceStopSystemShortcut extends SystemShortcut<QuickstepLauncher> {
+
+        ForceStopSystemShortcut(QuickstepLauncher launcher, ItemInfo itemInfo, View originalView) {
+            super(R.drawable.ic_gm_close_24, R.string.recent_task_option_force_stop, launcher,
+                    itemInfo, originalView);
+        }
+
+        @Override
+        public void onClick(View view) {
+            String packageName = mItemInfo.getTargetPackage();
+            if (packageName == null) {
+                return;
+            }
+            dismissTaskMenuView();
+            SystemUiProxy.INSTANCE.get(mTarget).forceStopPackage(packageName,
+                    mItemInfo.user.getIdentifier());
         }
     }
 }
