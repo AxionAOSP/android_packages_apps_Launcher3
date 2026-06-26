@@ -524,6 +524,11 @@ class SystemUiProxy @Inject constructor(
             systemUiProxy?.toggleQuickSettingsPanel()
         }
 
+    fun forceStopPackage(packageName: String, userId: Int) =
+        executeWithErrorLog({ "Failed call forceStopPackage" }) {
+            systemUiProxy?.forceStopPackage(packageName, userId)
+        }
+
     //
     // Pip
     //

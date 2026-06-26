@@ -16,6 +16,7 @@
 
 package com.android.quickstep
 
+import android.content.Context
 import android.view.View
 import com.android.launcher3.R
 import com.android.launcher3.logging.StatsLogManager.LauncherEvent
@@ -78,11 +79,33 @@ interface TaskViewShortFactory {
         override fun onClick(view: View) {
             val recentsView = taskView.recentsView ?: return
             dismissTaskMenuView()
+            forceStopTaskPackages(mTarget.asContext(), taskView)
             recentsView.dismissTaskView(taskView, true, true)
             mTarget.statsLogManager
                 .logger()
                 .withItemInfo(taskView.itemInfo)
                 .log(LauncherEvent.LAUNCHER_SYSTEM_SHORTCUT_CLOSE_APP_TAP)
+        }
+    }
+
+    class ForceStopTaskSystemShortcut(
+        iconResId: Int,
+        textResId: Int,
+        container: RecentsViewContainer,
+        private val taskView: TaskView,
+    ) :
+        SystemShortcut<ActivityContext>(
+            iconResId,
+            textResId,
+            container,
+            taskView.itemInfo,
+            taskView,
+        ) {
+        override fun onClick(view: View) {
+            val recentsView = taskView.recentsView ?: return
+            dismissTaskMenuView()
+            forceStopTaskPackages(mTarget.asContext(), taskView)
+            recentsView.dismissTaskView(taskView, true, true)
         }
     }
 
@@ -121,6 +144,33 @@ interface TaskViewShortFactory {
                 }
             }
 
+        private val FORCE_STOP_TASK: TaskViewShortFactory =
+            object : TaskViewShortFactory {
+                override fun getShortcuts(
+                    container: RecentsViewContainer,
+                    taskView: TaskView,
+                ): List<SystemShortcut<ActivityContext>> {
+                    if (
+                        taskView.firstTask == null ||
+                            !SystemUiProxy.INSTANCE.get(container.asContext()).isActive()
+                    ) {
+                        return emptyList()
+                    }
+                    return listOf(
+                        ForceStopTaskSystemShortcut(
+                            R.drawable.ic_gm_close_24,
+                            R.string.recent_task_option_force_stop,
+                            container,
+                            taskView,
+                        )
+                    )
+                }
+
+                override fun showForGroupedTask() = true
+
+                override fun showForDesktopTask() = true
+            }
+
         private val REMOVE_TASK: TaskViewShortFactory =
             object : TaskViewShortFactory {
                 override fun getShortcuts(
@@ -128,7 +178,7 @@ interface TaskViewShortFactory {
                     taskView: TaskView,
                 ): List<SystemShortcut<ActivityContext>> {
                     val recentsView = taskView.recentsView ?: return emptyList()
-                    if (!recentsView.canRemoveTaskView(taskView)) {
+                    if (taskView.isLocked || !recentsView.canRemoveTaskView(taskView)) {
                         return emptyList()
                     }
                     return listOf<SystemShortcut<ActivityContext>>(
@@ -147,6 +197,15 @@ interface TaskViewShortFactory {
             }
 
         private val TASK_VIEW_MENU_OPTIONS: Array<TaskViewShortFactory> =
-            arrayOf(LOCK_TASK, REMOVE_TASK)
+            arrayOf(LOCK_TASK, FORCE_STOP_TASK, REMOVE_TASK)
+    }
+}
+
+private fun forceStopTaskPackages(context: Context, taskView: TaskView) {
+    val proxy = SystemUiProxy.INSTANCE.get(context)
+    taskView.taskContainers.forEach { container ->
+        val key = container.task.key
+        val packageName = key.packageName ?: return@forEach
+        proxy.forceStopPackage(packageName, key.userId)
     }
 }
