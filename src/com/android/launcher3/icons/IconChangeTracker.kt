@@ -25,11 +25,18 @@ import android.content.Intent.ACTION_TIME_CHANGED
 import android.os.Process.myUserHandle
 import android.os.UserHandle
 import android.text.TextUtils
+import com.android.launcher3.LauncherPrefChangeListener
+import com.android.launcher3.LauncherPrefs
+import com.android.launcher3.LauncherPrefsExt
+import com.android.launcher3.R
 import com.android.launcher3.concurrent.annotations.LightweightBackground
 import com.android.launcher3.concurrent.annotations.LightweightBackgroundPriority
 import com.android.launcher3.dagger.ApplicationContext
+import com.android.launcher3.dagger.LauncherAppComponent
 import com.android.launcher3.dagger.LauncherAppSingleton
+import com.android.launcher3.icons.customicon.IconPackDrawableResolver
 import com.android.launcher3.pm.UserCache
+import com.android.launcher3.util.DaggerSingletonObject
 import com.android.launcher3.util.DaggerSingletonTracker
 import com.android.launcher3.util.LooperExecutor
 import com.android.launcher3.util.MutableListenableStream
@@ -46,6 +53,7 @@ constructor(
     @ApplicationContext context: Context,
     @LightweightBackground(LightweightBackgroundPriority.UI) executor: LooperExecutor,
     private val userCache: UserCache,
+    private val prefs: LauncherPrefs,
     lifecycleTracker: DaggerSingletonTracker,
 ) {
 
@@ -56,18 +64,61 @@ constructor(
     val changes = _changes.asListenable()
 
     init {
-        if (calendar != null || clock != null) {
-            val receiver =
-                SimpleBroadcastReceiver(context = context, executor = executor) { handleIntent(it) }
-            receiver.register(
-                actionsFilter(ACTION_TIMEZONE_CHANGED, ACTION_TIME_CHANGED, ACTION_DATE_CHANGED)
+        val receiver =
+            SimpleBroadcastReceiver(context = context, executor = executor) { handleIntent(it) }
+        receiver.register(
+            actionsFilter(
+                ACTION_TIMEZONE_CHANGED,
+                ACTION_TIME_CHANGED,
+                ACTION_DATE_CHANGED,
+                ACTION_THEME_CHANGED,
             )
-            lifecycleTracker.addCloseable(receiver)
+        )
+        lifecycleTracker.addCloseable(receiver)
+
+        val prefListener = LauncherPrefChangeListener { key ->
+            if (ICON_PREF_KEYS.contains(key)) {
+                IconPackDrawableResolver.clearCache(null)
+                dispatchAllIconsChanged()
+            }
+        }
+        prefs.addListener(
+            prefListener,
+            LauncherPrefsExt.ICON_PACK_PACKAGE,
+            LauncherPrefsExt.THEMED_ICONS_ENABLED,
+            LauncherPrefsExt.THEMED_ICON_PACK,
+            LauncherPrefsExt.THEMED_ICON_SCALE,
+            LauncherPrefsExt.THEMED_ICON_BACKGROUND_COLOR,
+            LauncherPrefsExt.THEMED_ICON_BACKGROUND_COLOR_SOURCE,
+            LauncherPrefsExt.THEMED_ICON_FOREGROUND_COLOR,
+            LauncherPrefsExt.THEMED_ICON_FOREGROUND_COLOR_SOURCE,
+            LauncherPrefsExt.THEMED_ICON_COLOR_PRESET,
+            LauncherPrefsExt.ICON_OVERRIDES,
+        )
+        lifecycleTracker.addCloseable {
+            prefs.removeListener(
+                prefListener,
+                LauncherPrefsExt.ICON_PACK_PACKAGE,
+                LauncherPrefsExt.THEMED_ICONS_ENABLED,
+                LauncherPrefsExt.THEMED_ICON_PACK,
+                LauncherPrefsExt.THEMED_ICON_SCALE,
+                LauncherPrefsExt.THEMED_ICON_BACKGROUND_COLOR,
+                LauncherPrefsExt.THEMED_ICON_BACKGROUND_COLOR_SOURCE,
+                LauncherPrefsExt.THEMED_ICON_FOREGROUND_COLOR,
+                LauncherPrefsExt.THEMED_ICON_FOREGROUND_COLOR_SOURCE,
+                LauncherPrefsExt.THEMED_ICON_COLOR_PRESET,
+                LauncherPrefsExt.ICON_OVERRIDES,
+            )
         }
     }
 
     private fun handleIntent(intent: Intent) {
         when (intent.action) {
+            ACTION_THEME_CHANGED -> {
+                IconPackDrawableResolver.clearCache(null)
+                dispatchAllIconsChanged()
+            }
+
             ACTION_TIMEZONE_CHANGED -> {
                 if (clock != null) notifyIconChanged(clock.packageName, myUserHandle())
                 dispatchCalendarIconChanged()
@@ -88,7 +139,30 @@ constructor(
         _changes.dispatchValue(PackageUserKey(packageName, user))
     }
 
+    fun notifyAllIconsChanged() {
+        dispatchAllIconsChanged()
+    }
+
+    private fun dispatchAllIconsChanged() {
+        userCache.userProfiles.forEach { _changes.dispatchValue(PackageUserKey("", it)) }
+    }
+
     companion object {
+        private const val ACTION_THEME_CHANGED = "android.intent.action.THEME_ENGINE_CHANGED"
+        @JvmField val INSTANCE = DaggerSingletonObject(LauncherAppComponent::getIconChangeTracker)
+        private val ICON_PREF_KEYS = setOf(
+            LauncherPrefsExt.ICON_PACK_PACKAGE.sharedPrefKey,
+            LauncherPrefsExt.THEMED_ICONS_ENABLED.sharedPrefKey,
+            LauncherPrefsExt.THEMED_ICON_PACK.sharedPrefKey,
+            LauncherPrefsExt.THEMED_ICON_SCALE.sharedPrefKey,
+            LauncherPrefsExt.THEMED_ICON_BACKGROUND_COLOR.sharedPrefKey,
+            LauncherPrefsExt.THEMED_ICON_BACKGROUND_COLOR_SOURCE.sharedPrefKey,
+            LauncherPrefsExt.THEMED_ICON_FOREGROUND_COLOR.sharedPrefKey,
+            LauncherPrefsExt.THEMED_ICON_FOREGROUND_COLOR_SOURCE.sharedPrefKey,
+            LauncherPrefsExt.THEMED_ICON_COLOR_PRESET.sharedPrefKey,
+            LauncherPrefsExt.ICON_OVERRIDES.sharedPrefKey,
+        )
+
         private fun Context.parseComponentOrNull(resId: Int): ComponentName? {
             val cn = getString(resId)
             return if (TextUtils.isEmpty(cn)) null else ComponentName.unflattenFromString(cn)

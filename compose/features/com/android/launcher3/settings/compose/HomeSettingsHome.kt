@@ -47,6 +47,12 @@ internal fun HomeScreen(
     }
     PreferenceGroup(title = stringResource(R.string.home_settings_labels_category)) {
         item {
+            PercentSliderPreference(
+                item = LauncherPrefsExt.WORKSPACE_ICON_SCALE,
+                titleRes = R.string.home_icon_size_title,
+            )
+        }
+        item {
             BooleanPreference(
                 item = LauncherPrefsExt.SHOW_DESKTOP_LABELS,
                 titleRes = R.string.desktop_show_labels,

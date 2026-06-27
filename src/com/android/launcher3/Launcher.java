@@ -96,6 +96,7 @@ import static com.android.launcher3.model.ItemInstallQueue.FLAG_DRAG_AND_DROP;
 import static com.android.launcher3.model.data.ItemInfoWithIcon.FLAG_NOT_PINNABLE;
 import static com.android.launcher3.pageindicators.PaginationArrow.DISABLED_ARROW_OPACITY;
 import static com.android.launcher3.pageindicators.PaginationArrow.FULLY_OPAQUE;
+import static com.android.launcher3.popup.CustomIconShortcut.CUSTOM_ICON;
 import static com.android.launcher3.popup.SystemShortcut.ADD_TO_HOME_SCREEN;
 import static com.android.launcher3.popup.SystemShortcut.APP_INFO;
 import static com.android.launcher3.popup.SystemShortcut.INSTALL;
@@ -3011,20 +3012,23 @@ public class Launcher extends StatefulActivity<LauncherState>
     public Stream<SystemShortcut.Factory> getSupportedShortcuts(ItemInfo itemInfo) {
         int container = itemInfo.container;
         if (container == CONTAINER_DESKTOP || container == CONTAINER_HOTSEAT) {
-            return Stream.of(APP_INFO, WIDGETS, INSTALL, REMOVE);
+            return Stream.of(APP_INFO, CUSTOM_ICON, WIDGETS, INSTALL, REMOVE);
         } else if (container == CONTAINER_ALL_APPS || container == CONTAINER_ALL_APPS_PREDICTION) {
             // TODO(b/444744861): Update private space apps to have its own container.
             boolean isPinnable = itemInfo instanceof ItemInfoWithIcon info
                     && (info.runtimeStatusFlags & FLAG_NOT_PINNABLE) == 0;
             if (isPinnable) {
-                return Stream.of(APP_INFO, WIDGETS, INSTALL, PIN_TO_DRAWER, ADD_TO_HOME_SCREEN);
+                return Stream.of(
+                        APP_INFO, CUSTOM_ICON, WIDGETS, INSTALL, PIN_TO_DRAWER,
+                        ADD_TO_HOME_SCREEN);
             } else {
-                return Stream.of(APP_INFO, WIDGETS, INSTALL);
+                return Stream.of(APP_INFO, CUSTOM_ICON, WIDGETS, INSTALL);
             }
         } else if (AxFolderExt.isAllAppsFolderItem(this, itemInfo)) {
-            return Stream.of(APP_INFO, WIDGETS, INSTALL, PIN_TO_DRAWER, ADD_TO_HOME_SCREEN);
+            return Stream.of(APP_INFO, CUSTOM_ICON, WIDGETS, INSTALL, PIN_TO_DRAWER,
+                    ADD_TO_HOME_SCREEN);
         }
-        return Stream.of(APP_INFO, WIDGETS, INSTALL);
+        return Stream.of(APP_INFO, CUSTOM_ICON, WIDGETS, INSTALL);
     }
 
     /**

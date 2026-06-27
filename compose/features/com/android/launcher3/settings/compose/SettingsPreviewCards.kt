@@ -62,6 +62,8 @@ internal fun HomeSettingsPreview(
     showLabels: Boolean,
     hotseatIcons: Int,
     showSearchBar: Boolean,
+    extraKey: String = "",
+    heightFraction: Float = 1f,
 ) {
     val context = LocalContext.current
     val previewSpec = rememberLauncherPreviewSpec(context)
@@ -79,14 +81,16 @@ internal fun HomeSettingsPreview(
             .padding(horizontal = 4.dp),
         contentAlignment = Alignment.Center,
     ) {
+        val safeHeightFraction = heightFraction.coerceIn(0.5f, 1f)
         val availableWidth = maxWidth * previewSpec.widthFraction
         val heightFromWidth = availableWidth / previewSpec.aspectRatio
-        val minHeight = previewSpec.minHeight.coerceAtMost(heightFromWidth)
-        val previewHeight = heightFromWidth.coerceIn(minHeight, previewSpec.maxHeight)
+        val minHeight = (previewSpec.minHeight * safeHeightFraction).coerceAtMost(heightFromWidth)
+        val maxHeight = previewSpec.maxHeight * safeHeightFraction
+        val previewHeight = heightFromWidth.coerceIn(minHeight, maxHeight)
         val previewWidth = (previewHeight * previewSpec.aspectRatio).coerceAtMost(maxWidth)
         LauncherRenderPreview(
             key = "$rows:$columns:$iconPercent:$labelPercent:$showLabels:"
-                + "$hotseatIcons:$showSearchBar",
+                + "$hotseatIcons:$showSearchBar:$extraKey",
             cornerRadius = previewSpec.cornerRadius,
             modifier = Modifier
                 .width(previewWidth)
