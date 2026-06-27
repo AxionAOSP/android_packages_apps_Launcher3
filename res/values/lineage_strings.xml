@@ -15,7 +15,7 @@
 -->
 <resources>
     <!-- Application name -->
-    <string name="lineageos_app_name" translatable="false">Trebuchet</string>
+    <string name="lineageos_app_name" translatable="false">Pulse</string>
 
     <!-- Settings -->
 
@@ -32,7 +32,7 @@
     <string name="home_settings_backup_title">Backup and restore</string>
     <string name="home_settings_backup_summary">Export or import the home screen layout</string>
     <string name="home_settings_about_title">About</string>
-    <string name="home_settings_about_summary">Trebuchet Launcher</string>
+    <string name="home_settings_about_summary">Pulse Launcher</string>
     <string name="home_settings_about_version_title">Version</string>
     <string name="home_settings_about_unknown_version">Unknown</string>
     <string name="home_settings_about_github">GitHub</string>

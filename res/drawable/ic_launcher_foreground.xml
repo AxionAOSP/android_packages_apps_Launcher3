@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-     SPDX-FileCopyrightText: 2022 The LineageOS Project
+     SPDX-FileCopyrightText: 2025 AxionOS
      SPDX-License-Identifier: Apache-2.0
 -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
@@ -10,25 +10,39 @@
     android:viewportWidth="108"
     android:viewportHeight="108">
   <group>
-    <clip-path
-        android:pathData="M0,0h108v108h-108z"/>
-    <path
-        android:pathData="M108,0H0V108H108V0ZM42,30C39.791,30 38,31.791 38,34V74C38,76.209 39.791,78 42,78H66C68.209,78 70,76.209 70,74V34C70,31.791 68.209,30 66,30H42Z"
-        android:fillColor="#2A3232"
-        android:fillType="evenOdd"/>
-    <path
-        android:pathData="M28.54,28.54m-72,0a72,72 0,1 1,144 0a72,72 0,1 1,-144 0"
-        android:fillAlpha="0.6">
+    <clip-path android:pathData="M0,0h108v108h-108z"/>
+    <path android:pathData="M0,0h108v108h-108z">
       <aapt:attr name="android:fillColor">
         <gradient
-            android:gradientRadius="72"
-            android:centerX="28.54"
-            android:centerY="28.54"
-            android:type="radial">
-          <item android:offset="0" android:color="#19FFFFFF"/>
-          <item android:offset="1" android:color="#00FFFFFF"/>
+            android:type="linear"
+            android:startX="0"
+            android:startY="108"
+            android:endX="108"
+            android:endY="0">
+          <item android:offset="0" android:color="@android:color/system_accent1_700"/>
+          <item android:offset="1" android:color="@android:color/system_accent1_400"/>
         </gradient>
       </aapt:attr>
     </path>
+    <path
+        android:pathData="M54,52m-26,0a26,26 0,1 1,52 0a26,26 0,1 1,-52 0"
+        android:fillColor="#FFFFFF"
+        android:fillAlpha="0.06"/>
+    <path
+        android:pathData="M41.5,36 H48.5 Q52,36 52,39.5 V46.5 Q52,50 48.5,50 H41.5 Q38,50 38,46.5 V39.5 Q38,36 41.5,36 Z"
+        android:fillColor="#FFFFFF"
+        android:fillAlpha="0.95"/>
+    <path
+        android:pathData="M59.5,36 H66.5 Q70,36 70,39.5 V46.5 Q70,50 66.5,50 H59.5 Q56,50 56,46.5 V39.5 Q56,36 59.5,36 Z"
+        android:fillColor="#FFFFFF"
+        android:fillAlpha="0.8"/>
+    <path
+        android:pathData="M41.5,54 H48.5 Q52,54 52,57.5 V64.5 Q52,68 48.5,68 H41.5 Q38,68 38,64.5 V57.5 Q38,54 41.5,54 Z"
+        android:fillColor="#FFFFFF"
+        android:fillAlpha="0.8"/>
+    <path
+        android:pathData="M59.5,54 H66.5 Q70,54 70,57.5 V64.5 Q70,68 66.5,68 H59.5 Q56,68 56,64.5 V57.5 Q56,54 59.5,54 Z"
+        android:fillColor="#FFFFFF"
+        android:fillAlpha="0.65"/>
   </group>
 </vector>
