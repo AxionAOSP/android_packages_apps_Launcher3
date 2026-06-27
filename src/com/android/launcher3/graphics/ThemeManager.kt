@@ -20,6 +20,7 @@ import android.content.Context
 import android.content.res.Resources
 import com.android.launcher3.LauncherPrefChangeListener
 import com.android.launcher3.LauncherPrefs
+import com.android.launcher3.LauncherPrefsExt
 import com.android.launcher3.LauncherPrefs.Companion.backedUpItem
 import com.android.launcher3.concurrent.annotations.Ui
 import com.android.launcher3.dagger.ApplicationContext
@@ -96,13 +97,32 @@ constructor(
         lifecycle.addCloseable(receiver)
 
         val prefListener = LauncherPrefChangeListener {
-            if (it == PREF_ICON_SHAPE.sharedPrefKey) verifyIconState()
+            when (it) {
+                PREF_ICON_SHAPE.sharedPrefKey -> verifyIconState()
+                LauncherPrefsExt.THEMED_ICONS_ENABLED.sharedPrefKey -> syncThemedIconState()
+            }
         }
-        prefs.addListener(prefListener, PREF_ICON_SHAPE)
+        prefs.addListener(prefListener, PREF_ICON_SHAPE, LauncherPrefsExt.THEMED_ICONS_ENABLED)
         lifecycle.addCloseable(themePreference.forEach(mainExecutor) { verifyIconState() })
+        syncThemedIconState()
         lifecycle.addCloseable {
-            prefs.removeListener(prefListener, PREF_ICON_SHAPE)
+            prefs.removeListener(
+                prefListener,
+                PREF_ICON_SHAPE,
+                LauncherPrefsExt.THEMED_ICONS_ENABLED,
+            )
             iconState.closeController()
+        }
+    }
+
+    private fun syncThemedIconState() {
+        if (!prefs.has(LauncherPrefsExt.THEMED_ICONS_ENABLED)) {
+            prefs.put(LauncherPrefsExt.THEMED_ICONS_ENABLED, isMonoThemeEnabled)
+            return
+        }
+        val enabled = prefs.get(LauncherPrefsExt.THEMED_ICONS_ENABLED)
+        if (enabled != isMonoThemeEnabled) {
+            isMonoThemeEnabled = enabled
         }
     }
 

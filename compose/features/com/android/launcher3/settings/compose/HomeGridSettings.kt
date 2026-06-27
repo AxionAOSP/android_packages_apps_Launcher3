@@ -162,7 +162,7 @@ private fun HomeGridPreferenceGroup(
 }
 
 @Composable
-private fun rememberHomePreviewState(): HomePreviewState {
+internal fun rememberHomePreviewState(): HomePreviewState {
     val context = LocalContext.current
     val configuration = LocalConfiguration.current
     val idp = remember(context) { LauncherAppState.getIDP(context) }
@@ -254,7 +254,7 @@ private fun resolveGridValue(value: Int, fallback: Int, defaultValue: Int, max: 
     )
 }
 
-private data class HomePreviewState(
+internal data class HomePreviewState(
     val isTablet: Boolean,
     val rows: Int,
     val columns: Int,
