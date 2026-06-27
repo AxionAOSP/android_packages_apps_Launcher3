@@ -88,6 +88,12 @@ object LauncherPrefsExt {
             true,
             EncryptionType.SECURE_SETTINGS,
         )
+    @JvmField val DISABLE_WALLPAPER_ZOOM =
+        backedUpItem(
+            "pref_disable_wallpaper_zoom",
+            true,
+            EncryptionType.SECURE_SETTINGS,
+        )
     @JvmField val WORKSPACE_SHOW_TOP_SHADOW =
         backedUpItem(
             "pref_workspace_show_top_shadow",
@@ -391,6 +397,7 @@ object LauncherPrefsExt {
         WORKSPACE_ICON_SCALE,
         WORKSPACE_LABEL_SCALE,
         WORKSPACE_WALLPAPER_SCROLLING,
+        DISABLE_WALLPAPER_ZOOM,
         WORKSPACE_SHOW_TOP_SHADOW,
         LAUNCHER_BLUR_ENABLED,
         LAUNCHER_BLUR_RADIUS,

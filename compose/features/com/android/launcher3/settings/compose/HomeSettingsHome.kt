@@ -74,6 +74,13 @@ internal fun HomeScreen(
         }
         item {
             BooleanPreference(
+                item = LauncherPrefsExt.DISABLE_WALLPAPER_ZOOM,
+                titleRes = R.string.pref_disable_wallpaper_zoom_title,
+                summaryRes = R.string.pref_disable_wallpaper_zoom_summary,
+            )
+        }
+        item {
+            BooleanPreference(
                 item = LauncherPrefsExt.WORKSPACE_SHOW_TOP_SHADOW,
                 titleRes = R.string.home_top_bar_shadow_title,
             )
