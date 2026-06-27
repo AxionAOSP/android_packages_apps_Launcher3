@@ -74,6 +74,8 @@
     <string name="home_icon_size_title">Icon size</string>
     <string name="home_label_size_title">Label size</string>
     <string name="home_wallpaper_scrolling_title">Wallpaper scrolling</string>
+    <string name="pref_disable_wallpaper_zoom_title">Disable wallpaper zoom</string>
+    <string name="pref_disable_wallpaper_zoom_summary">Prevent wallpaper from zooming when switching states</string>
     <string name="home_top_bar_shadow_title">Top bar shadow</string>
     <string name="pref_launcher_blur_category">Launcher blur</string>
     <string name="pref_launcher_blur_title">Enable launcher blur</string>
