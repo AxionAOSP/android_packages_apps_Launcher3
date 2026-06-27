@@ -140,7 +140,8 @@ public class BaseDepthController implements LauncherPrefChangeListener {
         mMaxBlurRadius = getConfiguredMaxBlurRadius();
         mLauncherPrefs.addListener(this,
                 LauncherPrefsExt.LAUNCHER_BLUR_ENABLED,
-                LauncherPrefsExt.LAUNCHER_BLUR_RADIUS);
+                LauncherPrefsExt.LAUNCHER_BLUR_RADIUS,
+                LauncherPrefsExt.DISABLE_WALLPAPER_ZOOM);
         mWallpaperManager = activity.getSystemService(WallpaperManager.class);
 
         MultiPropertyFactory<BaseDepthController> depthProperty =
@@ -154,7 +155,8 @@ public class BaseDepthController implements LauncherPrefChangeListener {
     public void destroy() {
         mLauncherPrefs.removeListener(this,
                 LauncherPrefsExt.LAUNCHER_BLUR_ENABLED,
-                LauncherPrefsExt.LAUNCHER_BLUR_RADIUS);
+                LauncherPrefsExt.LAUNCHER_BLUR_RADIUS,
+                LauncherPrefsExt.DISABLE_WALLPAPER_ZOOM);
     }
 
     @Override
@@ -162,6 +164,8 @@ public class BaseDepthController implements LauncherPrefChangeListener {
         if (LauncherPrefsExt.LAUNCHER_BLUR_ENABLED.getSharedPrefKey().equals(key)
                 || LauncherPrefsExt.LAUNCHER_BLUR_RADIUS.getSharedPrefKey().equals(key)) {
             updateMaxBlurRadius();
+        } else if (LauncherPrefsExt.DISABLE_WALLPAPER_ZOOM.getSharedPrefKey().equals(key)) {
+            applyDepthAndBlur(null, false, false);
         }
     }
 
@@ -241,7 +245,7 @@ public class BaseDepthController implements LauncherPrefChangeListener {
         float depth = mDepth;
         IBinder windowToken = mLauncher.getRootView().getWindowToken();
         if (windowToken != null) {
-            mWallpaperManager.setWallpaperZoomOut(windowToken, depth);
+            mWallpaperManager.setWallpaperZoomOut(windowToken, getWallpaperZoom(depth));
         }
 
         if (!BlurUtils.supportsBlursOnWindows()) {
@@ -305,6 +309,10 @@ public class BaseDepthController implements LauncherPrefChangeListener {
         }
 
         blurWorkspaceDepthTargets();
+    }
+
+    private float getWallpaperZoom(float depth) {
+        return LauncherPrefsExt.DISABLE_WALLPAPER_ZOOM.get(mLauncher) ? 0f : depth;
     }
 
     /**
