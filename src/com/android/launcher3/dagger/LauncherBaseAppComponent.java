@@ -41,6 +41,7 @@ import com.android.launcher3.graphics.theme.ThemePreference;
 import com.android.launcher3.homescreenfiles.HomeScreenFilesProvider;
 import com.android.launcher3.icons.IconChangeTracker;
 import com.android.launcher3.icons.LauncherIcons.IconPool;
+import com.android.launcher3.icons.customicon.IconOverrideRepository;
 import com.android.launcher3.logging.DumpManager;
 import com.android.launcher3.logging.StatsLogManager;
 import com.android.launcher3.model.GridSizeMigrationLogic;
@@ -160,6 +161,7 @@ public interface LauncherBaseAppComponent {
 
     /** Tracker for any app icon changes */
     IconChangeTracker getIconChangeTracker();
+    IconOverrideRepository getIconOverrideRepository();
 
     /** Builder for LauncherBaseAppComponent. */
     interface Builder {

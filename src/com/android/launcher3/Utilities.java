@@ -88,6 +88,7 @@ import com.android.launcher3.icons.CacheableShortcutInfo;
 import com.android.launcher3.icons.IconShape;
 import com.android.launcher3.icons.IconThemeController;
 import com.android.launcher3.icons.LauncherIcons;
+import com.android.launcher3.icons.customicon.IconPackPreferenceStore;
 import com.android.launcher3.model.data.ItemInfo;
 import com.android.launcher3.model.data.ItemInfoWithIcon;
 import com.android.launcher3.pm.ShortcutConfigActivityInfo;
@@ -732,6 +733,9 @@ public final class Utilities {
         if (mainIcon instanceof AdaptiveIconDrawable aid) {
             result = aid;
         } else {
+            if (IconPackPreferenceStore.hasAnyIconCustomization(context)) {
+                return null;
+            }
             // Wrap the main icon in AID
             try (LauncherIcons li = LauncherIcons.obtain(context)) {
                 result = li.wrapToAdaptiveIcon(mainIcon);

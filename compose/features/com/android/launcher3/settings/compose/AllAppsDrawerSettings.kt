@@ -262,6 +262,12 @@ internal fun AllAppsDrawerScreen(onNavigate: (String) -> Unit) {
         }
         item {
             PercentSliderPreference(
+                item = LauncherPrefsExt.ALL_APPS_DRAWER_ICON_SCALE,
+                titleRes = R.string.drawer_icon_size_title,
+            )
+        }
+        item {
+            PercentSliderPreference(
                 item = LauncherPrefsExt.ALL_APPS_DRAWER_ROW_SCALE,
                 titleRes = R.string.drawer_row_height_title,
             )

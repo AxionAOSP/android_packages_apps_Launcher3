@@ -52,7 +52,6 @@ internal fun HomeSettingsScreen(
 
     BackHandler(onBack = ::goBack)
     val scrollState = rememberScrollState()
-
     LaunchedEffect(route) {
         scrollState.scrollTo(0)
     }
@@ -79,11 +78,13 @@ internal fun HomeSettingsScreen(
                 SettingsContentColumn {
                     when (targetRoute) {
                         HomeSettingsRoutes.ROOT -> DashboardScreen(activity, navigator::navigateTo)
-                        HomeSettingsRoutes.GENERAL -> GeneralScreen(activity)
+                        HomeSettingsRoutes.GENERAL -> GeneralScreen(activity, navigator::navigateTo)
+                        HomeSettingsRoutes.ICONS -> IconSettingsScreen()
                         HomeSettingsRoutes.HOME -> HomeScreen(activity, navigator::navigateTo)
                         HomeSettingsRoutes.HOME_GRID -> HomeGridScreen()
                         HomeSettingsRoutes.OVERVIEW -> OverviewScreen()
-                        HomeSettingsRoutes.ALL_APPS -> AllAppsDrawerScreen(navigator::navigateTo)
+                        HomeSettingsRoutes.ALL_APPS ->
+                            AllAppsDrawerScreen(navigator::navigateTo)
                         HomeSettingsRoutes.ALL_APPS_FOLDERS -> AllAppsFoldersScreen()
                         HomeSettingsRoutes.ALL_APPS_SMART_DRAWER ->
                             AllAppsFoldersScreen(smartDrawer = true)

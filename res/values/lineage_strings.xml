@@ -45,6 +45,8 @@
     <string name="home_settings_about_role_development">Development</string>
     <string name="home_settings_layout_category">Layout</string>
     <string name="home_settings_icons_category">Icons</string>
+    <string name="icon_settings_title">Icon settings</string>
+    <string name="icon_settings_summary">Choose icon packs and themed icon sources</string>
     <string name="home_settings_labels_category">Labels</string>
     <string name="home_settings_style_category">Style</string>
     <string name="home_settings_gestures_category">Gestures</string>
@@ -285,4 +287,34 @@
     <string name="tapered_rect_shape_title">Tapered rect</string>
     <string name="teardrop_shape_title">Teardrop</string>
     <string name="rounded_rect_shape_title">Rounded rect</string>
+    <string name="icon_pack_title">Icon pack</string>
+    <string name="icon_pack_description">Use a third-party icon pack for home screen and app drawer icons</string>
+    <string name="icon_pack_system_default">System default</string>
+    <string name="icon_pack_system_icons">System icons</string>
+    <string name="icon_source_title">Source</string>
+    <string name="themed_icons_card_title">Themed icons</string>
+    <string name="themed_icons_description">Monochrome icons that adapt to your colors</string>
+    <string name="themed_icon_pack_title">Themed icon pack</string>
+    <string name="themed_icon_source_section_title">Themed icon source</string>
+    <string name="themed_icon_pack_description">Use monochrome icons from third-party packs when themed icons are enabled</string>
+    <string name="themed_icon_pack_none">None</string>
+    <string name="themed_icon_source_default">Default</string>
+    <string name="themed_icon_customization_title">Themed icon customization</string>
+    <string name="themed_icon_size_title">Icon size</string>
+    <string name="themed_icon_size_percent">%d%%</string>
+    <string name="themed_icon_background_source_title">Background source</string>
+    <string name="themed_icon_foreground_source_title">Foreground source</string>
+    <string name="themed_icon_color_preset_axicons" translatable="false">AxIcons</string>
+    <string name="themed_icon_color_preset_aosp" translatable="false">AOSP</string>
+    <string name="themed_icon_color_preset_custom">Custom</string>
+    <string name="themed_icon_background_title">Background icon color</string>
+    <string name="themed_icon_foreground_title">Foreground icon color</string>
+    <string name="custom_icon_shortcut_label">Customize icon</string>
+    <string name="custom_icon_picker_title">Choose icon pack</string>
+    <string name="custom_icon_no_packs">No icon packs installed</string>
+    <string name="custom_icon_reset">Reset icon</string>
+    <string name="custom_icon_back">Back</string>
+    <string name="custom_icon_search_hint">Search icons</string>
+    <string name="custom_icon_no_drawables">This icon pack does not expose selectable icons</string>
+    <string name="custom_icon_no_search_results">No matching icons</string>
 </resources>

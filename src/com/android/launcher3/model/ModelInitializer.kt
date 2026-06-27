@@ -191,6 +191,10 @@ constructor(
     /** Called when the icon for an app changes, outside of package event */
     @WorkerThread
     private fun onAppIconChanged(model: LauncherModel, event: PackageUserKey) {
+        if (event.mPackageName.isNullOrEmpty()) {
+            model.forceReload()
+            return
+        }
         // Update the icon for the calendar package
         Log.d(TAG, "onAppIconChanged: ${event.mPackageName}")
         model.enqueueModelUpdateTask(

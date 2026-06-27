@@ -20,6 +20,7 @@ import android.graphics.Color
 import androidx.core.graphics.ColorUtils
 import com.android.launcher3.LauncherPrefs.Companion.backedUpItem
 import com.android.launcher3.LauncherPrefs.Companion.nonRestorableItem
+import com.android.launcher3.icons.ThemedIconSettings
 import kotlin.math.roundToInt
 
 object LauncherPrefsExt {
@@ -136,6 +137,54 @@ object LauncherPrefsExt {
             "none",
             EncryptionType.SECURE_SETTINGS,
         )
+    @JvmField val ICON_PACK_PACKAGE =
+        backedUpItem("pref_icon_pack_package", "", EncryptionType.SECURE_SETTINGS)
+    @JvmField val THEMED_ICONS_ENABLED =
+        backedUpItem(
+            ThemedIconSettings.KEY_THEMED_ICONS,
+            false,
+            EncryptionType.SECURE_SETTINGS,
+        )
+    @JvmField val THEMED_ICON_PACK =
+        backedUpItem("themed_icon_pack", "", EncryptionType.SECURE_SETTINGS)
+    @JvmField val THEMED_ICON_SCALE =
+        backedUpItem(
+            ThemedIconSettings.KEY_ICON_SCALE,
+            ThemedIconSettings.DEFAULT_ICON_SCALE,
+            EncryptionType.SECURE_SETTINGS,
+        )
+    @JvmField val THEMED_ICON_BACKGROUND_COLOR =
+        backedUpItem(
+            ThemedIconSettings.KEY_BACKGROUND_COLOR,
+            0,
+            EncryptionType.SECURE_SETTINGS,
+        )
+    @JvmField val THEMED_ICON_BACKGROUND_COLOR_SOURCE =
+        backedUpItem(
+            ThemedIconSettings.KEY_BACKGROUND_COLOR_SOURCE,
+            ThemedIconSettings.COLOR_PRESET_AXICONS,
+            EncryptionType.SECURE_SETTINGS,
+        )
+    @JvmField val THEMED_ICON_FOREGROUND_COLOR =
+        backedUpItem(
+            ThemedIconSettings.KEY_FOREGROUND_COLOR,
+            0,
+            EncryptionType.SECURE_SETTINGS,
+        )
+    @JvmField val THEMED_ICON_FOREGROUND_COLOR_SOURCE =
+        backedUpItem(
+            ThemedIconSettings.KEY_FOREGROUND_COLOR_SOURCE,
+            ThemedIconSettings.COLOR_PRESET_AXICONS,
+            EncryptionType.SECURE_SETTINGS,
+        )
+    @JvmField val THEMED_ICON_COLOR_PRESET =
+        backedUpItem(
+            ThemedIconSettings.KEY_COLOR_PRESET,
+            ThemedIconSettings.COLOR_PRESET_AXICONS,
+            EncryptionType.SECURE_SETTINGS,
+        )
+    @JvmField val ICON_OVERRIDES =
+        backedUpItem("launcher_icon_overrides", "{}", EncryptionType.SECURE_SETTINGS)
     @JvmField val ALLAPPS_THEMED_ICONS =
         backedUpItem("pref_allapps_themed_icons", false, EncryptionType.SECURE_SETTINGS)
     @JvmField val DRAWER_OPEN_KEYBOARD =
@@ -352,6 +401,16 @@ object LauncherPrefsExt {
         HOTSEAT_SEARCH_BAR,
         HOTSEAT_SEARCH_PROVIDER,
         WORKSPACE_DOUBLE_TAP_ACTION,
+        ICON_PACK_PACKAGE,
+        THEMED_ICONS_ENABLED,
+        THEMED_ICON_PACK,
+        THEMED_ICON_SCALE,
+        THEMED_ICON_BACKGROUND_COLOR,
+        THEMED_ICON_BACKGROUND_COLOR_SOURCE,
+        THEMED_ICON_FOREGROUND_COLOR,
+        THEMED_ICON_FOREGROUND_COLOR_SOURCE,
+        THEMED_ICON_COLOR_PRESET,
+        ICON_OVERRIDES,
         ALLAPPS_THEMED_ICONS,
         DRAWER_OPEN_KEYBOARD,
         SHOW_DESKTOP_LABELS,

@@ -25,25 +25,16 @@ import com.android.launcher3.R
 import com.android.launcher3.settings.SettingsActivity
 
 @Composable
-internal fun GeneralScreen(activity: SettingsActivity) {
-    val iconPacks = rememberInstalledIconPacks()
+internal fun GeneralScreen(
+    activity: SettingsActivity,
+    onNavigate: (String) -> Unit,
+) {
     PreferenceGroup(title = stringResource(R.string.home_settings_icons_category)) {
         item {
-            IconPackPreference(iconPacks)
-        }
-        item {
-            ThemedIconPackPreference(iconPacks)
-        }
-        item {
-            PercentSliderPreference(
-                item = LauncherPrefsExt.WORKSPACE_ICON_SCALE,
-                titleRes = R.string.home_icon_size_title,
-            )
-        }
-        item {
-            PercentSliderPreference(
-                item = LauncherPrefsExt.ALL_APPS_DRAWER_ICON_SCALE,
-                titleRes = R.string.drawer_icon_size_title,
+            CategoryPreference(
+                titleRes = R.string.icon_settings_title,
+                summaryRes = R.string.icon_settings_summary,
+                onClick = { onNavigate(HomeSettingsRoutes.ICONS) },
             )
         }
     }
