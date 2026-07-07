@@ -27,11 +27,11 @@
     <!-- Displayed when user selects a shortcut for an app that is current not available [CHAR_LIMIT=none]-->
     <string name="activity_not_available">האפליקציה לא זמינה</string>
     <!-- SafeMode shortcut error string -->
-    <string name="safemode_shortcut_error">Downloaded app disabled in Safe mode</string>
+    <string name="safemode_shortcut_error">אפליקציה שהורדת הושבתה במצב בטוח</string>
     <!-- SafeMode widget error string -->
-    <string name="safemode_widget_error">Widgets disabled in Safe mode</string>
+    <string name="safemode_widget_error">הווידג׳טים מושבתים במצב בטוח</string>
     <!-- Message shown when a shortcut is not available. It could have been temporarily disabled and may start working again after some time. -->
-    <string name="shortcut_not_available">Shortcut isn\'t available</string>
+    <string name="shortcut_not_available">הקיצור לא זמין</string>
     <!-- User visible name for the launcher/home screen. [CHAR_LIMIT=30] -->
     <string name="home_screen">מסך הבית</string>
     <!-- Description for setting the current launcher as the default home app. [CHAR_LIMIT=none]-->
@@ -40,17 +40,17 @@
     <!-- Title for an option to enter split screen mode for a given app -->
     <string name="recent_task_option_split_screen">מסך מפוצל</string>
     <string name="recent_task_option_aspect_ratio">שינוי יחס תצוגה</string>
-    <string name="split_app_info_accessibility">App info for %1$s</string>
-    <string name="split_app_usage_settings">Usage settings for %1$s</string>
+    <string name="split_app_info_accessibility">מידע על האפליקציה %1$s</string>
+    <string name="split_app_usage_settings">הגדרות שימוש עבור %1$s</string>
     <string name="close_task_accessibility">סגירת %1$s</string>
     <!-- Title for an option to open a new window for a given app   -->
     <string name="new_window_option_taskbar">חלון חדש</string>
     <!-- Title for an option to manage open windows for a given app   -->
     <string name="manage_windows_option_taskbar">ניהול חלונות</string>
     <!-- Title for an option to close open windows for a given app   -->
-    <string name="close_app_taskbar">Close</string>
+    <string name="close_app_taskbar">סגירה</string>
     <!-- App pairs -->
-    <string name="save_app_pair">Save app pair</string>
+    <string name="save_app_pair">שמירת צמד האפליקציות</string>
     <!-- App pair default title -->
     <string name="app_pair_default_title"><xliff:g id="app1" example="Chrome">%1$s</xliff:g> | <xliff:g id="app2" example="YouTube">%2$s</xliff:g></string>
     <!-- Displayed when an app pair can't launch at this screen size [CHAR_LIMIT=none] -->
@@ -66,18 +66,18 @@
     <string name="long_accessible_way_to_add">Double-tap &amp; hold to move a widget or use custom actions.</string>
     <!-- Accessibility label for the icon button shown in the widget picker that opens a overflow
          menu with widgets viewing options. [CHAR_LIMIT=25] -->
-    <string name="widget_picker_widget_options_button_description">More options</string>
+    <string name="widget_picker_widget_options_button_description">אפשרויות נוספות</string>
     <!-- Label for the checkbox shown in the widget picker toggles whether to show all widgets or
      the default set. [CHAR_LIMIT=25] -->
-    <string name="widget_picker_show_all_widgets_menu_item_title">Show all widgets</string>
+    <string name="widget_picker_show_all_widgets_menu_item_title">הצגת כל הווידג׳טים</string>
     <!-- The format string for the dimensions of a widget in the drawer -->
     <!-- There is a special version of this format string for Farsi -->
     <string name="widget_dims_format">%1$d \u00d7 %2$d</string>
     <!-- Accessibility spoken message format for the dimensions of a widget in the drawer -->
-    <string name="widget_accessible_dims_format">%1$d wide by %2$d high</string>
+    <string name="widget_accessible_dims_format">רוחב %1$d וגובה %2$d</string>
     <!-- Spoken text for a screen reader. The placeholder text is the widget name.
          [CHAR_LIMIT=none]-->
-    <string name="widget_preview_context_description"><xliff:g id="widget_name" example="Calendar month view">%1$s</xliff:g> widget</string>
+    <string name="widget_preview_context_description">הווידג׳ט <xliff:g id="widget_name" example="Calendar month view">%1$s</xliff:g></string>
     <!-- Spoken text for a screen reader. The first placeholder text is the widget name, the
          remaining placeholders are for the widget dimensions.
          [CHAR_LIMIT=none]-->
@@ -87,7 +87,7 @@
          [CHAR LIMIT=NONE]  -->
     <string name="add_item_request_drag_hint">Touch &amp; hold the widget to move it around the home screen</string>
     <!-- Button label to automatically add a widget to home screen [CHAR_LIMIT=50] -->
-    <string name="add_to_home_screen">Add to home screen</string>
+    <string name="add_to_home_screen">הוספה למסך הבית</string>
     <!-- Accessibility spoken message announced when a widget gets added to the home screen using a
          button in a dialog. [CHAR_LIMIT=none] -->
     <string name="added_to_home_screen_accessibility_text"><xliff:g id="widget_name" example="Calendar month view">%1$s</xliff:g> widget added to home screen</string>
@@ -124,7 +124,7 @@
     <string name="widgets_and_shortcuts_count"><xliff:g id="widgets_count" example="5 widgets">%1$s</xliff:g>, <xliff:g id="shortcuts_count" example="1 shortcut">%2$s</xliff:g></string>
     <!-- Text for both the tile of a popup view, which shows all available widgets installed on
          the device, and the text of a button, which opens this popup view. [CHAR LIMIT=30]-->
-    <string name="widget_button_text">Widgets</string>
+    <string name="widget_button_text">ווידג׳טים</string>
     <!-- Search bar text shown in the popup view showing all available widgets installed on the
          device. [CHAR_LIMIT=50] -->
     <string name="widgets_full_sheet_search_bar_hint">חיפוש</string>
@@ -157,7 +157,7 @@
     <!-- Text on the button that enables users to expand the widgets list to see all widget apps besides the default ones displayed. [CHAR_LIMIT=15] -->
     <string name="widgets_list_expand_button_label">להציג הכול</string>
     <!-- Accessibility content description for the button that enables users to expand the widgets list to see all widget apps besides the default ones displayed. [CHAR_LIMIT=none]  -->
-    <string name="widgets_list_expand_button_content_description">Show all widgets</string>
+    <string name="widgets_list_expand_button_content_description">הצגת כל הווידג׳טים</string>
     <!-- Accessibility announcement to indicate to the users that widgets list is now expanded -->
     <string name="widgets_list_expanded">כל הווידג׳טים מוצגים</string>
     <!-- Text on an educational tip on widget informing users that they can change widget settings.
@@ -229,14 +229,14 @@
     <string name="custom_icon_picker_title">בחירת ערכת סמלים</string>
     <string name="custom_icon_no_packs">לא מותקנות ערכות סמלים</string>
     <string name="custom_icon_no_drawables">לא נמצאו סמלים בערכה זו</string>
-    <string name="custom_icon_reset">Reset to default</string>
+    <string name="custom_icon_reset">איפוס לברירת המחדל</string>
     <string name="custom_icon_back">חזרה</string>
     <string name="custom_icon_search_hint">חיפוש סמלים</string>
     <string name="custom_icon_no_search_results">אין סמלים שתואמים לחיפוש שלך</string>
     <string name="action_customize_icon">התאמה אישית של הסמלים</string>
     <string name="icon_pack_picker_title">התאמה אישית של הסמלים</string>
     <string name="icon_pack_picker_default">Default</string>
-    <string name="icon_pack_picker_reset">Reset to default</string>
+    <string name="icon_pack_picker_reset">איפוס לברירת המחדל</string>
     <string name="icon_pack_title">ערכת סמלים</string>
     <string name="themed_icons_card_title">סמלים מסוגננים</string>
     <string name="themed_icons_description">סמלים מונוכרומטיים שמשתנים לפי צבעי הנושא</string>
@@ -299,7 +299,7 @@
     <!-- The format string for Workspace page scroll text [CHAR_LIMIT=none] -->
     <string name="workspace_scroll_format">Home screen %1$d of %2$d</string>
     <!-- Description for a new page on homescreen[CHAR_LIMIT=none] -->
-    <string name="workspace_new_page">New home screen page</string>
+    <string name="workspace_new_page">עמוד חדש במסך הבית</string>
     <string name="app_running_state_description">Active</string>
     <string name="app_minimized_state_description">Minimized</string>
     <!-- Folder accessibility -->
@@ -310,7 +310,7 @@
     <!-- Instruction that clicking outside will commit folder rename -->
     <string name="folder_tap_to_rename">Tap to save rename</string>
     <!-- Indication that folder closed -->
-    <string name="folder_closed">Folder closed</string>
+    <string name="folder_closed">התיקיה נסגרה</string>
     <!-- Folder renamed format -->
     <string name="folder_renamed">Folder renamed to <xliff:g id="name" example="Games">%1$s</xliff:g></string>
     <!-- Folder name format when folder has less than 4 items -->
@@ -322,19 +322,19 @@
     <!-- Folder name format when folder has 4 or more items shown in preview and a notification dot -->
     <string name="folder_name_format_overflow_with_dot">תיקייה: <xliff:g id="name" example="Games">%1$s</xliff:g>, <xliff:g id="size" example="2">%2$d</xliff:g> פריטים או יותר, מכילה התראות</string>
     <!-- Accessibility announement for unnamed folders -->
-    <string name="unnamed_folder">Unnamed folder</string>
+    <string name="unnamed_folder">תיקייה ללא שם</string>
     <!-- App pair accessibility -->
     <!-- App pair name -->
-    <string name="app_pair_name_format">App pair: <xliff:g id="app1" example="Chrome">%1$s</xliff:g> and <xliff:g id="app2" example="YouTube">%2$s</xliff:g></string>
+    <string name="app_pair_name_format">צמד אפליקציות: <xliff:g id="app1" example="Chrome">%1$s</xliff:g> ו־<xliff:g id="app2" example="YouTube">%2$s</xliff:g></string>
     <!-- Strings for the customization mode -->
     <!-- Text for wallpaper change button [CHAR LIMIT=30]-->
-    <string name="styles_wallpaper_button_text">Wallpaper &amp; style</string>
+    <string name="styles_wallpaper_button_text">טפט וסגנון</string>
     <!-- Text for edit home screen button [CHAR LIMIT=30]-->
     <string name="edit_home_screen">עריכת מסך הבית</string>
     <!-- Text for settings button [CHAR LIMIT=20]-->
     <string name="settings_button_text">הגדרות מסך הבית</string>
     <!-- Message shown when a feature is disabled by the administrator -->
-    <string name="msg_disabled_by_admin">Disabled by your admin</string>
+    <string name="msg_disabled_by_admin">הושבת על ידי המנהל שלך</string>
     <!-- Strings for settings -->
     <!-- Title for Allow Rotation setting. [CHAR LIMIT=50] -->
     <string name="allow_rotation_title">לאפשר לסובב את כיוון מסך הבית</string>
@@ -353,7 +353,7 @@
     <!-- Title for the dialog shown when the app does not has notification access, explaining the requirement for notification access [CHAR LIMIT=50] -->
     <string name="title_missing_notification_access">נחוצה הרשאת גישה להתראות</string>
     <!-- Message explaining to the user that the notification access is required by the app for showing 'Notification dots' [CHAR LIMIT=NONE] -->
-    <string name="msg_missing_notification_access">To show Notification Dots, turn on app notifications for <xliff:g id="name" example="My App">%1$s</xliff:g></string>
+    <string name="msg_missing_notification_access">כדי להציג סימני התראות, יש להפעיל התראות מהאפליקציה <xliff:g id="name" example="My App">%1$s</xliff:g></string>
     <!-- Button text in the confirmation dialog which would take the user to the system settings [CHAR LIMIT=50] -->
     <string name="title_change_settings">לשינוי ההגדרות</string>
     <!-- Summary for Notification dots setting. Tapping this will link enable/disable notification dots feature on the home screen. [CHAR LIMIT=50] -->
@@ -374,22 +374,22 @@
     <string name="abandoned_promises_title">אפליקציה זו אינה מותקנת</string>
     <!-- Explanation for abandoned promise dialog. "The first 'it' refers to the shortcut icon.
     The second "it" refers to the app. -->
-    <string name="abandoned_promise_explanation">The app for this icon isn\'t installed.
-        You can remove it, or search for the app and install it manually.
+    <string name="abandoned_promise_explanation">האפליקציה של סמל זה אינה מותקנת.
+        ניתן להסיר אותו, או לחפש את האפליקציה ולהתקין אותה ידנית.
     </string>
     <!-- Title for an app which is being installed. -->
-    <string name="app_installing_title"><xliff:g id="name" example="Messenger">%1$s</xliff:g> installing, <xliff:g id="progress" example="30%">%2$s</xliff:g> complete</string>
+    <string name="app_installing_title">‏<xliff:g id="name" example="Messenger">%1$s</xliff:g> בהתקנה, <xliff:g id="progress" example="30%">%2$s</xliff:g> הושלמו</string>
     <!-- Title for an app which is being downloaded. -->
-    <string name="app_downloading_title"><xliff:g id="name" example="Messenger">%1$s</xliff:g> downloading, <xliff:g id="progress" example="30%">%2$s</xliff:g> complete</string>
+    <string name="app_downloading_title">‏<xliff:g id="name" example="Messenger">%1$s</xliff:g> בהורדה, <xliff:g id="progress" example="30%">%2$s</xliff:g> הושלמו</string>
     <!-- Title for an app whose download has been started. -->
-    <string name="app_waiting_download_title"><xliff:g id="name" example="Messenger">%1$s</xliff:g> waiting to install</string>
+    <string name="app_waiting_download_title">‏<xliff:g id="name" example="Messenger">%1$s</xliff:g> בהמתנה להתקנה</string>
     <!-- Title for an app which is archived. -->
-    <string name="app_archived_title"><xliff:g id="name" example="Messenger">%1$s</xliff:g> is archived.</string>
+    <string name="app_archived_title">‏<xliff:g id="name" example="Messenger">%1$s</xliff:g> בארכיון.</string>
     <!-- Accessibility Action for an app which is archived. -->
-    <string name="app_unarchiving_action">download and restore</string>
+    <string name="app_unarchiving_action">הורדה ושחזור</string>
     <!-- Title shown on the alert dialog prompting the user to update the application in market
      in order to re-enable the disabled shortcuts -->
-    <string name="dialog_update_title">App update required</string>
+    <string name="dialog_update_title">נדרש עדכון לאפליקציה</string>
     <!-- Message shown on the alert dialog prompting the user to update the application -->
     <string name="dialog_update_message">The app for this icon isn\'t updated. You can update manually to re-enable this shortcut, or remove the icon.</string>
     <!-- Message for the update button in the alert dialog, will bring the user to market -->
@@ -400,12 +400,12 @@
     <!-- Accessibility title for the popup containing a list of widgets. [CHAR_LIMIT=50] -->
     <string name="widgets_list">רשימת וידג׳טים</string>
     <!-- Text announced by accessibility when the popup containing the list of widgets is closed. [CHAR_LIMIT=100] -->
-    <string name="widgets_list_closed">Widgets list closed</string>
+    <string name="widgets_list_closed">רשימת הווידג׳טים נסגרה</string>
     <!-- Strings for accessibility actions -->
     <!-- Accessibility action to add an app to workspace. [CHAR_LIMIT=30] -->
-    <string name="action_add_to_workspace">Add to home screen</string>
+    <string name="action_add_to_workspace">הוספה למסך הבית</string>
     <!-- Accessibility action to move item to the current location. [CHAR_LIMIT=30] -->
-    <string name="action_move_here">Move item here</string>
+    <string name="action_move_here">העברת הפריט לכאן</string>
     <!-- Accessibility confirmation for item removed. [CHAR_LIMIT=50]-->
     <string name="item_removed">הפריט הוסר</string>
     <!-- Action shown in snackbar to undo item removal. [CHAR_LIMIT=20] -->
@@ -423,11 +423,11 @@
     <!-- Accessibility description to move item into an existing folder. -->
     <string name="add_to_folder">Add to folder: <xliff:g id="name" example="Games">%1$s</xliff:g></string>
     <!-- Accessibility description to move item into an existing folder containing an app. -->
-    <string name="add_to_folder_with_app">Add to folder with <xliff:g id="name" example="Messenger">%1$s</xliff:g></string>
+    <string name="add_to_folder_with_app">הוספה לתיקייה עם <xliff:g id="name" example="Messenger">%1$s</xliff:g></string>
     <!-- Accessibility confirmation for item added to folder. -->
     <string name="added_to_folder">הפריט נוסף לתיקייה</string>
     <!-- Accessibility description to create folder with another item. -->
-    <string name="create_folder_with">Create folder with: <xliff:g id="name" example="Game">%1$s</xliff:g></string>
+    <string name="create_folder_with">יצירת תיקייה עם: <xliff:g id="name" example="Game">%1$s</xliff:g></string>
     <!-- Accessibility confirmation for folder created. -->
     <string name="folder_created">התיקייה נוצרה</string>
     <!-- Accessibility action to move an item from folder to workspace. [CHAR_LIMIT=30] -->
@@ -439,9 +439,9 @@
     <!-- Accessibility action to increase height of a widget. [CHAR_LIMIT=30] -->
     <string name="action_increase_height">הגדלת גובה</string>
     <!-- Accessibility action to decrease width of a widget. [CHAR_LIMIT=30] -->
-    <string name="action_decrease_width">Decrease width</string>
+    <string name="action_decrease_width">הקטנת רוחב</string>
     <!-- Accessibility action to decrease height of a widget. [CHAR_LIMIT=30] -->
-    <string name="action_decrease_height">Decrease height</string>
+    <string name="action_decrease_height">הקטנת גובה</string>
     <!-- Accessibility confirmation for widget resize. -->
     <string name="widget_resized">Widget resized to width <xliff:g id="number" example="2">%1$s</xliff:g> height <xliff:g id="number" example="1">%2$s</xliff:g></string>
     <!-- Accessibility action to show quick actions menu for an icon. [CHAR_LIMIT=30] -->
@@ -449,47 +449,47 @@
     <!-- Accessibility name for the app widget resize frame. -->
     <string name="widget_frame_name">Widget Resize Frame for <xliff:g id="string" example="Clock">%1$s</xliff:g></string>
     <!-- Accessibility action to close the widget resize frame. [CHAR_LIMIT=30] -->
-    <string name="action_close">Close</string>
+    <string name="action_close">סגירה</string>
     <!-- Accessibility action to dismiss a notification in the shortcuts menu for an icon. [CHAR_LIMIT=30] -->
-    <string name="action_dismiss_notification">Dismiss</string>
+    <string name="action_dismiss_notification">התעלמות</string>
     <!-- Content description for arrow tip close button. [CHAR LIMIT=NONE] -->
-    <string name="accessibility_close">Close</string>
+    <string name="accessibility_close">סגירה</string>
     <!-- Label of tab to indicate personal apps -->
     <string name="all_apps_personal_tab">אישי</string>
     <!-- Label of tab to indicate work apps -->
     <string name="all_apps_work_tab">עבודה</string>
     <!-- Content description of personal tab to indicate personal apps -->
-    <string name="all_apps_personal_tab_content_description">Personal apps tab</string>
+    <string name="all_apps_personal_tab_content_description">לשונית האפליקציות האישיות</string>
     <!-- Content description of work tab to indicate work apps -->
-    <string name="all_apps_work_tab_content_description">Work apps tab</string>
+    <string name="all_apps_work_tab_content_description">לשונית האפליקציות לעבודה</string>
     <!-- This string is in the work profile tab when a user has All Apps open on their phone. This is a label for a toggle to turn the work profile on and off. "Work profile" means a separate profile on a user's phone that's specifically for their work apps and managed by their company. "Work" is used as an adjective.-->
-    <string name="work_profile_toggle_label">Work profile</string>
+    <string name="work_profile_toggle_label">פרופיל עבודה</string>
     <!--- User onboarding title for work profile apps -->
-    <string name="work_profile_edu_work_apps">Work apps are badged and visible to your IT admin</string>
+    <string name="work_profile_edu_work_apps">האפליקציות לעבודה מסומנות והן גלויות למנהל ה־IT שלך</string>
     <!-- Info icon unicode for alpha scroller when work edu card is present -->
     <!-- Intent for work profiler scheduler -->
     <!--- heading shown when user opens work apps tab while work apps are paused -->
-    <string name="work_apps_paused_title">Work apps are paused</string>
+    <string name="work_apps_paused_title">האפליקציות לעבודה מושהות</string>
     <!--- body shown when user opens work apps tab while work apps are paused.-->
-    <string name="work_apps_paused_info_body">You won’t receive notifications from your work apps</string>
+    <string name="work_apps_paused_info_body">לא יתקבלו התראות מהאפליקציות שלך לעבודה</string>
     <!--- body shown when user opens work apps tab while work apps are paused. -->
-    <string name="work_apps_paused_body">Your work apps can’t send you notifications, use your battery, or access your location</string>
+    <string name="work_apps_paused_body">האפליקציות שלך לעבודה לא יוכלו לשלוח לך התראות, לצרוך סוללה, או לגשת למיקומך</string>
     <!--- body shown when user opens work apps tab while work apps are paused and calls and texts are unavailable-->
-    <string name="work_apps_paused_telephony_unavailable_body">You won’t receive phone calls, text messages, or notifications from your work apps</string>
+    <string name="work_apps_paused_telephony_unavailable_body">לא יתקבלו שיחות טלפון, הודעות טקסט, או התראות מהאפליקציות שלך לעבודה</string>
     <!-- string shown in educational banner about work profile -->
-    <string name="work_apps_paused_edu_banner">Work apps are badged and visible to your IT admin</string>
+    <string name="work_apps_paused_edu_banner">האפליקציות לעבודה מסומנות והן גלויות למנהל ה־IT שלך</string>
     <!-- button string shown to dismiss work tab education -->
-    <string name="work_apps_paused_edu_accept">Got it</string>
+    <string name="work_apps_paused_edu_accept">הבנתי</string>
     <!-- button string shown pause work profile [CHAR LIMIT=28] -->
-    <string name="work_apps_pause_btn_text">Pause work apps</string>
+    <string name="work_apps_pause_btn_text">השהיית האפליקציות לעבודה</string>
     <!-- button string shown enable work profile -->
     <string name="work_apps_enable_btn_text">ביטול השהיה</string>
     <!-- Label for the work profile scheduler button in the work profile screen. [CHAR_LIMIT=40] -->
-    <string name="work_scheduler_button_content_description">Work apps schedule</string>
+    <string name="work_scheduler_button_content_description">לוח זמנים לאפליקציות לעבודה</string>
     <!-- A hint shown in launcher settings develop options filter box -->
-    <string name="developer_options_filter_hint">Filter</string>
+    <string name="developer_options_filter_hint">סינון</string>
     <!-- Failed action error message: e.g. Failed: Pause -->
-    <string name="remote_action_failed">Failed: <xliff:g id="what" example="Pause">%1$s</xliff:g></string>
+    <string name="remote_action_failed">הפעולה נכשלה: <xliff:g id="what" example="Pause">%1$s</xliff:g></string>
     <!-- Strings for Private Space -->
     <!-- Private space tile label -->
     <string name="private_space_label">מרחב פרטי</string>
@@ -505,7 +505,7 @@
     <string name="ps_container_lock_button_content_description">פרטי, נעול.</string>
     <string name="ps_container_lock_title">נעילה</string>
     <!-- Description for Private Space Transition button -->
-    <string name="ps_container_transition">Private Space Transitioning</string>
+    <string name="ps_container_transition">מעבר למרחב הפרטי</string>
     <!-- Title for Private Space install app icon -->
     <string name="ps_add_button_label">התקנה</string>
     <!-- Title for Private Space app icon to add files and more to Private Space -->
@@ -526,10 +526,10 @@
     <!-- Label for unlock button on private space veil -->
     <string name="ps_unlock_button">שחרור</string>
     <string name="ps_swipe_hint">יש להחליק למרחב הפרטי</string>
-    <string name="ps_swipe_hint_dismiss">Got it</string>
+    <string name="ps_swipe_hint_dismiss">הבנתי</string>
     <string name="folder_delete_title">למחוק את \"%1$s\"?</string>
     <string name="folder_delete_message">%1$d יישומים ישויכו בחזרה לקטגוריות ברירת המחדל שלהם.</string>
-    <string name="folder_delete_confirm">Delete</string>
+    <string name="folder_delete_confirm">מחיקה</string>
     <string name="folder_add_title">הוספה לתיקייה</string>
     <string name="folder_name_hint">שם תיקייה</string>
     <string name="folder_create_button">יצירה</string>
@@ -537,7 +537,7 @@
     <string name="folder_remove_button">הסרה מהתיקייה</string>
     <string name="folder_rename_title">שינוי שם התיקייה</string>
     <string name="folder_rename_confirm">שינוי שם</string>
-    <string name="folder_selected_description">Selected</string>
+    <string name="folder_selected_description">נבחר</string>
     <string name="action_cancel">ביטול</string>
     <string name="action_back">חזרה</string>
     <!-- Strings for icon shapes -->
@@ -550,5 +550,5 @@
     <!-- label for 7-sided cookie option shape in customization picker -->
     <string name="seven_sided_cookie_shape_title">עוגייה בעלת 7 דפנות</string>
     <!-- label for arch shape option in customization picker -->
-    <string name="arch_shape_title">Arch</string>
+    <string name="arch_shape_title">חץ</string>
 </resources>
