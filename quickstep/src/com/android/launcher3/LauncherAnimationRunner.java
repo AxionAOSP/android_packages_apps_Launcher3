@@ -107,7 +107,7 @@ public class LauncherAnimationRunner extends RemoteAnimationRunnerCompat {
     @UiThread
     private void finishExistingAnimation() {
         if (mAnimationResult != null) {
-            mAnimationResult.finish();
+            mAnimationResult.cancel();
             mAnimationResult = null;
         }
     }
@@ -141,6 +141,15 @@ public class LauncherAnimationRunner extends RemoteAnimationRunnerCompat {
         private AnimationResult(Runnable syncFinishRunnable, Runnable asyncFinishRunnable) {
             mSyncFinishRunnable = syncFinishRunnable;
             mASyncFinishRunnable = asyncFinishRunnable;
+        }
+
+        @UiThread
+        private void cancel() {
+            if (mAnimator != null && mAnimator.isStarted()) {
+                mAnimator.cancel();
+            } else {
+                finish();
+            }
         }
 
         @UiThread

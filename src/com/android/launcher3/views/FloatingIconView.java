@@ -96,8 +96,9 @@ public class FloatingIconView extends FrameLayout implements
 
     private View mBtvDrawable;
 
-    private ClipIconView mClipIconView;
+    private AxClipIconView mClipIconView;
     private @Nullable Drawable mBadge;
+    private float mAppOpenIconAlpha = 1f;
 
     // A view whose visibility should update in sync with mOriginalIcon.
     private @Nullable AsyncView mMatchVisibilityView;
@@ -129,7 +130,7 @@ public class FloatingIconView extends FrameLayout implements
         mLauncher = Launcher.getLauncher(context);
         mIsRtl = Utilities.isRtl(getResources());
         mListenerView = new ListenerView(context, attrs);
-        mClipIconView = new ClipIconView(context, attrs);
+        mClipIconView = new AxClipIconView(context, attrs);
         mBtvDrawable = new ImageView(context, attrs);
         addView(mBtvDrawable);
         addView(mClipIconView);
@@ -170,14 +171,53 @@ public class FloatingIconView extends FrameLayout implements
      */
     public void update(float alpha, RectF rect, float progress, float shapeProgressStart,
             float cornerRadius, boolean isOpening, int taskViewDrawAlpha) {
+        updateInternal(alpha, rect, progress, shapeProgressStart, cornerRadius, isOpening,
+                taskViewDrawAlpha, 1f);
+    }
+
+    void updateHomeGesture(float alpha, RectF rect, float progress, float shapeProgressStart,
+            float cornerRadius, float foregroundScale) {
+        mBtvDrawable.setAlpha(0f);
+        updateViewAlpha(alpha, 0);
+        mClipIconView.updateHomeGesture(rect, progress, shapeProgressStart, cornerRadius, this,
+                mLauncher.getDeviceProfile(), foregroundScale, alpha);
+        updateFadeOutView(progress);
+    }
+
+    void prepareHomeGesture(RectF rect, float shapeProgressStart, float cornerRadius,
+            float foregroundScale) {
+        updateViewsVisibility(false);
+        updateHomeGesture(0f, rect, 0f, shapeProgressStart, cornerRadius, foregroundScale);
+    }
+
+    void updateAppOpen(float alpha, RectF rect, float progress, float cornerRadius,
+            float foregroundScale, float foregroundAlpha) {
+        mAppOpenIconAlpha = foregroundAlpha;
+        updateBadgeAlpha();
+        updateViewAlpha(alpha, 0);
+        mClipIconView.updateAppOpen(rect, progress, cornerRadius, this,
+                mLauncher.getDeviceProfile(), foregroundScale, foregroundAlpha);
+        updateFadeOutView(progress);
+    }
+
+    private void updateInternal(float alpha, RectF rect, float progress, float shapeProgressStart,
+            float cornerRadius, boolean isOpening, int taskViewDrawAlpha, float foregroundScale) {
+        updateViewAlpha(alpha, taskViewDrawAlpha);
+        mClipIconView.update(rect, progress, shapeProgressStart, cornerRadius, isOpening, this,
+                mLauncher.getDeviceProfile(), taskViewDrawAlpha, foregroundScale,
+                1f);
+        updateFadeOutView(progress);
+    }
+
+    private void updateViewAlpha(float alpha, int taskViewDrawAlpha) {
         // The non-running task home animation has some very funky first few frames because this
         // FIV hasn't fully laid out. During those frames, hide this FIV and continue drawing the
         // TaskView directly while transforming it in the place of this FIV. However, if we fade
         // the TaskView at all, we need to display this FIV regardless.
         setAlpha(isLaidOut() || taskViewDrawAlpha < 255 ? alpha : 0f);
-        mClipIconView.update(rect, progress, shapeProgressStart, cornerRadius, isOpening, this,
-                mLauncher.getDeviceProfile(), taskViewDrawAlpha);
+    }
 
+    private void updateFadeOutView(float progress) {
         // The alpha goes from 1 to 0 when progress is 0 and 0.15 respectively.
         // This value minimizes view display time while still allowing the view to fade out.
         if (mFadeOutView != null) {
@@ -371,7 +411,11 @@ public class FloatingIconView extends FrameLayout implements
         final InsettableFrameLayout.LayoutParams lp =
                 (InsettableFrameLayout.LayoutParams) getLayoutParams();
         mBadge = badge;
+        updateBadgeAlpha();
         mClipIconView.setIcon(drawable, iconOffset, lp, mIsOpening, usingCustomShape, dp);
+        if (mIsOpening) {
+            mClipIconView.setForegroundAlpha(mAppOpenIconAlpha);
+        }
         if (drawable instanceof AdaptiveIconDrawable) {
             final int originalHeight = lp.height;
             final int originalWidth = lp.width;
@@ -398,6 +442,13 @@ public class FloatingIconView extends FrameLayout implements
 
         setOriginalDrawableBackground(btvIcon);
         invalidate();
+    }
+
+    private void updateBadgeAlpha() {
+        if (mBadge != null && mIsOpening) {
+            mBadge.setAlpha(
+                    Math.round(255f * Utilities.boundToRange(mAppOpenIconAlpha, 0f, 1f)));
+        }
     }
 
     /**
@@ -720,11 +771,16 @@ public class FloatingIconView extends FrameLayout implements
         mListenerView.setListener(null);
         mOriginalIcon = null;
         mOnTargetChangeRunnable = null;
+        if (mBadge != null) {
+            mBadge.setAlpha(255);
+        }
         mBadge = null;
+        mAppOpenIconAlpha = 1f;
         sRecycledFetchIconId = sFetchIconId;
         mIconLoadResult = null;
         mClipIconView.recycle();
         mBtvDrawable.setBackground(null);
+        mBtvDrawable.setAlpha(1f);
         mFastFinishRunnable = null;
         mIconOffsetY = 0;
         mMatchVisibilityView = null;

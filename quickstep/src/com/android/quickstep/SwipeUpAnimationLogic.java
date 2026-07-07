@@ -43,6 +43,7 @@ import com.android.launcher3.views.ClipIconView;
 import com.android.quickstep.RemoteTargetGluer.RemoteTargetHandle;
 import com.android.quickstep.orientation.RecentsPagedOrientationHandler;
 import com.android.quickstep.util.AnimatorControllerWithResistance;
+import com.android.quickstep.util.AxRectFSpringAnim;
 import com.android.quickstep.util.RectFSpringAnim;
 import com.android.quickstep.util.RectFSpringAnim.DefaultSpringConfig;
 import com.android.quickstep.util.RectFSpringAnim.TaskbarHotseatSpringConfig;
@@ -216,6 +217,10 @@ public abstract class SwipeUpAnimationLogic implements
             // No-op
         }
 
+        public boolean useAxAnimation() {
+            return false;
+        }
+
         public void setAnimation(RectFSpringAnim anim) { }
 
         public void update(RectF currentRect, float progress, float radius, int overlayAlpha) { }
@@ -314,19 +319,24 @@ public abstract class SwipeUpAnimationLogic implements
             HomeAnimationFactory homeAnimationFactory) {
         // TODO(b/195473584) compute separate end targets for different staged split
         final RectF targetRect = homeAnimationFactory.getWindowTargetRect();
+        final boolean useAxAnim = homeAnimationFactory.useAxAnimation();
         RectFSpringAnim[] out = new RectFSpringAnim[mRemoteTargetHandles.length];
         Matrix[] homeToWindowPositionMap = new Matrix[mRemoteTargetHandles.length];
         RectF[] startRects = updateProgressForStartRect(homeToWindowPositionMap, startProgress);
         for (int i = 0, mRemoteTargetHandlesLength = mRemoteTargetHandles.length;
                 i < mRemoteTargetHandlesLength; i++) {
             RemoteTargetHandle remoteHandle = mRemoteTargetHandles[i];
+            RemoteAnimationTarget firstAppTarget = AxSwipeUpAnimationLogicExt.getFirstAppTarget(
+                    remoteHandle.getTransformParams());
             out[i] = getWindowAnimationToHomeInternal(
                     homeAnimationFactory,
                     targetRect,
                     remoteHandle.getTransformParams(),
                     remoteHandle.getTaskViewSimulator(),
+                    firstAppTarget,
                     startRects[i],
-                    homeToWindowPositionMap[i]);
+                    homeToWindowPositionMap[i],
+                    useAxAnim);
         }
         return out;
     }
@@ -340,14 +350,16 @@ public abstract class SwipeUpAnimationLogic implements
             RectF targetRect,
             TransformParams transformParams,
             TaskViewSimulator taskViewSimulator,
+            @Nullable RemoteAnimationTarget firstAppTarget,
             RectF startRect,
-            Matrix homeToWindowPositionMap) {
+            Matrix homeToWindowPositionMap,
+            boolean useAxAnim) {
         RectF cropRectF = new RectF(taskViewSimulator.getCurrentCropRect());
         // Move the startRect to Launcher space as floatingIconView runs in Launcher
         Matrix windowToHomePositionMap = new Matrix();
 
         TaskView targetTaskView = homeAnimationFactory.getTargetTaskView();
-        if (targetTaskView == null) {
+        if (targetTaskView == null && !useAxAnim) {
             // If the start rect ends up overshooting too much to the left/right offscreen, bring it
             // back to fullscreen. This can happen when the recentsScroll value isn't aligned with
             // the pageScroll value for a given taskView, see b/228829958#comment12
@@ -372,11 +384,25 @@ public abstract class SwipeUpAnimationLogic implements
 
         boolean useTaskbarHotseatParams = mDp.isTaskbarPresent
                 && homeAnimationFactory.isInHotseat();
+        if (useAxAnim) {
+            AxRectFSpringAnim axAnim = AxSwipeUpAnimationLogicExt.createHomeGestureAnim(
+                    mContext, mDp, startRect, targetRect, useTaskbarHotseatParams);
+            homeAnimationFactory.setAnimation(axAnim);
+            float startVisibleRadius =
+                    AxSwipeUpAnimationLogicExt.getHomeRadius(mContext, taskViewSimulator);
+            AxHomeSpringAnimationRunner runner = new AxHomeSpringAnimationRunner(
+                    mDp, homeAnimationFactory, cropRectF, homeToWindowPositionMap,
+                    transformParams, startVisibleRadius, firstAppTarget,
+                    targetRect);
+            axAnim.addAnimatorListener(runner);
+            axAnim.addOnUpdateListener(runner);
+            return axAnim;
+        }
+
         RectFSpringAnim anim = new RectFSpringAnim(useTaskbarHotseatParams
                 ? new TaskbarHotseatSpringConfig(mContext, startRect, targetRect)
                 : new DefaultSpringConfig(mContext, mDp, startRect, targetRect));
         homeAnimationFactory.setAnimation(anim);
-
         SpringAnimationRunner runner = new SpringAnimationRunner(
                 homeAnimationFactory,
                 cropRectF,
