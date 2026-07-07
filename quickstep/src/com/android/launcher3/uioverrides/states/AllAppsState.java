@@ -35,7 +35,6 @@ import com.android.launcher3.R;
 import com.android.launcher3.util.Themes;
 import com.android.launcher3.views.ActivityContext;
 import com.android.launcher3.views.ScrimColors;
-import com.android.quickstep.util.BaseDepthController;
 import com.android.systemui.shared.system.InteractionJankMonitorWrapper;
 
 import java.util.concurrent.TimeUnit;
@@ -158,12 +157,12 @@ public class AllAppsState extends LauncherState {
     protected <DEVICE_PROFILE_CONTEXT extends Context & ActivityContext>
             float getDepthUnchecked(DEVICE_PROFILE_CONTEXT context) {
         if (context.getDeviceProfile().shouldShowAllAppsOnSheet()) {
-            return context.getDeviceProfile().getBottomSheetProfile().getBottomSheetDepth();
+            return 1f;
         } else {
             // The scrim fades in at approximately 50% of the swipe gesture.
             // The depth should be twice of what we want, in order to fully zoom out during the
             // visible portion of the animation.
-            return BaseDepthController.DEPTH_60_PERCENT;
+            return 1f;
         }
     }
 

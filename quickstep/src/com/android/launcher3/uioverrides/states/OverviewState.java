@@ -215,7 +215,7 @@ public class OverviewState extends LauncherState {
     protected float getDepthUnchecked(Context context) {
         // TODO(178661709): revert to always scaled
         return SystemProperties.getBoolean("ro.launcher.depth.overview", true)
-                ? BaseDepthController.DEPTH_70_PERCENT
+                ? BaseDepthController.DEPTH_85_PERCENT
                 : BaseDepthController.DEPTH_0_PERCENT;
     }
 

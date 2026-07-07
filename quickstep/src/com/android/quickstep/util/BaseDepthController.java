@@ -19,12 +19,10 @@ import static android.os.Trace.TRACE_TAG_APP;
 
 import static com.android.launcher3.Flags.enableOverviewBackgroundWallpaperBlur;
 
-import android.app.WallpaperManager;
 import android.graphics.RenderEffect;
 import android.graphics.Shader;
 import android.gui.EarlyWakeupInfo;
 import android.os.Binder;
-import android.os.IBinder;
 import android.os.Trace;
 import android.util.FloatProperty;
 import android.util.Log;
@@ -48,6 +46,7 @@ import com.android.launcher3.statemanager.StateManager;
 import com.android.launcher3.uioverrides.QuickstepLauncher;
 import com.android.launcher3.util.MultiPropertyFactory;
 import com.android.launcher3.util.MultiPropertyFactory.MultiProperty;
+import com.android.quickstep.SystemUiProxy;
 import com.android.systemui.shared.system.BlurUtils;
 
 /**
@@ -57,6 +56,7 @@ public class BaseDepthController implements LauncherPrefChangeListener {
     public static final float DEPTH_0_PERCENT = 0f;
     public static final float DEPTH_60_PERCENT = 0.6f;
     public static final float DEPTH_70_PERCENT = 0.7f;
+    public static final float DEPTH_85_PERCENT = 0.85f;
 
     private static final FloatProperty<BaseDepthController> DEPTH =
             new FloatProperty<BaseDepthController>("depth") {
@@ -88,7 +88,6 @@ public class BaseDepthController implements LauncherPrefChangeListener {
      * Blur radius when completely zoomed out, in pixels.
      */
     protected int mMaxBlurRadius;
-    protected final WallpaperManager mWallpaperManager;
     protected boolean mCrossWindowBlursEnabled;
 
     /**
@@ -97,6 +96,7 @@ public class BaseDepthController implements LauncherPrefChangeListener {
      * @see android.service.wallpaper.WallpaperService.Engine#onZoomChanged(float)
      */
     private float mDepth;
+    private float mWallpaperZoomOverride = Float.NaN;
 
     protected SurfaceControl mBaseSurface;
     protected SurfaceControl mBaseSurfaceOverride;
@@ -140,7 +140,6 @@ public class BaseDepthController implements LauncherPrefChangeListener {
                 LauncherPrefsExt.LAUNCHER_BLUR_ENABLED,
                 LauncherPrefsExt.LAUNCHER_BLUR_RADIUS_PCT,
                 LauncherPrefsExt.DISABLE_WALLPAPER_ZOOM);
-        mWallpaperManager = activity.getSystemService(WallpaperManager.class);
 
         MultiPropertyFactory<BaseDepthController> depthProperty =
                 new MultiPropertyFactory<>(this, DEPTH, DEPTH_INDEX_COUNT, Float::max);
@@ -155,6 +154,19 @@ public class BaseDepthController implements LauncherPrefChangeListener {
                 LauncherPrefsExt.LAUNCHER_BLUR_ENABLED,
                 LauncherPrefsExt.LAUNCHER_BLUR_RADIUS_PCT,
                 LauncherPrefsExt.DISABLE_WALLPAPER_ZOOM);
+        SystemUiProxy.INSTANCE.get(mLauncher).setLauncherDepthWallpaperZoom(0f);
+    }
+
+    public void setWallpaperZoomOverride(float zoom) {
+        float override = Float.isNaN(zoom)
+                ? Float.NaN : Utilities.boundToRange(zoom, 0f, 1f);
+        if (Float.compare(mWallpaperZoomOverride, override) == 0) {
+            return;
+        }
+        mWallpaperZoomOverride = override;
+        if (!Float.isNaN(override)) {
+            applyDepthAndBlur();
+        }
     }
 
     @Override
@@ -246,10 +258,8 @@ public class BaseDepthController implements LauncherPrefChangeListener {
     private void applyDepthAndBlur(@Nullable SurfaceTransaction surfaceTransaction,
             boolean applyImmediately, boolean skipSimilarBlur) {
         float depth = mDepth;
-        IBinder windowToken = mLauncher.getRootView().getWindowToken();
-        if (windowToken != null) {
-            mWallpaperManager.setWallpaperZoomOut(windowToken, getWallpaperZoom(depth));
-        }
+        SystemUiProxy.INSTANCE.get(mLauncher)
+                .setLauncherDepthWallpaperZoom(getWallpaperZoom(depth));
 
         if (!BlurUtils.supportsBlursOnWindows()) {
             return;
@@ -315,7 +325,10 @@ public class BaseDepthController implements LauncherPrefChangeListener {
     }
 
     private float getWallpaperZoom(float depth) {
-        return LauncherPrefsExt.DISABLE_WALLPAPER_ZOOM.get(mLauncher) ? 0f : depth;
+        if (LauncherPrefsExt.DISABLE_WALLPAPER_ZOOM.get(mLauncher)) {
+            return 0f;
+        }
+        return Float.isNaN(mWallpaperZoomOverride) ? depth : mWallpaperZoomOverride;
     }
 
     /**

@@ -120,6 +120,20 @@ public class ClipIconView extends View implements ClipPathView {
      */
     public void update(RectF rect, float progress, float shapeProgressStart, float cornerRadius,
             boolean isOpening, View container, DeviceProfile dp, int taskViewDrawAlpha) {
+        update(rect, progress, shapeProgressStart, cornerRadius, isOpening, container, dp,
+                taskViewDrawAlpha, 1f, 1f);
+    }
+
+    void update(RectF rect, float progress, float shapeProgressStart, float cornerRadius,
+            boolean isOpening, View container, DeviceProfile dp, int taskViewDrawAlpha,
+            float foregroundScale, float foregroundAlpha) {
+        updateInternal(rect, progress, shapeProgressStart, cornerRadius, isOpening, container, dp,
+                taskViewDrawAlpha, foregroundScale, foregroundAlpha);
+    }
+
+    private void updateInternal(RectF rect, float progress, float shapeProgressStart,
+            float cornerRadius, boolean isOpening, View container, DeviceProfile dp,
+            int taskViewDrawAlpha, float foregroundScale, float foregroundAlpha) {
         MarginLayoutParams lp = (MarginLayoutParams) container.getLayoutParams();
 
         float dX = mIsRtl
@@ -147,7 +161,8 @@ public class ClipIconView extends View implements ClipPathView {
             return;
         }
 
-        update(rect, progress, shapeProgressStart, cornerRadius, isOpening, scale, minSize, dp);
+        update(rect, progress, shapeProgressStart, cornerRadius, isOpening, scale, minSize, dp,
+                foregroundScale, foregroundAlpha);
 
         container.setPivotX(0);
         container.setPivotY(0);
@@ -158,7 +173,8 @@ public class ClipIconView extends View implements ClipPathView {
     }
 
     private void update(RectF rect, float progress, float shapeProgressStart, float cornerRadius,
-            boolean isOpening, float scale, float minSize, DeviceProfile dp) {
+            boolean isOpening, float scale, float minSize, DeviceProfile dp,
+            float foregroundScale, float foregroundAlpha) {
         // shapeRevealProgress = 1 when progress = shapeProgressStart + SHAPE_PROGRESS_DURATION
         float toMax = isOpening ? 1 / SHAPE_PROGRESS_DURATION : 1f;
 
@@ -173,7 +189,10 @@ public class ClipIconView extends View implements ClipPathView {
 
         mTaskCornerRadius = cornerRadius / scale;
         if (mIsAdaptiveIcon) {
-            if ((!isOpening || Flags.enableLauncherIconShapes())
+            if (shouldSkipShapeReveal()) {
+                endReveal();
+                setClipPath(null);
+            } else if ((!isOpening || Flags.enableLauncherIconShapes())
                     && progress >= shapeProgressStart) {
                 if (mRevealAnimator == null) {
                     ShapeDelegate shape;
@@ -199,18 +218,44 @@ public class ClipIconView extends View implements ClipPathView {
             setBackgroundDrawableBounds(drawableScale, dp.getDeviceProperties().isLandscape());
 
             // Center align foreground
-            int height = mFinalDrawableBounds.height();
-            int width = mFinalDrawableBounds.width();
-            int diffY = dp.getDeviceProperties().isLandscape() ? 0
-                    : (int) (((height * drawableScale) - height) / 2);
-            int diffX = dp.getDeviceProperties().isLandscape() ? (int) (((width * drawableScale) - width) / 2)
-                    : 0;
-            sTmpRect.set(mFinalDrawableBounds);
-            sTmpRect.offset(diffX, diffY);
+            updateForegroundBounds(sTmpRect, mFinalDrawableBounds, drawableScale,
+                    foregroundScale, dp.getDeviceProperties().isLandscape(), mIsRtl);
+            setForegroundAlpha(foregroundAlpha);
             mForeground.setBounds(sTmpRect);
         }
         invalidate();
         invalidateOutline();
+    }
+
+    void setForegroundAlpha(float alpha) {
+        int drawableAlpha = Math.round(255f * boundToRange(alpha, 0f, 1f));
+        if (mForeground != null) {
+            mForeground.setAlpha(drawableAlpha);
+        } else if (getBackground() != null) {
+            getBackground().setAlpha(drawableAlpha);
+        }
+    }
+
+    protected boolean shouldSkipShapeReveal() {
+        return false;
+    }
+
+    protected float getForegroundScale(float foregroundScale, float drawableScale) {
+        return foregroundScale;
+    }
+
+    protected void updateForegroundBounds(Rect outBounds, Rect finalDrawableBounds,
+            float drawableScale, float foregroundScale, boolean isLandscape, boolean isRtl) {
+        int height = finalDrawableBounds.height();
+        int width = finalDrawableBounds.width();
+        int diffY = isLandscape ? 0 : (int) (((height * drawableScale) - height) / 2);
+        int diffX = isLandscape ? (int) (((width * drawableScale) - width) / 2) : 0;
+        outBounds.set(finalDrawableBounds);
+        outBounds.offset(diffX, diffY);
+        float scaledForeground = getForegroundScale(foregroundScale, drawableScale);
+        if (scaledForeground != 1f) {
+            Utilities.scaleRectAboutCenter(outBounds, scaledForeground);
+        }
     }
 
     private void setBackgroundDrawableBounds(float scale, boolean isLandscape) {
@@ -309,6 +354,7 @@ public class ClipIconView extends View implements ClipPathView {
             });
             setClipToOutline(true);
         } else {
+            mIsFolderIcon = false;
             setBackground(drawable);
             setClipToOutline(false);
         }
@@ -357,6 +403,7 @@ public class ClipIconView extends View implements ClipPathView {
     void recycle() {
         setBackground(null);
         mIsAdaptiveIcon = false;
+        mIsFolderIcon = false;
         mForeground = null;
         mBackground = null;
         mClipPath = null;

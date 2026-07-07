@@ -198,9 +198,24 @@ public class FloatingWidgetView extends FrameLayout implements AnimatorListener,
      */
     public void update(RectF backgroundPosition, float floatingWidgetAlpha, float foregroundAlpha,
             float fallbackBackgroundAlpha, float cornerRadiusProgress) {
+        update(backgroundPosition, floatingWidgetAlpha, foregroundAlpha, fallbackBackgroundAlpha,
+                cornerRadiusProgress, true, 1f);
+    }
+
+    public void updateForHomeGesture(RectF backgroundPosition, float floatingWidgetAlpha,
+            float foregroundAlpha, float fallbackBackgroundAlpha, float cornerRadiusProgress,
+            float windowAlpha) {
+        update(backgroundPosition, floatingWidgetAlpha, foregroundAlpha, fallbackBackgroundAlpha,
+                cornerRadiusProgress, false, windowAlpha);
+    }
+
+    private void update(RectF backgroundPosition, float floatingWidgetAlpha, float foregroundAlpha,
+            float fallbackBackgroundAlpha, float cornerRadiusProgress, boolean isForward,
+            float windowAlpha) {
         if (isUninitialized() || mAppTargetIsTranslucent) return;
         setAlpha(floatingWidgetAlpha);
-        mBackgroundView.update(cornerRadiusProgress, fallbackBackgroundAlpha);
+        mBackgroundView.update(isForward, cornerRadiusProgress, fallbackBackgroundAlpha,
+                windowAlpha);
         mAppWidgetView.setAlpha(foregroundAlpha);
         mBackgroundPosition = backgroundPosition;
         positionViews();

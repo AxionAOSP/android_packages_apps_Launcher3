@@ -112,12 +112,20 @@ final class FloatingWidgetBackgroundView extends View {
 
     /** Update the animated properties of the drawables. */
     void update(float cornerRadiusProgress, float fallbackAlpha) {
+        update(true, cornerRadiusProgress, fallbackAlpha, 1f);
+    }
+
+    void update(boolean isForward, float cornerRadiusProgress, float fallbackAlpha,
+            float windowAlpha) {
         if (isUninitialized()) return;
         mOutlineRadius = mInitialOutlineRadius + (mFinalRadius - mInitialOutlineRadius)
                 * cornerRadiusProgress;
         mForegroundProperties.updateDrawable(mFinalRadius, cornerRadiusProgress);
         mBackgroundProperties.updateDrawable(mFinalRadius, cornerRadiusProgress);
-        setAlpha(mIsUsingFallback ? fallbackAlpha : 1f);
+        if (!mIsUsingFallback) {
+            fallbackAlpha = isForward ? 1f : 1f - windowAlpha;
+        }
+        setAlpha(fallbackAlpha);
     }
 
     /** Restores the drawables to the source view. */
