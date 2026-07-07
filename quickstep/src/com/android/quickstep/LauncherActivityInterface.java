@@ -15,13 +15,11 @@
  */
 package com.android.quickstep;
 
-import static com.android.app.animation.Interpolators.LINEAR;
 import static com.android.launcher3.LauncherState.ALL_APPS;
 import static com.android.launcher3.LauncherState.BACKGROUND_APP;
 import static com.android.launcher3.LauncherState.NORMAL;
 import static com.android.launcher3.LauncherState.OVERVIEW;
 import static com.android.launcher3.util.Executors.MAIN_EXECUTOR;
-import static com.android.launcher3.util.MultiPropertyFactory.MULTI_PROPERTY_VALUE;
 
 import android.animation.Animator;
 import android.animation.AnimatorSet;
@@ -35,10 +33,8 @@ import androidx.annotation.UiThread;
 
 import com.android.launcher3.DeviceProfile;
 import com.android.launcher3.Launcher;
-import com.android.launcher3.LauncherAnimUtils;
 import com.android.launcher3.LauncherInitListener;
 import com.android.launcher3.LauncherState;
-import com.android.launcher3.anim.PendingAnimation;
 import com.android.launcher3.statehandlers.DepthController;
 import com.android.launcher3.statemanager.StateManager;
 import com.android.launcher3.taskbar.TaskbarInteractor;
@@ -111,21 +107,7 @@ public final class LauncherActivityInterface extends
     public AnimationFactory prepareRecentsUI(
             boolean activityVisible, Consumer<AnimatorControllerWithResistance> callback) {
         notifyRecentsOfOrientation();
-        DefaultAnimationFactory factory = new DefaultAnimationFactory(callback) {
-            @Override
-            protected void createBackgroundToOverviewAnim(QuickstepLauncher activity,
-                    PendingAnimation pa) {
-                super.createBackgroundToOverviewAnim(activity, pa);
-
-                // Animate the blur and wallpaper zoom
-                float fromDepthRatio = BACKGROUND_APP.getDepth(activity);
-                float toDepthRatio = OVERVIEW.getDepth(activity);
-                pa.addFloat(getDepthController().stateDepth,
-                        new LauncherAnimUtils.ClampedProperty<>(
-                                MULTI_PROPERTY_VALUE, fromDepthRatio, toDepthRatio),
-                        fromDepthRatio, toDepthRatio, LINEAR);
-            }
-        };
+        DefaultAnimationFactory factory = new DefaultAnimationFactory(callback);
 
         QuickstepLauncher launcher = factory.initBackgroundStateUI();
         // Since all apps is not visible, we can safely reset the scroll position.

@@ -206,6 +206,8 @@ class SystemUiProxy @Inject constructor(
     // Used to dedupe calls to SystemUI
     private var lastLauncherKeepClearAreaHeight = 0
     private var lastLauncherKeepClearAreaHeightVisible = false
+    private var lastLauncherWallpaperZoom = 0f
+    private var lastLauncherDepthWallpaperZoom = 0f
 
     private val asyncHandler =
         Handler(lightweightBackgroundExecutor.looper) { handleMessageAsync(it) }
@@ -356,6 +358,8 @@ class SystemUiProxy @Inject constructor(
         setBackToLauncherCallback(backToLauncherCallback, backToLauncherRunner)
         setUnfoldAnimationListener(unfoldAnimationListener)
         setDesktopTaskListener(desktopTaskListener)
+        setLauncherWallpaperZoom(lastLauncherWallpaperZoom)
+        setLauncherDepthWallpaperZoom(lastLauncherDepthWallpaperZoom)
         setAssistantOverridesRequested(
             ContextualSearchInvoker(context).getSysUiAssistOverrideInvocationTypes()
         )
@@ -379,8 +383,11 @@ class SystemUiProxy @Inject constructor(
      * Clear the proxy to release held resources and turn the majority of its operations into no-ops
      */
     @MainThread
-    fun clearProxy() =
+    fun clearProxy() {
+        setLauncherWallpaperZoom(0f)
+        setLauncherDepthWallpaperZoom(0f)
         setProxy(null, null, null, null, null, null, null, null, null, null, null, null, null)
+    }
 
     /** Adds a callback to be notified whenever the active state changes */
     fun addOnStateChangeListener(callback: Runnable) = stateChangeCallbacks.add(callback)
@@ -461,6 +468,22 @@ class SystemUiProxy @Inject constructor(
         executeWithErrorLog({ "Failed call setOverrideHomeButtonLongPress" }) {
             systemUiProxy?.setOverrideHomeButtonLongPress(duration, slopMultiplier, haptic)
         }
+
+    fun setLauncherWallpaperZoom(zoomOut: Float) {
+        lastLauncherWallpaperZoom = zoomOut
+        executeWithErrorLog({ "Failed call setLauncherWallpaperZoom with arg: $zoomOut" }) {
+            systemUiProxy?.setLauncherWallpaperZoom(zoomOut)
+        }
+    }
+
+    fun getLauncherWallpaperZoom(): Float = lastLauncherWallpaperZoom
+
+    fun setLauncherDepthWallpaperZoom(zoomOut: Float) {
+        lastLauncherDepthWallpaperZoom = zoomOut
+        executeWithErrorLog({ "Failed call setLauncherDepthWallpaperZoom with arg: $zoomOut" }) {
+            systemUiProxy?.setLauncherDepthWallpaperZoom(zoomOut)
+        }
+    }
 
     fun notifyAccessibilityButtonClicked(displayId: Int) =
         executeWithErrorLog({ "Failed call notifyAccessibilityButtonClicked" }) {

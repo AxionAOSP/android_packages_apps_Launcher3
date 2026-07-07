@@ -99,6 +99,7 @@ public class TaskViewSimulator implements TransformParams.BuilderProxy {
 
     // TaskView properties
     private final FullscreenDrawParams mCurrentFullscreenParams;
+    private final AxTaskViewSimulatorExt mAxExt;
     public final AnimatedFloat taskPrimaryTranslation = new AnimatedFloat();
     public final AnimatedFloat taskSecondaryTranslation = new AnimatedFloat();
     public final AnimatedFloat taskGridTranslationX = new AnimatedFloat();
@@ -143,6 +144,7 @@ public class TaskViewSimulator implements TransformParams.BuilderProxy {
         mCurrentFullscreenParams = mIsDesktopTask
                 ? new DesktopFullscreenDrawParams(context)
                 : new FullscreenDrawParams(context);
+        mAxExt = new AxTaskViewSimulatorExt(context, isDesktop);
         mOrientationStateId = mOrientationState.getStateId();
         Resources resources = context.getResources();
         mIsRecentsRtl = mOrientationState.getOrientationHandler().getRecentsRtlSetting(resources);
@@ -250,6 +252,7 @@ public class TaskViewSimulator implements TransformParams.BuilderProxy {
      */
     public void setPreview(RemoteAnimationTarget runningTarget, SplitBounds splitInfo) {
         mSplitBounds = splitInfo;
+        mAxExt.setSplit(splitInfo != null);
         if (mSplitBounds == null) {
             setPreviewBounds(
                     runningTarget.startBounds != null
@@ -520,6 +523,13 @@ public class TaskViewSimulator implements TransformParams.BuilderProxy {
         }
 
         params.setProgress(1f - fullScreenProgress);
+        mAxExt.traceApply(
+                mMatrix,
+                mTmpCropRect,
+                fullScreenProgress,
+                params.getTargetAlpha(),
+                getCurrentCornerRadius(),
+                surfaceTransaction != null);
         params.applySurfaceParams(surfaceTransaction == null
                 ? params.createSurfaceParams(this) : surfaceTransaction);
 
@@ -583,7 +593,11 @@ public class TaskViewSimulator implements TransformParams.BuilderProxy {
      * TaskView
      */
     public float getCurrentCornerRadius() {
-        float visibleRadius = mCurrentFullscreenParams.getCurrentCornerRadius();
+        float visibleRadius = mAxExt.getRadius(
+                mCurrentFullscreenParams.getCurrentCornerRadius(),
+                fullScreenProgress.value,
+                recentsViewScale.value,
+                carouselScale.value);
         mTempPoint[0] = visibleRadius;
         mTempPoint[1] = 0;
         mInversePositionMatrix.mapVectors(mTempPoint);
@@ -596,5 +610,9 @@ public class TaskViewSimulator implements TransformParams.BuilderProxy {
 
         // Ideally we should use square-root. This is an optimization as one of the dimension is 0.
         return Math.max(Math.abs(mTempPoint[0]), Math.abs(mTempPoint[1]));
+    }
+
+    public void setAxGestureRadius(boolean enabled) {
+        mAxExt.setEnabled(enabled);
     }
 }

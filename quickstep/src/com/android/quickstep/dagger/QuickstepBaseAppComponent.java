@@ -19,6 +19,7 @@ package com.android.quickstep.dagger;
 import com.android.app.displaylib.DisplayRepository;
 import com.android.app.displaylib.DisplaysWithDecorationsRepositoryCompat;
 import com.android.app.displaylib.PerDisplayRepository;
+import com.android.launcher3.AxHomePackageObserver;
 import com.android.launcher3.LifecycleTracker;
 import com.android.launcher3.dagger.LauncherAppComponent;
 import com.android.launcher3.dagger.LauncherBaseAppComponent;
@@ -64,6 +65,8 @@ import java.util.Set;
  * See {@link LauncherAppComponent} for the one actually used.
  */
 public interface QuickstepBaseAppComponent extends LauncherBaseAppComponent {
+
+    AxHomePackageObserver getAxHomePackageObserver();
 
     WellbeingModel getWellbeingModel();
 
