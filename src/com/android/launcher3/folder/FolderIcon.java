@@ -31,7 +31,6 @@ import android.animation.ObjectAnimator;
 import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Paint;
-import android.graphics.Path;
 import android.graphics.Rect;
 import android.graphics.RectF;
 import android.graphics.drawable.Drawable;
@@ -71,6 +70,7 @@ import com.android.launcher3.dragndrop.BaseItemDragListener;
 import com.android.launcher3.dragndrop.DragLayer;
 import com.android.launcher3.dragndrop.DragView;
 import com.android.launcher3.dragndrop.DraggableView;
+import com.android.launcher3.graphics.PathWrapper;
 import com.android.launcher3.graphics.ThemeManager;
 import com.android.launcher3.icons.DotRenderer;
 import com.android.launcher3.logger.LauncherAtom.FromState;
@@ -642,13 +642,13 @@ public class FolderIcon extends FrameLayout implements FloatingIconViewCompanion
     }
 
     private boolean drawBackdropBlur(Canvas canvas, int alpha) {
-        Path clipPath = mBackground.getClipPath();
-        clipPath.computeBounds(mTempBlurBounds, true);
+        PathWrapper clipPath = mBackground.getClipPath();
+        mTempBlurBounds.set(clipPath.getBounds());
         return mBlurBackgroundRenderer.draw(
                 canvas,
                 mTempBlurBounds,
-                clipPath,
-                mBackground.getScaledRadius(),
+                clipPath.getPath(),
+                clipPath.getCornerRadius(),
                 mFolderBlurOverlayColor,
                 alpha);
     }

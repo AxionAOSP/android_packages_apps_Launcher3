@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019 The Android Open Source Project
+ * Copyright 2025-2026 AxionOS
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,16 +13,26 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.android.launcher3.views;
 
-import android.view.View;
+package com.android.launcher3.graphics
 
-import com.android.launcher3.graphics.PathWrapper;
+import android.graphics.Path
+import android.graphics.RectF
 
-/**
- * Alternative to using {@link View#getClipToOutline()} as it only works with derivatives of
- * rounded rect.
- */
-public interface ClipPathView {
-    void setClipPath(PathWrapper clipPath);
+class PathWrapper {
+    val path: Path = Path()
+    val bounds: RectF = RectF()
+    var cornerRadius = 0f
+
+    fun setBounds(left: Float, top: Float, right: Float, bottom: Float) {
+        bounds.set(left, top, right, bottom)
+    }
+
+    fun estimateBoundsFromPath() {
+        path.computeBounds(bounds, true)
+    }
+
+    fun reset() {
+        path.reset()
+    }
 }
