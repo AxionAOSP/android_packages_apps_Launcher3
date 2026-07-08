@@ -104,19 +104,21 @@ public class DeepShortcutView extends FrameLayout implements BubbleTextHolder {
      * Updates the text background to match the shape of this background (when applicable).
      */
     private void tryUpdateTextBackground() {
-        if (!(getBackground() instanceof GradientDrawable) || mBubbleText == null) {
+        if (mBubbleText == null) {
             return;
         }
-        GradientDrawable background = (GradientDrawable) getBackground();
+        if (!(getBackground() instanceof GradientDrawable surfaceColor)) {
+            return;
+        }
 
         int color = Themes.getAttrColor(getContext(), android.R.attr.colorControlHighlight);
         GradientDrawable backgroundMask = new GradientDrawable();
         backgroundMask.setColor(color);
         backgroundMask.setShape(GradientDrawable.RECTANGLE);
-        if (background.getCornerRadii() != null) {
-            backgroundMask.setCornerRadii(background.getCornerRadii());
+        if (surfaceColor.getCornerRadii() != null) {
+            backgroundMask.setCornerRadii(surfaceColor.getCornerRadii());
         } else {
-            backgroundMask.setCornerRadius(background.getCornerRadius());
+            backgroundMask.setCornerRadius(surfaceColor.getCornerRadius());
         }
 
         RippleDrawable drawable = new RippleDrawable(ColorStateList.valueOf(color),
