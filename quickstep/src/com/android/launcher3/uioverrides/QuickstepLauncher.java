@@ -309,6 +309,7 @@ public class QuickstepLauncher extends Launcher implements RecentsViewContainer,
     private final OverviewChangeListener mOverviewChangeListener = this::onOverviewTargetChanged;
 
     private boolean mOverviewBlurEnabled;
+    private boolean mFolderBlurEnabled;
 
     private final TaskViewRecentsTouchContext mTaskViewRecentsTouchContext =
             new TaskViewRecentsTouchContext() {
@@ -339,7 +340,10 @@ public class QuickstepLauncher extends Launcher implements RecentsViewContainer,
         getAppWidgetHolder().setOnViewCreationCallback(new QuickstepInteractionHandler(this));
         mDepthController = new DepthController(this);
         mOverviewBlurEnabled = isOverviewBackgroundBlurEnabled();
+        mFolderBlurEnabled = isCrossWindowBlurEnabled();
         getTheme().applyStyle(getOverviewBlurStyleResId(), true);
+        getTheme().applyStyle(mFolderBlurEnabled ? R.style.FolderBlurStyle
+                : R.style.FolderBlurFallbackStyle, true);
         super.setupViews();
         mDepthController.setSurfaceTransactionApplier(getRootView());
 
@@ -512,16 +516,21 @@ public class QuickstepLauncher extends Launcher implements RecentsViewContainer,
 
     @Override
     public boolean isOverviewBackgroundBlurEnabled() {
-        return mDepthController != null && mDepthController.isCrossWindowBlursEnabled()
-                && enableOverviewBackgroundWallpaperBlur();
+        return isCrossWindowBlurEnabled() && enableOverviewBackgroundWallpaperBlur();
+    }
+
+    @Override
+    public boolean isCrossWindowBlurEnabled() {
+        return mDepthController != null && mDepthController.isCrossWindowBlursEnabled();
     }
 
     /** Apply the blur or blur fallback style to the current theme. */
     public void updateBlurStyle() {
-        if (enableOverviewBackgroundWallpaperBlur()) {
-            if (isOverviewBackgroundBlurEnabled() != mOverviewBlurEnabled) {
-                mWallpaperThemeManager.recreateToUpdateTheme();
-            }
+        boolean shouldRecreate = enableOverviewBackgroundWallpaperBlur()
+                && isOverviewBackgroundBlurEnabled() != mOverviewBlurEnabled;
+        shouldRecreate |= isCrossWindowBlurEnabled() != mFolderBlurEnabled;
+        if (shouldRecreate) {
+            mWallpaperThemeManager.recreateToUpdateTheme();
         } else if (Flags.allAppsBlur()) {
             // For all apps, we only need to update the scrim, which draws the panel. But if the
             // activity was recreated above, this is unnecessary.

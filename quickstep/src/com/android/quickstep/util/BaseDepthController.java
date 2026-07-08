@@ -133,10 +133,8 @@ public class BaseDepthController implements LauncherPrefChangeListener {
     public BaseDepthController(QuickstepLauncher activity) {
         mLauncher = activity;
         mLauncherPrefs = LauncherPrefs.get(activity);
-        if (Flags.allAppsBlur() || enableOverviewBackgroundWallpaperBlur()) {
-            mCrossWindowBlursEnabled =
-                    CrossWindowBlurListeners.getInstance().isCrossWindowBlurEnabled();
-        }
+        mCrossWindowBlursEnabled =
+                CrossWindowBlurListeners.getInstance().isCrossWindowBlurEnabled();
         mMaxBlurRadius = getConfiguredMaxBlurRadius();
         mLauncherPrefs.addListener(this,
                 LauncherPrefsExt.LAUNCHER_BLUR_ENABLED,

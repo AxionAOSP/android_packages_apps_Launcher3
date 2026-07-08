@@ -229,6 +229,10 @@ public interface ActivityContext extends SavedStateRegistryOwner {
         return false;
     }
 
+    default boolean isCrossWindowBlurEnabled() {
+        return false;
+    }
+
     /** @return the resource id of the style to apply for the current blur state in All Apps. */
     default int getAllAppsBlurStyleResId() {
         if (!Flags.allAppsBlur()) {

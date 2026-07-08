@@ -594,7 +594,11 @@ public class FolderIcon extends FrameLayout implements FloatingIconViewCompanion
     }
 
     public boolean usesBlurredBackground() {
-        return mBlurBackgroundRenderer.isCrossWindowBlurActive();
+        return shouldUseFolderIconBlur() && mBlurBackgroundRenderer.isCrossWindowBlurActive();
+    }
+
+    private boolean shouldUseFolderIconBlur() {
+        return !AxFolderExt.isAllAppsFolder(mInfo);
     }
 
     public PreviewItemManager getPreviewItemManager() {
@@ -609,8 +613,6 @@ public class FolderIcon extends FrameLayout implements FloatingIconViewCompanion
         if (!mBackgroundIsVisible) {
             if (usesBlurredBackground) {
                 drawBackdropBlur(canvas);
-            } else {
-                drawBackdropBlur(canvas, 0);
             }
             return;
         }
@@ -618,11 +620,12 @@ public class FolderIcon extends FrameLayout implements FloatingIconViewCompanion
         mPreviewItemManager.recomputePreviewDrawingParams();
 
         if (!mBackground.drawingDelegated()) {
-            drawBackdropBlur(canvas);
-            if (!usesBlurredBackground) {
+            if (usesBlurredBackground) {
+                drawBackdropBlur(canvas);
+            } else {
                 mBackground.drawBackground(canvas);
             }
-        } else {
+        } else if (usesBlurredBackground) {
             drawBackdropBlur(canvas, 0);
         }
 
@@ -713,19 +716,25 @@ public class FolderIcon extends FrameLayout implements FloatingIconViewCompanion
     @Override
     protected void onAttachedToWindow() {
         super.onAttachedToWindow();
-        mBlurBackgroundRenderer.onAttachedToWindow();
+        if (shouldUseFolderIconBlur()) {
+            mBlurBackgroundRenderer.onAttachedToWindow();
+        }
     }
 
     @Override
     protected void onDetachedFromWindow() {
-        mBlurBackgroundRenderer.onDetachedFromWindow();
+        if (shouldUseFolderIconBlur()) {
+            mBlurBackgroundRenderer.onDetachedFromWindow();
+        }
         super.onDetachedFromWindow();
     }
 
     @Override
     public void onVisibilityAggregated(boolean isVisible) {
         super.onVisibilityAggregated(isVisible);
-        mBlurBackgroundRenderer.onVisibilityAggregated(isVisible);
+        if (shouldUseFolderIconBlur()) {
+            mBlurBackgroundRenderer.onVisibilityAggregated(isVisible);
+        }
     }
 
     @Override
