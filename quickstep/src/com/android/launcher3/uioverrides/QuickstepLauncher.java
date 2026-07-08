@@ -532,9 +532,8 @@ public class QuickstepLauncher extends Launcher implements RecentsViewContainer,
         if (shouldRecreate) {
             mWallpaperThemeManager.recreateToUpdateTheme();
         } else if (Flags.allAppsBlur()) {
-            // For all apps, we only need to update the scrim, which draws the panel. But if the
-            // activity was recreated above, this is unnecessary.
-            getAppsView().invalidateHeader();
+            getAppsView().getContext().getTheme().applyStyle(getAllAppsBlurStyleResId(), true);
+            getAppsView().onThemeChanged();
         }
     }
 
