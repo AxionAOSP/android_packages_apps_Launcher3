@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.android.launcher3.folder
+package com.android.launcher3.util
 
 import android.graphics.Canvas
 import android.graphics.Outline
@@ -27,17 +27,17 @@ import android.view.View
 import com.android.internal.graphics.drawable.BackgroundBlurDrawable
 import com.android.launcher3.R
 import com.android.launcher3.dagger.ActivityContextSingleton
+import com.android.launcher3.folder.Folder
 import com.android.launcher3.graphics.PathWrapper
-import com.android.launcher3.util.Themes
 import com.android.launcher3.views.ActivityContext
 import javax.inject.Inject
 
 @ActivityContextSingleton
-class QuickstepFolderBackgroundBlurHelper
+class QuickstepBackgroundBlurHelper
 @Inject
 constructor(
     private val activityContext: ActivityContext,
-) : FolderBlurBackgroundHelper() {
+) : BlurBackgroundHelper() {
     private val blurRadius =
         activityContext.asContext().resources.getDimension(R.dimen.folder_blur_radius)
     private val cornerRadius = Themes.getDialogCornerRadius(activityContext.asContext())
@@ -58,13 +58,13 @@ constructor(
         }
     }
 
-    override fun prepareToOpen(folder: Folder) {
+    override fun prepareToOpenFolder(folder: Folder) {
         if (!isFolderBlurStyleEnabled()) {
             return
         }
 
-        val folderIcon = folder.mFolderIcon
-        val folderNameVisibility = folderIcon.mFolderName.visibility
+        val folderIcon = folder.folderIcon
+        val folderNameVisibility = folderIcon.folderName.visibility
         val isIconVisible = folderIcon.iconVisible
 
         folderIcon.setTextVisible(false)
@@ -76,11 +76,11 @@ constructor(
         workspaceBlurRenderNode.endRecording()
         workspaceBlurRenderNode.setPosition(0, 0, dragLayer.width, dragLayer.height)
 
-        folderIcon.mFolderName.visibility = folderNameVisibility
+        folderIcon.folderName.visibility = folderNameVisibility
         folderIcon.setIconVisible(isIconVisible)
     }
 
-    override fun drawBlur(canvas: Canvas, pathWrapper: PathWrapper?, view: View) {
+    override fun drawFolderBlur(canvas: Canvas, pathWrapper: PathWrapper?, view: View) {
         if (!isFolderBlurStyleEnabled()) {
             return
         }

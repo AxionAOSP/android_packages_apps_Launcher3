@@ -14,21 +14,22 @@
  * limitations under the License.
  */
 
-package com.android.launcher3.folder
+package com.android.launcher3.util
 
 import android.graphics.Canvas
 import android.view.View
 import com.android.launcher3.dagger.ActivityContextSingleton
+import com.android.launcher3.folder.Folder
 import com.android.launcher3.graphics.PathWrapper
 import javax.inject.Inject
 
 @ActivityContextSingleton
-open class FolderBlurBackgroundHelper
+open class BlurBackgroundHelper
 @Inject
 constructor() {
-    open fun prepareToOpen(folder: Folder) {}
+    open fun prepareToOpenFolder(folder: Folder) {}
 
-    open fun drawBlur(canvas: Canvas, pathWrapper: PathWrapper?, view: View) {}
+    open fun drawFolderBlur(canvas: Canvas, pathWrapper: PathWrapper?, view: View) {}
 
     open fun folderCloseComplete() {}
 }

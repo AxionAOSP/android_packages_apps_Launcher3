@@ -170,7 +170,7 @@ public abstract class ArrowPopup<T extends Context & ActivityContext>
         mArrowPointRadius = resources.getDimensionPixelSize(R.dimen.popup_arrow_corner_radius);
         mPopupBlurOverlayColor = AxBlurColors.surfaceContainerTint(context);
         mPopupBackgroundBlurView = new PopupBackgroundBlurView(
-                context, resources.getDimension(R.dimen.folder_blur_radius));
+                context, resources.getDimension(R.dimen.popup_blur_radius));
 
         int smallerRadius = resources.getDimensionPixelSize(R.dimen.popup_smaller_radius);
         mRoundedTop = new GradientDrawable();
@@ -371,7 +371,8 @@ public abstract class ArrowPopup<T extends Context & ActivityContext>
                 if (view instanceof ViewGroup && isShortcutContainer(view)) {
                     int childBackgroundColor = colors != null ? colors[0] : backgroundColor;
                     boolean hasChildRows = hasVisibleShortcutChild((ViewGroup) view);
-                    setChildColor(view, hasChildRows ? Color.TRANSPARENT : childBackgroundColor,
+                    setChildColor(view.getBackground(),
+                            hasChildRows ? Color.TRANSPARENT : childBackgroundColor,
                             colorAnimator);
                     mArrowColor = childBackgroundColor;
                     assignMarginsAndBackgrounds((ViewGroup) view, childBackgroundColor);
@@ -396,7 +397,7 @@ public abstract class ArrowPopup<T extends Context & ActivityContext>
                     }
                 }
 
-                setChildColor(view, backgroundColor, colorAnimator);
+                setChildColor(view.getBackground(), backgroundColor, colorAnimator);
             }
         }
 
@@ -421,8 +422,7 @@ public abstract class ArrowPopup<T extends Context & ActivityContext>
     /**
      * Sets the background color of the child.
      */
-    protected void setChildColor(View view, int color, AnimatorSet animatorSetOut) {
-        Drawable bg = view.getBackground();
+    protected void setChildColor(Drawable bg, int color, AnimatorSet animatorSetOut) {
         if (bg instanceof GradientDrawable) {
             GradientDrawable gd = (GradientDrawable) bg.mutate();
             int oldColor = ((GradientDrawable) bg).getColor().getDefaultColor();

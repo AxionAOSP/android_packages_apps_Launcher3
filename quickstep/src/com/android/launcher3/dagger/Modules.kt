@@ -29,8 +29,8 @@ import com.android.launcher3.dragndrop.SystemDragControllerImpl
 import com.android.launcher3.dragndrop.SystemDragControllerStub
 import com.android.launcher3.dragndrop.SystemDragListener
 import com.android.launcher3.dragndrop.SystemDragListenerFactory
-import com.android.launcher3.folder.FolderBlurBackgroundHelper
-import com.android.launcher3.folder.QuickstepFolderBackgroundBlurHelper
+import com.android.launcher3.util.BlurBackgroundHelper
+import com.android.launcher3.util.QuickstepBackgroundBlurHelper
 import com.android.launcher3.homescreenfiles.HomeScreenFilesMediaStoreProvider
 import com.android.launcher3.homescreenfiles.HomeScreenFilesNoOpProvider
 import com.android.launcher3.homescreenfiles.HomeScreenFilesProvider
@@ -85,9 +85,9 @@ abstract class ActivityContextModule {
     ): SecondaryDisplayDelegate
 
     @Binds
-    abstract fun bindFolderBackgroundBlurHelper(
-        impl: QuickstepFolderBackgroundBlurHelper
-    ): FolderBlurBackgroundHelper
+    abstract fun bindBackgroundBlurHelper(
+        impl: QuickstepBackgroundBlurHelper
+    ): BlurBackgroundHelper
 }
 
 @Module
