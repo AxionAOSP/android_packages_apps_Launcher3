@@ -42,6 +42,8 @@ public interface TaskViewIcon {
      */
     void setFlexSplitAlpha(float alpha);
 
+    void setAxStackAlpha(float alpha);
+
     /**
      * Returns this icon view's drawable.
      */
