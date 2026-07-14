@@ -653,6 +653,7 @@ constructor(
         var lastTaskViewSpring = previousSpring
         var previousColumnDriverSpring = previousSpring
         var lastColumnOffset = taskViewOffsetPairs.first().second
+        val needsReflowUpdates = recentsView.needsTaskDismissReflowUpdates()
         taskViewOffsetPairs
             .filter { (taskView, _) ->
                 willTaskBeVisibleAfterDismiss(taskView, dismissedTaskGap.roundToInt())
@@ -679,7 +680,11 @@ constructor(
                         .setSpring(createExpressiveGridReflowSpringForce(dismissedTaskGap))
                         .setStartValue(startValue)
                 // Update live tile on spring animation.
-                if (taskView.isRunningTask && recentsView.enableDrawingLiveTile) {
+                if (
+                    !needsReflowUpdates &&
+                        taskView.isRunningTask &&
+                        recentsView.enableDrawingLiveTile
+                ) {
                     taskViewSpringAnimation.addUpdateListener { _, _, _ ->
                         recentsView.runActionOnRemoteHandles { remoteTargetHandle ->
                             remoteTargetHandle.taskViewSimulator.taskPrimaryTranslation.value =
@@ -696,6 +701,11 @@ constructor(
                 }
                 previousColumnDriverSpring.addUpdateListener { _, value, _ ->
                     taskViewSpringAnimation.animateToFinalPosition(value)
+                }
+                if (needsReflowUpdates) {
+                    taskViewSpringAnimation.addUpdateListener { _, _, _ ->
+                        recentsView.onTaskDismissReflowUpdated(taskView)
+                    }
                 }
                 lastTaskViewSpring = taskViewSpringAnimation
                 reflowSpringSet.trackSpring(taskViewSpringAnimation, dismissedTaskGap)

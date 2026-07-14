@@ -45,8 +45,8 @@ import com.android.quickstep.RemoteTargetGluer.RemoteTargetHandle;
 import com.android.quickstep.util.GroupTask;
 import com.android.quickstep.util.SingleTask;
 import com.android.quickstep.util.SplitSelectStateController;
+import com.android.quickstep.views.AxStackRecentsView;
 import com.android.quickstep.views.OverviewActionsView;
-import com.android.quickstep.views.RecentsView;
 import com.android.quickstep.views.RecentsViewContainer;
 import com.android.quickstep.views.TaskContainer;
 import com.android.quickstep.views.TaskView;
@@ -59,7 +59,7 @@ import java.util.Arrays;
 import java.util.List;
 
 public class FallbackRecentsView<CONTAINER_TYPE extends Context & RecentsViewContainer
-        & StatefulContainer<RecentsState>> extends RecentsView<CONTAINER_TYPE, RecentsState>
+        & StatefulContainer<RecentsState>> extends AxStackRecentsView<CONTAINER_TYPE, RecentsState>
         implements StateListener<RecentsState> {
 
     private static final int TASK_DISMISS_DURATION = 150;

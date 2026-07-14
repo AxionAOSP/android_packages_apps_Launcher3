@@ -188,6 +188,9 @@ public final class TaskViewUtils {
             @Nullable TransitionInfo transitionInfo,
             int appearedTaskId,
             PendingAnimation out) {
+        if (!skipViewChanges) {
+            recentsView.prepareTaskForLaunch(taskView);
+        }
         boolean isQuickSwitch = taskView.isEndQuickSwitchCuj();
         taskView.setEndQuickSwitchCuj(false);
 
@@ -938,6 +941,11 @@ public final class TaskViewUtils {
             }
             tvsLocal.recentsViewScroll.value = scrollOffset;
             tvsLocal.taskSecondaryTranslation.value = gridTranslationY;
+            tvsLocal.setAxStackTransform(
+                    taskView.getAxStackScale(),
+                    taskView.getAxStackTranslationX(),
+                    taskView.getAxStackTranslationY(),
+                    taskView.getAxStackAlpha());
 
             if (taskView instanceof DesktopTaskView) {
                 handle.getTransformParams().setTargetAlpha(1f);

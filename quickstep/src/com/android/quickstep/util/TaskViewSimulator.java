@@ -275,6 +275,9 @@ public class TaskViewSimulator implements TransformParams.BuilderProxy {
      * Sets the targets which the simulator will control
      */
     public void setPreviewBounds(Rect bounds, Rect insets) {
+        mAxExt.setStackTransform(1f, 0f, 0f, 1f);
+        mAxExt.setStackTransformPinned(false);
+        mAxExt.setLaunchAlpha(1f);
         mThumbnailData.insets.set(insets);
         // TODO: What is this?
         mThumbnailData.windowingMode = WINDOWING_MODE_FULLSCREEN;
@@ -493,12 +496,14 @@ public class TaskViewSimulator implements TransformParams.BuilderProxy {
                 calculateDesktopTaskCropRect();
             }
         }
+        mAxExt.applyStackScale(mMatrix, mFullTaskSize, fullScreenProgress);
 
         mOrientationState.getOrientationHandler().setPrimary(mMatrix, MATRIX_POST_TRANSLATE,
                 taskPrimaryTranslation.value);
         mOrientationState.getOrientationHandler().setSecondary(mMatrix, MATRIX_POST_TRANSLATE,
                 taskSecondaryTranslation.value);
         mMatrix.postTranslate(taskGridTranslationX.value, taskGridTranslationY.value);
+        mAxExt.applyStackTranslation(mMatrix, fullScreenProgress);
 
         mMatrix.postScale(carouselScale.value, carouselScale.value,
                 mIsRecentsRtl ? mCarouselTaskSize.right : mCarouselTaskSize.left,
@@ -559,7 +564,9 @@ public class TaskViewSimulator implements TransformParams.BuilderProxy {
             SurfaceProperties builder, RemoteAnimationTarget app, TransformParams params) {
         builder.setMatrix(mMatrix)
                 .setWindowCrop(mTmpCropRect)
-                .setCornerRadius(getCurrentCornerRadius());
+                .setCornerRadius(getCurrentCornerRadius())
+                .setAlpha(params.getTargetAlpha()
+                        * mAxExt.getAlpha(fullScreenProgress.value));
 
         if (mDrawsBelowRecents == null && mDrawAboveOtherApps == null) {
             // No reordering will be enforced.
@@ -614,5 +621,18 @@ public class TaskViewSimulator implements TransformParams.BuilderProxy {
 
     public void setAxGestureRadius(boolean enabled) {
         mAxExt.setEnabled(enabled);
+    }
+
+    public void setAxStackTransform(
+            float scale, float translationX, float translationY, float alpha) {
+        mAxExt.setStackTransform(scale, translationX, translationY, alpha);
+    }
+
+    public void setAxStackTransformPinned(boolean pinned) {
+        mAxExt.setStackTransformPinned(pinned);
+    }
+
+    public void setAxLaunchAlpha(float alpha) {
+        mAxExt.setLaunchAlpha(alpha);
     }
 }
