@@ -55,7 +55,7 @@ import kotlin.Unit;
  * {@link RecentsView} used in Launcher activity
  */
 @TargetApi(Build.VERSION_CODES.O)
-public class LauncherRecentsView extends RecentsView<QuickstepLauncher, LauncherState>
+public class LauncherRecentsView extends AxStackRecentsView<QuickstepLauncher, LauncherState>
         implements StateListener<LauncherState> {
 
     public LauncherRecentsView(Context context) {

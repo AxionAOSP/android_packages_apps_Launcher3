@@ -409,6 +409,9 @@ constructor(
             applyScale()
         }
 
+    private val axStackTransform = AxTaskViewTransform()
+    private var axStackHidden = false
+
     private var dismissTranslationX = 0f
         set(value) {
             field = value
@@ -498,6 +501,8 @@ constructor(
     var attachAlpha by MultiPropertyDelegate(taskViewAlpha, Alpha.Attach)
     var splitAlpha by MultiPropertyDelegate(taskViewAlpha, Alpha.Split)
     private var modalAlpha by MultiPropertyDelegate(taskViewAlpha, Alpha.Modal)
+    private var appliedAxStackAlpha by MultiPropertyDelegate(taskViewAlpha, Alpha.AxStack)
+    private var axLaunchAlpha by MultiPropertyDelegate(taskViewAlpha, Alpha.AxLaunch)
 
     protected var shouldShowScreenshot = false
         get() = !isRunningTask || field
@@ -1481,6 +1486,7 @@ constructor(
     }
 
     protected fun setIcon(iconView: TaskViewIcon, icon: Drawable?) {
+        setAxStackIconAlpha(iconView, axStackTransform.getIconAlpha())
         with(iconView) {
             if (icon != null) {
                 setDrawable(icon)
@@ -1498,6 +1504,13 @@ constructor(
                 asView().setOnClickListener(null)
                 asView().setOnLongClickListener(null)
             }
+        }
+    }
+
+    private fun setAxStackIconAlpha(iconView: TaskViewIcon, alpha: Float) {
+        iconView.setAxStackAlpha(alpha)
+        if (!enableOverviewIconMenu() && fullscreenProgress >= 1f) {
+            iconView.asView().visibility = INVISIBLE
         }
     }
 
@@ -1535,6 +1548,7 @@ constructor(
 
     /** Launch of the current task (both live and inactive tasks) with an animation. */
     fun launchWithAnimation(): RunnableList? {
+        recentsView?.prepareTaskForLaunch(this)
         return if (isRunningTask && recentsView?.remoteTargetHandles != null) {
                 launchAsLiveTile(recentsView?.remoteTargetHandles!!)
             } else {
@@ -1817,6 +1831,9 @@ constructor(
 
     private fun showTaskMenu(iconView: TaskViewIcon): Boolean {
         val recentsView = recentsView ?: return false
+        if (recentsView.snapToTaskIfNeeded(this)) {
+            return true
+        }
         if (!recentsView.canLaunchFullscreenTask()) {
             // Don't show menu when selecting second split screen app
             return true
@@ -2076,7 +2093,11 @@ constructor(
     fun getSizeAdjustment(fullscreenEnabled: Boolean) = if (fullscreenEnabled) nonGridScale else 1f
 
     private fun applyScale() {
-        val scale = persistentScale * dismissScale * Utilities.mapRange(modalness, 1f, modalScale)
+        val scale =
+            persistentScale *
+                dismissScale *
+                Utilities.mapRange(modalness, 1f, modalScale) *
+                axStackTransform.getAppliedScale(fullscreenProgress)
         scaleX = scale
         scaleY = scale
         updateFullscreenParams()
@@ -2089,7 +2110,8 @@ constructor(
                 taskResistanceTranslationX +
                 splitSelectTranslationX +
                 gridEndTranslationX +
-                persistentTranslationX
+                persistentTranslationX +
+                getAppliedAxStackTranslationX()
     }
 
     private fun applyTranslationY() {
@@ -2098,7 +2120,105 @@ constructor(
                 taskOffsetTranslationY +
                 taskResistanceTranslationY +
                 splitSelectTranslationY +
-                persistentTranslationY
+                persistentTranslationY +
+                getAppliedAxStackTranslationY()
+    }
+
+    fun setAxStackTransform(
+        scale: Float,
+        translationX: Float,
+        translationY: Float,
+        depth: Float,
+        alpha: Float,
+        iconAlpha: Float,
+    ): Boolean {
+        val changes =
+            axStackTransform.set(scale, translationX, translationY, depth, alpha, iconAlpha)
+        if (changes == 0) {
+            return false
+        }
+        if (changes and AxTaskViewTransform.SCALE_CHANGED != 0) {
+            applyScale()
+        }
+        if (changes and AxTaskViewTransform.TRANSLATION_X_CHANGED != 0) {
+            applyTranslationX()
+        }
+        if (changes and AxTaskViewTransform.TRANSLATION_Y_CHANGED != 0) {
+            applyTranslationY()
+        }
+        if (changes and AxTaskViewTransform.DEPTH_CHANGED != 0) {
+            applyAxStackDepth()
+        }
+        if (changes and AxTaskViewTransform.ALPHA_CHANGED != 0) {
+            applyAxStackAlpha()
+        }
+        if (changes and AxTaskViewTransform.ICON_ALPHA_CHANGED != 0) {
+            val iconAlpha = axStackTransform.getIconAlpha()
+            taskContainers.forEach {
+                setAxStackIconAlpha(it.iconView, iconAlpha)
+            }
+        }
+        return changes and AxTaskViewTransform.SURFACE_CHANGED != 0
+    }
+
+    fun resetAxStackTransform(): Boolean {
+        val pinChanged = axStackTransform.setPinnedDuringFullscreen(false)
+        return setAxStackTransform(1f, 0f, 0f, 0f, 1f, 1f) || pinChanged
+    }
+
+    fun setAxStackTransformPinned(pinned: Boolean) {
+        if (!axStackTransform.setPinnedDuringFullscreen(pinned) || !hasAxStackTransform()) {
+            return
+        }
+        applyTranslationX()
+        applyTranslationY()
+        applyAxStackDepth()
+        applyAxStackAlpha()
+        applyScale()
+    }
+
+    fun getAxStackScale(): Float = axStackTransform.getScale()
+
+    fun getAxStackTranslationX(): Float = axStackTransform.getTranslationX()
+
+    fun getAxStackTranslationY(): Float = axStackTransform.getTranslationY()
+
+    fun getAxStackAlpha(): Float = axStackTransform.getAlpha()
+
+    fun getAxLaunchAlphaValue(): Float = axLaunchAlpha
+
+    fun setAxLaunchAlphaValue(alpha: Float) {
+        axLaunchAlpha = alpha
+    }
+
+    fun isAxStackIconVisible(): Boolean = axStackTransform.getIconAlpha() > 0f
+
+    fun getAppliedAxStackTranslationX(): Float =
+        axStackTransform.getAppliedTranslationX(fullscreenProgress)
+
+    fun getAppliedAxStackTranslationY(): Float =
+        axStackTransform.getAppliedTranslationY(fullscreenProgress)
+
+    private fun hasAxStackTransform(): Boolean = axStackTransform.isActive()
+
+    private fun applyAxStackDepth() {
+        elevation = axStackTransform.getAppliedDepth(fullscreenProgress)
+    }
+
+    private fun applyAxStackAlpha() {
+        val alpha = axStackTransform.getAppliedAlpha(fullscreenProgress)
+        appliedAxStackAlpha = alpha
+        if (alpha <= 0f) {
+            if (!axStackHidden && visibility == VISIBLE) {
+                visibility = INVISIBLE
+                axStackHidden = true
+            }
+        } else if (axStackHidden) {
+            if (visibility == INVISIBLE) {
+                visibility = VISIBLE
+            }
+            axStackHidden = false
+        }
     }
 
     private fun onGridProgressChanged() {
@@ -2109,13 +2229,26 @@ constructor(
 
     protected open fun onFullscreenProgressChanged(fullscreenProgress: Float) {
         if (!enableOverviewIconMenu()) {
-            getTaskIcons().forEach { (icon, _) ->
+            val axStackIconAlpha = axStackTransform.getIconAlpha()
+            taskContainers.forEach {
+                val icon = it.iconView
                 icon.asView().visibility = if (fullscreenProgress < 1) VISIBLE else INVISIBLE
+                if (axStackIconAlpha != 1f) {
+                    setAxStackIconAlpha(icon, axStackIconAlpha)
+                }
             }
         }
         taskContainers.forEach { it.overlay.setFullscreenProgress(fullscreenProgress) }
         updateSettledProgressFullscreen(fullscreenProgress)
-        updateFullscreenParams()
+        if (hasAxStackTransform()) {
+            applyTranslationX()
+            applyTranslationY()
+            applyAxStackDepth()
+            applyAxStackAlpha()
+            applyScale()
+        } else {
+            updateFullscreenParams()
+        }
     }
 
     protected fun updateSettledProgressFullscreen(fullscreenProgress: Float) {
@@ -2167,6 +2300,8 @@ constructor(
             it.snapshotView.translationX = 0f
             it.snapshotView.translationY = 0f
         }
+        axLaunchAlpha = 1f
+        resetAxStackTransform()
         resetViewTransforms()
     }
 
@@ -2222,6 +2357,8 @@ constructor(
             Attach,
             Split,
             Modal,
+            AxStack,
+            AxLaunch,
         }
 
         private enum class SettledProgress {

@@ -142,6 +142,10 @@ class IconView : View, TaskViewIcon {
         multiValueAlpha[INDEX_FLEX_SPLIT_ALPHA].setValue(alpha)
     }
 
+    override fun setAxStackAlpha(alpha: Float) {
+        multiValueAlpha[INDEX_AX_STACK_ALPHA].setValue(alpha)
+    }
+
     /**
      * Set the tint color of the icon, useful for scrimming or dimming.
      *
@@ -187,9 +191,10 @@ class IconView : View, TaskViewIcon {
     }
 
     companion object {
-        private const val NUM_ALPHA_CHANNELS = 3
+        private const val NUM_ALPHA_CHANNELS = 4
         private const val INDEX_CONTENT_ALPHA = 0
         private const val INDEX_MODAL_ALPHA = 1
         private const val INDEX_FLEX_SPLIT_ALPHA = 2
+        private const val INDEX_AX_STACK_ALPHA = 3
     }
 }

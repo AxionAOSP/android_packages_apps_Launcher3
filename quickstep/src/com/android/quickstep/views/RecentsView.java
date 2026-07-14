@@ -820,11 +820,13 @@ public abstract class RecentsView<
 
         @Override
         public void onSplitSelectionActive() {
+            updateCurveProperties();
         }
 
         @Override
         public void onSplitSelectionExit(boolean launchedSplit) {
             resetFromSplitSelectionState();
+            updateCurveProperties();
         }
     };
 
@@ -1780,7 +1782,7 @@ public abstract class RecentsView<
                 }
             }
         } else {
-            TaskView taskView = getCurrentPageTaskView();
+            TaskView taskView = getTaskViewForTouch();
             if (taskView != null && taskView.offerTouchToChildren(ev)) {
                 // Keep consuming events to pass to delegate
                 return true;
@@ -1826,10 +1828,11 @@ public abstract class RecentsView<
                                         && mClearAllButtonDeadZoneRect.contains(x, y);
                         final boolean cameFromNavBar = (ev.getEdgeFlags() & EDGE_NAV_BAR) != 0;
                         int adjustedX = x + getScrollX();
+                        int adjustedY = y + getScrollY();
                         if (!clearAllButtonDeadZoneConsumed && !cameFromNavBar
-                                && !mTaskViewDeadZoneRect.contains(adjustedX, y)
-                                && !mTopRowDeadZoneRect.contains(adjustedX, y)
-                                && !mBottomRowDeadZoneRect.contains(adjustedX, y)) {
+                                && !mTaskViewDeadZoneRect.contains(adjustedX, adjustedY)
+                                && !mTopRowDeadZoneRect.contains(adjustedX, adjustedY)
+                                && !mBottomRowDeadZoneRect.contains(adjustedX, adjustedY)) {
                             mTouchDownToStartHome = true;
                         }
                     }
@@ -1840,6 +1843,14 @@ public abstract class RecentsView<
         }
 
         return isHandlingTouch();
+    }
+
+    protected @Nullable TaskView getTaskViewForTouch() {
+        return getCurrentPageTaskView();
+    }
+
+    boolean snapToTaskIfNeeded(TaskView taskView) {
+        return false;
     }
 
     @Override
@@ -2700,6 +2711,10 @@ public abstract class RecentsView<
         return minDistanceFromScreenStartIndex;
     }
 
+    protected int getTaskViewVisibleRange() {
+        return 2;
+    }
+
     /**
      * Iterates through all the tasks, and loads the associated task data for newly visible tasks,
      * and unloads the associated task data for tasks that are no longer visible.
@@ -2727,8 +2742,9 @@ public abstract class RecentsView<
         } else {
             int centerPageIndex = getPageNearestToCenterOfScreen();
             int numChildren = getChildCount();
-            lowerIndex = Math.max(0, centerPageIndex - 2);
-            upperIndex = Math.min(centerPageIndex + 2, numChildren - 1);
+            int visibleRange = getTaskViewVisibleRange();
+            lowerIndex = Math.max(0, centerPageIndex - visibleRange);
+            upperIndex = Math.min(centerPageIndex + visibleRange, numChildren - 1);
             visibleStart = visibleEnd = 0;
         }
 
@@ -4005,7 +4021,8 @@ public abstract class RecentsView<
                     && nextFocusedTaskView == null && !dismissingForSplitSelection)) {
                 int offset = getOffsetToDismissedTask(scrollDiffPerPage, dismissedIndex,
                         lastTaskViewIndex);
-                int scrollDiff = newScroll[i] - oldScroll[i] + offset;
+                int scrollDiff = getTaskDismissPrimaryTranslation(
+                        dismissedTaskView, child, newScroll[i] - oldScroll[i] + offset);
                 if (scrollDiff != 0) {
                     translateTaskWhenDismissed(
                             child,
@@ -4393,6 +4410,11 @@ public abstract class RecentsView<
         return offset;
     }
 
+    protected int getTaskDismissPrimaryTranslation(
+            @Nullable TaskView dismissedTaskView, View child, int defaultTranslation) {
+        return defaultTranslation;
+    }
+
     private void translateTaskWhenDismissed(
             View view,
             int indexDiff,
@@ -4439,18 +4461,24 @@ public abstract class RecentsView<
         if (mEnableDrawingLiveTile && view instanceof TaskView
                 && ((TaskView) view).isRunningTask()) {
             pendingAnimation.addOnFrameCallback(() -> {
-                runActionOnRemoteHandles(
-                        remoteTargetHandle ->
-                                remoteTargetHandle.getTaskViewSimulator()
-                                        .taskPrimaryTranslation.value =
-                                        getPagedOrientationHandler().getPrimaryValue(
-                                                view.getTranslationX(),
-                                                view.getTranslationY()
-                                        ));
+                runActionOnRemoteHandles(remoteTargetHandle ->
+                        remoteTargetHandle.getTaskViewSimulator().taskPrimaryTranslation.value =
+                                getTaskDismissLiveTilePrimaryTranslation(view));
                 redrawLiveTile();
             });
         }
     }
+
+    protected float getTaskDismissLiveTilePrimaryTranslation(View view) {
+        return getPagedOrientationHandler().getPrimaryValue(
+                view.getTranslationX(), view.getTranslationY());
+    }
+
+    boolean needsTaskDismissReflowUpdates() {
+        return false;
+    }
+
+    void onTaskDismissReflowUpdated(TaskView taskView) { }
 
     /**
      * Hides all overview actions if user is halfway through split selection, shows otherwise.
@@ -5807,8 +5835,13 @@ public abstract class RecentsView<
             mClearAllButtonDeadZoneRect.inset(-getPaddingRight() / 2, -verticalMargin);
         }
 
-        mUtils.updateTaskViewDeadZoneRect(mTaskViewDeadZoneRect, mTopRowDeadZoneRect,
-                mBottomRowDeadZoneRect);
+        updateTaskViewDeadZoneRects(
+                mTaskViewDeadZoneRect, mTopRowDeadZoneRect, mBottomRowDeadZoneRect);
+    }
+
+    protected void updateTaskViewDeadZoneRects(
+            Rect taskViewRect, Rect topRowRect, Rect bottomRowRect) {
+        mUtils.updateTaskViewDeadZoneRect(taskViewRect, topRowRect, bottomRowRect);
     }
 
     private void updateEmptyStateUi(boolean sizeChanged) {
@@ -5956,6 +5989,8 @@ public abstract class RecentsView<
         }
         return anim;
     }
+
+    public void prepareTaskForLaunch(TaskView taskView) { }
 
     /**
      * Returns the scale up required on the view, so that it coves the screen completely
