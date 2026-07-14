@@ -80,8 +80,7 @@
     <string name="pref_launcher_blur_category">Launcher blur</string>
     <string name="pref_launcher_blur_title">Enable launcher blur</string>
     <string name="pref_launcher_blur_summary">Blur wallpaper behind launcher surfaces</string>
-    <string name="pref_launcher_blur_radius_title">Blur radius</string>
-    <string name="pref_launcher_blur_radius_pixels">%1$d px</string>
+    <string name="pref_launcher_blur_strength_title">Blur strength</string>
     <string name="home_widgets_rounded_title">Rounded widget corners</string>
     <string name="home_widgets_rounded_summary">Apply launcher corner clipping to home screen widgets</string>
     <string name="home_widgets_overlap_title">Allow widget overlap</string>

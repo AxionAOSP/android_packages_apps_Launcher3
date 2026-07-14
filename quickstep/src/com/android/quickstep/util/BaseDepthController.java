@@ -138,7 +138,7 @@ public class BaseDepthController implements LauncherPrefChangeListener {
         mMaxBlurRadius = getConfiguredMaxBlurRadius();
         mLauncherPrefs.addListener(this,
                 LauncherPrefsExt.LAUNCHER_BLUR_ENABLED,
-                LauncherPrefsExt.LAUNCHER_BLUR_RADIUS,
+                LauncherPrefsExt.LAUNCHER_BLUR_RADIUS_PCT,
                 LauncherPrefsExt.DISABLE_WALLPAPER_ZOOM);
         mWallpaperManager = activity.getSystemService(WallpaperManager.class);
 
@@ -153,14 +153,14 @@ public class BaseDepthController implements LauncherPrefChangeListener {
     public void destroy() {
         mLauncherPrefs.removeListener(this,
                 LauncherPrefsExt.LAUNCHER_BLUR_ENABLED,
-                LauncherPrefsExt.LAUNCHER_BLUR_RADIUS,
+                LauncherPrefsExt.LAUNCHER_BLUR_RADIUS_PCT,
                 LauncherPrefsExt.DISABLE_WALLPAPER_ZOOM);
     }
 
     @Override
     public void onPrefChanged(String key) {
         if (LauncherPrefsExt.LAUNCHER_BLUR_ENABLED.getSharedPrefKey().equals(key)
-                || LauncherPrefsExt.LAUNCHER_BLUR_RADIUS.getSharedPrefKey().equals(key)) {
+                || LauncherPrefsExt.LAUNCHER_BLUR_RADIUS_PCT.getSharedPrefKey().equals(key)) {
             updateMaxBlurRadius();
         } else if (LauncherPrefsExt.DISABLE_WALLPAPER_ZOOM.getSharedPrefKey().equals(key)) {
             applyDepthAndBlur(null, false, false);
@@ -184,7 +184,12 @@ public class BaseDepthController implements LauncherPrefChangeListener {
         if (!LauncherPrefsExt.LAUNCHER_BLUR_ENABLED.get(mLauncher)) {
             return 0;
         }
-        return Utilities.boundToRange(LauncherPrefsExt.LAUNCHER_BLUR_RADIUS.get(mLauncher), 0, 100);
+        int radiusPct = Utilities.boundToRange(
+                LauncherPrefsExt.LAUNCHER_BLUR_RADIUS_PCT.get(mLauncher),
+                LauncherPrefsExt.LAUNCHER_BLUR_MIN_RADIUS_PCT,
+                LauncherPrefsExt.LAUNCHER_BLUR_MAX_RADIUS_PCT);
+        return Math.round(LauncherPrefsExt.LAUNCHER_BLUR_MAX_RADIUS_PX
+                * radiusPct / (float) LauncherPrefsExt.LAUNCHER_BLUR_MAX_RADIUS_PCT);
     }
 
     /**
