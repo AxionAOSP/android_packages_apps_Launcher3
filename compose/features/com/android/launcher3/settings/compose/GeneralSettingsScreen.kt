@@ -58,14 +58,14 @@ internal fun GeneralScreen(
         item {
             val blurEnabled = rememberLauncherPreference(LauncherPrefsExt.LAUNCHER_BLUR_ENABLED)
             IntSliderPreference(
-                item = LauncherPrefsExt.LAUNCHER_BLUR_RADIUS,
-                titleRes = R.string.pref_launcher_blur_radius_title,
-                min = 0,
-                max = 100,
-                defaultValue = LauncherPrefsExt.LAUNCHER_BLUR_DEFAULT_RADIUS,
-                interval = 10,
+                item = LauncherPrefsExt.LAUNCHER_BLUR_RADIUS_PCT,
+                titleRes = R.string.pref_launcher_blur_strength_title,
+                min = LauncherPrefsExt.LAUNCHER_BLUR_MIN_RADIUS_PCT,
+                max = LauncherPrefsExt.LAUNCHER_BLUR_MAX_RADIUS_PCT,
+                defaultValue = LauncherPrefsExt.LAUNCHER_BLUR_DEFAULT_RADIUS_PCT,
+                interval = 1,
                 enabled = blurEnabled.value,
-                valueLabel = { stringResource(R.string.pref_launcher_blur_radius_pixels, it) },
+                valueLabel = { stringResource(R.string.home_settings_percent_value, it) },
             )
         }
     }

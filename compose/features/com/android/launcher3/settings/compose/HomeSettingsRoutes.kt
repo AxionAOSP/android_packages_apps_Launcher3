@@ -73,7 +73,7 @@ internal object HomeSettingsRoutes {
         return when (key) {
             KEY_SCREEN_GENERAL,
             KEY_LAUNCHER_BLUR_ENABLED,
-            KEY_LAUNCHER_BLUR_RADIUS -> GENERAL
+            KEY_LAUNCHER_BLUR_RADIUS_PCT -> GENERAL
             KEY_ICON_PACK_PACKAGE,
             KEY_THEMED_ICON_PACK,
             KEY_THEMED_ICONS,
