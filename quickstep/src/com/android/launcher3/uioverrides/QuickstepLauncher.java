@@ -211,6 +211,7 @@ import com.android.quickstep.fallback.RecentsStateUtilsKt;
 import com.android.quickstep.util.ActiveGestureProtoLogProxy;
 import com.android.quickstep.util.AnimUtils;
 import com.android.quickstep.util.AsyncClockEventDelegate;
+import com.android.quickstep.util.LauncherUnlockAnimationController;
 import com.android.quickstep.util.LauncherUnfoldAnimationController;
 import com.android.quickstep.util.QuickstepOnboardingPrefs;
 import com.android.quickstep.util.SplitSelectStateController;
@@ -279,6 +280,7 @@ public class QuickstepLauncher extends Launcher implements RecentsViewContainer,
     // Will be updated when dragging from taskbar.
     private @Nullable UnfoldTransitionProgressProvider mUnfoldTransitionProgressProvider;
     private @Nullable LauncherUnfoldAnimationController mLauncherUnfoldAnimationController;
+    private @Nullable LauncherUnlockAnimationController mLauncherUnlockAnimationController;
 
     private SplitSelectStateController mSplitSelectStateController;
     private SplitWithKeyboardShortcutController mSplitWithKeyboardShortcutController;
@@ -372,6 +374,9 @@ public class QuickstepLauncher extends Launcher implements RecentsViewContainer,
         mAppTransitionManager = buildAppTransitionManager();
         mAppTransitionManager.registerRemoteAnimations();
         mAppTransitionManager.registerRemoteTransitions();
+        mLauncherUnlockAnimationController = new LauncherUnlockAnimationController(this);
+        systemUiProxy.setLauncherUnlockAnimationController(
+                getClass().getName(), mLauncherUnlockAnimationController);
 
         mTISBindHelper = new TISBindHelper(this, this::onTISConnected);
 
@@ -721,6 +726,11 @@ public class QuickstepLauncher extends Launcher implements RecentsViewContainer,
 
         OverviewComponentObserver.INSTANCE.get(this)
                 .removeOverviewChangeListener(mOverviewChangeListener);
+        SystemUiProxy.INSTANCE.get(this).setLauncherUnlockAnimationController(null, null);
+        if (mLauncherUnlockAnimationController != null) {
+            mLauncherUnlockAnimationController.destroy();
+            mLauncherUnlockAnimationController = null;
+        }
         mTISBindHelper.onDestroy();
 
         if (mLauncherUnfoldAnimationController != null) {
