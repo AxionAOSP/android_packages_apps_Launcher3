@@ -259,7 +259,8 @@ public class BaseDepthController implements LauncherPrefChangeListener {
             boolean applyImmediately, boolean skipSimilarBlur) {
         float depth = mDepth;
         SystemUiProxy.INSTANCE.get(mLauncher)
-                .setLauncherDepthWallpaperZoom(getWallpaperZoom(depth));
+                .setLauncherDepthWallpaperZoom(
+                        Float.isNaN(mWallpaperZoomOverride) ? depth : mWallpaperZoomOverride);
 
         if (!BlurUtils.supportsBlursOnWindows()) {
             return;
@@ -322,13 +323,6 @@ public class BaseDepthController implements LauncherPrefChangeListener {
         }
 
         blurWorkspaceDepthTargets();
-    }
-
-    private float getWallpaperZoom(float depth) {
-        if (LauncherPrefsExt.DISABLE_WALLPAPER_ZOOM.get(mLauncher)) {
-            return 0f;
-        }
-        return Float.isNaN(mWallpaperZoomOverride) ? depth : mWallpaperZoomOverride;
     }
 
     /**
