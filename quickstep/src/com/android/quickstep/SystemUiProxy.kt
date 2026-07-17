@@ -57,11 +57,16 @@ import com.android.internal.logging.InstanceId
 import com.android.internal.util.ScreenshotRequest
 import com.android.internal.view.AppearanceRegion
 import com.android.launcher3.Flags
+import com.android.launcher3.LauncherPrefChangeListener
+import com.android.launcher3.LauncherPrefs
+import com.android.launcher3.LauncherPrefsExt
 import com.android.launcher3.dagger.ApplicationContext
 import com.android.launcher3.dagger.LauncherAppComponent
 import com.android.launcher3.dagger.LauncherAppSingleton
+import com.android.launcher3.dagger.LauncherComponentProvider
 import com.android.launcher3.taskbar.bubbles.BubbleActivityStarter
 import com.android.launcher3.util.DaggerSingletonObject
+import com.android.launcher3.util.DaggerSingletonTracker
 import com.android.launcher3.concurrent.annotations.LightweightBackground
 import com.android.launcher3.concurrent.annotations.Ui
 import com.android.launcher3.concurrent.annotations.LightweightBackgroundPriority.UI
@@ -122,7 +127,10 @@ import javax.inject.Inject
 class SystemUiProxy @Inject constructor(
     @ApplicationContext private val context: Context,
     @Ui private val uiExecutor: Executor,
-    @LightweightBackground(priority = UI) private val lightweightBackgroundExecutor: LooperExecutor
+    @LightweightBackground(priority = UI) private val lightweightBackgroundExecutor: LooperExecutor,
+    private val launcherPrefs: LauncherPrefs = LauncherPrefs.get(context),
+    lifecycle: DaggerSingletonTracker =
+        LauncherComponentProvider.get(context).daggerSingletonTracker,
 ) : NavHandle {
 
     private var systemUiProxy: ISystemUiProxy? = null
@@ -208,6 +216,30 @@ class SystemUiProxy @Inject constructor(
     private var lastLauncherKeepClearAreaHeightVisible = false
     private var lastLauncherWallpaperZoom = 0f
     private var lastLauncherDepthWallpaperZoom = 0f
+    private var isWallpaperZoomDisabled =
+        launcherPrefs.get(LauncherPrefsExt.DISABLE_WALLPAPER_ZOOM)
+    private val wallpaperZoomPreferenceListener =
+        LauncherPrefChangeListener {
+            val disabled = launcherPrefs.get(LauncherPrefsExt.DISABLE_WALLPAPER_ZOOM)
+            if (isWallpaperZoomDisabled != disabled) {
+                isWallpaperZoomDisabled = disabled
+                setLauncherWallpaperZoom(lastLauncherWallpaperZoom)
+                setLauncherDepthWallpaperZoom(lastLauncherDepthWallpaperZoom)
+            }
+        }
+
+    init {
+        launcherPrefs.addListener(
+            wallpaperZoomPreferenceListener,
+            LauncherPrefsExt.DISABLE_WALLPAPER_ZOOM,
+        )
+        lifecycle.addCloseable {
+            launcherPrefs.removeListener(
+                wallpaperZoomPreferenceListener,
+                LauncherPrefsExt.DISABLE_WALLPAPER_ZOOM,
+            )
+        }
+    }
 
     private val asyncHandler =
         Handler(lightweightBackgroundExecutor.looper) { handleMessageAsync(it) }
@@ -471,19 +503,26 @@ class SystemUiProxy @Inject constructor(
 
     fun setLauncherWallpaperZoom(zoomOut: Float) {
         lastLauncherWallpaperZoom = zoomOut
-        executeWithErrorLog({ "Failed call setLauncherWallpaperZoom with arg: $zoomOut" }) {
-            systemUiProxy?.setLauncherWallpaperZoom(zoomOut)
+        val wallpaperZoom = getWallpaperZoom(zoomOut)
+        executeWithErrorLog({ "Failed call setLauncherWallpaperZoom with arg: $wallpaperZoom" }) {
+            systemUiProxy?.setLauncherWallpaperZoom(wallpaperZoom)
         }
     }
 
-    fun getLauncherWallpaperZoom(): Float = lastLauncherWallpaperZoom
+    fun getLauncherWallpaperZoom(): Float = getWallpaperZoom(lastLauncherWallpaperZoom)
 
     fun setLauncherDepthWallpaperZoom(zoomOut: Float) {
         lastLauncherDepthWallpaperZoom = zoomOut
-        executeWithErrorLog({ "Failed call setLauncherDepthWallpaperZoom with arg: $zoomOut" }) {
-            systemUiProxy?.setLauncherDepthWallpaperZoom(zoomOut)
+        val wallpaperZoom = getWallpaperZoom(zoomOut)
+        executeWithErrorLog({
+            "Failed call setLauncherDepthWallpaperZoom with arg: $wallpaperZoom"
+        }) {
+            systemUiProxy?.setLauncherDepthWallpaperZoom(wallpaperZoom)
         }
     }
+
+    private fun getWallpaperZoom(zoomOut: Float): Float =
+        if (isWallpaperZoomDisabled) 0f else zoomOut
 
     fun notifyAccessibilityButtonClicked(displayId: Int) =
         executeWithErrorLog({ "Failed call notifyAccessibilityButtonClicked" }) {
