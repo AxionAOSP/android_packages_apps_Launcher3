@@ -81,7 +81,8 @@
     <!-- Spoken text for a screen reader. The first placeholder text is the widget name, the
          remaining placeholders are for the widget dimensions.
          [CHAR_LIMIT=none]-->
-    <string name="widget_preview_name_and_dims_content_description">      <xliff:g id="widget_name" example="Calendar month view">%1$s</xliff:g> Виджет %2$d на %3$d
+    <string name="widget_preview_name_and_dims_content_description">
+      <xliff:g id="widget_name" example="Calendar month view">%1$s</xliff:g> Виджет %2$d на %3$d
     </string>
     <!-- Message to tell the user to press and hold a widget/icon to add it to the home screen.
          [CHAR LIMIT=NONE]  -->
@@ -113,11 +114,13 @@
     <string name="widget_picker_right_pane_accessibility_title"><xliff:g id="selected_header" example="Calendar">%1$s</xliff:g> Виджет справа, поиск и опции слева</string>
     <!-- Label for showing the number of widgets an app has in the full widgets picker.
          [CHAR_LIMIT=25][ICU SYNTAX] -->
-    <string name="widgets_count">        {count,plural, =1{# виджет}one{# виджет}few{# виджета}many{# виджетов}other{# виджета}}
+    <string name="widgets_count">
+        {count,plural, =1{# виджет}one{# виджет}few{# виджета}many{# виджетов}other{# виджета}}
     </string>
     <!-- Label for showing the number of shortcut an app has in the full widgets picker.
          [CHAR_LIMIT=25][ICU SYNTAX] -->
-    <string name="shortcuts_count">        {count,plural, =1{# ярлык}one{# ярлык}few{# ярлыка}many{# ярлыков}other{# ярлыка}}
+    <string name="shortcuts_count">
+        {count,plural, =1{# ярлык}one{# ярлык}few{# ярлыка}many{# ярлыков}other{# ярлыка}}
     </string>
     <!-- Label for showing both the number of widgets and shortcuts an app has in the full widgets
          picker. [CHAR_LIMIT=50] -->
@@ -284,7 +287,8 @@
     <!-- The format string for when an app is temporarily disabled. -->
     <string name="disabled_app_label">Приложение <xliff:g id="app_name" example="Messenger">%1$s</xliff:g> отключено</string>
     <!-- The format string for when an app has a notification dot (meaning it has associated notifications). [ICU_FORMAT]-->
-    <string name="dotted_app_label">{count, plural, =1 {{app_name}: # уведомление} other {{app_name}: # уведомлений}}    </string>
+    <string name="dotted_app_label">
+{count, plural, =1 {{app_name}: # уведомление} other {{app_name}: # уведомлений}}    </string>
     <!-- content description for hotseat items -->
     <string name="hotseat_prediction_content_description">Рекомендуемое приложение: <xliff:g id="title" example="Chrome">%1$s</xliff:g></string>
     <!-- The format string for default page scroll text [CHAR_LIMIT=none] -->
