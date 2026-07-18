@@ -21,7 +21,9 @@ import android.content.SharedPreferences;
 import android.os.Bundle;
 
 import com.android.launcher3.Launcher;
+import com.android.launcher3.LauncherPrefChangeListener;
 import com.android.launcher3.LauncherPrefs;
+import com.android.launcher3.LauncherPrefsExt;
 import com.android.systemui.plugins.shared.LauncherOverlayManager;
 import com.android.systemui.plugins.shared.LauncherOverlayManager.LauncherOverlay;
 import com.android.systemui.plugins.shared.LauncherOverlayManager.LauncherOverlayCallbacks;
@@ -40,7 +42,7 @@ import java.io.PrintWriter;
  */
 public class OverlayCallbackImpl
         implements LauncherOverlay, LauncherClientCallbacks, LauncherOverlayManager,
-        SharedPreferences.OnSharedPreferenceChangeListener {
+        LauncherPrefChangeListener {
 
     private static final String KEY_ENABLE_MINUS_ONE = "pref_enable_minus_one";
 
@@ -51,11 +53,9 @@ public class OverlayCallbackImpl
     private boolean mWasOverlayAttached = false;
 
     public OverlayCallbackImpl(Launcher launcher) {
-        SharedPreferences prefs = LauncherPrefs.getPrefs(launcher);
-
         mLauncher = launcher;
-        mClient = new LauncherClient(mLauncher, this, getClientOptions(prefs));
-        prefs.registerOnSharedPreferenceChangeListener(this);
+        mClient = new LauncherClient(mLauncher, this, getClientOptions());
+        LauncherPrefs.get(mLauncher).addListener(this, LauncherPrefsExt.ENABLE_MINUS_ONE);
     }
 
     @Override
@@ -116,13 +116,13 @@ public class OverlayCallbackImpl
     @Override
     public void onActivityDestroyed() {
         mClient.onDestroy();
-        mLauncher.getSharedPrefs().unregisterOnSharedPreferenceChangeListener(this);
+        LauncherPrefs.get(mLauncher).removeListener(this, LauncherPrefsExt.ENABLE_MINUS_ONE);
     }
 
     @Override
-    public void onSharedPreferenceChanged(SharedPreferences prefs, String key) {
+    public void onPrefChanged(String key) {
         if (KEY_ENABLE_MINUS_ONE.equals(key)) {
-            mClient.setClientOptions(getClientOptions(prefs));
+            mClient.setClientOptions(getClientOptions());
         }
     }
 
@@ -161,9 +161,9 @@ public class OverlayCallbackImpl
         mLauncherOverlayCallbacks = callbacks;
     }
 
-    private LauncherClient.ClientOptions getClientOptions(SharedPreferences prefs) {
+    private LauncherClient.ClientOptions getClientOptions() {
         return new LauncherClient.ClientOptions(
-                prefs.getBoolean(KEY_ENABLE_MINUS_ONE, true),
+                LauncherPrefs.get(mLauncher).get(LauncherPrefsExt.ENABLE_MINUS_ONE),
                 true, /* enableHotword */
                 true /* enablePrewarming */
         );
