@@ -78,7 +78,7 @@ internal fun DashboardScreen(
             CategoryPreference(
                 titleRes = R.string.home_settings_backup_title,
                 summaryRes = R.string.home_settings_backup_summary,
-                iconRes = R.drawable.ic_ps_settings,
+                iconRes = R.drawable.ic_home_settings_backup,
                 onClick = { onNavigate(HomeSettingsRoutes.BACKUP) },
             )
         }
