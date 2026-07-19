@@ -522,7 +522,7 @@ class SystemUiProxy @Inject constructor(
     }
 
     private fun getWallpaperZoom(zoomOut: Float): Float =
-        if (isWallpaperZoomDisabled) 0f else zoomOut
+        if (isWallpaperZoomDisabled) 1f else zoomOut
 
     fun notifyAccessibilityButtonClicked(displayId: Int) =
         executeWithErrorLog({ "Failed call notifyAccessibilityButtonClicked" }) {
