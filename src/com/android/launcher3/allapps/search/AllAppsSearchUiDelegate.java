@@ -21,6 +21,7 @@ import android.view.View;
 
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.android.launcher3.LauncherPrefsExt;
 import com.android.launcher3.R;
 import com.android.launcher3.allapps.ActivityAllAppsContainerView;
 import com.android.launcher3.allapps.BaseAllAppsAdapter.AdapterItem;
@@ -76,7 +77,7 @@ public class AllAppsSearchUiDelegate {
 
     /** Whether the search box is floating above the apps surface (inset by the IME). */
     public boolean isSearchBarFloating() {
-        return false;
+        return LauncherPrefsExt.ALL_APPS_FLOATING_SEARCH_BAR.get(mAppsView.getContext());
     }
 
     /** Creates the adapter provider for the main section. */

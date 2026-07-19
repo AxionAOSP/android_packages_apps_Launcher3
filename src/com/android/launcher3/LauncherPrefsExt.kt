@@ -198,6 +198,8 @@ object LauncherPrefsExt {
         backedUpItem("pref_allapps_themed_icons", false, EncryptionType.SECURE_SETTINGS)
     @JvmField val DRAWER_OPEN_KEYBOARD =
         backedUpItem("pref_drawer_open_keyboard", false, EncryptionType.SECURE_SETTINGS)
+    @JvmField val ALL_APPS_FLOATING_SEARCH_BAR =
+        backedUpItem("pref_all_apps_floating_search_bar", false, EncryptionType.SECURE_SETTINGS)
     @JvmField val SHOW_DESKTOP_LABELS =
         backedUpItem("pref_desktop_show_labels", true, EncryptionType.SECURE_SETTINGS)
     @JvmField val SHOW_DRAWER_LABELS =
