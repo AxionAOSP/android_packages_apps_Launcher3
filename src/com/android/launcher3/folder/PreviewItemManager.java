@@ -17,6 +17,7 @@
 package com.android.launcher3.folder;
 
 import static com.android.launcher3.BubbleTextView.DISPLAY_FOLDER;
+import static com.android.launcher3.LauncherPrefsExt.ALLAPPS_THEMED_ICONS;
 import static com.android.launcher3.LauncherSettings.Favorites.DESKTOP_ICON_FLAG;
 import static com.android.launcher3.Utilities.dpToPx;
 import static com.android.launcher3.folder.ClippedFolderIconLayoutRule.ENTER_INDEX;
@@ -49,6 +50,7 @@ import com.android.launcher3.Utilities;
 import com.android.launcher3.apppairs.AppPairIcon;
 import com.android.launcher3.apppairs.AppPairIconDrawingParams;
 import com.android.launcher3.apppairs.AppPairIconGraphic;
+import com.android.launcher3.folder.AxFolderExt;
 import com.android.launcher3.model.data.AppPairInfo;
 import com.android.launcher3.model.data.ItemInfo;
 import com.android.launcher3.model.data.ItemInfoWithIcon;
@@ -453,10 +455,13 @@ public class PreviewItemManager {
     private void setDrawableInternal(
             PreviewItemDrawingParams p, ItemInfo item, boolean loadHighResIcon) {
         if (item instanceof WorkspaceItemInfo wii) {
+            boolean useThemed = !AxFolderExt.isAllAppsFolder(mIcon.mInfo)
+                    || ALLAPPS_THEMED_ICONS.get(mContext);
+            int flags = useThemed ? FLAG_THEMED : 0;
             if (wii.shouldShowPendingIcon()) {
-                p.drawable = newPendingIcon(wii, mContext, FLAG_THEMED);
+                p.drawable = newPendingIcon(wii, mContext, flags);
             } else {
-                p.drawable = wii.newIcon(mContext, FLAG_THEMED);
+                p.drawable = wii.newIcon(mContext, flags);
             }
             p.drawable.setBounds(0, 0, mIconSize, mIconSize);
         } else if (item instanceof AppPairInfo api) {
