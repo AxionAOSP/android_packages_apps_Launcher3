@@ -254,6 +254,7 @@ public class BubbleTextView extends TextView implements ItemInfoUpdateReceiver,
 
     private boolean mShouldShowLabel;
     private boolean mThemeAllAppsIcons;
+    private boolean mIsInAllAppsFolder;
 
     private CancellableTask mIconLoadRequest;
 
@@ -308,6 +309,7 @@ public class BubbleTextView extends TextView implements ItemInfoUpdateReceiver,
                     mDeviceProfile.getFolderProfile().getChildDrawablePaddingPx());
             defaultIconSize = mDeviceProfile.getFolderProfile().getChildIconSizePx();
             mShouldShowLabel = SHOW_DESKTOP_LABELS.get(context);
+            mThemeAllAppsIcons = ALLAPPS_THEMED_ICONS.get(context);
         } else if (mDisplay == DISPLAY_SEARCH_RESULT) {
             setTextSize(TypedValue.COMPLEX_UNIT_PX,
                     mDeviceProfile.getAllAppsProfile().getIconTextSizePx());
@@ -590,9 +592,15 @@ public class BubbleTextView extends TextView implements ItemInfoUpdateReceiver,
         return flags;
     }
 
+    public void setIsInAllAppsFolder(boolean isInAllAppsFolder) {
+        mIsInAllAppsFolder = isInAllAppsFolder;
+    }
+
     protected boolean shouldUseTheme() {
-        return mDisplay == DISPLAY_WORKSPACE || mDisplay == DISPLAY_FOLDER
-                || mDisplay == DISPLAY_TASKBAR
+        if (mDisplay == DISPLAY_FOLDER) {
+            return mThemeAllAppsIcons || !mIsInAllAppsFolder;
+        }
+        return mDisplay == DISPLAY_WORKSPACE || mDisplay == DISPLAY_TASKBAR
                 || (mThemeAllAppsIcons && mDisplay == DISPLAY_ALL_APPS);
     }
 
