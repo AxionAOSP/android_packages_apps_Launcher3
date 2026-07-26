@@ -122,10 +122,17 @@
             android:summary="@string/search_results_settings_summary"
             android:persistent="false" />
 
-        <SwitchPreferenceCompat
+        <com.android.axion.preference.AxSwitchPreference
             android:key="pref_drawer_open_keyboard"
             android:title="@string/drawer_open_keyboard_title"
             android:summary="@string/drawer_open_keyboard_summary"
+            android:defaultValue="false"
+            android:persistent="true" />
+
+        <com.android.axion.preference.AxSwitchPreference
+            android:key="pref_all_apps_floating_search_bar"
+            android:title="@string/floating_search_bar_title"
+            android:summary="@string/floating_search_bar_summary"
             android:defaultValue="false"
             android:persistent="true" />
 

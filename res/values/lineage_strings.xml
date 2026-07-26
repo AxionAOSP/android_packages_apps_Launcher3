@@ -261,6 +261,8 @@
     <!-- Open keyboard -->
     <string name="drawer_open_keyboard_title">Swipe to start search</string>
     <string name="drawer_open_keyboard_summary">Open keyboard whenever app drawer becomes visible</string>
+    <string name="floating_search_bar_title">Floating search bar</string>
+    <string name="floating_search_bar_summary">Show the search bar floating above the app drawer instead of fixed at the top</string>
 
     <!-- Sleep gesture -->
     <string name="pref_sleep_gesture_title">Double tap to sleep</string>
