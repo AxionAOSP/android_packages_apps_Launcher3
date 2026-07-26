@@ -68,14 +68,6 @@ internal fun DashboardScreen(
         }
         item {
             CategoryPreference(
-                titleRes = R.string.home_settings_privacy_title,
-                summaryRes = R.string.home_settings_privacy_summary,
-                iconRes = R.drawable.ic_home_settings_privacy,
-                onClick = { onNavigate(HomeSettingsRoutes.PRIVACY) },
-            )
-        }
-        item {
-            CategoryPreference(
                 titleRes = R.string.home_settings_backup_title,
                 summaryRes = R.string.home_settings_backup_summary,
                 iconRes = R.drawable.ic_home_settings_backup,
