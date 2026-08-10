@@ -122,7 +122,7 @@ public abstract class BaseLauncherAppWidgetHostView extends NavigableAppWidgetHo
                 background,
                 mEnforcedRectangle);
         setOutlineProvider(mCornerRadiusEnforcementOutline);
-        setClipToOutline(!mWorkspaceWidgetPrefs.shouldAllowWidgetOverlap(getContext()));
+        setClipToOutline(true);
         mIsCornerRadiusEnforced = true;
         invalidateOutline();
     }
