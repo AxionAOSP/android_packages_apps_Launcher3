@@ -25,15 +25,21 @@ import android.graphics.RenderNode
 import android.graphics.Shader
 import android.view.View
 import com.android.internal.graphics.drawable.BackgroundBlurDrawable
-import com.android.launcher3.Flags.blurOnMoreSurfaces
+import com.android.launcher3.Launcher
+import com.android.launcher3.LauncherPrefs
+import com.android.launcher3.LauncherPrefsExt.LAUNCHER_BLUR_ENABLED
+import com.android.launcher3.LauncherPrefsExt.LAUNCHER_BLUR_MAX_RADIUS_PCT
+import com.android.launcher3.LauncherState
+import com.android.launcher3.LauncherPrefsExt.LAUNCHER_BLUR_MAX_RADIUS_PX
+import com.android.launcher3.LauncherPrefsExt.LAUNCHER_BLUR_MIN_RADIUS_PCT
+import com.android.launcher3.LauncherPrefsExt.LAUNCHER_BLUR_RADIUS_PCT
 import com.android.launcher3.R
 import com.android.launcher3.dagger.ActivityContextSingleton
 import com.android.launcher3.folder.Folder
 import com.android.launcher3.graphics.PathWrapper
-import com.android.launcher3.util.WindowBlurState.WINDOW_BLUR_STATE
+import com.android.launcher3.Utilities
 import com.android.launcher3.views.ActivityContext
 import javax.inject.Inject
-import javax.inject.Named
 
 /**
  * Quickstep implementation of the helper class that creates and updates the blur drawable used
@@ -44,25 +50,31 @@ class QuickstepBackgroundBlurHelper
 @Inject
 constructor(
     private val activityContext: ActivityContext,
-    @Named(WINDOW_BLUR_STATE) private val blurState: ListenableRef<Boolean>,
 ) : BlurBackgroundHelper() {
 
-    private val folderBlurRadius = activityContext.asContext().resources.getDimension(
-        R.dimen.folder_blur_radius
-    )
+    private val launcherPrefs = LauncherPrefs.get(activityContext.asContext())
+
+    private val blurRadius: Float
+        get() {
+            val radiusPct = Utilities.boundToRange(
+                launcherPrefs.get(LAUNCHER_BLUR_RADIUS_PCT),
+                LAUNCHER_BLUR_MIN_RADIUS_PCT,
+                LAUNCHER_BLUR_MAX_RADIUS_PCT,
+            )
+            val maxBlurRadius = LAUNCHER_BLUR_MAX_RADIUS_PX.toFloat()
+            return maxBlurRadius * radiusPct.toFloat() / LAUNCHER_BLUR_MAX_RADIUS_PCT
+        }
 
     private val cornerRadius = Themes.getDialogCornerRadius(activityContext.asContext())
     private val workspaceBlurRenderNode = RenderNode("workspaceBlur")
     private val workspaceBlurRenderNodeOutline = Outline()
     private val bounds = Rect()
     private val folderBlurDrawable: BackgroundBlurDrawable? by lazy {
-        if (!isBlurEnabled()) null
-        else
-            activityContext.dragLayer.getViewRootImpl()
-                .createBackgroundBlurDrawable()?.apply {
-                    setBlurRadius(folderBlurRadius.toInt())
-                    setVisible(false, false)
-                }
+        activityContext.dragLayer.getViewRootImpl()
+            .createBackgroundBlurDrawable()?.apply {
+                setBlurRadius(blurRadius.toInt())
+                setVisible(false, false)
+            }
     }
 
     override fun prepareToOpenFolder(folder: Folder) {
@@ -101,18 +113,18 @@ constructor(
         if (!workspaceBlurRenderNode.hasDisplayList()) {
             return
         }
-        workspaceBlurRenderNode.translationX = -view.left.toFloat()
-        workspaceBlurRenderNode.translationY = -view.top.toFloat()
+        workspaceBlurRenderNode.translationX = -view.x
+        workspaceBlurRenderNode.translationY = -view.y
 
         if (path != null && !path.isEmpty) {
             workspaceBlurRenderNodeOutline.setPath(path)
-            workspaceBlurRenderNodeOutline.mPath.offset(view.left.toFloat(), view.top.toFloat())
+            workspaceBlurRenderNodeOutline.mPath.offset(view.x, view.y)
         } else {
             workspaceBlurRenderNodeOutline.setRoundRect(
-                view.left,
-                view.top,
-                view.right,
-                view.bottom,
+                Math.round(view.x),
+                Math.round(view.y),
+                Math.round(view.x + view.width),
+                Math.round(view.y + view.height),
                 cornerRadius,
             )
         }
@@ -121,8 +133,8 @@ constructor(
 
         workspaceBlurRenderNode.setRenderEffect(
             RenderEffect.createBlurEffect(
-                folderBlurRadius,
-                folderBlurRadius,
+                blurRadius,
+                blurRadius,
                 Shader.TileMode.CLAMP
             )
         )
@@ -132,6 +144,7 @@ constructor(
     private fun drawCrossWindowBlur(canvas: Canvas, pathWrapper: PathWrapper?, view: View) {
         val d = folderBlurDrawable ?: return
 
+        d.setBlurRadius(blurRadius.toInt())
         d.setVisible(true, false)
         if (pathWrapper != null) {
             pathWrapper.bounds.roundOut(bounds)
@@ -151,7 +164,36 @@ constructor(
         folderBlurDrawable?.setVisible(false, false)
     }
 
+    override fun prepareToOpenPopup(popup: View) {
+        if (!isBlurEnabled()) {
+            return
+        }
+        val dragLayer = activityContext.dragLayer
+        val canvas = workspaceBlurRenderNode.beginRecording(dragLayer.getWidth(), dragLayer.getHeight())
+        dragLayer.draw(canvas)
+        workspaceBlurRenderNode.endRecording()
+        workspaceBlurRenderNode.setPosition(0, 0, dragLayer.getWidth(), dragLayer.getHeight())
+    }
+
+    override fun drawPopupBlur(canvas: Canvas, popup: View): Boolean {
+        if (!isBlurEnabled()) {
+            return false
+        }
+        drawCrossWindowBlur(canvas, null, popup)
+        drawWorkspaceBlur(canvas, null, popup)
+        return true
+    }
+
+    override fun popupCloseComplete() {
+        if (workspaceBlurRenderNode.hasDisplayList()) {
+            workspaceBlurRenderNode.discardDisplayList()
+        }
+        folderBlurDrawable?.setVisible(false, false)
+    }
+
     override fun isBlurEnabled(): Boolean {
-        return blurOnMoreSurfaces() && blurState.value
+        return (activityContext.asContext() as? Launcher)?.isInState(LauncherState.NORMAL) == true
+                && activityContext.isCrossWindowBlurEnabled
+                && launcherPrefs.get(LAUNCHER_BLUR_ENABLED)
     }
 }

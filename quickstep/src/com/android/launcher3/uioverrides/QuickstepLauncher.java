@@ -25,7 +25,6 @@ import static com.android.app.animation.Interpolators.EMPHASIZED;
 import static com.android.internal.jank.Cuj.CUJ_LAUNCHER_LAUNCH_APP_PAIR_FROM_WORKSPACE;
 import static com.android.launcher3.Flags.enableExpressiveDismissTaskMotion;
 import static com.android.launcher3.Flags.enableOverviewBackgroundWallpaperBlur;
-import static com.android.launcher3.Flags.blurOnMoreSurfaces;
 import static com.android.launcher3.Flags.enableUnfoldStateAnimation;
 import static com.android.launcher3.Flags.refactorTaskbarUiState;
 import static com.android.launcher3.LauncherConstants.SavedInstanceKeys.PENDING_SPLIT_SELECT_INFO;
@@ -345,10 +344,8 @@ public class QuickstepLauncher extends Launcher implements RecentsViewContainer,
         mOverviewBlurEnabled = isOverviewBackgroundBlurEnabled();
         mFolderBlurEnabled = mDepthController.isCrossWindowBlursEnabled();
         getTheme().applyStyle(getOverviewBlurStyleResId(), true);
-        if (blurOnMoreSurfaces()) {
-            getTheme().applyStyle(mFolderBlurEnabled ? R.style.FolderBlurStyle
-                    : R.style.FolderBlurFallbackStyle, true);
-        }
+        getTheme().applyStyle(mFolderBlurEnabled ? R.style.FolderBlurStyle
+                : R.style.FolderBlurFallbackStyle, true);
         super.setupViews();
         mDepthController.setSurfaceTransactionApplier(getRootView());
 
@@ -537,8 +534,7 @@ public class QuickstepLauncher extends Launcher implements RecentsViewContainer,
     public void updateBlurStyle() {
         boolean shouldRecreate = enableOverviewBackgroundWallpaperBlur()
                 && isOverviewBackgroundBlurEnabled() != mOverviewBlurEnabled;
-        shouldRecreate |= blurOnMoreSurfaces()
-                && isCrossWindowBlurEnabled() != mFolderBlurEnabled;
+        shouldRecreate |= isCrossWindowBlurEnabled() != mFolderBlurEnabled;
         if (shouldRecreate) {
             mWallpaperThemeManager.recreateToUpdateTheme();
         } else if (Flags.allAppsBlur()) {

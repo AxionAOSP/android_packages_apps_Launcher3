@@ -27,6 +27,7 @@ import android.animation.ObjectAnimator;
 import android.animation.ValueAnimator;
 import android.content.Context;
 import android.content.res.Resources;
+import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Rect;
 import android.graphics.drawable.ColorDrawable;
@@ -45,12 +46,15 @@ import android.widget.FrameLayout;
 
 import androidx.annotation.VisibleForTesting;
 
+import java.util.ArrayList;
+
 import com.android.launcher3.AbstractFloatingView;
 import com.android.launcher3.InsettableFrameLayout;
 import com.android.launcher3.R;
 import com.android.launcher3.Utilities;
 import com.android.launcher3.dragndrop.DragLayer;
 import com.android.launcher3.shortcuts.DeepShortcutView;
+import com.android.launcher3.util.BlurBackgroundHelper;
 import com.android.launcher3.util.RunnableList;
 import com.android.launcher3.util.Themes;
 import com.android.launcher3.views.ActivityContext;
@@ -130,11 +134,14 @@ public abstract class ArrowPopup<T extends Context & ActivityContext>
 
     protected final int[] mColors;
 
+    private final BlurBackgroundHelper mBlurBackgroundHelper;
+
     public ArrowPopup(Context context, AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
         mInflater = LayoutInflater.from(context);
         mOutlineRadius = Themes.getDialogCornerRadius(context);
         mActivityContext = ActivityContext.lookupContext(context);
+        mBlurBackgroundHelper = mActivityContext.getActivityComponent().getBlurBackgroundHelper();
         mIsRtl = Utilities.isRtl(getResources());
         mElevation = getResources().getDimension(R.dimen.deep_shortcuts_elevation);
 
@@ -153,7 +160,9 @@ public abstract class ArrowPopup<T extends Context & ActivityContext>
 
         int smallerRadius = resources.getDimensionPixelSize(R.dimen.popup_smaller_radius);
         mRoundedTop = new GradientDrawable();
-        int popupPrimaryColor = Themes.getAttrColor(context, R.attr.popupColorPrimary);
+        int popupPrimaryColor = mBlurBackgroundHelper.isBlurEnabled()
+                ? context.getColor(com.android.internal.R.color.surface_effect_0)
+                : Themes.getAttrColor(context, R.attr.popupColorPrimary);
         mRoundedTop.setColor(popupPrimaryColor);
         mRoundedTop.setCornerRadii(new float[]{mOutlineRadius, mOutlineRadius, mOutlineRadius,
                 mOutlineRadius, smallerRadius, smallerRadius, smallerRadius, smallerRadius});
@@ -165,7 +174,9 @@ public abstract class ArrowPopup<T extends Context & ActivityContext>
 
         mIterateChildrenTag = getContext().getString(R.string.popup_container_iterate_children);
 
-        if (mActivityContext.canUseMultipleShadesForPopup()) {
+        if (mBlurBackgroundHelper.isBlurEnabled()) {
+            mColors = new int[]{context.getColor(com.android.internal.R.color.surface_effect_0)};
+        } else if (mActivityContext.canUseMultipleShadesForPopup()) {
             mColors = new int[]{
                     getContext().getColor(R.color.popup_shade_first),
                     getContext().getColor(R.color.popup_shade_second),
@@ -329,8 +340,10 @@ public abstract class ArrowPopup<T extends Context & ActivityContext>
     protected void setupForDisplay() {
         setVisibility(View.INVISIBLE);
         mIsOpen = true;
-        getPopupContainer().addView(this);
+        BaseDragLayer popupContainer = getPopupContainer();
+        popupContainer.addView(this);
         orientAboutObject();
+        mBlurBackgroundHelper.prepareToOpenPopup(this);
     }
 
     private int getArrowLeft() {
@@ -715,6 +728,7 @@ public abstract class ArrowPopup<T extends Context & ActivityContext>
         }
         mIsOpen = false;
         mDeferContainerRemoval = false;
+        mBlurBackgroundHelper.popupCloseComplete();
         getPopupContainer().removeView(this);
         getPopupContainer().removeView(mArrow);
         mOnCloseCallbacks.executeAllAndClear();
@@ -729,5 +743,13 @@ public abstract class ArrowPopup<T extends Context & ActivityContext>
 
     protected BaseDragLayer getPopupContainer() {
         return mActivityContext.getDragLayer();
+    }
+
+    @Override
+    protected void dispatchDraw(Canvas canvas) {
+        if (mIsOpen) {
+            mBlurBackgroundHelper.drawPopupBlur(canvas, this);
+        }
+        super.dispatchDraw(canvas);
     }
 }
