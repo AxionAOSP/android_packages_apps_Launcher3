@@ -133,22 +133,32 @@ public class AppsDividerView extends View implements FloatingHeaderRow {
         if (!mTabsHidden) {
             dividerType = DividerType.NONE;
         } else {
-            // Check how many sections above me.
-            int sectionCount = 0;
-            for (FloatingHeaderRow row : mRows) {
-                if (row == this) {
+            // This divider is visible only when the row directly above it is visible.
+            FloatingHeaderRow previousRow = null;
+            int dividerIndex = 0;
+            for (int i = 0; i < mRows.length; i++) {
+                if (mRows[i] == this) {
+                    dividerIndex = i;
                     break;
-                } else if (row.shouldDraw()) {
-                    sectionCount++;
                 }
+                previousRow = mRows[i];
             }
-
-            if (mShowAllAppsLabel && sectionCount > 0) {
-                dividerType = DividerType.ALL_APPS_LABEL;
-            } else if (sectionCount == 1) {
-                dividerType = DividerType.LINE;
-            } else {
+            if (previousRow == null || !previousRow.shouldDraw()) {
                 dividerType = DividerType.NONE;
+            } else {
+                // The divider directly above the all-apps grid shows the all-apps label.
+                boolean aboveAppGrid = true;
+                for (int i = dividerIndex + 1; i < mRows.length; i++) {
+                    if (mRows[i].shouldDraw()) {
+                        aboveAppGrid = false;
+                        break;
+                    }
+                }
+                if (mShowAllAppsLabel && aboveAppGrid) {
+                    dividerType = DividerType.ALL_APPS_LABEL;
+                } else {
+                    dividerType = DividerType.LINE;
+                }
             }
         }
 

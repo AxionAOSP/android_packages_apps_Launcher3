@@ -40,7 +40,6 @@ import com.android.launcher3.Flags;
 import com.android.launcher3.LauncherPrefChangeListener;
 import com.android.launcher3.LauncherPrefs;
 import com.android.launcher3.R;
-import com.android.launcher3.Utilities;
 import com.android.launcher3.anim.AlphaUpdateListener;
 import com.android.launcher3.keyboard.FocusIndicatorHelper;
 import com.android.launcher3.keyboard.FocusIndicatorHelper.SimpleFocusIndicatorHelper;
@@ -58,9 +57,6 @@ public class PinnedAppsRowView extends LinearLayout implements OnDeviceProfileCh
     private final AllAppsStore mAllAppsStore;
     private final FocusIndicatorHelper mFocusHelper;
     private final List<WorkspaceItemInfo> mPinnedApps = new ArrayList<>();
-    private final int mTopRowExtraHeight;
-    private final int mVerticalPadding;
-
     private FloatingHeaderView mParent;
     private int mNumPinnedAppsPerRow;
     private boolean mPinnedAppsVisible;
@@ -71,16 +67,12 @@ public class PinnedAppsRowView extends LinearLayout implements OnDeviceProfileCh
 
     public PinnedAppsRowView(@NonNull Context context, @Nullable AttributeSet attrs) {
         super(context, attrs);
-        setOrientation(LinearLayout.HORIZONTAL);
+        setOrientation(LinearLayout.VERTICAL);
 
         mActivityContext = ActivityContext.lookupContext(context);
         mAllAppsStore = mActivityContext.getActivityComponent().getAppsStore();
         mFocusHelper = new SimpleFocusIndicatorHelper(this);
         mNumPinnedAppsPerRow = mActivityContext.getDeviceProfile().numShownAllAppsColumns;
-        mTopRowExtraHeight = getResources().getDimensionPixelSize(
-                R.dimen.all_apps_search_top_row_extra_height);
-        mVerticalPadding = getResources().getDimensionPixelSize(
-                R.dimen.all_apps_predicted_icon_vertical_padding);
         updateVisibility();
     }
 
@@ -107,7 +99,9 @@ public class PinnedAppsRowView extends LinearLayout implements OnDeviceProfileCh
                 ALL_APPS_DRAWER_LAYOUT_MODE);
         mAllAppsStore.removeUpdateListener(this);
         mActivityContext.removeOnDeviceProfileChangeListener(this);
-        mAllAppsStore.unregisterIconContainer(this);
+        for (int i = 0; i < getChildCount(); i++) {
+            mAllAppsStore.unregisterIconContainer((ViewGroup) getChildAt(i));
+        }
         super.onDetachedFromWindow();
     }
 
@@ -119,14 +113,8 @@ public class PinnedAppsRowView extends LinearLayout implements OnDeviceProfileCh
     @Override
     public int getExpectedHeight() {
         DeviceProfile deviceProfile = mActivityContext.getDeviceProfile();
-        int iconHeight = deviceProfile.getAllAppsProfile().getIconSizePx();
-        int iconPadding = deviceProfile.getAllAppsProfile().getIconDrawablePaddingPx();
-        int textHeight = Utilities.calculateTextHeight(
-                deviceProfile.getAllAppsProfile().getIconTextSizePx());
-        int totalHeight = iconHeight + iconPadding + textHeight + mVerticalPadding * 2;
-        int extraHeight = deviceProfile.inv.enableTwoLinesInAllApps
-                ? textHeight + mTopRowExtraHeight : mTopRowExtraHeight;
-        totalHeight += extraHeight;
+        int perRowHeight = deviceProfile.getAllAppsProfile().getCellHeightPx();
+        int totalHeight = Math.max(1, getChildCount()) * perRowHeight;
         return getVisibility() == GONE ? 0 : totalHeight + getPaddingTop() + getPaddingBottom();
     }
 
@@ -158,7 +146,11 @@ public class PinnedAppsRowView extends LinearLayout implements OnDeviceProfileCh
 
     @Override
     public View getFocusedChild() {
-        return getChildAt(0);
+        if (getChildCount() == 0) {
+            return null;
+        }
+        LinearLayout iconRow = (LinearLayout) getChildAt(0);
+        return iconRow.getChildAt(0);
     }
 
     @Override
@@ -169,6 +161,9 @@ public class PinnedAppsRowView extends LinearLayout implements OnDeviceProfileCh
     @Override
     public void onDeviceProfileChanged(DeviceProfile dp) {
         mNumPinnedAppsPerRow = dp.numShownAllAppsColumns;
+        for (int i = 0; i < getChildCount(); i++) {
+            mAllAppsStore.unregisterIconContainer((ViewGroup) getChildAt(i));
+        }
         removeAllViews();
         applyPinnedApps();
     }
@@ -222,20 +217,25 @@ public class PinnedAppsRowView extends LinearLayout implements OnDeviceProfileCh
     private void applyPinnedApps() {
         updatePinnedIconSlots();
         int pinnedCount = mPinnedApps.size();
+        int iconIndex = 0;
 
-        for (int i = 0; i < getChildCount(); i++) {
-            BubbleTextView icon = (BubbleTextView) getChildAt(i);
-            icon.reset();
-            if (pinnedCount > i) {
-                icon.setVisibility(View.VISIBLE);
-                WorkspaceItemInfo pinnedItem = mPinnedApps.get(i);
-                pinnedItem.container = CONTAINER_ALL_APPS;
-                pinnedItem.rank = i;
-                pinnedItem.cellX = i;
-                pinnedItem.cellY = 0;
-                icon.applyFromWorkspaceItem(pinnedItem);
-            } else {
-                icon.setVisibility(pinnedCount == 0 ? GONE : INVISIBLE);
+        for (int row = 0; row < getChildCount(); row++) {
+            LinearLayout iconRow = (LinearLayout) getChildAt(row);
+            for (int col = 0; col < iconRow.getChildCount(); col++) {
+                BubbleTextView icon = (BubbleTextView) iconRow.getChildAt(col);
+                icon.reset();
+                if (pinnedCount > iconIndex) {
+                    icon.setVisibility(View.VISIBLE);
+                    WorkspaceItemInfo pinnedItem = mPinnedApps.get(iconIndex);
+                    pinnedItem.container = CONTAINER_ALL_APPS;
+                    pinnedItem.rank = iconIndex;
+                    pinnedItem.cellX = col;
+                    pinnedItem.cellY = row;
+                    icon.applyFromWorkspaceItem(pinnedItem);
+                } else {
+                    icon.setVisibility(pinnedCount == 0 ? GONE : INVISIBLE);
+                }
+                iconIndex++;
             }
         }
 
@@ -250,16 +250,27 @@ public class PinnedAppsRowView extends LinearLayout implements OnDeviceProfileCh
     }
 
     private void updatePinnedIconSlots() {
-        if (getChildCount() == mNumPinnedAppsPerRow) {
-            return;
-        }
-        while (getChildCount() > mNumPinnedAppsPerRow) {
-            removeViewAt(0);
+        int pinnedCount = mPinnedApps.size();
+        int neededRows = Math.max(1,
+                (int) Math.ceil(pinnedCount / (double) mNumPinnedAppsPerRow));
+        while (getChildCount() > neededRows) {
+            mAllAppsStore.unregisterIconContainer((ViewGroup) getChildAt(getChildCount() - 1));
+            removeViewAt(getChildCount() - 1);
         }
         LayoutInflater inflater = LayoutInflater.from(getContext());
-        while (getChildCount() < mNumPinnedAppsPerRow) {
+        while (getChildCount() < neededRows) {
+            addView(createIconRow(inflater));
+        }
+    }
+
+    private LinearLayout createIconRow(LayoutInflater inflater) {
+        LinearLayout iconRow = new LinearLayout(getContext());
+        iconRow.setOrientation(LinearLayout.HORIZONTAL);
+        iconRow.setLayoutParams(new LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,
+                mActivityContext.getDeviceProfile().getAllAppsProfile().getCellHeightPx()));
+        for (int i = 0; i < mNumPinnedAppsPerRow; i++) {
             BubbleTextView icon = (BubbleTextView) inflater.inflate(
-                    R.layout.all_apps_prediction_row_icon, this, false);
+                    R.layout.all_apps_prediction_row_icon, iconRow, false);
             icon.setOnClickListener(mActivityContext.getItemOnClickListener());
             icon.setOnLongClickListener(mActivityContext.getAllAppsItemLongClickListener());
             icon.setLongPressTimeoutFactor(1f);
@@ -274,17 +285,22 @@ public class PinnedAppsRowView extends LinearLayout implements OnDeviceProfileCh
             }
             lp.width = 0;
             lp.weight = 1;
-            addView(icon);
+            iconRow.addView(icon);
         }
+        mAllAppsStore.registerIconContainer(iconRow);
+        return iconRow;
     }
 
     private void updateVisibility() {
         boolean visible = mPinnedAppsVisible && !AxSmartDrawerManager.isEnabled(getContext());
         setVisibility(visible ? VISIBLE : GONE);
-        if (visible) {
-            mAllAppsStore.registerIconContainer(this);
-        } else {
-            mAllAppsStore.unregisterIconContainer(this);
+        for (int i = 0; i < getChildCount(); i++) {
+            ViewGroup iconRow = (ViewGroup) getChildAt(i);
+            if (visible) {
+                mAllAppsStore.registerIconContainer(iconRow);
+            } else {
+                mAllAppsStore.unregisterIconContainer(iconRow);
+            }
         }
     }
 }
