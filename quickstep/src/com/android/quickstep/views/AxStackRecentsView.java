@@ -502,7 +502,7 @@ public abstract class AxStackRecentsView<
                     stackScale,
                     naturalLayout ? stackTranslation : 0f,
                     naturalLayout ? 0f : stackTranslation,
-                    visible ? (childCount - index) * depthStep : 0f,
+                    visible ? Math.max(0f, MAX_STACK_DEPTH - Math.abs(distance) * depthStep) : 0f,
                     stackAlpha,
                     stackIconAlpha);
             if (taskView.isRunningTask()) {
@@ -527,7 +527,7 @@ public abstract class AxStackRecentsView<
         if (!stackWasActive) {
             loadVisibleTaskData(TaskView.FLAG_UPDATE_ALL);
         }
-        if (redrawLiveTile && canDrawStack()) {
+        if (redrawLiveTile && canDrawStack() && !getEnableDrawingLiveTile()) {
             redrawLiveTile();
         }
     }
