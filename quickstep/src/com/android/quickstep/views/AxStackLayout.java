@@ -42,7 +42,6 @@ final class AxStackLayout {
     private static final float DECELERATE_55 = 0.55f;
     private static final float DECELERATE_65 = 0.65f;
     private static final float DECELERATE_70 = 0.7f;
-
     boolean isDistanceActive(float distance, boolean naturalLayout) {
         return distance >= -TASK_PRELOAD_RANGE
                 && distance <= getLeftStackDistance(naturalLayout) + EDGE_BLEND_DISTANCE;
@@ -80,14 +79,15 @@ final class AxStackLayout {
         return 1f - decelerate(progress, DECELERATE_70);
     }
 
-    void getTransform(float distance, float normalDelta, float primarySize,
-            boolean naturalLayout, boolean rtl, Transform out) {
+    void getTransform(float distance, float normalDelta, float reflowTranslation,
+            float primarySize, boolean naturalLayout, boolean rtl, Transform out) {
         if (distance < -TASK_PRELOAD_RANGE) {
             out.set(1f, 0f, 0f, 0f);
             return;
         }
         if (distance <= 0f) {
-            out.set(1f, 0f, 1f, 1f);
+            float translation = -reflowTranslation;
+            out.set(1f, rtl ? -translation : translation, 1f, 1f);
             return;
         }
         if (distance > getLeftStackDistance(naturalLayout) + EDGE_BLEND_DISTANCE) {
@@ -95,27 +95,24 @@ final class AxStackLayout {
             return;
         }
         float desiredDelta;
-        float scale;
+        float scale = getStackScale(distance, naturalLayout);
         float alpha;
         if (distance <= 1f) {
             float progress = decelerate(distance, DECELERATE_65);
             desiredDelta = interpolate(
                     0f, getLeftNearOffset(naturalLayout), progress) * primarySize;
-            scale = interpolate(1f, LEFT_NEAR_SCALE, progress);
             alpha = 1f;
         } else if (distance <= 2f) {
             float progress = decelerate(distance - 1f, DECELERATE_65);
             desiredDelta = interpolate(
                     getLeftNearOffset(naturalLayout),
                     getLeftMidOffset(naturalLayout), progress) * primarySize;
-            scale = interpolate(LEFT_NEAR_SCALE, LEFT_MID_SCALE, progress);
             alpha = 1f;
         } else if (distance <= 3f) {
             float progress = decelerate(distance - 2f, DECELERATE_65);
             desiredDelta = interpolate(
                     getLeftMidOffset(naturalLayout),
                     getLeftFarOffset(naturalLayout), progress) * primarySize;
-            scale = interpolate(LEFT_MID_SCALE, LEFT_FAR_SCALE, progress);
             alpha = naturalLayout
                     ? 1f - progress
                     : interpolate(1f, LANDSCAPE_FAR_ALPHA, progress);
@@ -125,7 +122,6 @@ final class AxStackLayout {
             desiredDelta = interpolate(
                     LANDSCAPE_LEFT_FAR_OFFSET,
                     LANDSCAPE_LEFT_END_OFFSET, progress) * primarySize;
-            scale = interpolate(LEFT_FAR_SCALE, LEFT_END_SCALE, progress);
             alpha = interpolate(LANDSCAPE_FAR_ALPHA, 0f, progress);
         } else {
             float stackDistance = getLeftStackDistance(naturalLayout);
@@ -140,6 +136,29 @@ final class AxStackLayout {
         }
         float translation = desiredDelta - normalDelta;
         out.set(scale, rtl ? -translation : translation, alpha, getMenuAlpha(distance));
+    }
+
+    float getStackDepth(float distance, boolean naturalLayout) {
+        if (distance <= 0f) {
+            return 1f;
+        }
+        return Math.max(0f, 1f - distance / getLeftStackDistance(naturalLayout));
+    }
+
+    private float getStackScale(float distance, boolean naturalLayout) {
+        if (distance <= 1f) {
+            return interpolate(1f, LEFT_NEAR_SCALE, decelerate(distance, DECELERATE_65));
+        } else if (distance <= 2f) {
+            return interpolate(LEFT_NEAR_SCALE, LEFT_MID_SCALE,
+                    decelerate(distance - 1f, DECELERATE_65));
+        } else if (distance <= 3f) {
+            return interpolate(LEFT_MID_SCALE, LEFT_FAR_SCALE,
+                    decelerate(distance - 2f, DECELERATE_65));
+        } else if (!naturalLayout && distance <= 4f) {
+            return interpolate(LEFT_FAR_SCALE, LEFT_END_SCALE,
+                    decelerate(distance - 3f, DECELERATE_65));
+        }
+        return naturalLayout ? LEFT_FAR_SCALE : LEFT_END_SCALE;
     }
 
     private float getLeftStackDistance(boolean naturalLayout) {

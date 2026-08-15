@@ -6447,7 +6447,8 @@ public abstract class RecentsView<
     protected boolean getPageScrolls(int[] outPageScrolls, boolean layoutChildren,
             ComputePageScrollsLogic scrollLogic) {
         int[] newPageScrolls = new int[outPageScrolls.length];
-        super.getPageScrolls(newPageScrolls, layoutChildren, scrollLogic);
+        super.getPageScrolls(newPageScrolls, layoutChildren,
+                v -> scrollLogic.shouldIncludeView(v) || v instanceof TaskView);
         boolean showAsFullscreen = showAsFullscreen();
         boolean showAsGrid = showAsGrid();
 
