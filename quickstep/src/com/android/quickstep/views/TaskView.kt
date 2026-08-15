@@ -410,6 +410,7 @@ constructor(
         }
 
     private val axStackTransform = AxTaskViewTransform()
+    private val axStackElevationScale = 16f * resources.displayMetrics.density
     private var axStackHidden = false
 
     private var dismissTranslationX = 0f
@@ -2179,6 +2180,13 @@ constructor(
 
     fun getAxStackScale(): Float = axStackTransform.getScale()
 
+    fun setAxStackIconElevation(elevation: Float) {
+        taskContainers.forEach {
+            it.iconView.asView().elevation = elevation
+        }
+        lockBadgeView?.elevation = elevation
+    }
+
     fun getAxStackTranslationX(): Float = axStackTransform.getTranslationX()
 
     fun getAxStackTranslationY(): Float = axStackTransform.getTranslationY()
@@ -2202,22 +2210,25 @@ constructor(
     private fun hasAxStackTransform(): Boolean = axStackTransform.isActive()
 
     private fun applyAxStackDepth() {
-        elevation = axStackTransform.getAppliedDepth(fullscreenProgress)
+        elevation = axStackTransform.getAppliedDepth(fullscreenProgress) * axStackElevationScale
     }
 
     private fun applyAxStackAlpha() {
         val alpha = axStackTransform.getAppliedAlpha(fullscreenProgress)
-        appliedAxStackAlpha = alpha
         if (alpha <= 0f) {
-            if (!axStackHidden && visibility == VISIBLE) {
-                visibility = INVISIBLE
+            appliedAxStackAlpha = alpha
+            if (!axStackHidden && visibility != GONE) {
+                visibility = GONE
                 axStackHidden = true
             }
-        } else if (axStackHidden) {
-            if (visibility == INVISIBLE) {
-                visibility = VISIBLE
+        } else {
+            if (axStackHidden) {
+                if (visibility != VISIBLE) {
+                    visibility = VISIBLE
+                }
+                axStackHidden = false
             }
-            axStackHidden = false
+            appliedAxStackAlpha = alpha
         }
     }
 

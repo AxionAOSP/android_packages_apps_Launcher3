@@ -30,6 +30,7 @@ import android.view.View;
 
 import androidx.annotation.Nullable;
 
+import com.android.launcher3.R;
 import com.android.launcher3.Utilities;
 import com.android.launcher3.statehandlers.DepthController;
 import com.android.launcher3.statemanager.BaseState;
@@ -51,6 +52,7 @@ public abstract class AxStackRecentsView<
         STATE_TYPE extends BaseState<STATE_TYPE>> extends RecentsView<CONTAINER_TYPE, STATE_TYPE> {
     private static final float MIN_SIZE = 1f;
     private static final float MAX_STACK_DEPTH = 0.05f;
+    private static final float MAX_STACK_TILT = 8f;
     private static final float TASK_DEPTH = 0.001f;
     private static final long STACK_ENTRANCE_DURATION_MS = 320L;
     private static final float HOME_ENTRANCE_STAGGER = 0.1f;
@@ -65,6 +67,8 @@ public abstract class AxStackRecentsView<
     private boolean mOverviewEnabled;
     private boolean mGestureActive;
     private boolean mStackTransformsActive;
+    private final float mIconChipElevation = getResources().getDimension(
+            R.dimen.task_thumbnail_icon_menu_elevation);
     private boolean mStackEntranceActive;
     private boolean mStackEntranceFromHome;
     private float mStackEntranceProgress;
@@ -454,13 +458,13 @@ public abstract class AxStackRecentsView<
         float pageDistance = Math.max(MIN_SIZE, primarySize + getPageSpacing());
         int scroll = orientationHandler.getPrimaryScroll(this);
         int anchorScroll = getAnchorScroll(centerIndex, scroll, pageDistance);
+        float focusedDisplacement = Math.min(1f,
+                Math.abs(getVisualDelta(getScrollForPage(centerIndex) - anchorScroll) / pageDistance));
         boolean redrawLiveTile = false;
         boolean liveTileFound = false;
         RemoteTargetHandle[] remoteTargetHandles = getRemoteTargetHandles();
         boolean hasRemoteTargets = remoteTargetHandles != null && remoteTargetHandles.length > 0;
         int childCount = getChildCount();
-        float depthStep = MAX_STACK_DEPTH / Math.max(1, childCount);
-
         for (int index = 0; index < childCount; index++) {
             if (!(getChildAt(index) instanceof TaskView taskView)) {
                 continue;
@@ -470,6 +474,10 @@ public abstract class AxStackRecentsView<
             }
             if (!isStackTask(taskView, homeTask)) {
                 boolean transformChanged = taskView.resetAxStackTransform();
+                if (transformChanged) {
+                    taskView.setRotationY(0f);
+                    taskView.setAxStackIconElevation(mIconChipElevation);
+                }
                 if (taskView.isRunningTask()) {
                     liveTileFound = true;
                     if (transformChanged || forceLiveTileUpdate || taskView != mLiveTileTask) {
@@ -488,8 +496,8 @@ public abstract class AxStackRecentsView<
                     + reflowTranslation;
             float distance = (getVisualDelta(pageScroll - anchorScroll)
                     + reflowTranslation) / pageDistance;
-            STACK_LAYOUT.getTransform(distance, normalDelta, primarySize, naturalLayout,
-                    mIsRtl, mStackTransform);
+            STACK_LAYOUT.getTransform(distance, normalDelta, reflowTranslation, primarySize,
+                    naturalLayout, mIsRtl, mStackTransform);
             float entranceProgress = getStackEntranceProgress(index, centerIndex);
             float stackScale = interpolate(1f, mStackTransform.scale, entranceProgress);
             float stackTranslation = mStackTransform.primaryTranslation * entranceProgress;
@@ -498,13 +506,25 @@ public abstract class AxStackRecentsView<
                     : interpolate(1f, mStackTransform.alpha, entranceProgress);
             float stackIconAlpha = interpolate(1f, mStackTransform.iconAlpha, entranceProgress);
             boolean visible = stackAlpha > 0f;
+            float tilt = visible && distance > 0f
+                    ? MAX_STACK_TILT * focusedDisplacement
+                    : 0f;
+            float handoffTranslationX = getPageSpacing() * focusedDisplacement
+                    * (mIsRtl ? -Math.signum(distance) : Math.signum(distance));
+            float stackDepth = visible
+                    ? MAX_STACK_DEPTH * STACK_LAYOUT.getStackDepth(distance, naturalLayout)
+                    : 0f;
+            taskView.setRotationY(tilt);
             boolean transformChanged = taskView.setAxStackTransform(
                     stackScale,
-                    naturalLayout ? stackTranslation : 0f,
+                    naturalLayout ? stackTranslation + handoffTranslationX : 0f,
                     naturalLayout ? 0f : stackTranslation,
-                    visible ? Math.max(0f, MAX_STACK_DEPTH - Math.abs(distance) * depthStep) : 0f,
+                    stackDepth,
                     stackAlpha,
                     stackIconAlpha);
+            taskView.setAxStackIconElevation(
+                    mIconChipElevation * Math.max(0f, Math.min(1f,
+                            1f - Math.abs(distance))));
             if (taskView.isRunningTask()) {
                 liveTileFound = true;
                 if (transformChanged || forceLiveTileUpdate || taskView != mLiveTileTask) {
@@ -554,7 +574,9 @@ public abstract class AxStackRecentsView<
             return;
         }
         for (TaskView taskView : getTaskViews()) {
+            taskView.setRotationY(0f);
             taskView.resetAxStackTransform();
+            taskView.setAxStackIconElevation(mIconChipElevation);
         }
         runActionOnRemoteHandles(remoteTargetHandle -> remoteTargetHandle.getTaskViewSimulator()
                 .setAxStackTransform(1f, 0f, 0f, 1f));
