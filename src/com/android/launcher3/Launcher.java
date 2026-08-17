@@ -74,7 +74,6 @@ import static com.android.launcher3.Workspace.mapOverCellLayouts;
 import static com.android.launcher3.allapps.AxAllAppsShortcuts.PIN_TO_DRAWER;
 import static com.android.launcher3.anim.AnimatorListeners.forEndCallback;
 import static com.android.launcher3.config.FeatureFlags.FOLDABLE_SINGLE_PAGE;
-import static com.android.launcher3.config.FeatureFlags.MULTI_SELECT_EDIT_MODE;
 import static com.android.launcher3.icons.BitmapRenderer.createHardwareBitmap;
 import static com.android.launcher3.logging.KeyboardStateManager.KeyboardState.HIDE;
 import static com.android.launcher3.logging.KeyboardStateManager.KeyboardState.SHOW;
@@ -312,6 +311,12 @@ public class Launcher extends StatefulActivity<LauncherState>
             "launcher.extra.EXCLUDE_CLOSE_WIDGET_PICKER";
 
     private StateManager<LauncherState, Launcher> mStateManager;
+
+    private final com.android.launcher3.util.MultiSelectController mMultiSelectController = new com.android.launcher3.util.MultiSelectController();
+
+    public com.android.launcher3.util.MultiSelectController getMultiSelectController() {
+        return mMultiSelectController;
+    }
 
     private static final int ON_ACTIVITY_RESULT_ANIMATION_DELAY = 500;
 
@@ -848,8 +853,7 @@ public class Launcher extends StatefulActivity<LauncherState>
 
         final int pendingAddWidgetId = requestArgs.getWidgetId();
 
-        Runnable exitSpringLoaded = MULTI_SELECT_EDIT_MODE.get() ? null
-                : () -> mStateManager.goToState(NORMAL, SPRING_LOADED_EXIT_DELAY);
+        Runnable exitSpringLoaded = null;
 
         if (requestCode == REQUEST_BIND_APPWIDGET) {
             // This is called only if the user did not previously have permissions to bind widgets
@@ -1888,8 +1892,7 @@ public class Launcher extends StatefulActivity<LauncherState>
 
         // Exit spring loaded mode if necessary after adding the widget; unless config activity was
         // started.
-        Runnable onComplete = MULTI_SELECT_EDIT_MODE.get() ? null : () -> mStateManager.goToState(
-                NORMAL, SPRING_LOADED_EXIT_DELAY);
+        Runnable onComplete = null;
         completeAddAppWidget(appWidgetId, info, boundWidget,
                 addFlowHandler.getProviderInfo(this), addFlowHandler.needsConfigure(),
                 false, widgetPreviewBitmap);
@@ -2668,6 +2671,10 @@ public class Launcher extends StatefulActivity<LauncherState>
      public void collectStateHandlers(List<StateHandler<LauncherState>> out) {
         out.add(getAllAppsController());
         out.add(getWorkspace());
+        View toolbar = findViewById(R.id.edit_mode_toolbar);
+        if (toolbar instanceof StateHandler) {
+            out.add((StateHandler<LauncherState>) toolbar);
+        }
     }
 
     public TouchController[] createTouchControllers() {

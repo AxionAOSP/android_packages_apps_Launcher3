@@ -60,6 +60,9 @@ public interface DropTarget {
         /** The data associated with the object, after item is dropped. */
         public ItemInfo dragInfo = null;
 
+        /** The list of items being dragged in a multi-drag operation. */
+        public java.util.List<ItemInfo> multiDragInfo = new java.util.ArrayList<>();
+
         /** The data associated with the object  being dragged */
         public ItemInfo originalDragInfo = null;
 

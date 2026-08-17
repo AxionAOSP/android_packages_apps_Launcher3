@@ -101,6 +101,8 @@
     <!-- Extra margin between bottom of the scrollbar and the search bar protection layer. -->
     <dimen name="fastscroll_bottom_margin_floating_search">4dp</dimen>
 
+    <dimen name="drag_view_badge_size">24dp</dimen>
+
     <!-- PagedView -->
     <dimen name="fling_threshold_velocity">500dp</dimen>
     <dimen name="easy_fling_threshold_velocity">400dp</dimen>

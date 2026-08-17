@@ -188,6 +188,8 @@ public class BubbleTextView extends TextView implements ItemInfoUpdateReceiver,
     protected int mDisplay;
 
     private final CheckLongPressHelper mLongPressHelper;
+    private final Rect mTempIconBounds = new Rect();
+    private com.android.launcher3.graphics.SelectionIndicatorRenderer mSelectionRenderer;
 
     private boolean mLayoutHorizontal;
     private final boolean mIsRtl;
@@ -858,6 +860,33 @@ public class BubbleTextView extends TextView implements ItemInfoUpdateReceiver,
         super.onDraw(canvas);
         drawDotIfNecessary(canvas);
         drawRunningAppIndicatorIfNecessary(canvas);
+        drawSelectionIndicatorIfNecessary(canvas);
+    }
+
+    /**
+     * Helper method to render selection indicator.
+     */
+    public void drawSelectionIndicatorIfNecessary(Canvas canvas) {
+        if (mActivity instanceof Launcher launcher && launcher.isInState(LauncherState.EDIT_MODE)) {
+            Object tag = getTag();
+            if (tag instanceof ItemInfo info) {
+                if (info.container != com.android.launcher3.LauncherSettings.Favorites.CONTAINER_DESKTOP &&
+                    info.container != com.android.launcher3.LauncherSettings.Favorites.CONTAINER_HOTSEAT) {
+                    return;
+                }
+                if (mSelectionRenderer == null) {
+                    mSelectionRenderer = new com.android.launcher3.graphics.SelectionIndicatorRenderer(getContext());
+                }
+                boolean isSelected = launcher.getMultiSelectController().isSelected(info);
+                getIconBounds(mTempIconBounds);
+
+                final int scrollX = getScrollX();
+                final int scrollY = getScrollY();
+                canvas.translate(scrollX, scrollY);
+                mSelectionRenderer.draw(canvas, mTempIconBounds, isSelected, mDeviceProfile.getWorkspaceIconProfile().getIconSizePx());
+                canvas.translate(-scrollX, -scrollY);
+            }
+        }
     }
 
     /**

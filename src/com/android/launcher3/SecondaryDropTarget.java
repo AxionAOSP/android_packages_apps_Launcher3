@@ -144,6 +144,14 @@ public class SecondaryDropTarget extends ButtonDropTarget implements OnAlarmList
     }
 
     @Override
+    public void onDragStart(DropTarget.DragObject dragObject, DragOptions options) {
+        super.onDragStart(dragObject, options);
+        if (!dragObject.multiDragInfo.isEmpty()) {
+            mActive = false;
+        }
+    }
+
+    @Override
     public int getSupportedAccessibilityAction(ItemInfo info, View view) {
         return getButtonType(info, view);
     }
@@ -237,6 +245,13 @@ public class SecondaryDropTarget extends ButtonDropTarget implements OnAlarmList
 
     @Override
     public void completeDrop(final DragObject d) {
+        if (!d.multiDragInfo.isEmpty()) {
+            for (ItemInfo item : d.multiDragInfo) {
+                ComponentName target = performDropAction(getViewUnderDrag(item), item);
+                mDropTargetHandler.onSecondaryTargetCompleteDrop(target, d);
+            }
+            return;
+        }
         ComponentName target = performDropAction(getViewUnderDrag(d.dragInfo), d.dragInfo);
         mDropTargetHandler.onSecondaryTargetCompleteDrop(target, d);
     }

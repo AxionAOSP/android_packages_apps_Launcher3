@@ -21,7 +21,6 @@ import static android.content.pm.LauncherApps.EXTRA_PIN_ITEM_REQUEST;
 import static com.android.launcher3.LauncherAnimUtils.SPRING_LOADED_EXIT_DELAY;
 import static com.android.launcher3.LauncherState.EDIT_MODE;
 import static com.android.launcher3.LauncherState.SPRING_LOADED;
-import static com.android.launcher3.config.FeatureFlags.MULTI_SELECT_EDIT_MODE;
 
 import android.annotation.TargetApi;
 import android.app.Activity;
@@ -97,7 +96,7 @@ public class PinShortcutRequestActivityInfo extends ShortcutConfigActivityInfo {
 
     @Override
     public WorkspaceItemInfo createWorkspaceItemInfo() {
-        long transitionDuration = (MULTI_SELECT_EDIT_MODE.get() ? EDIT_MODE : SPRING_LOADED)
+        long transitionDuration = EDIT_MODE
                 .getTransitionDuration(Launcher.getLauncher(mContext), true /* isToState */);
         // Total duration for the drop animation to complete.
         long duration = mContext.getResources().getInteger(R.integer.config_dropAnimMaxDuration) +

@@ -92,6 +92,10 @@
             android:id="@+id/drop_target_bar"
             layout="@layout/drop_target_bar" />
 
+        <include
+            android:id="@+id/edit_mode_toolbar"
+            layout="@layout/edit_mode_toolbar" />
+
         <com.android.launcher3.views.ScrimView
             android:layout_width="match_parent"
             android:layout_height="match_parent"
