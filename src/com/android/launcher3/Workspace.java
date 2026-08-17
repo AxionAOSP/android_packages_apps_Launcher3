@@ -316,6 +316,7 @@ public class Workspace<T extends View & PageIndicator> extends PagedView<T>
 
     // Handles workspace state transitions
     private final WorkspaceStateTransitionAnimation mStateTransitionAnimation;
+    private android.view.ScaleGestureDetector mPinchDetector;
 
     private final StatsLogManager mStatsLogManager;
 
@@ -363,6 +364,20 @@ public class Workspace<T extends View & PageIndicator> extends PagedView<T>
 
         setHapticFeedbackEnabled(false);
         initWorkspace();
+
+        mPinchDetector = new android.view.ScaleGestureDetector(getContext(), new android.view.ScaleGestureDetector.SimpleOnScaleGestureListener() {
+            @Override
+            public boolean onScale(android.view.ScaleGestureDetector detector) {
+                float scaleFactor = detector.getScaleFactor();
+                if (scaleFactor < 0.75f) {
+                    if (mLauncher.getStateManager().getState() == com.android.launcher3.LauncherState.NORMAL && isFinishedSwitchingState()) {
+                        mLauncher.getStateManager().goToState(com.android.launcher3.LauncherState.EDIT_MODE);
+                        return true;
+                    }
+                }
+                return false;
+            }
+        });
 
         // Disable multitouch across the workspace/all apps/customize tray
         setMotionEventSplittingEnabled(true);
@@ -1143,6 +1158,14 @@ public class Workspace<T extends View & PageIndicator> extends PagedView<T>
 
         // Now that we have removed some pages, ensure state description is up to date.
         updateAccessibilityViewPageDescription();
+    }
+
+    @Override
+    public boolean dispatchTouchEvent(MotionEvent ev) {
+        if (mPinchDetector != null && AbstractFloatingView.getTopOpenView(mLauncher) == null) {
+            mPinchDetector.onTouchEvent(ev);
+        }
+        return super.dispatchTouchEvent(ev);
     }
 
     /**
@@ -2092,6 +2115,11 @@ public class Workspace<T extends View & PageIndicator> extends PagedView<T>
 
     @Override
     public void onDrop(final DragObject d, DragOptions options) {
+        if (!d.multiDragInfo.isEmpty()) {
+            onMultiDrop(d, options);
+            return;
+        }
+
         mDragViewVisualCenter = d.getVisualCenter(mDragViewVisualCenter);
         CellLayout dropTargetLayout = mDropToLayout;
 
@@ -2574,6 +2602,56 @@ public class Workspace<T extends View & PageIndicator> extends PagedView<T>
         if (mDragTargetLayout != null) {
             // We want the point to be mapped to the dragTarget.
             mapPointFromDropLayout(mDragTargetLayout, mDragViewVisualCenter);
+
+            if (!d.multiDragInfo.isEmpty()) {
+                java.util.List<com.android.launcher3.celllayout.CellLayoutLayoutParams> targetOutlines = new java.util.ArrayList<>();
+                com.android.launcher3.util.GridOccupancy virtualOccupied = new com.android.launcher3.util.GridOccupancy(mDragTargetLayout.getCountX(), mDragTargetLayout.getCountY());
+                mDragTargetLayout.getOccupied().copyTo(virtualOccupied);
+
+                // Temporarily mark original cells as unoccupied on current page
+                int targetScreenId = getCellLayoutId(mDragTargetLayout);
+                boolean isTargetHotseat = mLauncher.isHotseatLayout(mDragTargetLayout);
+                for (ItemInfo info : d.multiDragInfo) {
+                    boolean isOnTargetPage = false;
+                    if (info.container == CONTAINER_DESKTOP && info.screenId == targetScreenId) {
+                        isOnTargetPage = true;
+                    } else if (info.container == CONTAINER_HOTSEAT && isTargetHotseat) {
+                        isOnTargetPage = true;
+                    }
+                    if (isOnTargetPage) {
+                        virtualOccupied.markCells(info, false);
+                    }
+                }
+
+                for (ItemInfo info : d.multiDragInfo) {
+                    double minDistance = Double.MAX_VALUE;
+                    int bestX = -1;
+                    int bestY = -1;
+
+                    for (int y = 0; y <= mDragTargetLayout.getCountY() - info.spanY; y++) {
+                        for (int x = 0; x <= mDragTargetLayout.getCountX() - info.spanX; x++) {
+                            if (virtualOccupied.isRegionVacant(x, y, info.spanX, info.spanY)) {
+                                int[] pixelXY = new int[2];
+                                mDragTargetLayout.cellToPoint(x, y, pixelXY);
+                                float centerX = pixelXY[0] + (info.spanX * mDragTargetLayout.getCellWidth()) / 2f;
+                                float centerY = pixelXY[1] + (info.spanY * mDragTargetLayout.getCellHeight()) / 2f;
+                                double dist = Math.hypot(centerX - mDragViewVisualCenter[0], centerY - mDragViewVisualCenter[1]);
+                                if (dist < minDistance) {
+                                    minDistance = dist;
+                                    bestX = x;
+                                    bestY = y;
+                                }
+                            }
+                        }
+                    }
+                    if (bestX != -1) {
+                        virtualOccupied.markCells(bestX, bestY, info.spanX, info.spanY, true);
+                        targetOutlines.add(new com.android.launcher3.celllayout.CellLayoutLayoutParams(bestX, bestY, info.spanX, info.spanY));
+                    }
+                }
+                mDragTargetLayout.visualizeMultiDropLocation(targetOutlines);
+                return;
+            }
 
             int minSpanX = item.spanX;
             int minSpanY = item.spanY;
@@ -3377,13 +3455,131 @@ public class Workspace<T extends View & PageIndicator> extends PagedView<T>
     /**
      * Returns a specific CellLayout
      */
-    CellLayout getParentCellLayoutForView(View v) {
+    public CellLayout getParentCellLayoutForView(View v) {
         for (CellLayout layout : getWorkspaceAndHotseatCellLayouts()) {
             if (layout.getShortcutsAndWidgets().indexOfChild(v) > -1) {
                 return layout;
             }
         }
         return null;
+    }
+
+    private void onMultiDrop(final DragObject d, DragOptions options) {
+        CellLayout dropTargetLayout = mDropToLayout;
+        if (dropTargetLayout == null) {
+            dropTargetLayout = (CellLayout) getChildAt(getNextPage());
+        }
+
+        mDragViewVisualCenter = d.getVisualCenter(mDragViewVisualCenter);
+        mapPointFromDropLayout(dropTargetLayout, mDragViewVisualCenter);
+
+        boolean hasMovedIntoHotseat = mLauncher.isHotseatLayout(dropTargetLayout);
+        int container = hasMovedIntoHotseat ? CONTAINER_HOTSEAT : CONTAINER_DESKTOP;
+        int screenId = hasMovedIntoHotseat ? -1 : getScreenIdForPageIndex(indexOfChild(dropTargetLayout));
+
+        com.android.launcher3.util.GridOccupancy virtualOccupied = new com.android.launcher3.util.GridOccupancy(dropTargetLayout.getCountX(), dropTargetLayout.getCountY());
+        dropTargetLayout.getOccupied().copyTo(virtualOccupied);
+
+        java.util.ArrayList<ItemInfo> itemsToMove = new java.util.ArrayList<>(d.multiDragInfo);
+
+        // Ensure primary item (the one being held) is first for animation
+        if (itemsToMove.contains(d.dragInfo)) {
+            itemsToMove.remove(d.dragInfo);
+            itemsToMove.add(0, d.dragInfo);
+        }
+
+        int animDuration = mLauncher.getResources().getInteger(R.integer.config_dropAnimMaxDuration);
+        boolean firstItem = true;
+
+        java.util.ArrayList<ItemInfo> itemsSuccessfullyPlaced = new java.util.ArrayList<>();
+
+        for (ItemInfo info : itemsToMove) {
+            View itemView = getFirstMatch(com.android.launcher3.util.ItemInfoMatcher.ofItemIds(com.android.launcher3.util.IntSet.wrap(info.id)));
+            if (itemView != null && getParentCellLayoutForView(itemView) == dropTargetLayout) {
+                virtualOccupied.markCells(info, false);
+            }
+
+            double minDistance = Double.MAX_VALUE;
+            int bestX = -1;
+            int bestY = -1;
+
+            for (int y = 0; y <= dropTargetLayout.getCountY() - info.spanY; y++) {
+                for (int x = 0; x <= dropTargetLayout.getCountX() - info.spanX; x++) {
+                    if (virtualOccupied.isRegionVacant(x, y, info.spanX, info.spanY)) {
+                        int[] pixelXY = new int[2];
+                        dropTargetLayout.cellToPoint(x, y, pixelXY);
+                        float centerX = pixelXY[0] + (info.spanX * dropTargetLayout.getCellWidth()) / 2f;
+                        float centerY = pixelXY[1] + (info.spanY * dropTargetLayout.getCellHeight()) / 2f;
+                        
+                        double dist = Math.hypot(centerX - mDragViewVisualCenter[0], centerY - mDragViewVisualCenter[1]);
+                        if (dist < minDistance) {
+                            minDistance = dist;
+                            bestX = x;
+                            bestY = y;
+                        }
+                    }
+                }
+            }
+
+            if (bestX != -1) {
+                virtualOccupied.markCells(bestX, bestY, info.spanX, info.spanY, true);
+
+                if (itemView != null) {
+                    CellLayout parentLayout = getParentCellLayoutForView(itemView);
+                    if (parentLayout != null) {
+                        parentLayout.getOccupied().markCells(info.cellX, info.cellY, info.spanX, info.spanY, false);
+                    }
+                    if (itemView.getParent() instanceof ViewGroup) {
+                        ((ViewGroup) itemView.getParent()).removeView(itemView);
+                    }
+                    
+                    info.container = container;
+                    info.screenId = hasMovedIntoHotseat ? bestX : screenId;
+                    info.cellX = bestX;
+                    info.cellY = bestY;
+                    
+                    addInScreen(itemView, info);
+                    dropTargetLayout.onDropChild(itemView);
+                    dropTargetLayout.getShortcutsAndWidgets().measureChild(itemView);
+                    itemsSuccessfullyPlaced.add(info);
+
+                    if (firstItem && itemView.getParent() != null) {
+                        itemView.setVisibility(VISIBLE);
+                        mLauncher.getDragLayer().animateViewIntoPosition(d.dragView, itemView, animDuration, null);
+                        firstItem = false;
+                    } else {
+                        itemView.setVisibility(VISIBLE);
+                    }
+                }
+            } else {
+                if (itemView != null) {
+                    itemView.setVisibility(VISIBLE);
+                    if (firstItem) {
+                        mLauncher.getDragLayer().animateViewIntoPosition(d.dragView, itemView, animDuration, null);
+                        firstItem = false;
+                    }
+                }
+            }
+        }
+
+        dropTargetLayout.getOccupied().copyTo(dropTargetLayout.mTmpOccupied);
+        dropTargetLayout.onDragExit(); // This clears outlines
+
+        if (!itemsSuccessfullyPlaced.isEmpty()) {
+            if (hasMovedIntoHotseat) {
+                for (ItemInfo info : itemsSuccessfullyPlaced) {
+                    mLauncher.getModelWriter().moveItemInDatabase(info, container, info.screenId, info.cellX, info.cellY);
+                }
+            } else {
+                mLauncher.getModelWriter().moveItemsInDatabase(itemsSuccessfullyPlaced, container, screenId);
+            }
+        }
+        
+        postDelayed(() -> {
+            if (mLauncher.getStateManager().getState() == LauncherState.EDIT_MODE) {
+                mLauncher.getStateManager().goToState(NORMAL);
+            }
+        }, animDuration);
     }
 
     /**

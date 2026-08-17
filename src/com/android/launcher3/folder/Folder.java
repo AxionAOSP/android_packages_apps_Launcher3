@@ -1607,6 +1607,9 @@ public class Folder extends AbstractFloatingView implements ClipPathView, DragSo
             throw new RuntimeException("tried to add an illegal type into a folder");
         }
 
+        item.cellX = -1;
+        item.cellY = -1;
+
         rank = Utilities.boundToRange(rank, 0, mInfo.getContents().size());
         mInfo.getContents().add(rank, item);
 

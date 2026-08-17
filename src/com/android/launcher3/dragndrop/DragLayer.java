@@ -249,6 +249,10 @@ public class DragLayer extends BaseDragLayer<Launcher> implements LauncherOverla
 
     public void animateViewIntoPosition(DragView dragView, final View child, int duration,
             View anchorView) {
+        if (child == null || !(child.getParent() instanceof ShortcutAndWidgetContainer)) {
+            android.util.Log.w(TAG, "Cannot animate view into position: child has no valid ShortcutAndWidgetContainer parent!");
+            return;
+        }
 
         ShortcutAndWidgetContainer childParent = (ShortcutAndWidgetContainer) child.getParent();
         CellLayoutLayoutParams lp =  (CellLayoutLayoutParams) child.getLayoutParams();

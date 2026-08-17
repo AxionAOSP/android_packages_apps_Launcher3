@@ -123,6 +123,19 @@ public class LauncherDragController extends DragController<Launcher> {
         mDragObject = new DropTarget.DragObject(mActivity.getApplicationContext());
         mDragObject.originalView = originalView;
 
+        if (mActivity.isInState(com.android.launcher3.LauncherState.EDIT_MODE) && mActivity.getMultiSelectController().isSelected(dragInfo)) {
+            mDragObject.multiDragInfo.addAll(mActivity.getMultiSelectController().getSelectedItems());
+            if (!mDragObject.multiDragInfo.contains(dragInfo)) {
+                mDragObject.multiDragInfo.add(dragInfo);
+            }
+            for (ItemInfo info : mDragObject.multiDragInfo) {
+                View targetView = mActivity.getWorkspace().getFirstMatch(com.android.launcher3.util.ItemInfoMatcher.ofItemIds(com.android.launcher3.util.IntSet.wrap(info.id)));
+                if (targetView != null) {
+                    targetView.setVisibility(View.INVISIBLE);
+                }
+            }
+        }
+
         mIsInPreDrag = mOptions.preDragCondition != null
                 && !mOptions.preDragCondition.shouldStartDrag(0);
 
@@ -156,6 +169,19 @@ public class LauncherDragController extends DragController<Launcher> {
 
         dragView.setItemInfo(dragInfo);
         mDragObject.dragComplete = false;
+
+        if (!mDragObject.multiDragInfo.isEmpty()) {
+            android.widget.TextView badge = new android.widget.TextView(mActivity);
+            badge.setBackgroundResource(R.drawable.bg_widgets_full_sheet);
+            badge.setTextColor(android.graphics.Color.WHITE);
+            badge.setText(String.valueOf(mDragObject.multiDragInfo.size()));
+            badge.setGravity(android.view.Gravity.CENTER);
+            badge.setElevation(dragView.getElevation() + 1);
+            int size = mActivity.getResources().getDimensionPixelSize(R.dimen.drag_view_badge_size);
+            android.widget.FrameLayout.LayoutParams lp = new android.widget.FrameLayout.LayoutParams(size, size);
+            lp.gravity = android.view.Gravity.BOTTOM | android.view.Gravity.END;
+            dragView.addView(badge, lp);
+        }
 
         mDragObject.xOffset = mMotionDown.x - (dragLayerX + dragRegionLeft);
         mDragObject.yOffset = mMotionDown.y - (dragLayerY + dragRegionTop);
@@ -276,6 +302,19 @@ public class LauncherDragController extends DragController<Launcher> {
         mActivity.getDragLayer().mapCoordInSelfToDescendant(mActivity.getWorkspace(),
                 dropCoordinates);
         return mActivity.getWorkspace();
+    }
+
+    @Override
+    protected void callOnDragEnd() {
+        super.callOnDragEnd();
+        if (mDragObject != null && !mDragObject.multiDragInfo.isEmpty()) {
+            for (ItemInfo info : mDragObject.multiDragInfo) {
+                View targetView = mActivity.getWorkspace().getFirstMatch(com.android.launcher3.util.ItemInfoMatcher.ofItemIds(com.android.launcher3.util.IntSet.wrap(info.id)));
+                if (targetView != null) {
+                    targetView.setVisibility(View.VISIBLE);
+                }
+            }
+        }
     }
 
     /**

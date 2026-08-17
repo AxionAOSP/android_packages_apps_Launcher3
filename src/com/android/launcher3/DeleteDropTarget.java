@@ -137,6 +137,40 @@ public class DeleteDropTarget extends ButtonDropTarget {
 
     @Override
     public void completeDrop(DragObject d) {
+        if (!d.multiDragInfo.isEmpty()) {
+            Launcher launcher = Launcher.getLauncher(getContext());
+            
+            final com.android.launcher3.util.IntSet pageIds = new com.android.launcher3.util.IntSet();
+            for (ItemInfo item : d.multiDragInfo) {
+                if (canRemove(item)) {
+                    View itemView = launcher.getWorkspace().getFirstMatch(com.android.launcher3.util.ItemInfoMatcher.ofItemIds(com.android.launcher3.util.IntSet.wrap(item.id)));
+                    launcher.removeItem(itemView, item, true, "Removed via multi drag remove");
+                    if (item.container == com.android.launcher3.LauncherSettings.Favorites.CONTAINER_DESKTOP) {
+                        pageIds.add((int) item.screenId);
+                    }
+                }
+            }
+            if (pageIds.isEmpty()) {
+                pageIds.addAll(launcher.getWorkspace().getCurrentPageScreenIds());
+            }
+
+            launcher.getWorkspace().stripEmptyScreens();
+            launcher.getMultiSelectController().clearSelection();
+            launcher.getStateManager().goToState(com.android.launcher3.LauncherState.NORMAL);
+            
+            com.android.launcher3.views.Snackbar.show(
+                launcher,
+                R.string.item_removed,
+                R.string.undo,
+                launcher.getModelWriter()::commitDelete,
+                () -> {
+                    launcher.setPagesToBindSynchronously(pageIds);
+                    launcher.getModelWriter().abortDelete();
+                }
+            );
+            return;
+        }
+
         ItemInfo item = d.dragInfo;
         if (canRemove(item)) {
             mDropTargetHandler.onDeleteComplete(item, /* view */ null);

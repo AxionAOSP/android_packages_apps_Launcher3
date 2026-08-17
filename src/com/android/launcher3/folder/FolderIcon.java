@@ -132,6 +132,8 @@ public class FolderIcon extends FrameLayout implements FloatingIconViewCompanion
         return mBlurSurface;
     }
     private boolean mBackgroundIsVisible = true;
+    private com.android.launcher3.graphics.SelectionIndicatorRenderer mSelectionRenderer;
+    private final Rect mTempIconBounds = new Rect();
 
     FolderGridOrganizer mPreviewVerifier;
     final ClippedFolderIconLayoutRule mPreviewLayoutRule;
@@ -480,6 +482,47 @@ public class FolderIcon extends FrameLayout implements FloatingIconViewCompanion
 
 
     public void onDrop(DragObject d, boolean itemReturnedOnFailedDrop) {
+        if (!d.multiDragInfo.isEmpty() && mActivity instanceof Launcher) {
+            Launcher launcher = (Launcher) mActivity;
+            mFolder.notifyDrop();
+            
+            ItemInfo primaryItem = d.dragInfo;
+            boolean animatedPrimary = false;
+
+            for (int i = 0; i < d.multiDragInfo.size(); i++) {
+                ItemInfo info = d.multiDragInfo.get(i);
+                ItemInfo item;
+                if (info instanceof WorkspaceItemFactory) {
+                    item = ((WorkspaceItemFactory) info).makeWorkspaceItem(getContext());
+                } else if (d.dragSource instanceof BaseItemDragListener) {
+                    item = new WorkspaceItemInfo((WorkspaceItemInfo) info);
+                } else {
+                    item = info;
+                }
+                
+                View itemView = launcher.getWorkspace().getFirstMatch(com.android.launcher3.util.ItemInfoMatcher.ofItemIds(com.android.launcher3.util.IntSet.wrap(item.id)));
+                if (itemView != null) {
+                    CellLayout parentLayout = launcher.getWorkspace().getParentCellLayoutForView(itemView);
+                    if (parentLayout != null) {
+                        parentLayout.getOccupied().markCells(info.cellX, info.cellY, info.spanX, info.spanY, false);
+                        parentLayout.removeView(itemView);
+                    }
+                }
+                
+                boolean shouldAnimate = (primaryItem != null && info.id == primaryItem.id) || (!animatedPrimary && (i == d.multiDragInfo.size() - 1));
+                if (shouldAnimate && !animatedPrimary) {
+                    onDrop(item, d, null, 1.0f, mInfo.getContents().size(), false);
+                    animatedPrimary = true;
+                } else {
+                    getFolder().addFolderContent(item);
+                }
+            }
+            
+            launcher.getMultiSelectController().clearSelection();
+            launcher.getStateManager().goToState(com.android.launcher3.LauncherState.NORMAL);
+            return;
+        }
+
         ItemInfo item;
         if (d.dragInfo instanceof WorkspaceItemFactory) {
             // Came from all apps -- make a copy
@@ -640,6 +683,22 @@ public class FolderIcon extends FrameLayout implements FloatingIconViewCompanion
         }
 
         drawDot(canvas);
+
+        if (mActivity instanceof Launcher launcher && launcher.isInState(com.android.launcher3.LauncherState.EDIT_MODE)) {
+            Object tag = getTag();
+            if (tag instanceof ItemInfo info) {
+                if (info.container != com.android.launcher3.LauncherSettings.Favorites.CONTAINER_DESKTOP &&
+                    info.container != com.android.launcher3.LauncherSettings.Favorites.CONTAINER_HOTSEAT) {
+                    return;
+                }
+                if (mSelectionRenderer == null) {
+                    mSelectionRenderer = new com.android.launcher3.graphics.SelectionIndicatorRenderer(getContext());
+                }
+                boolean isSelected = launcher.getMultiSelectController().isSelected(info);
+                mBackground.getBounds(mTempIconBounds);
+                mSelectionRenderer.draw(canvas, mTempIconBounds, isSelected, mActivity.getDeviceProfile().getWorkspaceIconProfile().getIconSizePx());
+            }
+        }
     }
 
     public void drawDot(Canvas canvas) {

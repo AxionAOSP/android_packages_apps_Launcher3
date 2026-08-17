@@ -98,6 +98,23 @@ public class ItemClickHandler {
         Launcher launcher = Launcher.getLauncher(v.getContext());
         if (!launcher.getWorkspace().isFinishedSwitchingState()) return;
 
+        if (launcher.isInState(com.android.launcher3.LauncherState.EDIT_MODE)) {
+            if (v.getTag() instanceof ItemInfo info) {
+                if (info.itemType == com.android.launcher3.LauncherSettings.Favorites.ITEM_TYPE_APPLICATION ||
+                    info.itemType == com.android.launcher3.LauncherSettings.Favorites.ITEM_TYPE_DEEP_SHORTCUT ||
+                    info.itemType == com.android.launcher3.LauncherSettings.Favorites.ITEM_TYPE_FOLDER) {
+                    
+                    if (info.container == com.android.launcher3.LauncherSettings.Favorites.CONTAINER_DESKTOP || 
+                        info.container == com.android.launcher3.LauncherSettings.Favorites.CONTAINER_HOTSEAT) {
+                        launcher.getMultiSelectController().toggleSelection(info);
+                        v.performHapticFeedback(android.view.HapticFeedbackConstants.CLOCK_TICK);
+                        v.invalidate();
+                    }
+                }
+            }
+            return;
+        }
+
         Object tag = v.getTag();
         if (tag instanceof WorkspaceItemInfo) {
             onClickAppShortcut(v, (WorkspaceItemInfo) tag, launcher);

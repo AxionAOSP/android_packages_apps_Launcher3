@@ -146,6 +146,8 @@ public class CellLayout extends ViewGroup {
     private final InterruptibleInOutAnimator[] mDragOutlineAnims =
             new InterruptibleInOutAnimator[mDragOutlines.length];
 
+    private final java.util.List<CellLayoutLayoutParams> mMultiDragOutlines = new java.util.ArrayList<>();
+
     // Used as an index into the above 3 arrays; indicates which is the most current value.
     private int mDragOutlineCurrent = 0;
     private final Paint mDragOutlinePaint = new Paint();
@@ -651,6 +653,26 @@ public class CellLayout extends ViewGroup {
                 mVisualizeGridPaint.setColor(Color.argb((int) (alpha),
                         Color.red(mGridColor), Color.green(mGridColor), Color.blue(mGridColor)));
 
+                canvas.save();
+                canvas.translate(getMarginForGivenCellParams(params), 0);
+                canvas.drawRoundRect(mVisualizeGridRect, mGridVisualizationRoundingRadius,
+                        mGridVisualizationRoundingRadius, mVisualizeGridPaint);
+                canvas.restore();
+            }
+        }
+
+        if (!mMultiDragOutlines.isEmpty()) {
+            final float alpha = 128f; // Use a fixed alpha for multi-select outlines
+            mVisualizeGridPaint.setAlpha(255);
+            mVisualizeGridPaint.setStyle(Paint.Style.STROKE);
+            mVisualizeGridPaint.setColor(Color.argb((int) (alpha),
+                    Color.red(mGridColor), Color.green(mGridColor), Color.blue(mGridColor)));
+
+            for (CellLayoutLayoutParams params : mMultiDragOutlines) {
+                cellToRect(params.getCellX(), params.getCellY(), params.cellHSpan, params.cellVSpan,
+                        mTempOnDrawCellToRect);
+                mVisualizeGridRect.set(mTempOnDrawCellToRect);
+                mVisualizeGridRect.inset(paddingX, paddingY);
                 canvas.save();
                 canvas.translate(getMarginForGivenCellParams(params), 0);
                 canvas.drawRoundRect(mVisualizeGridRect, mGridVisualizationRoundingRadius,
@@ -1803,8 +1825,19 @@ public class CellLayout extends ViewGroup {
         mDragCellSpan[0] = mDragCellSpan[1] = -1;
         mDragOutlineAnims[mDragOutlineCurrent].animateOut();
         mDragOutlineCurrent = (mDragOutlineCurrent + 1) % mDragOutlineAnims.length;
+        mMultiDragOutlines.clear();
         revertTempState();
+        invalidate();
         setIsDragOverlapping(false);
+    }
+
+    /**
+     * Visualizes multiple drop locations for multi-select drag and drop.
+     */
+    public void visualizeMultiDropLocation(java.util.List<CellLayoutLayoutParams> outlines) {
+        mMultiDragOutlines.clear();
+        mMultiDragOutlines.addAll(outlines);
+        invalidate();
     }
 
     /**
