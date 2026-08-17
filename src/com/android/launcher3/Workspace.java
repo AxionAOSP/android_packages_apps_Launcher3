@@ -518,6 +518,10 @@ public class Workspace<T extends View & PageIndicator> extends PagedView<T>
 
     @Override
     public void onDragStart(DragObject dragObject, DragOptions options) {
+        if (mLauncher.getShakeDetector() != null) {
+            mLauncher.getShakeDetector().stop();
+        }
+
         if (ENFORCE_DRAG_EVENT_ORDER) {
             enforceDragParity("onDragStart", 0, 0);
         }
@@ -580,6 +584,10 @@ public class Workspace<T extends View & PageIndicator> extends PagedView<T>
 
     @Override
     public void onDragEnd() {
+        if (mLauncher.getShakeDetector() != null && mLauncher.getStateManager().getState() == LauncherState.EDIT_MODE) {
+            mLauncher.getShakeDetector().start();
+        }
+
         if (ENFORCE_DRAG_EVENT_ORDER) {
             enforceDragParity("onDragEnd", 0, 0);
         }
@@ -3580,6 +3588,168 @@ public class Workspace<T extends View & PageIndicator> extends PagedView<T>
                 mLauncher.getStateManager().goToState(NORMAL);
             }
         }, animDuration);
+    }
+
+    /**
+     * Auto-arranges all folder, app, and deep shortcut icons sequentially on the current workspace page,
+     * while leaving widgets in their original spots and preventing overlap.
+     */
+    public void arrangeWorkspaceItems() {
+        int currentPage = getCurrentPage();
+        View page = getChildAt(currentPage);
+        if (page instanceof CellLayout layout) {
+            arrangeItemsInLayout(layout);
+        }
+
+        if (mLauncher.getHotseat() != null) {
+            CellLayout hotseatLayout = mLauncher.getHotseat();
+            if (hotseatLayout != null) {
+                arrangeItemsInLayout(hotseatLayout);
+            }
+        }
+    }
+
+    private void arrangeItemsInLayout(CellLayout layout) {
+        int countX = layout.getCountX();
+        int countY = layout.getCountY();
+        com.android.launcher3.util.GridOccupancy occupied = new com.android.launcher3.util.GridOccupancy(countX, countY);
+
+        java.util.ArrayList<View> viewsToArrange = new java.util.ArrayList<>();
+        java.util.ArrayList<ItemInfo> infosToArrange = new java.util.ArrayList<>();
+
+        com.android.launcher3.ShortcutAndWidgetContainer container = layout.getShortcutsAndWidgets();
+        for (int i = 0; i < container.getChildCount(); i++) {
+            View child = container.getChildAt(i);
+            if (child.getVisibility() != View.VISIBLE) {
+                continue;
+            }
+            if (child.getTag() instanceof ItemInfo info) {
+                if (info.itemType == com.android.launcher3.LauncherSettings.Favorites.ITEM_TYPE_APPLICATION ||
+                    info.itemType == com.android.launcher3.LauncherSettings.Favorites.ITEM_TYPE_DEEP_SHORTCUT ||
+                    info.itemType == com.android.launcher3.LauncherSettings.Favorites.ITEM_TYPE_FOLDER) {
+                    viewsToArrange.add(child);
+                    infosToArrange.add(info);
+                } else {
+                    occupied.markCells(info.cellX, info.cellY, info.spanX, info.spanY, true);
+                }
+            }
+        }
+
+        if (infosToArrange.isEmpty()) {
+            return;
+        }
+
+        java.util.ArrayList<Integer> indices = new java.util.ArrayList<>();
+        for (int i = 0; i < infosToArrange.size(); i++) {
+            indices.add(i);
+        }
+        indices.sort((a, b) -> {
+            ItemInfo infoA = infosToArrange.get(a);
+            ItemInfo infoB = infosToArrange.get(b);
+            int posA = infoA.cellY * countX + infoA.cellX;
+            int posB = infoB.cellY * countX + infoB.cellX;
+            return Integer.compare(posA, posB);
+        });
+
+        int nextX = 0;
+        int nextY = 0;
+
+        java.util.ArrayList<ItemInfo> successfullyArrangedInfos = new java.util.ArrayList<>();
+        java.util.ArrayList<View> successfullyArrangedViews = new java.util.ArrayList<>();
+        java.util.ArrayList<int[]> targetCells = new java.util.ArrayList<>();
+
+        for (int idx : indices) {
+            View view = viewsToArrange.get(idx);
+            ItemInfo info = infosToArrange.get(idx);
+
+            while (nextY < countY) {
+                if (!occupied.cells[nextX][nextY]) {
+                    break;
+                }
+                nextX++;
+                if (nextX >= countX) {
+                    nextX = 0;
+                    nextY++;
+                }
+            }
+
+            if (nextY >= countY) {
+                break;
+            }
+
+            occupied.cells[nextX][nextY] = true;
+            targetCells.add(new int[]{nextX, nextY});
+            successfullyArrangedViews.add(view);
+            successfullyArrangedInfos.add(info);
+
+            nextX++;
+            if (nextX >= countX) {
+                nextX = 0;
+                nextY++;
+            }
+        }
+
+        for (ItemInfo info : successfullyArrangedInfos) {
+            layout.getOccupied().markCells(info.cellX, info.cellY, info.spanX, info.spanY, false);
+        }
+
+        boolean changed = false;
+        for (int i = 0; i < successfullyArrangedViews.size(); i++) {
+            View view = successfullyArrangedViews.get(i);
+            ItemInfo info = successfullyArrangedInfos.get(i);
+            int[] cell = targetCells.get(i);
+            int newX = cell[0];
+            int newY = cell[1];
+
+            if (info.cellX != newX || info.cellY != newY) {
+                int oldLeft = view.getLeft();
+                int oldTop = view.getTop();
+
+                info.cellX = newX;
+                info.cellY = newY;
+                if (layout instanceof Hotseat) {
+                    info.screenId = newX;
+                }
+
+                if (view.getLayoutParams() instanceof com.android.launcher3.celllayout.CellLayoutLayoutParams lp) {
+                    lp.setCellX(newX);
+                    lp.setCellY(newY);
+                    container.setupLp(view);
+                    
+                    int newLeft = lp.x;
+                    int newTop = lp.y;
+
+                    view.requestLayout();
+                    changed = true;
+
+                    view.setTranslationX(oldLeft - newLeft);
+                    view.setTranslationY(oldTop - newTop);
+                    final int index = i;
+                    view.animate()
+                        .translationX(0f)
+                        .translationY(0f)
+                        .setStartDelay(index * 20L)
+                        .setDuration(350)
+                        .setInterpolator(com.android.app.animation.Interpolators.FAST_OUT_SLOW_IN)
+                        .start();
+                }
+            }
+            
+            layout.getOccupied().markCells(newX, newY, info.spanX, info.spanY, true);
+        }
+
+        if (changed) {
+            if (layout instanceof Hotseat) {
+                for (ItemInfo info : successfullyArrangedInfos) {
+                    mLauncher.getModelWriter().moveItemInDatabase(info, info.container, info.screenId, info.cellX, info.cellY);
+                }
+            } else {
+                mLauncher.getModelWriter().moveItemsInDatabase(successfullyArrangedInfos, com.android.launcher3.LauncherSettings.Favorites.CONTAINER_DESKTOP, getCellLayoutId(layout));
+            }
+            container.requestLayout();
+            container.performHapticFeedback(android.view.HapticFeedbackConstants.LONG_PRESS);
+            container.announceForAccessibility("Home screen icons arranged");
+        }
     }
 
     /**
