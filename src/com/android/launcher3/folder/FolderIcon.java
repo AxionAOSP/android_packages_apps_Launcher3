@@ -33,6 +33,7 @@ import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.graphics.Path;
 import android.graphics.Rect;
+import android.graphics.RectF;
 import android.graphics.drawable.Drawable;
 import android.os.Looper;
 import android.util.AttributeSet;
@@ -57,6 +58,7 @@ import com.android.launcher3.DropTarget.DragObject;
 import com.android.axion.blur.AxBlurColors;
 import com.android.launcher3.Launcher;
 import com.android.launcher3.LauncherSettings;
+import com.android.launcher3.LauncherState;
 import com.android.launcher3.OnAlarmListener;
 import com.android.launcher3.R;
 import com.android.launcher3.Reorderable;
@@ -85,6 +87,7 @@ import com.android.launcher3.model.data.WorkspaceItemInfo;
 import com.android.launcher3.popup.Poppable;
 import com.android.launcher3.popup.PoppableType;
 import com.android.launcher3.popup.PopupController;
+import com.android.launcher3.touch.ItemClickHandler;
 import com.android.launcher3.util.MultiTranslateDelegate;
 import com.android.launcher3.util.Themes;
 import com.android.launcher3.util.Thunk;
@@ -156,6 +159,12 @@ public class FolderIcon extends FrameLayout implements FloatingIconViewCompanion
 
     private Rect mTouchArea = new Rect();
 
+    @Nullable
+    private FolderPreviewLayout.ItemPlacement mPressedPreviewItem;
+
+    @Nullable
+    private PreviewItemLaunchSource mPreviewItemLaunchSource;
+
     private float mScaleForReorderBounce = 1f;
     private PopupController mPopupController;
 
@@ -173,6 +182,38 @@ public class FolderIcon extends FrameLayout implements FloatingIconViewCompanion
         }
     };
 
+    private boolean mRequestedTextVisible = true;
+
+    private boolean shouldShowFolderName() {
+        return mRequestedTextVisible
+                && !isMultiSpanFolder()
+                && mFolderName.shouldShowLabel();
+    }
+
+    int getCurrentSpanX() {
+        if (!usesWorkspacePreviewLayout()) return 1;
+
+        return getLayoutParams() instanceof CellLayoutLayoutParams lp
+                ? lp.cellHSpan
+                : mInfo.spanX;
+    }
+
+    int getCurrentSpanY() {
+        if (!usesWorkspacePreviewLayout()) return 1;
+
+        return getLayoutParams() instanceof CellLayoutLayoutParams lp
+                ? lp.cellVSpan
+                : mInfo.spanY;
+    }
+
+    boolean usesWorkspacePreviewLayout() {
+        return mInfo != null
+                && mInfo.container == LauncherSettings.Favorites.CONTAINER_DESKTOP;
+    }
+
+    private void updateTextVisibility() {
+        mFolderName.setVisibility(shouldShowFolderName() ? VISIBLE : INVISIBLE);
+    }
 
     public FolderIcon(Context context) {
         this(context, null);
@@ -236,7 +277,7 @@ public class FolderIcon extends FrameLayout implements FloatingIconViewCompanion
                         + grid.getWorkspaceIconProfile().getIconDrawablePaddingPx();
 
         icon.setTag(folderInfo);
-        icon.setOnClickListener(activity.getItemOnClickListener());
+        icon.setOnClickListener(icon::handleClick);
         icon.mInfo = folderInfo;
         icon.mActivity = activity;
         icon.mDotRenderer = grid.mDotRendererWorkSpace;
@@ -269,8 +310,21 @@ public class FolderIcon extends FrameLayout implements FloatingIconViewCompanion
         Utilities.scaleRectAboutCenter(outBounds, ICON_OVERLAP_FACTOR);
     }
 
+    public void getPreviewBackgroundPath(Path outPath) {
+        mPreviewItemManager.recomputePreviewDrawingParams();
+        mBackground.getDrawnShapePath(outPath);
+    }
+
+    public boolean isPreviewBackgroundAnimating() {
+        return mBackground.isBoundsAnimating();
+    }
+
     public float getBackgroundStrokeWidth() {
         return mBackground.getStrokeWidth();
+    }
+
+    public float getPreviewBackgroundCornerRadius() {
+        return mBackground.getDrawnCornerRadius();
     }
 
     public Folder getFolder() {
@@ -281,12 +335,21 @@ public class FolderIcon extends FrameLayout implements FloatingIconViewCompanion
         mFolder = folder;
     }
 
+    public boolean isMultiSpanFolder() {
+        return getCurrentSpanX() > 1 || getCurrentSpanY() > 1;
+    }
+
     private boolean willAcceptItem(ItemInfo item) {
         return (willAcceptItemType(item.itemType) && item != mInfo && !mFolder.isOpen());
     }
 
     public boolean acceptDrop(ItemInfo dragInfo) {
         return !mFolder.isDestroyed() && willAcceptItem(dragInfo);
+    }
+
+    public boolean isPointInBackground(float x, float y) {
+        mBackground.getBounds(mTouchArea);
+        return mTouchArea.contains((int) x, (int) y);
     }
 
     public void onDragEnter(ItemInfo dragInfo) {
@@ -319,10 +382,11 @@ public class FolderIcon extends FrameLayout implements FloatingIconViewCompanion
             float scaleRelativeToDragLayer) {
         prepareCreateAnimation(destView);
         getFolder().addFolderContent(destInfo);
-        // This will animate the first item from it's position as an icon into its
-        // position as the first item in the preview
-        mPreviewItemManager.createFirstItemAnimation(false /* reverse */, null)
-                .start();
+
+        if (!usesWorkspacePreviewLayout()) {
+            mPreviewItemManager.createFirstItemAnimation(false /* reverse */, null)
+                    .start();
+        }
 
         // This will animate the dragView (srcView) into the new folder
         onDrop(srcInfo, d, dstRect, scaleRelativeToDragLayer, 1,
@@ -345,6 +409,7 @@ public class FolderIcon extends FrameLayout implements FloatingIconViewCompanion
         item.cellX = -1;
         item.cellY = -1;
         DragView animateView = d.dragView;
+
         // Typically, the animateView corresponds to the DragView; however, if this is being done
         // after a configuration activity (ie. for a Shortcut being dragged from AllApps) we
         // will not have a view to animate
@@ -352,6 +417,7 @@ public class FolderIcon extends FrameLayout implements FloatingIconViewCompanion
             final Launcher launcher = (Launcher) mActivity;
             DragLayer dragLayer = launcher.getDragLayer();
             Rect to = finalRect;
+
             if (to == null) {
                 to = new Rect();
                 Workspace<?> workspace = launcher.getWorkspace();
@@ -368,45 +434,22 @@ public class FolderIcon extends FrameLayout implements FloatingIconViewCompanion
                 workspace.resetTransitionTransform();
             }
 
-            int numItemsInPreview = Math.min(MAX_NUM_ITEMS_IN_PREVIEW, index + 1);
-            boolean itemAdded = false;
-            if (itemReturnedOnFailedDrop || index >= MAX_NUM_ITEMS_IN_PREVIEW) {
-                List<ItemInfo> oldPreviewItems = new ArrayList<>(mCurrentPreviewItems);
-                getFolder().addFolderContent(item, index, false);
-                mCurrentPreviewItems.clear();
-                mCurrentPreviewItems.addAll(getPreviewItemsOnPage(0));
+            boolean usesWorkspacePreview = usesWorkspacePreviewLayout();
+            PreviewDropAnimationTarget target = usesWorkspacePreview
+                    ? prepareWorkspacePreviewDrop(item, index)
+                    : prepareLegacyPreviewDrop(
+                            item, index, itemReturnedOnFailedDrop);
 
-                if (!oldPreviewItems.equals(mCurrentPreviewItems)) {
-                    int newIndex = mCurrentPreviewItems.indexOf(item);
-                    if (newIndex >= 0) {
-                        // If the item dropped is going to be in the preview, we update the
-                        // index here to reflect its position in the preview.
-                        index = newIndex;
-                    }
+            int centerX = Math.round(
+                    scaleRelativeToDragLayer * target.centerX);
+            int centerY = Math.round(
+                    scaleRelativeToDragLayer * target.centerY);
 
-                    mPreviewItemManager.hidePreviewItem(index, true);
-                    mPreviewItemManager.onDrop(oldPreviewItems, mCurrentPreviewItems, item);
-                    itemAdded = true;
-                } else {
-                    getFolder().removeFolderContent(false, item);
-                }
-            }
+            to.offset(centerX - animateView.getMeasuredWidth() / 2,
+                    centerY - animateView.getMeasuredHeight() / 2);
 
-            if (!itemAdded) {
-                getFolder().addFolderContent(item, index, true);
-            }
-
-            int[] center = new int[2];
-            float scale = getLocalCenterForIndex(index, numItemsInPreview, center);
-            center[0] = Math.round(scaleRelativeToDragLayer * center[0]);
-            center[1] = Math.round(scaleRelativeToDragLayer * center[1]);
-
-            to.offset(center[0] - animateView.getMeasuredWidth() / 2,
-                    center[1] - animateView.getMeasuredHeight() / 2);
-
-            float finalAlpha = index < MAX_NUM_ITEMS_IN_PREVIEW ? 1f : 0f;
-
-            float finalScale = scale * scaleRelativeToDragLayer;
+            float finalScale =
+                    target.scale * scaleRelativeToDragLayer;
 
             // Account for potentially different icon sizes with non-default grid settings
             if (d.dragSource instanceof ActivityAllAppsContainerView) {
@@ -416,19 +459,19 @@ public class FolderIcon extends FrameLayout implements FloatingIconViewCompanion
                 finalScale *= containerScale;
             }
 
-            final int finalIndex = index;
-            dragLayer.animateView(animateView, to, finalAlpha,
+            dragLayer.animateView(animateView, to, target.alpha,
                     finalScale, finalScale, DROP_IN_ANIMATION_DURATION,
                     Interpolators.DECELERATE_2,
-                    () -> {
-                        mPreviewItemManager.hidePreviewItem(finalIndex, false);
-                        mFolder.showItem(item);
-                    },
+                    () -> completePreviewDropAnimation(
+                            item, target.index, usesWorkspacePreview),
                     DragLayer.ANIMATION_END_DISAPPEAR, null);
 
             mFolder.hideItem(item);
 
-            if (!itemAdded) mPreviewItemManager.hidePreviewItem(index, true);
+            if (!target.itemAdded) {
+                mPreviewItemManager.hidePreviewItem(target.index, true);
+            }
+
             d.folderNameSuggestionLoader.getSuggestedFolderName(mInfo.getAppContents(),
                     folderNameInfos -> postDelayed(() -> {
                         setLabelSuggestion(folderNameInfos, d.logInstanceId);
@@ -438,6 +481,304 @@ public class FolderIcon extends FrameLayout implements FloatingIconViewCompanion
         } else {
             getFolder().addFolderContent(item);
         }
+    }
+
+    private static final class PreviewDropAnimationTarget {
+        final int centerX;
+        final int centerY;
+        final float scale;
+        final float alpha;
+        final int index;
+        final boolean itemAdded;
+
+        PreviewDropAnimationTarget(
+                int centerX, int centerY, float scale, float alpha,
+                int index, boolean itemAdded) {
+            this.centerX = centerX;
+            this.centerY = centerY;
+            this.scale = scale;
+            this.alpha = alpha;
+            this.index = index;
+            this.itemAdded = itemAdded;
+        }
+    }
+
+    private PreviewDropAnimationTarget prepareWorkspacePreviewDrop(
+            ItemInfo item, int index) {
+        FolderPreviewLayout.Snapshot oldSnapshot =
+                mPreviewItemManager.calculateWorkspacePreviewSnapshot();
+
+        getFolder().addFolderContent(item, index, false);
+
+        FolderPreviewLayout.Snapshot newSnapshot =
+                mPreviewItemManager.calculateWorkspacePreviewSnapshot();
+        mPreviewItemManager.animateWorkspacePreviewSnapshot(
+                oldSnapshot, newSnapshot, item);
+
+        FolderPreviewLayout.ItemPlacement placement =
+                mPreviewItemManager.findWorkspacePreviewPlacement(
+                        newSnapshot, item);
+
+        RectF targetBounds;
+        float targetScale;
+        float targetAlpha;
+
+        if (placement != null) {
+            targetBounds = placement.getBounds();
+            targetScale = targetBounds.width()
+                    / mPreviewItemManager.getIntrinsicIconSize();
+            targetAlpha = 1f;
+        } else {
+            targetBounds = newSnapshot.getOverviewBounds();
+            targetAlpha = 0f;
+            targetScale = calculateTargetScale(newSnapshot);
+            if (targetBounds == null) {
+                targetBounds = newSnapshot.getBackgroundBounds();
+            }
+        }
+
+        return new PreviewDropAnimationTarget(
+                Math.round(targetBounds.centerX()),
+                Math.round(targetBounds.centerY()),
+                targetScale,
+                targetAlpha,
+                index,
+                true);
+    }
+
+    private PreviewDropAnimationTarget prepareLegacyPreviewDrop(
+            ItemInfo item, int index,
+            boolean itemReturnedOnFailedDrop) {
+        int numItemsInPreview =
+                Math.min(MAX_NUM_ITEMS_IN_PREVIEW, index + 1);
+        boolean itemAdded = false;
+
+        if (itemReturnedOnFailedDrop
+                || index >= MAX_NUM_ITEMS_IN_PREVIEW) {
+            List<ItemInfo> oldPreviewItems =
+                    new ArrayList<>(mCurrentPreviewItems);
+            getFolder().addFolderContent(item, index, false);
+            mCurrentPreviewItems.clear();
+            mCurrentPreviewItems.addAll(getPreviewItemsOnPage(0));
+
+            if (!oldPreviewItems.equals(mCurrentPreviewItems)) {
+                int newIndex = mCurrentPreviewItems.indexOf(item);
+                if (newIndex >= 0) {
+                    index = newIndex;
+                }
+
+                mPreviewItemManager.hidePreviewItem(index, true);
+                mPreviewItemManager.onDrop(
+                        oldPreviewItems, mCurrentPreviewItems, item);
+                itemAdded = true;
+            } else {
+                getFolder().removeFolderContent(false, item);
+            }
+        }
+
+        if (!itemAdded) {
+            getFolder().addFolderContent(item, index, true);
+        }
+
+        int[] center = new int[2];
+        float scale = getLocalCenterForIndex(
+                index, numItemsInPreview, center);
+        float alpha =
+                index < MAX_NUM_ITEMS_IN_PREVIEW ? 1f : 0f;
+        return new PreviewDropAnimationTarget(
+                center[0], center[1], scale, alpha, index, itemAdded);
+    }
+
+    private float calculateTargetScale(
+            FolderPreviewLayout.Snapshot snapshot) {
+        for (FolderPreviewLayout.ItemPlacement candidate
+                : snapshot.getItems()) {
+            if (candidate.getRole()
+                    == FolderPreviewLayout.ItemRole.OVERVIEW) {
+                return candidate.getBounds().width()
+                        / mPreviewItemManager.getIntrinsicIconSize();
+            }
+        }
+        return 0f;
+    }
+
+    private void completePreviewDropAnimation(
+            ItemInfo item, int index,
+            boolean usesWorkspacePreview) {
+        if (usesWorkspacePreview) {
+            mPreviewItemManager.setWorkspacePreviewItemHidden(
+                    item, false);
+        } else {
+            mPreviewItemManager.hidePreviewItem(index, false);
+        }
+
+        mFolder.showItem(item);
+    }
+
+    private final class PreviewItemLaunchSource extends BubbleTextView {
+
+        @Nullable
+        private ItemInfo mItem;
+        private boolean mIsAppCloseSource;
+
+        PreviewItemLaunchSource(Context context) {
+            super(context);
+            setWillNotDraw(true);
+            setClickable(false);
+            setFocusable(false);
+            setImportantForAccessibility(
+                    IMPORTANT_FOR_ACCESSIBILITY_NO);
+            setVisibility(INVISIBLE);
+        }
+
+        void prepare(ItemInfo item, RectF bounds) {
+            resetLaunchSource();
+
+            mItem = item;
+            applyFromWorkspaceItem((WorkspaceItemInfo) item);
+
+            int left = Math.round(bounds.left);
+            int top = Math.round(bounds.top);
+            int width = Math.max(1, Math.round(bounds.right) - left);
+            int height = Math.max(1, Math.round(bounds.bottom) - top);
+
+            FrameLayout.LayoutParams lp =
+                    (FrameLayout.LayoutParams) getLayoutParams();
+            lp.width = width;
+            lp.height = height;
+            lp.leftMargin = left - FolderIcon.this.getPaddingLeft();
+            lp.topMargin = top - FolderIcon.this.getPaddingTop();
+            setLayoutParams(lp);
+
+            layout(left, top, left + width, top + height);
+            setVisibility(VISIBLE);
+        }
+
+        void prepare(FolderPreviewLayout.ItemPlacement placement) {
+            prepare(placement.getItem(), placement.getBounds());
+        }
+
+        @Override
+        public void setIconVisible(boolean visible) {
+            if (mItem == null) return;
+
+            if (!visible) {
+                mPreviewItemManager.setWorkspacePreviewItemHidden(
+                        mItem, true);
+            } else if (mIsAppCloseSource) {
+                resetLaunchSource();
+            } else {
+                mPreviewItemManager.setWorkspacePreviewItemHidden(
+                        mItem, false);
+            }
+        }
+
+        @Override
+        public void setForceHideDot(boolean hide) {
+        }
+
+        @Override
+        public void onDraw(Canvas canvas) {
+        }
+
+        @Override
+        public void getIconBounds(Rect outBounds) {
+            outBounds.set(0, 0, getWidth(), getHeight());
+        }
+
+        private void resetLaunchSource() {
+            if (mItem != null) {
+                mPreviewItemManager.setWorkspacePreviewItemHidden(
+                        mItem, false);
+            }
+
+            mItem = null;
+            mIsAppCloseSource = false;
+            super.reset();
+            setVisibility(INVISIBLE);
+        }
+
+        void prepareForAppClose(
+                ItemInfo item, RectF bounds) {
+            prepare(item, bounds);
+            mIsAppCloseSource = true;
+        }
+    }
+
+    private View preparePreviewItemLaunchSource(
+            FolderPreviewLayout.ItemPlacement placement) {
+        if (mPreviewItemLaunchSource == null) {
+            mPreviewItemLaunchSource =
+                    new PreviewItemLaunchSource(getContext());
+            addView(mPreviewItemLaunchSource,
+                    new FrameLayout.LayoutParams(0, 0));
+        }
+
+        mPreviewItemLaunchSource.prepare(placement);
+        return mPreviewItemLaunchSource;
+    }
+
+    @Nullable
+    public View getPreviewItemLaunchSourceForAppClose(
+            Predicate<ItemInfo> matcher) {
+        ItemInfo item = null;
+        for (ItemInfo candidate : mInfo.getContents()) {
+            if (matcher.test(candidate)) {
+                item = candidate;
+                break;
+            }
+        }
+
+        if (item == null) return null;
+
+        FolderPreviewLayout.Snapshot snapshot =
+                mPreviewItemManager.calculateWorkspacePreviewSnapshot();
+        FolderPreviewLayout.ItemPlacement placement =
+                mPreviewItemManager.findWorkspacePreviewPlacement(
+                        snapshot, item);
+
+        RectF targetBounds;
+        if (placement != null) {
+            targetBounds = placement.getBounds();
+        } else {
+            RectF overviewBounds = snapshot.getOverviewBounds();
+            if (overviewBounds == null) return null;
+
+            targetBounds = new RectF(
+                overviewBounds.centerX(),
+                overviewBounds.centerY(),
+                overviewBounds.centerX(),
+                overviewBounds.centerY());
+        }
+
+        if (mPreviewItemLaunchSource == null) {
+            mPreviewItemLaunchSource =
+                    new PreviewItemLaunchSource(getContext());
+            addView(mPreviewItemLaunchSource,
+                    new FrameLayout.LayoutParams(0, 0));
+        }
+
+        mPreviewItemLaunchSource.prepareForAppClose(
+                item, targetBounds);
+        return mPreviewItemLaunchSource;
+    }
+
+    private void handleClick(View view) {
+        if (mPressedPreviewItem != null
+                && mPressedPreviewItem.getItem() instanceof WorkspaceItemInfo item
+                && mActivity instanceof Launcher launcher
+                && mFolder != null
+                && !mFolder.isOpen()
+                && !mFolder.isDestroyed()
+                && launcher.getWorkspace().isFinishedSwitchingState()
+                && !launcher.isInState(LauncherState.EDIT_MODE)
+                && !launcher.getDragController().isDragging()) {
+            View launchSource =
+                    preparePreviewItemLaunchSource(mPressedPreviewItem);
+            ItemClickHandler.onClickAppShortcut(launchSource, item, launcher);
+            return;
+        }
+        mActivity.getItemOnClickListener().onClick(view);
     }
 
     /**
@@ -609,8 +950,8 @@ public class FolderIcon extends FrameLayout implements FloatingIconViewCompanion
         mTmpParams = mPreviewItemManager.computePreviewItemDrawingParams(
                 Math.min(MAX_NUM_ITEMS_IN_PREVIEW, index), curNumItems, mTmpParams);
 
-        mTmpParams.transX += mBackground.basePreviewOffsetX;
-        mTmpParams.transY += mBackground.basePreviewOffsetY;
+        mTmpParams.transX += mBackground.getPreviewLeft();
+        mTmpParams.transY += mBackground.getPreviewTop();
 
         float intrinsicIconSize = mPreviewItemManager.getIntrinsicIconSize();
         float offsetX = mTmpParams.transX + (mTmpParams.scale * intrinsicIconSize) / 2;
@@ -647,6 +988,30 @@ public class FolderIcon extends FrameLayout implements FloatingIconViewCompanion
         return mPreviewItemManager;
     }
 
+    public FolderPreviewLayout.GridUsage calculateWorkspacePreviewGridUsage(
+            int availableSpaceX,
+            int availableSpaceY,
+            int spanX,
+            int spanY) {
+        return mPreviewItemManager.calculateWorkspacePreviewGridUsage(
+                availableSpaceX,
+                availableSpaceY,
+                spanX,
+                spanY);
+    }
+
+    public boolean isPreviewTightlyWrapped(
+            int availableSpaceX,
+            int availableSpaceY,
+            int spanX,
+            int spanY) {
+        return mPreviewItemManager.isPreviewTightlyWrapped(
+            availableSpaceX,
+            availableSpaceY,
+            spanX,
+            spanY);
+    }
+
     @Override
     protected void dispatchDraw(Canvas canvas) {
         boolean drewBlur = false;
@@ -654,7 +1019,7 @@ public class FolderIcon extends FrameLayout implements FloatingIconViewCompanion
         if (canBlur && getLayerType() != View.LAYER_TYPE_HARDWARE) {
             mBackground.getDrawnShapePath(mBlurPath);
             drewBlur = getBlurSurface().drawPath(canvas, mBlurPath,
-                    mBackground.getScaledRadius());
+                    mBackground.getDrawnCornerRadius());
         } else if (canBlur) {
             postInvalidateOnAnimation();
         }
@@ -725,13 +1090,16 @@ public class FolderIcon extends FrameLayout implements FloatingIconViewCompanion
         boolean isAllAppsFolder = AxFolderExt.isAllAppsFolder(mInfo);
         boolean shouldCenterIcon = isAllAppsFolder
                 || mActivity.getDeviceProfile().getWorkspaceIconProfile().getIconCenterVertically()
-                || !mFolderName.shouldShowLabel();
+                || !shouldShowFolderName();
+
+        updateTextVisibility();
+
         if (shouldCenterIcon) {
             int iconSize = isAllAppsFolder
                     ? mActivity.getDeviceProfile().getAllAppsProfile().getIconSizePx()
                     : mActivity.getDeviceProfile().getWorkspaceIconProfile().getIconSizePx();
             int cellHeightPx;
-            if (mFolderName.shouldShowLabel()) {
+            if (shouldShowFolderName()) {
                 Paint.FontMetrics fm = mFolderName.getPaint().getFontMetrics();
                 cellHeightPx = iconSize + mFolderName.getCompoundDrawablePadding()
                         + (int) Math.ceil(fm.bottom - fm.top);
@@ -746,11 +1114,8 @@ public class FolderIcon extends FrameLayout implements FloatingIconViewCompanion
 
     /** Sets the visibility of the icon's title text */
     public void setTextVisible(boolean visible) {
-        if (visible) {
-            mFolderName.setVisibility(VISIBLE);
-        } else {
-            mFolderName.setVisibility(INVISIBLE);
-        }
+        mRequestedTextVisible = visible;
+        updateTextVisibility();
     }
 
     public boolean getTextVisible() {
@@ -773,6 +1138,15 @@ public class FolderIcon extends FrameLayout implements FloatingIconViewCompanion
         mPreviewItemManager.updatePreviewItems(animate);
         mCurrentPreviewItems.clear();
         mCurrentPreviewItems.addAll(getPreviewItemsOnPage(0));
+    }
+
+    void syncPreviewItems() {
+        updatePreviewItems(false);
+    }
+
+    public void onPreviewSettingsChanged() {
+        updatePreviewItems(false);
+        invalidate();
     }
 
     /**
@@ -798,15 +1172,43 @@ public class FolderIcon extends FrameLayout implements FloatingIconViewCompanion
 
     @Override
     public boolean onTouchEvent(MotionEvent event) {
-        if (event.getAction() == MotionEvent.ACTION_DOWN
-                && shouldIgnoreTouchDown(event.getX(), event.getY())) {
-            return false;
+        int action = event.getActionMasked();
+
+        switch (action) {
+            case MotionEvent.ACTION_DOWN:
+                mPressedPreviewItem = null;
+
+                if (shouldIgnoreTouchDown(event.getX(), event.getY())) {
+                    return false;
+                }
+
+                mPressedPreviewItem =
+                        mPreviewItemManager.findDirectItemAt(event.getX(), event.getY());
+                break;
+
+            case MotionEvent.ACTION_MOVE:
+            case MotionEvent.ACTION_UP:
+                if (mPressedPreviewItem != null
+                        && !mPressedPreviewItem.getBounds().contains(
+                                event.getX(), event.getY())) {
+                    mPressedPreviewItem = null;
+                }
+                break;
+
+            case MotionEvent.ACTION_CANCEL:
+                mPressedPreviewItem = null;
+                break;
         }
 
         // Call the superclass onTouchEvent first, because sometimes it changes the state to
         // isPressed() on an ACTION_UP
         super.onTouchEvent(event);
         mLongPressHelper.onTouchEvent(event);
+
+        if (action == MotionEvent.ACTION_UP) {
+            post(() -> mPressedPreviewItem = null);
+        }
+
         // Keep receiving the rest of the events
         return true;
     }
@@ -815,7 +1217,14 @@ public class FolderIcon extends FrameLayout implements FloatingIconViewCompanion
      * Returns true if the touch down at the provided position be ignored
      */
     protected boolean shouldIgnoreTouchDown(float x, float y) {
-        mTouchArea.set(getPaddingLeft(), getPaddingTop(), getWidth() - getPaddingRight(),
+        if (isMultiSpanFolder()) {
+            return !isPointInBackground(x, y);
+        }
+
+        mTouchArea.set(
+                getPaddingLeft(),
+                getPaddingTop(),
+                getWidth() - getPaddingRight(),
                 getHeight() - getPaddingBottom());
         return !mTouchArea.contains((int) x, (int) y);
     }

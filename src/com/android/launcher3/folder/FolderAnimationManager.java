@@ -31,6 +31,7 @@ import android.animation.TimeInterpolator;
 import android.content.Context;
 import android.content.res.Resources;
 import android.graphics.Rect;
+import android.graphics.RectF;
 import android.graphics.drawable.GradientDrawable;
 import android.util.Property;
 import android.view.View;
@@ -53,6 +54,7 @@ import com.android.launcher3.graphics.ThemeManager;
 import com.android.launcher3.util.Themes;
 import com.android.launcher3.views.BaseDragLayer;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -144,14 +146,31 @@ public class FolderAnimationManager implements FolderAnimationCreator {
 
         // Match position of the FolderIcon
         final Rect folderIconPos = new Rect();
+        final RectF scaledBackgroundBounds = new RectF();
+
         float scaleRelativeToDragLayer = mFolder.mActivityContext.getDragLayer()
                 .getDescendantRectRelativeToSelf(mFolderIcon, folderIconPos);
-        int scaledRadius = mPreviewBackground.getScaledRadius();
-        float initialSize = (scaledRadius * 2) * scaleRelativeToDragLayer;
+
+        mPreviewBackground.getScaledBounds(scaledBackgroundBounds);
+        float initialBackgroundWidth =
+                scaledBackgroundBounds.width() * scaleRelativeToDragLayer;
+        float initialBackgroundHeight =
+                scaledBackgroundBounds.height() * scaleRelativeToDragLayer;
 
         // Match size/scale of icons in the preview
-        float previewScale = rule.scaleForItem(itemsInPreview.size(), 0);
-        float previewSize = rule.getIconSize() * previewScale;
+        final float previewSize;
+        final FolderPreviewLayout.Snapshot workspacePreviewSnapshot;
+
+        if (mFolderIcon.usesWorkspacePreviewLayout()) {
+            workspacePreviewSnapshot = mFolderIcon.getPreviewItemManager()
+                    .calculateWorkspacePreviewSnapshotForPage(mContent.getCurrentPage());
+            previewSize = workspacePreviewSnapshot.getItems().get(0).getBounds().width();
+        } else {
+            workspacePreviewSnapshot = null;
+            float previewScale = rule.scaleForItem(itemsInPreview.size(), 0);
+            previewSize = rule.getIconSize() * previewScale;
+        }
+
         float baseIconSize = getBubbleTextView(itemsInPreview.get(0)).getIconSize();
         float initialScale = previewSize / baseIconSize * scaleRelativeToDragLayer;
         final float finalScale = 1f;
@@ -171,17 +190,17 @@ public class FolderAnimationManager implements FolderAnimationCreator {
 
         int previewItemOffsetX = 0;
         if (Utilities.isRtl(mContext.getResources())) {
-            previewItemOffsetX = (int) (lp.width * initialScale - initialSize);
+            previewItemOffsetX = (int) (lp.width * initialScale - initialBackgroundWidth);
         }
 
         final int paddingOffsetX = (int) (mContent.getPaddingLeft() * initialScale);
         final int paddingOffsetY = (int) (mContent.getPaddingTop() * initialScale);
 
         int initialX = folderIconPos.left + mFolder.getPaddingLeft()
-                + Math.round(mPreviewBackground.getOffsetX() * scaleRelativeToDragLayer)
+                + Math.round(scaledBackgroundBounds.left * scaleRelativeToDragLayer)
                 - paddingOffsetX - previewItemOffsetX;
         int initialY = folderIconPos.top + mFolder.getPaddingTop()
-                + Math.round(mPreviewBackground.getOffsetY() * scaleRelativeToDragLayer)
+                + Math.round(scaledBackgroundBounds.top * scaleRelativeToDragLayer)
                 - paddingOffsetY;
         final float xDistance = initialX - lp.x;
         final float yDistance = initialY - lp.y;
@@ -197,9 +216,11 @@ public class FolderAnimationManager implements FolderAnimationCreator {
         int totalOffsetX = paddingOffsetX + previewItemOffsetX;
         Rect startRect = new Rect(totalOffsetX,
                 paddingOffsetY,
-                Math.round((totalOffsetX + initialSize)),
-                Math.round((paddingOffsetY + initialSize)));
+                Math.round((totalOffsetX + initialBackgroundWidth)),
+                Math.round((paddingOffsetY + initialBackgroundHeight)));
         Rect endRect = new Rect(0, 0, lp.width, lp.height);
+        float initialRadius = mPreviewBackground.getDrawnCornerRadius()
+                * scaleRelativeToDragLayer;
         float finalRadius = mFolderBackground.getCornerRadius();
 
         // Create the animators.
@@ -245,7 +266,7 @@ public class FolderAnimationManager implements FolderAnimationCreator {
         ShapeDelegate shapeDelegate = ThemeManager.INSTANCE.get(mContext).getFolderShape();
         // Create reveal animator for the folder background
         play(a, shapeDelegate.createRevealAnimator(
-                mFolder, startRect, endRect, finalRadius, !mIsOpening));
+                mFolder, startRect, endRect, initialRadius, finalRadius, !mIsOpening));
 
         int page = mIsOpening ? mContent.getCurrentPage() : mContent.getDestinationPage();
         if (Utilities.isRtl(mContext.getResources())) {
@@ -349,11 +370,9 @@ public class FolderAnimationManager implements FolderAnimationCreator {
             );
         }
 
-        int radiusDiff = scaledRadius - mPreviewBackground.getRadius();
         addPreviewItemAnimators(a, initialScale / scaleRelativeToDragLayer,
-                // Background can have a scaled radius in drag and drop mode, so we need to add the
-                // difference to keep the preview items centered.
-                (int) (previewItemOffsetX / scaleRelativeToDragLayer) + radiusDiff, radiusDiff);
+                (int) (previewItemOffsetX / scaleRelativeToDragLayer),
+                workspacePreviewSnapshot, scaledBackgroundBounds);
         return a;
     }
 
@@ -369,29 +388,71 @@ public class FolderAnimationManager implements FolderAnimationCreator {
      * Animate the items on the current page.
      */
     private void addPreviewItemAnimators(AnimatorSet animatorSet, final float folderScale,
-            int previewItemOffsetX, int previewItemOffsetY) {
+            int previewItemOffsetX, FolderPreviewLayout.Snapshot workspacePreviewSnapshot,
+            RectF scaledBackgroundBounds) {
         ClippedFolderIconLayoutRule rule = mFolderIcon.getLayoutRule();
         boolean isOnFirstPage = mFolder.mContent.getCurrentPage() == 0;
-        final List<View> itemsInPreview = getPreviewIconsOnPage(
-                isOnFirstPage ? 0 : mFolder.mContent.getCurrentPage());
-        final int numItemsInPreview = itemsInPreview.size();
+        boolean useWorkspacePreview = workspacePreviewSnapshot != null;
+
+        final List<FolderPreviewLayout.ItemPlacement> workspacePlacements =
+                useWorkspacePreview ? workspacePreviewSnapshot.getItems() : null;
+        final List<View> itemsInPreview = useWorkspacePreview
+                ? null
+                : getPreviewIconsOnPage(isOnFirstPage ? 0 : mFolder.mContent.getCurrentPage());
+
+        final int numItemsInPreview = useWorkspacePreview
+                ? workspacePlacements.size()
+                : itemsInPreview.size();
         final int numItemsInFirstPagePreview = isOnFirstPage
-                ? numItemsInPreview : MAX_NUM_ITEMS_IN_PREVIEW;
+                ? numItemsInPreview
+                : MAX_NUM_ITEMS_IN_PREVIEW;
 
         TimeInterpolator previewItemInterpolator = getPreviewItemInterpolator();
 
-        ShortcutAndWidgetContainer cwc = mContent.getPageAt(0).getShortcutsAndWidgets();
+        float legacyPreviewOffsetX = mPreviewBackground.getPreviewLeft()
+                - scaledBackgroundBounds.left + previewItemOffsetX;
+        float legacyPreviewOffsetY = mPreviewBackground.getPreviewTop()
+                - scaledBackgroundBounds.top;
+
+        ShortcutAndWidgetContainer cwc = mContent
+                .getPageAt(mContent.getCurrentPage())
+                .getShortcutsAndWidgets();
+
+        final List<View> animatedPreviewItems = new ArrayList<>(numItemsInPreview);
+
         for (int i = 0; i < numItemsInPreview; ++i) {
-            final View v = itemsInPreview.get(i);
+            FolderPreviewLayout.ItemPlacement workspacePlacement =
+                    useWorkspacePreview ? workspacePlacements.get(i) : null;
+            final View v = useWorkspacePreview
+                    ? mFolder.getViewForInfo(workspacePlacement.getItem())
+                    : itemsInPreview.get(i);
+            animatedPreviewItems.add(v);
+
             CellLayoutLayoutParams vLp = (CellLayoutLayoutParams) v.getLayoutParams();
 
             // Calculate the final values in the LayoutParams.
             vLp.isLockedToGrid = true;
             cwc.setupLp(v);
 
-            // Match scale of icons in the preview of the items on the first page.
-            float previewScale = rule.scaleForItem(numItemsInFirstPagePreview, 0);
-            float previewSize = rule.getIconSize() * previewScale;
+            final float previewSize;
+            final float previewItemX;
+            final float previewItemY;
+
+            if (useWorkspacePreview) {
+                RectF bounds = workspacePlacement.getBounds();
+                previewSize = bounds.width();
+                previewItemX =
+                        bounds.left - scaledBackgroundBounds.left + previewItemOffsetX;
+                previewItemY = bounds.top - scaledBackgroundBounds.top;
+            } else {
+                float previewScale = rule.scaleForItem(numItemsInFirstPagePreview, 0);
+                previewSize = rule.getIconSize() * previewScale;
+                rule.computePreviewItemDrawingParams(
+                        i, numItemsInFirstPagePreview, mTmpParams);
+                previewItemX = mTmpParams.transX + legacyPreviewOffsetX;
+                previewItemY = mTmpParams.transY + legacyPreviewOffsetY;
+            }
+
             float baseIconSize = getBubbleTextView(v).getIconSize();
             float iconScale = previewSize / baseIconSize;
 
@@ -401,17 +462,17 @@ public class FolderAnimationManager implements FolderAnimationCreator {
             v.setScaleX(scale);
             v.setScaleY(scale);
 
-            // Match positions of the icons in the folder with their positions in the preview
-            rule.computePreviewItemDrawingParams(i, numItemsInFirstPagePreview, mTmpParams);
-            // The PreviewLayoutRule assumes that the icon size takes up the entire width so we
-            // offset by the actual size.
-            int iconOffsetX = (int) ((vLp.width - baseIconSize) * iconScale) / 2;
+            float iconLeft = (vLp.width - baseIconSize) / 2f;
+            float iconTop = v.getPaddingTop();
 
-            final int previewPosX =
-                    (int) ((mTmpParams.transX - iconOffsetX + previewItemOffsetX) / folderScale);
-            final float paddingTop = v.getPaddingTop() * iconScale;
-            final int previewPosY = (int) ((mTmpParams.transY + previewItemOffsetY - paddingTop)
-                    / folderScale);
+            final float previewPosX =
+                    previewItemX / folderScale
+                            - v.getPivotX()
+                            - initialScale * (iconLeft - v.getPivotX());
+            final float previewPosY =
+                    previewItemY / folderScale
+                            - v.getPivotY()
+                            - initialScale * (iconTop - v.getPivotY());
 
             final float xDistance = previewPosX - vLp.x;
             final float yDistance = previewPosY - vLp.y;
@@ -464,6 +525,32 @@ public class FolderAnimationManager implements FolderAnimationCreator {
                     v.setScaleY(1f);
                 }
             });
+        }
+
+        if (workspacePreviewSnapshot != null) {
+            PropertyResetListener<View, Float> alphaResetListener =
+                    new PropertyResetListener<>(ALPHA, 1f);
+
+            List<View> currentPageItems =
+                    mFolder.getItemsOnPage(mFolder.mContent.getCurrentPage());
+            for (View item : mFolder.getIconsInReadingOrder()) {
+                if (animatedPreviewItems.contains(item)) {
+                    continue;
+                }
+
+                float openAlpha = currentPageItems.contains(item) ? 1f : 0f;
+                float[] alphaValues = mIsOpening
+                        ? new float[] {0f, 0f, openAlpha}
+                        : new float[] {openAlpha, 0f, 0f};
+                Animator alphaAnimator =
+                        ObjectAnimator.ofFloat(item, ALPHA, alphaValues);
+
+                alphaAnimator.setInterpolator(mIsOpening
+                        ? mFolderOpenInterpolator
+                        : mFolderCloseInterpolator);
+                alphaAnimator.addListener(alphaResetListener);
+                play(animatorSet, alphaAnimator);
+            }
         }
     }
 

@@ -253,6 +253,8 @@ public class Folder extends AbstractFloatingView implements ClipPathView, DragSo
     private boolean mSuppressFolderDeletion = false;
     private boolean mSuppressContentUpdate = false;
 
+    private int mAutoShrinkPreviousItemCount = -1;
+
     private boolean mItemAddedBackToSelfViaIcon = false;
     private boolean mIsEditingName = false;
 
@@ -1053,6 +1055,7 @@ public class Folder extends AbstractFloatingView implements ClipPathView, DragSo
         mSuppressFolderDeletion = false;
         clearDragInfo();
         setState(STATE_CLOSED);
+        maybeApplyAutoShrink();
         mContent.setCurrentPage(0);
     }
 
@@ -1254,6 +1257,7 @@ public class Folder extends AbstractFloatingView implements ClipPathView, DragSo
             mInfo.setOption(FolderInfo.FLAG_MULTI_PAGE_ANIMATION, false,
                     mActivityContext.getModelWriter());
         }
+        mFolderIcon.post(this::maybeApplyAutoShrink);
     }
 
     private void updateItemLocationsInDatabaseBatch(boolean isBind) {
@@ -1635,8 +1639,11 @@ public class Folder extends AbstractFloatingView implements ClipPathView, DragSo
 
     /** Remove all matching app or shortcut. Does not change the DB. */
     public void removeFolderContent(boolean animate, ItemInfo... items) {
+        int previousItemCount = getItemCount();
         List<ItemInfo> itemArray = Arrays.asList(items);
-        if (mInfo.getContents().removeAll(itemArray)) {
+        boolean removed = mInfo.getContents().removeAll(itemArray);
+
+        if (removed) {
             mActivityContext.getModelWriter().notifyItemModified(mInfo);
         }
 
@@ -1659,6 +1666,33 @@ public class Folder extends AbstractFloatingView implements ClipPathView, DragSo
         }
 
         mFolderIcon.onItemsChanged(animate);
+        if (removed) {
+            requestAutoShrink(previousItemCount);
+        }
+    }
+
+    private void requestAutoShrink(int previousItemCount) {
+        mAutoShrinkPreviousItemCount =
+                Math.max(mAutoShrinkPreviousItemCount, previousItemCount);
+        mFolderIcon.post(this::maybeApplyAutoShrink);
+    }
+
+    private void maybeApplyAutoShrink() {
+        if (mAutoShrinkPreviousItemCount < 0
+                || mSuppressContentUpdate
+                || mIsDragInProgress
+                || mState != STATE_CLOSED) {
+            return;
+        }
+
+        int previousItemCount = mAutoShrinkPreviousItemCount;
+        mAutoShrinkPreviousItemCount = -1;
+
+        int itemCount = getItemCount();
+        if (mDestroyed || itemCount <= 1 || itemCount >= previousItemCount) return;
+
+        mFolderIcon.syncPreviewItems();
+        mLauncherDelegate.autoShrinkFolder(mFolderIcon);
     }
 
     @VisibleForTesting
@@ -1935,14 +1969,10 @@ public class Folder extends AbstractFloatingView implements ClipPathView, DragSo
             mClipPath.computeBounds(mBlurBounds, false);
             float minDim = Math.min(mBlurBounds.width(), mBlurBounds.height());
             float fullMin = Math.min(getWidth(), getHeight());
-            float iconRadius = mFolderIcon != null
-                    ? mFolderIcon.mBackground.getScaledRadius() : 0f;
-            float iconMin = iconRadius * 2f;
-            ShapeDelegate shape =
-                    ThemeManager.INSTANCE.get(getContext()).getFolderShape();
-            float shapeRatio = shape instanceof ShapeDelegate.RoundedSquare
-                    ? ((ShapeDelegate.RoundedSquare) shape).getRadiusRatio() : 1f;
-            float collapsedRadius = iconRadius * shapeRatio;
+            float iconMin = mFolderIcon != null
+                    ? mFolderIcon.mBackground.getScaledRadius() * 2f : 0f;
+            float collapsedRadius = mFolderIcon != null
+                    ? mFolderIcon.getPreviewBackgroundCornerRadius() : 0f;
             float progress = fullMin - iconMin > 1f
                     ? (fullMin - minDim) / (fullMin - iconMin) : 0f;
             progress = Math.max(0f, Math.min(1f, progress));

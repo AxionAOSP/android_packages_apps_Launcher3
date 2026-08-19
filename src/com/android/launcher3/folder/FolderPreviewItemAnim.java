@@ -44,8 +44,6 @@ class FolderPreviewItemAnim {
                 }
             };
 
-    private static final PreviewItemDrawingParams sTmpParams =
-            new PreviewItemDrawingParams(0, 0, 0);
     private static final float[] sTempParamsArray = new float[3];
 
     private final ObjectAnimator mAnimator;
@@ -66,15 +64,28 @@ class FolderPreviewItemAnim {
     FolderPreviewItemAnim(PreviewItemManager itemManager,
             PreviewItemDrawingParams params, int index0, int items0, int index1, int items1,
             int duration, final Runnable onCompleteRunnable) {
+        this(itemManager, params, index1,
+                getState(itemManager, index0, items0),
+                getState(itemManager, index1, items1),
+                duration, onCompleteRunnable);
+    }
+
+    FolderPreviewItemAnim(PreviewItemManager itemManager,
+            PreviewItemDrawingParams params, float finalScale, float finalTransX,
+            float finalTransY, int duration, final Runnable onCompleteRunnable) {
+        this(itemManager, params, params.index,
+                new float[] {params.scale, params.transX, params.transY},
+                new float[] {finalScale, finalTransX, finalTransY},
+                duration, onCompleteRunnable);
+    }
+
+    private FolderPreviewItemAnim(PreviewItemManager itemManager,
+            PreviewItemDrawingParams params, float finalIndex, float[] startState,
+            float[] endState, int duration, final Runnable onCompleteRunnable) {
         mItemManager = itemManager;
         mParams = params;
-        mParams.index = index1;
-
-        mItemManager.computePreviewItemDrawingParams(index1, items1, sTmpParams);
-        finalState = new float[] {sTmpParams.scale, sTmpParams.transX, sTmpParams.transY};
-
-        mItemManager.computePreviewItemDrawingParams(index0, items0, sTmpParams);
-        float[] startState = new float[] {sTmpParams.scale, sTmpParams.transX, sTmpParams.transY};
+        mParams.index = finalIndex;
+        finalState = endState;
 
         mAnimator = ObjectAnimator.ofObject(this, PARAMS, new FloatArrayEvaluator(),
                 startState, finalState);
@@ -88,6 +99,13 @@ class FolderPreviewItemAnim {
             }
         });
         mAnimator.setDuration(duration);
+    }
+
+    private static float[] getState(
+            PreviewItemManager itemManager, int index, int itemCount) {
+        PreviewItemDrawingParams params =
+                itemManager.computePreviewItemDrawingParams(index, itemCount, null);
+        return new float[] {params.scale, params.transX, params.transY};
     }
 
     private void setParams(float[] values) {
