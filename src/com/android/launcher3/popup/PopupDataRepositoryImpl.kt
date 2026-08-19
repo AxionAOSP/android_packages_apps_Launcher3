@@ -17,6 +17,7 @@
 package com.android.launcher3.popup
 
 import android.content.Context
+import com.android.launcher3.LauncherSettings.Favorites.CONTAINER_DESKTOP
 import com.android.launcher3.LauncherSettings.Favorites.ITEM_TYPE_APPWIDGET
 import com.android.launcher3.LauncherSettings.Favorites.ITEM_TYPE_APP_PAIR
 import com.android.launcher3.LauncherSettings.Favorites.ITEM_TYPE_FOLDER
@@ -40,11 +41,15 @@ constructor(
     lifeCycle: DaggerSingletonTracker,
 ) : PopupDataRepository {
     private val widgetManagerHelper = WidgetManagerHelper(context)
-    private val folderSystemShortcuts = listOf(popupDataSource.removePopupData)
     private val appPairSystemShortcuts = listOf(popupDataSource.removePopupData)
     private val widgetSystemShortcuts = listOf(popupDataSource.removePopupData)
     private val widgetWithSettingsSystemShortcuts =
         listOf(popupDataSource.removePopupData, popupDataSource.widgetSettingsPopupData)
+
+    private val folderSystemShortcuts = listOf(popupDataSource.removePopupData)
+    private val desktopFolderSystemShortcuts =
+        listOf(popupDataSource.folderSettingsPopupData)
+
     private var popupData: Map<Int, List<PopupData>> = mapOf()
 
     init {
@@ -103,8 +108,13 @@ constructor(
      */
     private fun getPopupDataForItemInfo(itemInfo: ItemInfo): List<PopupData>? {
         return when (itemInfo.itemType) {
-            ITEM_TYPE_FOLDER -> folderSystemShortcuts
             ITEM_TYPE_APP_PAIR -> appPairSystemShortcuts
+            ITEM_TYPE_FOLDER ->
+                if (itemInfo.container == CONTAINER_DESKTOP) {
+                    desktopFolderSystemShortcuts
+                } else {
+                    folderSystemShortcuts
+                }
             ITEM_TYPE_APPWIDGET -> {
                 if (itemInfo is LauncherAppWidgetInfo) {
                     val launcherAppWidgetProviderInfo =

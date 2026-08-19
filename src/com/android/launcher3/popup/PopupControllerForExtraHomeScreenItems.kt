@@ -19,8 +19,10 @@ package com.android.launcher3.popup
 import android.content.Context
 import android.view.View
 import com.android.launcher3.AppWidgetResizeFrame
+import com.android.launcher3.Launcher
 import com.android.launcher3.R
 import com.android.launcher3.dragndrop.LauncherDragController
+import com.android.launcher3.folder.FolderIcon
 import com.android.launcher3.model.data.ItemInfo
 import com.android.launcher3.shortcuts.DeepShortcutView
 import com.android.launcher3.views.ActivityContext
@@ -48,10 +50,16 @@ class PopupControllerForExtraHomeScreenItems<T>(
         addSystemShortcuts(container, itemInfo, itemView = view, activityContext)
         container.show()
 
-        val cellLayout = activityContext.getCellLayout(itemInfo.container, itemInfo.screenId)
+        val launcher = Launcher.getLauncher(view.context)
+        val cellLayout = launcher.workspace.getParentCellLayoutForView(view) ?: return container
+
         val resizeStrategy = DefaultPopupResizeStrategy()
         if (resizeStrategy.shouldShowResizeFrame(itemInfo, view, cellLayout)) {
-            AppWidgetResizeFrame.showForWidget(view as LauncherAppWidgetHostView?, cellLayout)
+            when (view) {
+                is FolderIcon -> AppWidgetResizeFrame.showForFolder(view, cellLayout)
+
+                is LauncherAppWidgetHostView -> AppWidgetResizeFrame.showForWidget(view, cellLayout)
+            }
         }
         return container
     }

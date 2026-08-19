@@ -1432,8 +1432,10 @@ public class Launcher extends StatefulActivity<LauncherState>
                         true, dragObject)) {
                     return;
                 }
-                if (mWorkspace.addToExistingFolderIfNecessary(view, layout, cellXY, 0, dragObject,
-                        true)) {
+
+                View dropOverView = layout.getChildAt(cellXY[0], cellXY[1]);
+                if (dropOverView instanceof FolderIcon folderIcon
+                        && mWorkspace.addToKnownFolderIfNecessary(folderIcon, dragObject, true)) {
                     return;
                 }
             } else {
@@ -2470,9 +2472,24 @@ public class Launcher extends StatefulActivity<LauncherState>
                 op -> mapOverCellLayouts(containerArray, op);
 
         // Order: Preferred item by itself or in folder, then by matching package/user
-        return visibleContainer.getFirstMatch(
+        View target = visibleContainer.getFirstMatch(
                 preferredItem, forFolderMatch(preferredItem),
                 packageAndUserAndApp, forFolderMatch(packageAndUserAndApp));
+
+        if (!(target instanceof FolderIcon folderIcon)) {
+            return target;
+        }
+
+        View previewItem =
+                folderIcon.getPreviewItemLaunchSourceForAppClose(
+                        preferredItem);
+        if (previewItem == null) {
+            previewItem =
+                    folderIcon.getPreviewItemLaunchSourceForAppClose(
+                            packageAndUserAndApp);
+        }
+
+        return previewItem != null ? previewItem : target;
     }
 
     private ValueAnimator createNewAppBounceAnimation(View v, int i) {

@@ -474,8 +474,18 @@ class WorkspaceItemProcessor(
         c.applyCommonProperties(collection)
         // Do not trim the folder label, as is was set by the user.
         collection.title = c.getString(c.mTitleIndex)
-        collection.spanX = 1
-        collection.spanY = 1
+
+        if (collection is FolderInfo && c.container == Favorites.CONTAINER_DESKTOP) {
+            collection.spanX = c.spanX.coerceAtLeast(1)
+            collection.spanY = c.spanY.coerceAtLeast(1)
+
+            collection.minSpanX = collection.spanX
+            collection.minSpanY = collection.spanY
+        } else {
+            collection.spanX = 1
+            collection.spanY = 1
+        }
+
         if (collection is FolderInfo) {
             collection.options = c.options
         } else {

@@ -372,6 +372,17 @@
     <dimen name="folder_content_padding_left_right">8dp</dimen>
     <dimen name="folder_content_padding_top">16dp</dimen>
 
+    <!-- Workspace folder previews -->
+    <dimen name="folder_workspace_preview_item_scale">1.00</dimen>
+    <dimen name="folder_workspace_preview_padding">10dp</dimen>
+    <dimen name="folder_workspace_preview_min_gap">2dp</dimen>
+
+    <!-- Resizable folder styling -->
+    <dimen name="folder_resize_outline_stroke_width">2dp</dimen>
+    <dimen name="folder_resize_handle_stroke_width">8dp</dimen>
+    <dimen name="folder_resize_handle_length">32dp</dimen>
+    <dimen name="folder_resize_handle_touch_size">48dp</dimen>
+
     <!-- Sizes for managed profile badges -->
     <dimen name="profile_badge_size">24dp</dimen>
     <dimen name="profile_badge_minimum_top">2dp</dimen>
@@ -583,6 +594,11 @@
     <dimen name="bottom_sheet_handle_margin">16dp</dimen>
     <dimen name="widgets_bottom_sheet_handle_margin">24dp</dimen>
     <dimen name="bottom_sheet_handle_corner_radius">2dp</dimen>
+
+    <!-- Folder settings sheet parameters -->
+    <dimen name="folder_settings_content_padding">24dp</dimen>
+    <dimen name="folder_settings_control_spacing">16dp</dimen>
+    <dimen name="folder_settings_title_spacing">24dp</dimen>
 
     <!-- State transition -->
     <item name="workspace_content_scale" format="float" type="dimen">0.97</item>

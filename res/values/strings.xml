@@ -579,4 +579,13 @@
     <string name="seven_sided_cookie_shape_title">7-sided cookie</string>
     <!-- label for arch shape option in customization picker -->
     <string name="arch_shape_title">Arch</string>
+
+    <!-- Strings for folder customization -->
+    <string name="folder_settings">Folder settings</string>
+    <string name="folder_preview_icon_scale">Preview icon size</string>
+    <string name="folder_settings_reset">Reset</string>
+    <string name="folder_settings_percentage">%1$d%%</string>
+    <string name="folder_preview_padding">Outer padding</string>
+    <string name="folder_preview_min_gap">Minimum icon spacing</string>
+    <string name="folder_settings_dp">%1$d dp</string>
 </resources>

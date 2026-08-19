@@ -24,6 +24,7 @@ import static com.android.launcher3.icons.GraphicsUtils.setColorAlphaBound;
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
 import android.animation.ObjectAnimator;
+import android.animation.RectEvaluator;
 import android.animation.ValueAnimator;
 import android.content.Context;
 import android.content.res.TypedArray;
@@ -36,6 +37,7 @@ import android.graphics.PorterDuff;
 import android.graphics.PorterDuffXfermode;
 import android.graphics.RadialGradient;
 import android.graphics.Rect;
+import android.graphics.RectF;
 import android.graphics.Region;
 import android.graphics.Shader;
 import android.util.Property;
@@ -76,6 +78,9 @@ public class PreviewBackground extends DelegatedCellDrawing {
 
     private final Matrix mShaderMatrix = new Matrix();
     private final Path mPath = new Path();
+    private final Rect mBackgroundBounds = new Rect();
+    private final Rect mTargetBackgroundBounds = new Rect();
+    private final RectF mScaledBackgroundBounds = new RectF();
 
     private final Paint mPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
 
@@ -88,8 +93,6 @@ public class PreviewBackground extends DelegatedCellDrawing {
     private View mInvalidateDelegate;
 
     int previewSize;
-    int basePreviewOffsetX;
-    int basePreviewOffsetY;
 
     private CellLayout mDrawingDelegate;
 
@@ -108,6 +111,7 @@ public class PreviewBackground extends DelegatedCellDrawing {
     @VisibleForTesting protected ValueAnimator mScaleAnimator;
     private ObjectAnimator mStrokeAlphaAnimator;
     private ObjectAnimator mShadowAnimator;
+    private ValueAnimator mBoundsAnimator;
 
     @VisibleForTesting protected boolean mIsAccepting;
     @VisibleForTesting protected boolean mIsHovered;
@@ -141,6 +145,41 @@ public class PreviewBackground extends DelegatedCellDrawing {
                 }
             };
 
+    static void calculateBackgroundBounds(
+            DeviceProfile grid,
+            int availableSpaceX,
+            int availableSpaceY,
+            int topPadding,
+            int spanX,
+            int spanY,
+            Rect outBounds) {
+        int previewSize = grid.folderIconSizePx;
+        int cellWidth = grid.getWorkspaceIconProfile().getCellSize().x;
+        int cellHeight = grid.getWorkspaceIconProfile().getCellSize().y;
+
+        int backgroundWidth = previewSize;
+        int backgroundHeight = previewSize;
+
+        if (spanX > 1) {
+            backgroundWidth += Math.max(0, availableSpaceX - cellWidth);
+        }
+
+        if (spanY > 1) {
+            backgroundHeight += Math.max(0, availableSpaceY - cellHeight);
+        }
+
+        int backgroundLeft = (availableSpaceX - backgroundWidth) / 2;
+        int backgroundTop = spanY > 1
+                ? (availableSpaceY - backgroundHeight) / 2
+                : topPadding + grid.folderIconOffsetYPx;
+
+        outBounds.set(
+            backgroundLeft,
+            backgroundTop,
+            backgroundLeft + backgroundWidth,
+            backgroundTop + backgroundHeight);
+    }
+
     public PreviewBackground(Context context) {
         mContext = context;
     }
@@ -167,7 +206,7 @@ public class PreviewBackground extends DelegatedCellDrawing {
     }
 
     public void setup(Context context, ActivityContext activity, View invalidateDelegate,
-                      int availableSpaceX, int topPadding) {
+            int availableSpaceX, int availableSpaceY, int topPadding, int spanX, int spanY) {
         mInvalidateDelegate = invalidateDelegate;
 
         TypedArray ta = context.getTheme().obtainStyledAttributes(R.styleable.FolderIconPreview);
@@ -178,8 +217,15 @@ public class PreviewBackground extends DelegatedCellDrawing {
         DeviceProfile grid = activity.getDeviceProfile();
         previewSize = grid.folderIconSizePx;
 
-        basePreviewOffsetX = (availableSpaceX - previewSize) / 2;
-        basePreviewOffsetY = topPadding + grid.folderIconOffsetYPx;
+        calculateBackgroundBounds(
+            grid,
+            availableSpaceX,
+            availableSpaceY,
+            topPadding,
+            spanX,
+            spanY,
+            mBackgroundBounds);
+        mTargetBackgroundBounds.set(mBackgroundBounds);
 
         // Stroke width is 1dp
         mStrokeWidth = context.getResources().getDisplayMetrics().density;
@@ -198,15 +244,74 @@ public class PreviewBackground extends DelegatedCellDrawing {
     }
 
     void getBounds(Rect outBounds) {
-        int top = basePreviewOffsetY;
-        int left = basePreviewOffsetX;
-        int right = left + previewSize;
-        int bottom = top + previewSize;
-        outBounds.set(left, top, right, bottom);
+        outBounds.set(mBackgroundBounds);
+    }
+
+    void getTargetBounds(Rect outBounds) {
+        outBounds.set(mTargetBackgroundBounds);
+    }
+
+    int getTargetPreviewLeft() {
+        return mTargetBackgroundBounds.centerX() - previewSize / 2;
+    }
+
+    int getTargetPreviewTop() {
+        return mTargetBackgroundBounds.centerY() - previewSize / 2;
+    }
+
+    void animateBoundsFrom(Rect startBounds, long duration) {
+        if (mBoundsAnimator != null) {
+            mBoundsAnimator.cancel();
+        }
+
+        Rect endBounds = new Rect(mBackgroundBounds);
+        if (startBounds.equals(endBounds)) return;
+
+        ValueAnimator animator = ValueAnimator.ofObject(
+                new RectEvaluator(new Rect()),
+                new Rect(startBounds),
+                endBounds);
+        mBoundsAnimator = animator;
+        mBackgroundBounds.set(startBounds);
+
+        animator.addUpdateListener(animation -> {
+            mBackgroundBounds.set(
+                    (Rect) animation.getAnimatedValue());
+            invalidate();
+        });
+        animator.addListener(new AnimatorListenerAdapter() {
+            @Override
+            public void onAnimationEnd(Animator animation) {
+                if (mBoundsAnimator == animation) {
+                    mBoundsAnimator = null;
+                }
+            }
+        });
+        animator.setDuration(duration);
+        animator.start();
+    }
+
+    void getScaledBounds(RectF outBounds) {
+        outBounds.set(getBoundsAtScale(mScale));
+    }
+
+    private RectF getBoundsAtScale(float scale) {
+        float centerX = mBackgroundBounds.exactCenterX();
+        float centerY = mBackgroundBounds.exactCenterY();
+        float halfWidth = mBackgroundBounds.width() * scale / 2f;
+        float halfHeight = mBackgroundBounds.height() * scale / 2f;
+
+        mScaledBackgroundBounds.set(
+            centerX - halfWidth,
+            centerY - halfHeight,
+            centerX + halfWidth,
+            centerY + halfHeight);
+
+        return mScaledBackgroundBounds;
     }
 
     public int getRadius() {
-        return previewSize / 2;
+        return Math.min(mBackgroundBounds.width(), mBackgroundBounds.height()) / 2;
     }
 
     int getScaledRadius() {
@@ -214,11 +319,19 @@ public class PreviewBackground extends DelegatedCellDrawing {
     }
 
     int getOffsetX() {
-        return basePreviewOffsetX - (getScaledRadius() - getRadius());
+        return mBackgroundBounds.left - (getScaledRadius() - getRadius());
     }
 
     int getOffsetY() {
-        return basePreviewOffsetY - (getScaledRadius() - getRadius());
+        return mBackgroundBounds.top - (getScaledRadius() - getRadius());
+    }
+
+    int getPreviewLeft() {
+        return mBackgroundBounds.centerX() - previewSize / 2;
+    }
+
+    int getPreviewTop() {
+        return mBackgroundBounds.centerY() - previewSize / 2;
     }
 
     /**
@@ -250,6 +363,10 @@ public class PreviewBackground extends DelegatedCellDrawing {
                 : mBgColor;
     }
 
+    boolean isBoundsAnimating() {
+        return mBoundsAnimator != null;
+    }
+
     public void drawBackground(Canvas canvas) {
         drawBackground(canvas, getBgColor());
     }
@@ -258,12 +375,68 @@ public class PreviewBackground extends DelegatedCellDrawing {
         mPaint.setStyle(Paint.Style.FILL);
         mPaint.setColor(colorOverride);
 
-        getShape().drawShape(canvas, getOffsetX(), getOffsetY(), getScaledRadius(), mPaint);
+        RectF bounds = getBoundsAtScale(mScale);
+        drawShapeInBounds(canvas, bounds, mScale, mPaint);
         drawShadow(canvas);
     }
 
     private ShapeDelegate getShape() {
         return ThemeManager.INSTANCE.get(mContext).getFolderShape();
+    }
+
+    private float getCornerRadius(
+            ShapeDelegate shape,
+            RectF bounds,
+            float scale) {
+        if (!(shape instanceof ShapeDelegate.RoundedSquare roundedSquare)) {
+            return 0f;
+        }
+
+        if (shape instanceof ShapeDelegate.Circle) {
+            return Math.min(bounds.width(), bounds.height()) / 2f;
+        }
+
+        float fixedRadius =
+                previewSize / 2f * roundedSquare.getRadiusRatio() * scale;
+        return Math.min(
+                fixedRadius,
+                Math.min(bounds.width(), bounds.height()) / 2f);
+    }
+
+    private void drawShapeInBounds(
+            Canvas canvas,
+            RectF bounds,
+            float scale,
+            Paint paint) {
+        ShapeDelegate shape = getShape();
+
+        if (shape instanceof ShapeDelegate.RoundedSquare) {
+            float radius = getCornerRadius(shape, bounds, scale);
+            canvas.drawRoundRect(bounds, radius, radius, paint);
+        } else {
+            shape.drawShapeInBounds(canvas, bounds, paint);
+        }
+    }
+
+    private void addShapeToPathInBounds(
+            Path path,
+            RectF bounds,
+            float scale) {
+        ShapeDelegate shape = getShape();
+
+        if (shape instanceof ShapeDelegate.RoundedSquare) {
+            float radius = getCornerRadius(shape, bounds, scale);
+            path.addRoundRect(bounds, radius, radius, Path.Direction.CW);
+        } else {
+            shape.addToPathInBounds(path, bounds);
+        }
+    }
+
+    float getDrawnCornerRadius() {
+        return getCornerRadius(
+                getShape(),
+                getBoundsAtScale(mScale),
+                mScale);
     }
 
     public void drawShadow(Canvas canvas) {
@@ -354,42 +527,38 @@ public class PreviewBackground extends DelegatedCellDrawing {
         mPaint.setStyle(Paint.Style.STROKE);
         mPaint.setStrokeWidth(mStrokeWidth);
 
-        float inset = 1f;
-        getShape().drawShape(canvas,
-                getOffsetX() + inset, getOffsetY() + inset, getScaledRadius() - inset, mPaint);
+        RectF bounds = getBoundsAtScale(mScale);
+        bounds.inset(1f, 1f);
+        drawShapeInBounds(canvas, bounds, mScale, mPaint);
     }
 
     /**
-     * Draws the leave-behind circle on the given canvas and in the given color.
+     * Draws the leave-behind shape on the given canvas and in the given color.
      */
     public void drawLeaveBehind(Canvas canvas, int color) {
-        float originalScale = mScale;
-        mScale = 0.5f;
-
         mPaint.setStyle(Paint.Style.FILL);
         mPaint.setColor(color);
-        getShape().drawShape(canvas, getOffsetX(), getOffsetY(), getScaledRadius(), mPaint);
 
-        mScale = originalScale;
+        RectF bounds = getBoundsAtScale(0.5f);
+        drawShapeInBounds(canvas, bounds, 0.5f, mPaint);
     }
 
     public Path getClipPath() {
         mPath.reset();
-        float radius = getScaledRadius();
+        float scale = mScale;
+
         if (!Flags.enableLauncherIconShapes()) {
-            radius = radius * ICON_OVERLAP_FACTOR;
+            scale *= ICON_OVERLAP_FACTOR;
         }
-        // Find the difference in radius so that the clip path remains centered.
-        float radiusDifference = radius - getRadius();
-        float offsetX = basePreviewOffsetX - radiusDifference;
-        float offsetY = basePreviewOffsetY - radiusDifference;
-        getShape().addToPath(mPath, offsetX, offsetY, radius);
+
+        RectF bounds = getBoundsAtScale(scale);
+        addShapeToPathInBounds(mPath, bounds, scale);
         return mPath;
     }
 
     public void getDrawnShapePath(Path out) {
         out.reset();
-        getShape().addToPath(out, getOffsetX(), getOffsetY(), getScaledRadius());
+        addShapeToPathInBounds(out, getBoundsAtScale(mScale), mScale);
     }
 
     private void delegateDrawing(CellLayout delegate, int cellX, int cellY) {

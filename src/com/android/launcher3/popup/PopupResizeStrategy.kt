@@ -20,6 +20,8 @@ import android.view.View
 import com.android.launcher3.CellLayout
 import com.android.launcher3.LauncherSettings.Favorites.CONTAINER_DESKTOP
 import com.android.launcher3.LauncherSettings.Favorites.ITEM_TYPE_APPWIDGET
+import com.android.launcher3.LauncherSettings.Favorites.ITEM_TYPE_FOLDER
+import com.android.launcher3.folder.FolderIcon
 import com.android.launcher3.model.data.ItemInfo
 import com.android.launcher3.widget.LauncherAppWidgetHostView
 
@@ -44,16 +46,20 @@ interface PopupResizeStrategy {
 /**
  * Default implementation of [PopupResizeStrategy].
  *
- * This strategy shows a resize frame only for app widgets on the home screen.
+ * This strategy shows a resize frame only for supported resizable items on the home screen.
  */
 class DefaultPopupResizeStrategy : PopupResizeStrategy {
     override fun shouldShowResizeFrame(
         itemInfo: ItemInfo,
         view: View,
         cellLayout: CellLayout?,
-    ): Boolean =
-        itemInfo.container == CONTAINER_DESKTOP &&
-            cellLayout != null &&
-            itemInfo.itemType == ITEM_TYPE_APPWIDGET &&
-            view is LauncherAppWidgetHostView
+    ): Boolean {
+        if (itemInfo.container != CONTAINER_DESKTOP || cellLayout == null) return false
+
+        return when (itemInfo.itemType) {
+            ITEM_TYPE_APPWIDGET -> view is LauncherAppWidgetHostView
+            ITEM_TYPE_FOLDER -> view is FolderIcon
+            else -> false
+        }
+    }
 }
