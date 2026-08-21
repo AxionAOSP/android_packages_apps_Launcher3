@@ -80,13 +80,14 @@ final class AxStackLayout {
     }
 
     void getTransform(float distance, float normalDelta, float reflowTranslation,
-            float primarySize, boolean naturalLayout, boolean rtl, Transform out) {
+            float anchorDistance, float primarySize, boolean naturalLayout, boolean rtl,
+            Transform out) {
         if (distance < -TASK_PRELOAD_RANGE) {
             out.set(1f, 0f, 0f, 0f);
             return;
         }
         if (distance <= 0f) {
-            float translation = -reflowTranslation;
+            float translation = anchorDistance <= 0f ? -reflowTranslation : 0f;
             out.set(1f, rtl ? -translation : translation, 1f, 1f);
             return;
         }

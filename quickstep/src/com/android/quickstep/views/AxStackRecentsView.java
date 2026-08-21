@@ -198,6 +198,12 @@ public abstract class AxStackRecentsView<
     }
 
     @Override
+    protected void onPageScrollsInitialized() {
+        super.onPageScrollsInitialized();
+        updateCurveProperties();
+    }
+
+    @Override
     public void setRecentsAnimationTargets(RecentsAnimationController controller,
             RecentsAnimationTargets targets) {
         super.setRecentsAnimationTargets(controller, targets);
@@ -492,12 +498,12 @@ public abstract class AxStackRecentsView<
             }
             float reflowTranslation = getDismissReflowTranslation(taskView);
             int pageScroll = getScrollForPage(index);
-            float normalDelta = getVisualDelta(pageScroll - scroll)
-                    + reflowTranslation;
-            float distance = (getVisualDelta(pageScroll - anchorScroll)
-                    + reflowTranslation) / pageDistance;
-            STACK_LAYOUT.getTransform(distance, normalDelta, reflowTranslation, primarySize,
-                    naturalLayout, mIsRtl, mStackTransform);
+            float anchorDelta = getVisualDelta(pageScroll - anchorScroll);
+            float normalDelta = anchorDelta + reflowTranslation;
+            float distance = (anchorDelta + reflowTranslation) / pageDistance;
+            STACK_LAYOUT.getTransform(distance, normalDelta, reflowTranslation,
+                    anchorDelta / pageDistance, primarySize, naturalLayout, mIsRtl,
+                    mStackTransform);
             float entranceProgress = getStackEntranceProgress(index, centerIndex);
             float stackScale = interpolate(1f, mStackTransform.scale, entranceProgress);
             float stackTranslation = mStackTransform.primaryTranslation * entranceProgress;
