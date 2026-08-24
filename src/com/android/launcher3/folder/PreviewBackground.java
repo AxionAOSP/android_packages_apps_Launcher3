@@ -44,9 +44,11 @@ import android.view.animation.Interpolator;
 
 import androidx.annotation.VisibleForTesting;
 
+import com.android.axion.blur.AxBlurColors;
 import com.android.launcher3.CellLayout;
 import com.android.launcher3.DeviceProfile;
 import com.android.launcher3.Flags;
+import com.android.launcher3.LauncherPrefsExt;
 import com.android.launcher3.R;
 import com.android.launcher3.celllayout.DelegatedCellDrawing;
 import com.android.launcher3.graphics.ShapeDelegate;
@@ -243,12 +245,18 @@ public class PreviewBackground extends DelegatedCellDrawing {
     }
 
     public int getBgColor() {
-        return mBgColor;
+        return LauncherPrefsExt.LAUNCHER_BLUR_ENABLED.get(mContext)
+                ? AxBlurColors.surfaceEffect0(mContext)
+                : mBgColor;
     }
 
     public void drawBackground(Canvas canvas) {
+        drawBackground(canvas, getBgColor());
+    }
+
+    public void drawBackground(Canvas canvas, int colorOverride) {
         mPaint.setStyle(Paint.Style.FILL);
-        mPaint.setColor(getBgColor());
+        mPaint.setColor(colorOverride);
 
         getShape().drawShape(canvas, getOffsetX(), getOffsetY(), getScaledRadius(), mPaint);
         drawShadow(canvas);
@@ -377,6 +385,11 @@ public class PreviewBackground extends DelegatedCellDrawing {
         float offsetY = basePreviewOffsetY - radiusDifference;
         getShape().addToPath(mPath, offsetX, offsetY, radius);
         return mPath;
+    }
+
+    public void getDrawnShapePath(Path out) {
+        out.reset();
+        getShape().addToPath(out, getOffsetX(), getOffsetY(), getScaledRadius());
     }
 
     private void delegateDrawing(CellLayout delegate, int cellX, int cellY) {

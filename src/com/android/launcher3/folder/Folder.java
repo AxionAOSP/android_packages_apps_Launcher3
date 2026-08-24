@@ -41,8 +41,10 @@ import android.appwidget.AppWidgetHostView;
 import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Insets;
+import android.graphics.Paint;
 import android.graphics.Path;
 import android.graphics.Rect;
+import android.graphics.RectF;
 import android.graphics.Typeface;
 import android.graphics.drawable.Drawable;
 import android.graphics.drawable.GradientDrawable;
@@ -61,12 +63,15 @@ import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewDebug;
+import android.view.ViewOutlineProvider;
 import android.view.WindowInsets;
 import android.view.accessibility.AccessibilityEvent;
 import android.view.animation.AnimationUtils;
 import android.view.inputmethod.EditorInfo;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+
+import com.android.axion.blur.AxBlurColors;
 
 import androidx.annotation.IntDef;
 import androidx.annotation.NonNull;
@@ -90,11 +95,13 @@ import com.android.launcher3.Utilities;
 import com.android.launcher3.accessibility.AccessibleDragListenerAdapter;
 import com.android.launcher3.accessibility.FolderAccessibilityHelper;
 import com.android.launcher3.anim.KeyboardInsetAnimationCallback;
+import com.android.launcher3.anim.RevealOutlineAnimation;
 import com.android.launcher3.compat.AccessibilityManagerCompat;
 import com.android.launcher3.config.FeatureFlags;
 import com.android.launcher3.dagger.LauncherComponentProvider;
 import com.android.launcher3.dragndrop.DragController.DragListener;
 import com.android.launcher3.dragndrop.DragOptions;
+import com.android.launcher3.graphics.AxBackdropBlurSurface;
 import com.android.launcher3.graphics.ShapeDelegate;
 import com.android.launcher3.graphics.ThemeManager;
 import com.android.launcher3.logger.LauncherAtom.FromState;
@@ -267,6 +274,12 @@ public class Folder extends AbstractFloatingView implements ClipPathView, DragSo
 
     private final @NonNull GradientDrawable mBackground;
 
+    private final AxBackdropBlurSurface mBlurSurface;
+    private final Paint mBlurSurfaceFillPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+    private final RectF mBlurBounds = new RectF();
+    private final Rect mBlurTempRect = new Rect();
+    private float mBlurCornerRadius;
+
     /**
      * Used to inflate the Workspace from XML.
      *
@@ -291,6 +304,7 @@ public class Folder extends AbstractFloatingView implements ClipPathView, DragSo
                 ResourcesCompat.getDrawable(getResources(),
                         R.drawable.round_rect_folder, getContext().getTheme()));
         mBackground.setCallback(this);
+        mBlurSurface = new AxBackdropBlurSurface(this, mActivityContext);
     }
 
     @Override
@@ -998,6 +1012,7 @@ public class Folder extends AbstractFloatingView implements ClipPathView, DragSo
 
     private void closeComplete(boolean wasAnimated) {
         // TODO: Clear all active animations.
+        mBlurSurface.release();
         BaseDragLayer parent = (BaseDragLayer) getParent();
         if (parent != null) {
             parent.removeView(this);
@@ -1005,6 +1020,7 @@ public class Folder extends AbstractFloatingView implements ClipPathView, DragSo
         mActivityContext.getDragController().removeDropTarget(this);
         clearFocus();
         if (mFolderIcon != null) {
+            mFolderIcon.invalidate();
             mFolderIcon.setVisibility(View.VISIBLE);
             mFolderIcon.setIconVisible(true);
             mFolderIcon.mFolderName.setTextVisibility(mFolderIcon.mFolderName.shouldShowLabel()
@@ -1870,16 +1886,73 @@ public class Folder extends AbstractFloatingView implements ClipPathView, DragSo
 
     @Override
     protected void dispatchDraw(Canvas canvas) {
+        boolean drewBlur = false;
+        if (mBlurSurface.isActive() && getWidth() > 0 && getHeight() > 0) {
+            if (computeBlurGeometry(mBackground.getCornerRadius())) {
+                drewBlur = mBlurSurface.drawRect(canvas,
+                        (int) mBlurBounds.left,
+                        (int) mBlurBounds.top,
+                        (int) mBlurBounds.right,
+                        (int) mBlurBounds.bottom,
+                        mBlurCornerRadius);
+            }
+        }
         if (mClipPath != null) {
             int count = canvas.save();
             canvas.clipPath(mClipPath);
-            mBackground.draw(canvas);
+            drawFolderBackground(canvas, drewBlur);
             canvas.restoreToCount(count);
             super.dispatchDraw(canvas);
         } else {
-            mBackground.draw(canvas);
+            drawFolderBackground(canvas, drewBlur);
             super.dispatchDraw(canvas);
         }
+    }
+
+    private void drawFolderBackground(Canvas canvas, boolean drewBlur) {
+        if (!drewBlur) {
+            mBackground.draw(canvas);
+            return;
+        }
+        mBlurSurfaceFillPaint.setColor(AxBlurColors.surfaceEffect0(getContext()));
+        canvas.drawRoundRect(
+                mBlurBounds, mBlurCornerRadius, mBlurCornerRadius, mBlurSurfaceFillPaint);
+    }
+
+    private boolean computeBlurGeometry(float fallbackCornerRadius) {
+        ViewOutlineProvider provider = getOutlineProvider();
+        if (provider instanceof RevealOutlineAnimation) {
+            RevealOutlineAnimation reveal = (RevealOutlineAnimation) provider;
+            reveal.getOutline(mBlurTempRect);
+            mBlurBounds.set(mBlurTempRect);
+            mBlurCornerRadius = reveal.getRadius();
+            return true;
+        }
+        if (mClipPath != null) {
+            mClipPath.computeBounds(mBlurBounds, false);
+            float minDim = Math.min(mBlurBounds.width(), mBlurBounds.height());
+            float fullMin = Math.min(getWidth(), getHeight());
+            float iconRadius = mFolderIcon != null
+                    ? mFolderIcon.mBackground.getScaledRadius() : 0f;
+            float iconMin = iconRadius * 2f;
+            ShapeDelegate shape =
+                    ThemeManager.INSTANCE.get(getContext()).getFolderShape();
+            float shapeRatio = shape instanceof ShapeDelegate.RoundedSquare
+                    ? ((ShapeDelegate.RoundedSquare) shape).getRadiusRatio() : 1f;
+            float collapsedRadius = iconRadius * shapeRatio;
+            float progress = fullMin - iconMin > 1f
+                    ? (fullMin - minDim) / (fullMin - iconMin) : 0f;
+            progress = Math.max(0f, Math.min(1f, progress));
+            mBlurCornerRadius = fallbackCornerRadius
+                    + (collapsedRadius - fallbackCornerRadius) * progress;
+            return true;
+        }
+        if (mCurrentAnimator != null && mCurrentAnimator.isRunning()) {
+            return false;
+        }
+        mBlurBounds.set(0, 0, getWidth(), getHeight());
+        mBlurCornerRadius = fallbackCornerRadius;
+        return true;
     }
 
     public FolderPagedView getContent() {

@@ -31,6 +31,7 @@ import android.animation.ObjectAnimator;
 import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Paint;
+import android.graphics.Path;
 import android.graphics.Rect;
 import android.graphics.drawable.Drawable;
 import android.os.Looper;
@@ -53,6 +54,7 @@ import com.android.launcher3.CellLayout;
 import com.android.launcher3.CheckLongPressHelper;
 import com.android.launcher3.DeviceProfile;
 import com.android.launcher3.DropTarget.DragObject;
+import com.android.axion.blur.AxBlurColors;
 import com.android.launcher3.Launcher;
 import com.android.launcher3.LauncherSettings;
 import com.android.launcher3.OnAlarmListener;
@@ -67,6 +69,7 @@ import com.android.launcher3.dragndrop.BaseItemDragListener;
 import com.android.launcher3.dragndrop.DragLayer;
 import com.android.launcher3.dragndrop.DragView;
 import com.android.launcher3.dragndrop.DraggableView;
+import com.android.launcher3.graphics.AxBackdropBlurSurface;
 import com.android.launcher3.graphics.ThemeManager;
 import com.android.launcher3.icons.DotRenderer;
 import com.android.launcher3.logger.LauncherAtom.FromState;
@@ -117,6 +120,17 @@ public class FolderIcon extends FrameLayout implements FloatingIconViewCompanion
     @Thunk BubbleTextView mFolderName;
 
     PreviewBackground mBackground = new PreviewBackground(getContext());
+
+    private AxBackdropBlurSurface mBlurSurface;
+
+    private final Path mBlurPath = new Path();
+
+    private AxBackdropBlurSurface getBlurSurface() {
+        if (mBlurSurface == null) {
+            mBlurSurface = new AxBackdropBlurSurface(this, mActivity);
+        }
+        return mBlurSurface;
+    }
     private boolean mBackgroundIsVisible = true;
 
     FolderGridOrganizer mPreviewVerifier;
@@ -572,6 +586,9 @@ public class FolderIcon extends FrameLayout implements FloatingIconViewCompanion
     @Override
     public void setIconVisible(boolean visible) {
         mBackgroundIsVisible = visible;
+        if (!visible && mBlurSurface != null) {
+            mBlurSurface.release();
+        }
         invalidate();
     }
 
@@ -589,6 +606,16 @@ public class FolderIcon extends FrameLayout implements FloatingIconViewCompanion
 
     @Override
     protected void dispatchDraw(Canvas canvas) {
+        boolean drewBlur = false;
+        boolean canBlur = !mBackground.drawingDelegated() && mBackgroundIsVisible;
+        if (canBlur && getLayerType() != View.LAYER_TYPE_HARDWARE) {
+            mBackground.getDrawnShapePath(mBlurPath);
+            drewBlur = getBlurSurface().drawPath(canvas, mBlurPath,
+                    mBackground.getScaledRadius());
+        } else if (canBlur) {
+            postInvalidateOnAnimation();
+        }
+
         super.dispatchDraw(canvas);
 
         if (!mBackgroundIsVisible) return;
@@ -596,7 +623,12 @@ public class FolderIcon extends FrameLayout implements FloatingIconViewCompanion
         mPreviewItemManager.recomputePreviewDrawingParams();
 
         if (!mBackground.drawingDelegated()) {
-            mBackground.drawBackground(canvas);
+            if (drewBlur) {
+                mBackground.drawBackground(canvas,
+                        AxBlurColors.surfaceEffect0(getContext()));
+            } else {
+                mBackground.drawBackground(canvas);
+            }
         }
 
         if (mCurrentPreviewItems.isEmpty() && !mAnimating) return;
