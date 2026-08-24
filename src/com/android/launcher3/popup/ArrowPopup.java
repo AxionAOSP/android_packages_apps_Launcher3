@@ -23,10 +23,12 @@ import static com.android.app.animation.Interpolators.LINEAR;
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
 import android.animation.AnimatorSet;
+import android.annotation.Nullable;
 import android.animation.ObjectAnimator;
 import android.animation.ValueAnimator;
 import android.content.Context;
 import android.content.res.Resources;
+import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Rect;
 import android.graphics.drawable.ColorDrawable;
@@ -45,11 +47,13 @@ import android.widget.FrameLayout;
 
 import androidx.annotation.VisibleForTesting;
 
+import com.android.axion.blur.AxBlurColors;
 import com.android.launcher3.AbstractFloatingView;
 import com.android.launcher3.InsettableFrameLayout;
 import com.android.launcher3.R;
 import com.android.launcher3.Utilities;
 import com.android.launcher3.dragndrop.DragLayer;
+import com.android.launcher3.graphics.AxBackdropBlurSurface;
 import com.android.launcher3.shortcuts.DeepShortcutView;
 import com.android.launcher3.util.RunnableList;
 import com.android.launcher3.util.Themes;
@@ -130,6 +134,8 @@ public abstract class ArrowPopup<T extends Context & ActivityContext>
 
     protected final int[] mColors;
 
+    private final AxBackdropBlurSurface mBlurSurface;
+
     public ArrowPopup(Context context, AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
         mInflater = LayoutInflater.from(context);
@@ -174,6 +180,8 @@ public abstract class ArrowPopup<T extends Context & ActivityContext>
         } else {
             mColors = new int[]{getContext().getColor(R.color.materialColorSurfaceContainer)};
         }
+
+        mBlurSurface = new AxBackdropBlurSurface(this, mActivityContext);
     }
 
     public ArrowPopup(Context context, AttributeSet attrs) {
@@ -283,6 +291,14 @@ public abstract class ArrowPopup<T extends Context & ActivityContext>
 
         colorAnimator.setDuration(0).start();
         measure(MeasureSpec.UNSPECIFIED, MeasureSpec.UNSPECIFIED);
+        applyBlurSurfaceColors();
+    }
+
+    private void applyBlurSurfaceColors() {
+        if (!mBlurSurface.isActive()) {
+            return;
+        }
+        mArrowColor = AxBlurColors.surfaceEffect0(getContext());
     }
 
     /**
@@ -303,15 +319,23 @@ public abstract class ArrowPopup<T extends Context & ActivityContext>
      * Sets the background color of the child.
      */
     protected void setChildColor(View view, int color, AnimatorSet animatorSetOut) {
+        int targetColor = color;
+        if (mBlurSurface.isActive()) {
+            boolean nestedInContainer = view.getParent() instanceof View
+                    && isShortcutContainer((View) view.getParent());
+            targetColor = !nestedInContainer || isShortcutContainer(view)
+                    ? AxBlurColors.surfaceEffect0(getContext())
+                    : Color.TRANSPARENT;
+        }
         Drawable bg = view.getBackground();
         if (bg instanceof GradientDrawable) {
             GradientDrawable gd = (GradientDrawable) bg.mutate();
             int oldColor = ((GradientDrawable) bg).getColor().getDefaultColor();
-            animatorSetOut.play(ObjectAnimator.ofArgb(gd, "color", oldColor, color));
+            animatorSetOut.play(ObjectAnimator.ofArgb(gd, "color", oldColor, targetColor));
         } else if (bg instanceof ColorDrawable) {
             ColorDrawable cd = (ColorDrawable) bg.mutate();
             int oldColor = ((ColorDrawable) bg).getColor();
-            animatorSetOut.play(ObjectAnimator.ofArgb(cd, "color", oldColor, color));
+            animatorSetOut.play(ObjectAnimator.ofArgb(cd, "color", oldColor, targetColor));
         }
     }
 
@@ -521,6 +545,51 @@ public abstract class ArrowPopup<T extends Context & ActivityContext>
     }
 
     @Override
+    protected void dispatchDraw(Canvas canvas) {
+        drawBlurBackdrop(canvas);
+        super.dispatchDraw(canvas);
+    }
+
+    private void drawBlurBackdrop(Canvas canvas) {
+        if (!mBlurSurface.isActive()) {
+            return;
+        }
+        for (int i = 0; i < getChildCount(); i++) {
+            View child = getChildAt(i);
+            if (child.getVisibility() != VISIBLE) {
+                continue;
+            }
+            int left = child.getLeft();
+            int top = child.getTop();
+            int right = child.getRight();
+            int bottom = child.getBottom();
+            if (right <= left || bottom <= top) {
+                continue;
+            }
+            mBlurSurface.drawRegion(canvas, child, left, top, right, bottom,
+                    cornerRadiiOf(child), child.getAlpha());
+        }
+    }
+
+    @Nullable
+    private float[] cornerRadiiOf(View child) {
+        Drawable bg = child.getBackground();
+        if (!(bg instanceof GradientDrawable)) {
+            return null;
+        }
+        GradientDrawable gd = (GradientDrawable) bg;
+        float[] radii = gd.getCornerRadii();
+        if (radii != null && radii.length >= 8) {
+            return radii;
+        }
+        float radius = gd.getCornerRadius();
+        if (radius <= 0f) {
+            return null;
+        }
+        return new float[]{radius, radius, radius, radius, radius, radius, radius, radius};
+    }
+
+    @Override
     protected void onLayout(boolean changed, int l, int t, int r, int b) {
         super.onLayout(changed, l, t, r, b);
 
@@ -718,6 +787,7 @@ public abstract class ArrowPopup<T extends Context & ActivityContext>
         mDeferContainerRemoval = false;
         getPopupContainer().removeView(this);
         getPopupContainer().removeView(mArrow);
+        mBlurSurface.release();
         mOnCloseCallbacks.executeAllAndClear();
     }
 
