@@ -22,6 +22,7 @@ import static com.android.launcher3.QuickstepTransitionManager.STATUS_BAR_TRANSI
 
 import android.animation.AnimatorSet;
 import android.util.Pair;
+import android.view.RemoteAnimationTarget;
 import android.view.View;
 
 import androidx.annotation.Nullable;
@@ -47,6 +48,14 @@ final class AxQuickstepTransitionManagerDelegate {
                 && (itemInfo == null || !itemInfo.shouldUseBackgroundAnimation())
                 && !(sourceView instanceof LauncherAppWidgetHostView)
                 && !(sourceView instanceof TaskView);
+    }
+
+    boolean useAppCloseAnimation(@Nullable View launcherView, RemoteAnimationTarget[] appTargets) {
+        ItemInfo itemInfo = launcherView != null && launcherView.getTag() instanceof ItemInfo info ? info : null;
+        return AxQuickstepTransitionManagerExt.isAxAnimEngineEnabled(mLauncher)
+                && (itemInfo == null || !itemInfo.shouldUseBackgroundAnimation())
+                && !(launcherView instanceof LauncherAppWidgetHostView)
+                && !(launcherView instanceof TaskView);
     }
 
     long getDuration(boolean useAxAnimation, boolean fromRecents) {
