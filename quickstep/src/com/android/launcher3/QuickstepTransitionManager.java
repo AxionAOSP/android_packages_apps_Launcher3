@@ -154,6 +154,10 @@ import com.android.quickstep.SystemUiProxy;
 import com.android.quickstep.TaskViewUtils;
 import com.android.quickstep.util.AlreadyStartedBackAnimState;
 import com.android.quickstep.util.AnimatorBackState;
+import com.android.quickstep.util.AxAnimationEngine;
+import com.android.quickstep.util.AxScalingWorkspaceRevealAnim;
+import com.android.quickstep.util.AxSpringAnimPlayer;
+import com.android.quickstep.util.AxWallpaperZoom;
 import com.android.quickstep.util.BackAnimState;
 import com.android.quickstep.util.CrossDisplayMoveTransition;
 import com.android.quickstep.util.MultiValueUpdateListener;
@@ -1568,6 +1572,14 @@ public class QuickstepTransitionManager implements OnDeviceProfileChangeListener
     protected RectFSpringAnim getClosingWindowAnimators(AnimatorSet animation,
             RemoteAnimationTarget[] targets, View launcherView, PointF velocityPxPerS,
             RectF closingWindowStartRectF, float startWindowCornerRadius) {
+        return getClosingWindowAnimators(animation, targets, launcherView, velocityPxPerS,
+                closingWindowStartRectF, startWindowCornerRadius, false);
+    }
+
+    protected RectFSpringAnim getClosingWindowAnimators(AnimatorSet animation,
+            RemoteAnimationTarget[] targets, View launcherView, PointF velocityPxPerS,
+            RectF closingWindowStartRectF, float startWindowCornerRadius,
+            boolean useAxAnimation) {
         FloatingIconView floatingIconView = null;
         FloatingWidgetView floatingWidget = null;
         RectF targetRect = new RectF();
@@ -1604,10 +1616,13 @@ public class QuickstepTransitionManager implements OnDeviceProfileChangeListener
         }
 
         boolean useTaskbarHotseatParams = mDeviceProfile.isTaskbarPresent && isInHotseat;
-        RectFSpringAnim anim = new RectFSpringAnim(useTaskbarHotseatParams
-                ? new TaskbarHotseatSpringConfig(mLauncher, closingWindowStartRectF, targetRect)
-                : new DefaultSpringConfig(mLauncher, mDeviceProfile, closingWindowStartRectF,
-                        targetRect));
+        RectFSpringAnim anim = useAxAnimation
+                ? AxSpringAnimPlayer.createHomeGestureAnim(
+                        mLauncher, mDeviceProfile, closingWindowStartRectF, targetRect, useTaskbarHotseatParams)
+                : new RectFSpringAnim(useTaskbarHotseatParams
+                        ? new TaskbarHotseatSpringConfig(mLauncher, closingWindowStartRectF, targetRect)
+                        : new DefaultSpringConfig(mLauncher, mDeviceProfile, closingWindowStartRectF,
+                                targetRect));
 
         // Hook up floating views to the closing window animators.
         // note the coordinate of closingWindowStartRect is based on launcher
@@ -1626,16 +1641,28 @@ public class QuickstepTransitionManager implements OnDeviceProfileChangeListener
             final float windowAlphaThreshold = 1f - SHAPE_PROGRESS_DURATION;
 
             RectFSpringAnim.OnUpdateListener runner = new SpringAnimRunner(targets, targetRect,
-                    closingWindowStartRect, closingWindowOriginalRect, startWindowCornerRadius) {
+                    closingWindowStartRect, closingWindowOriginalRect, startWindowCornerRadius,
+                    useAxAnimation) {
                 @Override
                 public void onUpdate(RectF currentRectF, float progress) {
-                    // We want the icon alpha to be 1 once this threshold is met, so that it can be
-                    // seen morphing into the icon shape. But before the threshold, we want to limit
-                    // the alpha to reduce the blur effect behind the window.
-                    float iconAlpha =
-                            Interpolators.clampToProgress(progress, 0f, windowAlphaThreshold);
-                    finalFloatingIconView.update(iconAlpha, currentRectF, progress,
-                            windowAlphaThreshold, getCornerRadius(progress), false);
+                    if (useAxAnimation) {
+                        float iconAlpha = AxAnimationEngine.getHomeGestureIconAlpha(progress);
+                        AxQuickstepTransitionManagerExt.updateHomeGestureFloatingIcon(
+                                finalFloatingIconView,
+                                iconAlpha,
+                                currentRectF,
+                                progress,
+                                windowAlphaThreshold,
+                                getCornerRadius(progress));
+                    } else {
+                        // We want the icon alpha to be 1 once this threshold is met, so that it can be
+                        // seen morphing into the icon shape. But before the threshold, we want to limit
+                        // the alpha to reduce the blur effect behind the window.
+                        float iconAlpha =
+                                Interpolators.clampToProgress(progress, 0f, windowAlphaThreshold);
+                        finalFloatingIconView.update(iconAlpha, currentRectF, progress,
+                                windowAlphaThreshold, getCornerRadius(progress), false);
+                    }
 
                     super.onUpdate(currentRectF, progress);
                 }
@@ -1649,7 +1676,8 @@ public class QuickstepTransitionManager implements OnDeviceProfileChangeListener
             final float floatingWidgetAlpha = isTransluscent ? 0 : 1;
             FloatingWidgetView finalFloatingWidget = floatingWidget;
             RectFSpringAnim.OnUpdateListener runner = new SpringAnimRunner(targets, targetRect,
-                    closingWindowStartRect, closingWindowOriginalRect, startWindowCornerRadius) {
+                    closingWindowStartRect, closingWindowOriginalRect, startWindowCornerRadius,
+                    useAxAnimation) {
                 @Override
                 public void onUpdate(RectF currentRectF, float progress) {
                     final float fallbackBackgroundAlpha =
@@ -1668,7 +1696,7 @@ public class QuickstepTransitionManager implements OnDeviceProfileChangeListener
             // target rect.
             anim.addOnUpdateListener(new SpringAnimRunner(
                     targets, targetRect, closingWindowStartRect, closingWindowOriginalRect,
-                    startWindowCornerRadius));
+                    startWindowCornerRadius, useAxAnimation));
         }
 
         // Use a fixed velocity to start the animation.
@@ -1864,22 +1892,37 @@ public class QuickstepTransitionManager implements OnDeviceProfileChangeListener
                 || mLauncher.getWorkspace().isOverlayShown()
                 || shouldPlayFallbackClosingAnimation(appTargets);
 
+        boolean useAxAnimation = mAxTransitionDelegate.useAppCloseAnimation(launcherView, appTargets);
+
         boolean playWorkspaceReveal = true;
         boolean skipAllAppsScale = false;
         if (!playFallBackAnimation) {
             rectFSpringAnim = getClosingWindowAnimators(
                     anim, appTargets, launcherView, new PointF(), startRect,
-                    startWindowCornerRadius);
+                    startWindowCornerRadius, useAxAnimation);
             if (mLauncher.isInState(LauncherState.ALL_APPS)) {
                 // Skip scaling all apps, otherwise FloatingIconView will get wrong
                 // layout bounds.
                 skipAllAppsScale = true;
             } else {
-                anim.play(
-                        new ScalingWorkspaceRevealAnim(mLauncher, rectFSpringAnim,
-                                rectFSpringAnim.getTargetRect(),
-                                !fromPredictiveBack /* playAlphaReveal */,
-                                true /* playBlur */).getAnimators());
+                if (useAxAnimation) {
+                    anim.play(
+                            new AxScalingWorkspaceRevealAnim(mLauncher, rectFSpringAnim,
+                                    rectFSpringAnim.getTargetRect(),
+                                    launcherView).getAnimators());
+                    anim.addListener(new AnimatorListenerAdapter() {
+                        @Override
+                        public void onAnimationStart(Animator animation) {
+                            AxWallpaperZoom.startHomeGesture(mSystemUiProxy);
+                        }
+                    });
+                } else {
+                    anim.play(
+                            new ScalingWorkspaceRevealAnim(mLauncher, rectFSpringAnim,
+                                    rectFSpringAnim.getTargetRect(),
+                                    !fromPredictiveBack /* playAlphaReveal */,
+                                    true /* playBlur */).getAnimators());
+                }
 
                 // We play StaggeredWorkspaceAnim as a part of the closing window animation.
                 playWorkspaceReveal = false;
@@ -2373,6 +2416,7 @@ public class QuickstepTransitionManager implements OnDeviceProfileChangeListener
         private final SurfaceTransactionApplier mSurfaceApplier;
         private final Rect mWindowStartBounds = new Rect();
         private final Rect mWindowOriginalBounds = new Rect();
+        private final boolean mUseAxAnimation;
 
         private final Rect mTmpRect = new Rect();
 
@@ -2391,9 +2435,22 @@ public class QuickstepTransitionManager implements OnDeviceProfileChangeListener
         SpringAnimRunner(RemoteAnimationTarget[] appTargets, RectF targetRect,
                 Rect closingWindowStartRect, Rect closingWindowOriginalRect,
                 float startWindowCornerRadius) {
+            this(appTargets, targetRect, closingWindowStartRect, closingWindowOriginalRect,
+                    startWindowCornerRadius, false);
+        }
+
+        SpringAnimRunner(RemoteAnimationTarget[] appTargets, RectF targetRect,
+                Rect closingWindowStartRect, Rect closingWindowOriginalRect,
+                float startWindowCornerRadius, boolean useAxAnimation) {
             mAppTargets = appTargets;
-            mStartRadius = startWindowCornerRadius;
-            mEndRadius = Math.max(1, targetRect.width()) / 2f;
+            mUseAxAnimation = useAxAnimation;
+            mStartRadius = (startWindowCornerRadius <= 0f)
+                    ? getWindowCornerRadius(mLauncher)
+                    : startWindowCornerRadius;
+            mEndRadius = useAxAnimation
+                    ? AxAnimationEngine.getAppOpenStartRadius(
+                            mLauncher.getResources().getDisplayMetrics().density)
+                    : Math.max(1, targetRect.width()) / 2f;
             mSurfaceApplier = new SurfaceTransactionApplier(mDragLayer);
             mWindowStartBounds.set(closingWindowStartRect);
             mWindowOriginalBounds.set(closingWindowOriginalRect);
@@ -2417,6 +2474,12 @@ public class QuickstepTransitionManager implements OnDeviceProfileChangeListener
         }
 
         public float getCornerRadius(float progress) {
+            if (mUseAxAnimation) {
+                float cornerProgress = AxAnimationEngine.APP_OPEN_CORNER_RADIUS_INTERPOLATOR
+                        .getInterpolation(progress);
+                return AxAnimationEngine.getAppOpenCornerRadius(
+                        mStartRadius, mEndRadius, cornerProgress);
+            }
             return Utilities.mapRange(progress, mStartRadius, mEndRadius);
         }
 
@@ -2464,7 +2527,7 @@ public class QuickstepTransitionManager implements OnDeviceProfileChangeListener
                     builder.setMatrix(mMatrix)
                             .setWindowCrop(mTmpRect)
                             .setAlpha(getWindowAlpha(progress))
-                            .setCornerRadius(getCornerRadius(progress) / scale);
+                            .setCornerRadius(getCornerRadius(progress) / Math.max(0.0001f, scale));
                 } else if (target.mode == MODE_OPENING) {
                     mMatrix.setTranslate(mTmpPos.x, mTmpPos.y);
                     builder.setMatrix(mMatrix)
@@ -2475,6 +2538,9 @@ public class QuickstepTransitionManager implements OnDeviceProfileChangeListener
         }
 
         protected float getWindowAlpha(float progress) {
+            if (mUseAxAnimation) {
+                return AxAnimationEngine.getHomeGestureWindowAlpha(progress);
+            }
             // Alpha interpolates between [1, 0] between progress values [start, end]
             final float start = 0f;
             final float end = 0.85f;

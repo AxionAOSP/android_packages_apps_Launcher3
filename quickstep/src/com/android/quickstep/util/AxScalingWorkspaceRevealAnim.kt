@@ -16,6 +16,7 @@
 
 package com.android.quickstep.util
 
+import android.animation.AnimatorSet
 import android.graphics.RectF
 import android.util.Log
 import android.view.View
@@ -37,7 +38,7 @@ import com.android.launcher3.states.StateAnimationConfig.SKIP_SCRIM
 import com.android.launcher3.uioverrides.QuickstepLauncher
 import com.android.quickstep.views.RecentsView
 
-class AxScalingWorkspaceRevealAnim private constructor(
+class AxScalingWorkspaceRevealAnim(
     private val launcher: QuickstepLauncher,
     siblingAnimation: RectFSpringAnim?,
     windowTargetRect: RectF?,
@@ -202,8 +203,12 @@ class AxScalingWorkspaceRevealAnim private constructor(
         )
     }
 
+    fun getAnimators(): AnimatorSet {
+        return animation.buildAnim()
+    }
+
     private fun start() {
-        val animators = animation.buildAnim()
+        val animators = getAnimators()
         Animations.setOngoingAnimation(launcher.workspace, animators)
         Animations.setOngoingAnimation(launcher.hotseat, animators)
         launcher.stateManager.setCurrentAnimation(animators, LauncherState.NORMAL)
