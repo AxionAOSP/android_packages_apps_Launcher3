@@ -126,7 +126,7 @@ private fun AboutHeader(
         ) {
             AboutActionButton(
                 titleRes = R.string.home_settings_about_github,
-                iconRes = R.drawable.ic_ps_settings,
+                iconRes = R.drawable.ic_github,
                 onClick = onGitHubClick,
             )
             AboutActionButton(
