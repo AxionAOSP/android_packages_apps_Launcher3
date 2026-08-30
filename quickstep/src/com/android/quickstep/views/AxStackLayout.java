@@ -88,6 +88,14 @@ final class AxStackLayout {
         }
         if (distance <= 0f) {
             float translation = anchorDistance <= 0f ? -reflowTranslation : 0f;
+            float scale = distance < 0f
+                    ? 1f + (1f - getStackScale(-distance, naturalLayout))
+                    : 1f;
+            out.set(scale, rtl ? -translation : translation, 1f, distance < 0f ? 0f : 1f);
+            return;
+        }
+        if (anchorDistance <= 0f) {
+            float translation = -reflowTranslation;
             out.set(1f, rtl ? -translation : translation, 1f, 1f);
             return;
         }

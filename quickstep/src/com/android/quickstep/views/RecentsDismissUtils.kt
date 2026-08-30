@@ -277,6 +277,11 @@ constructor(
                         msdlPlayerWrapper.playToken(MSDLToken.SWIPE_THRESHOLD_INDICATOR)
                     }
                     previousDisplacement = currentDisplacement
+                    recentsView.onTaskDismissDragUpdated(
+                        dismissedTaskView,
+                        currentDisplacement,
+                        dismissedTaskData.dismissLength.toFloat(),
+                    )
 
                     if (dismissedTaskView.isRunningTask && recentsView.enableDrawingLiveTile) {
                         recentsView.runActionOnRemoteHandles { remoteTargetHandle ->
@@ -503,6 +508,10 @@ constructor(
         // Grid end translation to run after all reflow animations have completed.
         val gridEndSpringSet =
             if (reflowSplitFromDesktopTile) null else createGridEndTranslationSpringSet(gridEndData)
+        if (recentsView.shouldUseTaskDismissScrollReflow()) {
+            recentsView.mTaskViewsDismissPrimaryTranslations.clear()
+            return Pair(gridEndSpringSet, emptyList())
+        }
         val tasksWithOffsetsToReflow = getTasksToReflow(dismissedTaskView, towardsStart)
         if (tasksWithOffsetsToReflow.isEmpty()) {
             return Pair(gridEndSpringSet, emptyList())
