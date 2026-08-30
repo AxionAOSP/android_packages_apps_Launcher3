@@ -44,6 +44,8 @@ public interface TaskViewIcon {
 
     void setAxStackAlpha(float alpha);
 
+    void setDismissAlpha(float alpha);
+
     /**
      * Returns this icon view's drawable.
      */

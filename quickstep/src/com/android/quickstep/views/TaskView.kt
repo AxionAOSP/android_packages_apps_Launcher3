@@ -128,6 +128,7 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
+import kotlin.math.abs
 
 /** A task in the Recents view. */
 open class TaskView
@@ -504,6 +505,7 @@ constructor(
     private var modalAlpha by MultiPropertyDelegate(taskViewAlpha, Alpha.Modal)
     private var appliedAxStackAlpha by MultiPropertyDelegate(taskViewAlpha, Alpha.AxStack)
     private var axLaunchAlpha by MultiPropertyDelegate(taskViewAlpha, Alpha.AxLaunch)
+    private var dismissAlpha by MultiPropertyDelegate(taskViewAlpha, Alpha.Dismiss)
 
     protected var shouldShowScreenshot = false
         get() = !isRunningTask || field
@@ -1488,6 +1490,7 @@ constructor(
 
     protected fun setIcon(iconView: TaskViewIcon, icon: Drawable?) {
         setAxStackIconAlpha(iconView, axStackTransform.getIconAlpha())
+        iconView.setDismissAlpha(dismissAlpha)
         with(iconView) {
             if (icon != null) {
                 setDrawable(icon)
@@ -2201,6 +2204,20 @@ constructor(
 
     fun isAxStackIconVisible(): Boolean = axStackTransform.getIconAlpha() > 0f
 
+    fun getAxStackIconAlpha(): Float = axStackTransform.getIconAlpha()
+
+    fun updateDismissAlpha(displacement: Float, dismissLength: Float) {
+        val recentsView = recentsView ?: return
+        val orientationHandler = recentsView.pagedOrientationHandler
+        val alpha = calculateDismissAlpha(
+            displacement,
+            dismissLength,
+            orientationHandler.isGoingUp(displacement, isLayoutRtl),
+        )
+        dismissAlpha = alpha
+        taskContainers.forEach { it.iconView.setDismissAlpha(alpha) }
+    }
+
     fun getAppliedAxStackTranslationX(): Float =
         axStackTransform.getAppliedTranslationX(fullscreenProgress)
 
@@ -2318,8 +2335,10 @@ constructor(
 
     fun resetViewTransforms() {
         // Dismiss translation shouldn't reset if actively being dragged
-        if (!isBeingDraggedForDismissal) {
+        if (!isBeingDraggedForDismissal && !isBeingDismissed) {
             secondaryDismissTranslationProperty.setValue(this, 0f)
+            dismissAlpha = 1f
+            taskContainers.forEach { it.iconView.setDismissAlpha(1f) }
         }
         primaryDismissTranslationProperty.setValue(this, 0f)
 
@@ -2370,6 +2389,7 @@ constructor(
             Modal,
             AxStack,
             AxLaunch,
+            Dismiss,
         }
 
         private enum class SettledProgress {
@@ -2439,5 +2459,22 @@ constructor(
         val DISMISS_SCALE: FloatProperty<TaskView> = KFloatProperty(TaskView::dismissScale)
 
         @JvmField val SPLIT_ALPHA: FloatProperty<TaskView> = KFloatProperty(TaskView::splitAlpha)
+
+        @VisibleForTesting
+        fun calculateDismissAlpha(
+            displacement: Float,
+            dismissLength: Float,
+            isGoingUp: Boolean,
+        ): Float {
+            val dismissDistance = if (isGoingUp) abs(displacement) else 0f
+            val fadeStart = 0f
+            val fadeEnd = abs(dismissLength)
+            if (fadeEnd <= 0f || fadeEnd <= fadeStart) {
+                return if (fadeEnd > 0f && dismissDistance >= fadeEnd) 0f else 1f
+            }
+            val fadeProgress =
+                ((dismissDistance - fadeStart) / (fadeEnd - fadeStart)).coerceIn(0f, 1f)
+            return 1f - fadeProgress
+        }
     }
 }

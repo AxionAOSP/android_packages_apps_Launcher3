@@ -23,14 +23,12 @@ import static android.os.Trace.traceEnd;
 import static android.view.View.MeasureSpec.EXACTLY;
 import static android.view.View.MeasureSpec.makeMeasureSpec;
 
-import static com.android.app.animation.Interpolators.ACCELERATE;
 import static com.android.app.animation.Interpolators.ACCELERATE_0_75;
 import static com.android.app.animation.Interpolators.ACCELERATE_DECELERATE;
 import static com.android.app.animation.Interpolators.DECELERATE_2;
 import static com.android.app.animation.Interpolators.EMPHASIZED;
 import static com.android.app.animation.Interpolators.EMPHASIZED_DECELERATE;
 import static com.android.app.animation.Interpolators.FAST_OUT_SLOW_IN;
-import static com.android.app.animation.Interpolators.FINAL_FRAME;
 import static com.android.app.animation.Interpolators.LINEAR;
 import static com.android.app.animation.Interpolators.clampToProgress;
 import static com.android.launcher3.AbstractFloatingView.TYPE_REBIND_SAFE;
@@ -42,7 +40,6 @@ import static com.android.launcher3.Flags.enableOverviewDesktopTileWallpaperBack
 import static com.android.launcher3.Flags.enablePreventOverviewMouseDrag;
 import static com.android.launcher3.Flags.enableRefactorTaskThumbnail;
 import static com.android.launcher3.LauncherAnimUtils.SUCCESS_TRANSITION_PROGRESS;
-import static com.android.launcher3.LauncherAnimUtils.VIEW_ALPHA;
 import static com.android.launcher3.LauncherAnimUtils.VIEW_BACKGROUND_COLOR;
 import static com.android.launcher3.LauncherState.BACKGROUND_APP;
 import static com.android.launcher3.QuickstepTransitionManager.RECENTS_LAUNCH_DURATION;
@@ -640,6 +637,9 @@ public abstract class RecentsView<
     private int mKeyboardTaskFocusSnapAnimationDuration;
 
     protected Map<TaskView, Integer> mTaskViewsDismissPrimaryTranslations = new HashMap<>();
+    @Nullable
+    private TaskView mPendingDismissIconFadeInTask;
+    private boolean mDismissIconFadeInCheckPosted;
 
     /**
      * TODO: Call reloadIdNeeded in onTaskStackChanged.
@@ -1291,6 +1291,8 @@ public abstract class RecentsView<
 
     @Override
     protected void onDetachedFromWindow() {
+        mPendingDismissIconFadeInTask = null;
+        mDismissIconFadeInCheckPosted = false;
         super.onDetachedFromWindow();
 
         updateTaskStackListenerState();
@@ -2880,6 +2882,8 @@ public abstract class RecentsView<
             ? extends StatefulContainer<STATE_TYPE>> getStateManager();
 
     public void reset() {
+        mPendingDismissIconFadeInTask = null;
+        mDismissIconFadeInCheckPosted = false;
         Log.d(TAG, "reset - mEnableDrawingLiveTile: " + mEnableDrawingLiveTile
                 + ", mRecentsAnimationController: " + mRecentsAnimationController);
         setCurrentTask(-1);
@@ -3353,6 +3357,9 @@ public abstract class RecentsView<
      * Updates icon visibility when going in or out of overview.
      */
     public void setTaskIconVisible(boolean isVisible) {
+        if (!isVisible) {
+            mPendingDismissIconFadeInTask = null;
+        }
         if (mTaskIconVisible != isVisible) {
             mTaskIconVisible = isVisible;
             for (TaskView taskView : getTaskViews()) {
@@ -3375,6 +3382,33 @@ public abstract class RecentsView<
         for (TaskView taskView : getTaskViews()) {
             taskView.startIconFadeInOnGestureComplete();
         }
+    }
+
+    private void startDismissIconFadeInWhenSettled(TaskView taskView) {
+        mPendingDismissIconFadeInTask = taskView;
+        schedulePendingDismissIconFadeIn();
+    }
+
+    private void schedulePendingDismissIconFadeIn() {
+        if (mDismissIconFadeInCheckPosted) {
+            return;
+        }
+        mDismissIconFadeInCheckPosted = true;
+        postOnAnimation(() -> {
+            mDismissIconFadeInCheckPosted = false;
+            TaskView taskView = mPendingDismissIconFadeInTask;
+            if (taskView == null) {
+                return;
+            }
+            if (isHandlingTouch() || isPageInTransition() || !mScroller.isFinished()) {
+                schedulePendingDismissIconFadeIn();
+                return;
+            }
+            mPendingDismissIconFadeInTask = null;
+            if (indexOfChild(taskView) != INVALID_PAGE) {
+                taskView.getDismissIconFadeInAnimator().start();
+            }
+        });
     }
 
     /**
@@ -3727,10 +3761,6 @@ public abstract class RecentsView<
 
     private void addDismissedTaskAnimations(TaskView taskView, long duration,
             PendingAnimation anim) {
-        // Use setFloat instead of setViewAlpha as we want to keep the view visible even when it's
-        // alpha is set to 0 so that it can be recycled in the view pool properly
-        anim.setFloat(taskView, VIEW_ALPHA, 0,
-                clampToProgress(isOnGridBottomRow(taskView) ? ACCELERATE : FINAL_FRAME, 0, 0.5f));
         FloatProperty<TaskView> secondaryViewTranslate =
                 taskView.getSecondaryDismissTranslationProperty();
         int secondaryTaskDimension = getPagedOrientationHandler().getSecondaryDimension(taskView);
@@ -3741,6 +3771,8 @@ public abstract class RecentsView<
                 .setDampingRatio(rp.getFloat(R.dimen.dismiss_task_trans_y_damping_ratio))
                 .setStiffness(rp.getFloat(R.dimen.dismiss_task_trans_y_stiffness));
 
+        anim.addOnFrameCallback(() -> onTaskDismissDragUpdated(
+                taskView, secondaryViewTranslate.get(taskView), secondaryTaskDimension * 2f));
         anim.add(ObjectAnimator.ofFloat(taskView, secondaryViewTranslate,
                 verticalFactor * secondaryTaskDimension * 2).setDuration(duration), LINEAR, sp);
 
@@ -4285,7 +4317,7 @@ public abstract class RecentsView<
                                     ? INVALID_TASK_ID
                                     : finalNextFocusedTaskView.getTaskViewId());
                             mTopRowIdSet.remove(mFocusedTaskViewId);
-                            finalNextFocusedTaskView.getDismissIconFadeInAnimator().start();
+                            startDismissIconFadeInWhenSettled(finalNextFocusedTaskView);
                         }
                         updateTaskSize();
                         mUtils.updateChildTaskOrientations();
@@ -4475,6 +4507,19 @@ public abstract class RecentsView<
     }
 
     boolean needsTaskDismissReflowUpdates() {
+        return false;
+    }
+
+    public void onTaskDismissDragUpdated(
+            @Nullable TaskView taskView, float displacement, float dismissLength) {
+        if (taskView != null) {
+            taskView.updateDismissAlpha(displacement, dismissLength);
+        }
+    }
+
+    public void onTaskDismissDragEnded(boolean isDismissing) { }
+
+    boolean shouldUseTaskDismissScrollReflow() {
         return false;
     }
 

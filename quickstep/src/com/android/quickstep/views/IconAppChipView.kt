@@ -397,6 +397,10 @@ constructor(
         multiValueAlpha[INDEX_AX_STACK_ALPHA].value = alpha
     }
 
+    override fun setDismissAlpha(alpha: Float) {
+        multiValueAlpha[INDEX_DISMISS_ALPHA].value = alpha
+    }
+
     override fun getDrawableWidth(): Int = iconView?.drawableWidth ?: 0
 
     override fun getDrawableHeight(): Int = iconView?.drawableHeight ?: 0
@@ -671,13 +675,14 @@ constructor(
 
         private const val Z_INDEX_FRONT = 10f
 
-        private const val NUM_ALPHA_CHANNELS = 5
+        private const val NUM_ALPHA_CHANNELS = 6
         private const val INDEX_CONTENT_ALPHA = 0
         private const val INDEX_COLOR_FILTER_ALPHA = 1
         private const val INDEX_MODAL_ALPHA = 2
         /** Used to hide the app chip for 90:10 flex split. */
         private const val INDEX_MINIMUM_RATIO_ALPHA = 3
         private const val INDEX_AX_STACK_ALPHA = 4
+        private const val INDEX_DISMISS_ALPHA = 5
 
         private const val INDEX_SPLIT_TRANSLATION = 0
         private const val INDEX_MENU_TRANSLATION = 1
