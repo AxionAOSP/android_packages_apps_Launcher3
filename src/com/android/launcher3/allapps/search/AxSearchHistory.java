@@ -16,6 +16,7 @@
 package com.android.launcher3.allapps.search;
 
 import static com.android.launcher3.LauncherPrefsExt.ALL_APPS_SEARCH_HISTORY;
+import static com.android.launcher3.LauncherPrefsExt.SEARCH_HISTORY_ENABLED;
 
 import android.content.Context;
 
@@ -42,7 +43,14 @@ public final class AxSearchHistory {
 
     private AxSearchHistory() { }
 
+    public static boolean isEnabled(Context context) {
+        return LauncherPrefs.get(context).get(SEARCH_HISTORY_ENABLED);
+    }
+
     public static boolean showHistory(Context context, SearchCallback<AdapterItem> callback) {
+        if (!isEnabled(context)) {
+            return false;
+        }
         ArrayList<AdapterItem> items = getHistoryItems(context);
         if (items.isEmpty()) {
             return false;
@@ -64,6 +72,9 @@ public final class AxSearchHistory {
     }
 
     public static void record(Context context, @Nullable CharSequence rawQuery) {
+        if (!isEnabled(context)) {
+            return;
+        }
         String query = normalizeQuery(rawQuery);
         if (query.isEmpty()) {
             return;

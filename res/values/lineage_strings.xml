@@ -229,6 +229,9 @@
     <string name="search_results_fuzzy_apps_summary">Match app names even when the typed query is incomplete or approximate</string>
     <string name="search_results_web_delay_title">Search result delay</string>
     <string name="search_history_section_title">Recent searches</string>
+    <string name="search_history_title">Show search history</string>
+    <string name="search_history_summary_on">Recent searches appear when you tap the search bar</string>
+    <string name="search_history_summary_off">Tapping the search bar keeps the app list; apps filter as you type</string>
     <string name="search_history_clear_title">Clear search history</string>
     <string name="search_history_clear_summary">Remove saved app drawer search terms</string>
     <string name="search_history_clear_success">Search history cleared</string>
