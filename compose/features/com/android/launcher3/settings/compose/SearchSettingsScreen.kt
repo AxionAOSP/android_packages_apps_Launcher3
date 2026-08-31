@@ -81,6 +81,14 @@ private fun SearchResultsBehaviorGroup() {
     PreferenceGroup(title = stringResource(R.string.search_results_category_behavior)) {
         item {
             BooleanPreference(
+                item = LauncherPrefsExt.SEARCH_HISTORY_ENABLED,
+                titleRes = R.string.search_history_title,
+                summaryOnRes = R.string.search_history_summary_on,
+                summaryOffRes = R.string.search_history_summary_off,
+            )
+        }
+        item {
+            BooleanPreference(
                 item = LauncherPrefsExt.ALL_APPS_SEARCH_FUZZY_APPS,
                 titleRes = R.string.search_results_fuzzy_apps_title,
                 summaryRes = R.string.search_results_fuzzy_apps_summary,

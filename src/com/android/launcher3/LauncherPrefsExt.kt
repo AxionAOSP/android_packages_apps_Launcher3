@@ -348,6 +348,12 @@ object LauncherPrefsExt {
             "[]",
             EncryptionType.SECURE_SETTINGS,
         )
+    @JvmField val SEARCH_HISTORY_ENABLED =
+        backedUpItem(
+            "pref_all_apps_search_history_enabled",
+            true,
+            EncryptionType.SECURE_SETTINGS,
+        )
     const val ALL_APPS_DEFAULT_BG_OPACITY = 80
     @JvmField val ALL_APPS_BG_OPACITY =
         backedUpItem(
