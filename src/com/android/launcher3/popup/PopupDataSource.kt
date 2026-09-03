@@ -32,7 +32,6 @@ import com.android.launcher3.accessibility.LauncherAccessibilityDelegate
 import com.android.launcher3.allapps.PrivateProfileManager
 import com.android.launcher3.dagger.LauncherAppSingleton
 import com.android.launcher3.folder.FolderIcon
-import com.android.launcher3.folder.FolderSettingsView
 import com.android.launcher3.logging.StatsLogManager.LauncherEvent
 import com.android.launcher3.model.data.ItemInfo
 import com.android.launcher3.model.data.WorkspaceItemInfo
@@ -148,32 +147,6 @@ class PopupDataSource @Inject constructor() {
                 else R.drawable.ic_widget,
             labelResId = R.string.widget_button_text,
             popupAction = handleWidgets,
-            category = PopupCategory.SYSTEM_SHORTCUT_FIXED,
-        )
-
-    private val handleFolderSettings =
-        { activityContext: ActivityContext, _: ItemInfo, view: View ->
-            if (view is FolderIcon) {
-                AbstractFloatingView.closeAllOpenViews(activityContext)
-
-                val settingsView =
-                    activityContext
-                        .getLayoutInflater()
-                        .inflate(
-                            R.layout.folder_settings,
-                            activityContext.getDragLayer(),
-                            false,
-                        ) as FolderSettingsView
-
-                settingsView.show(view)
-            }
-        }
-
-    val folderSettingsPopupData =
-        PopupData(
-            iconResId = R.drawable.ic_setting,
-            labelResId = R.string.folder_settings,
-            popupAction = handleFolderSettings,
             category = PopupCategory.SYSTEM_SHORTCUT_FIXED,
         )
 

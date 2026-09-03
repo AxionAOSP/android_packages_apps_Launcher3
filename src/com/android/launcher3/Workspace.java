@@ -3747,17 +3747,27 @@ public class Workspace<T extends View & PageIndicator> extends PagedView<T>
         if (cellLayout == null) return false;
         if (!(folderIcon.getTag() instanceof FolderInfo folderInfo)) return false;
 
+        int oldSpanX = folderInfo.spanX;
+        int oldSpanY = folderInfo.spanY;
         int oldMinSpanX = folderInfo.minSpanX;
         int oldMinSpanY = folderInfo.minSpanY;
+
+        folderInfo.spanX = target.spanX;
+        folderInfo.spanY = target.spanY;
         folderInfo.minSpanX = target.spanX;
         folderInfo.minSpanY = target.spanY;
 
         boolean resized = false;
         try {
             resized = cellLayout.resizeView(folderIcon, target, direction);
+            if (resized) {
+                mLauncher.getModelWriter().updateItemInDatabase(folderInfo);
+            }
             return resized;
         } finally {
             if (!resized) {
+                folderInfo.spanX = oldSpanX;
+                folderInfo.spanY = oldSpanY;
                 folderInfo.minSpanX = oldMinSpanX;
                 folderInfo.minSpanY = oldMinSpanY;
             }

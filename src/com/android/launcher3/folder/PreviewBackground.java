@@ -154,24 +154,46 @@ public class PreviewBackground extends DelegatedCellDrawing {
             int spanY,
             Rect outBounds) {
         int previewSize = grid.folderIconSizePx;
-        int cellWidth = grid.getWorkspaceIconProfile().getCellSize().x;
-        int cellHeight = grid.getWorkspaceIconProfile().getCellSize().y;
 
-        int backgroundWidth = previewSize;
-        int backgroundHeight = previewSize;
+        int backgroundWidth;
+        int backgroundHeight;
+        int backgroundLeft;
+        int backgroundTop;
 
-        if (spanX > 1) {
-            backgroundWidth += Math.max(0, availableSpaceX - cellWidth);
+        if (spanX == 1 && spanY == 1) {
+            // Keep legacy 1x1 circular folder preview size and alignment exactly
+            backgroundWidth = previewSize;
+            backgroundHeight = previewSize;
+            backgroundLeft = (availableSpaceX - backgroundWidth) / 2;
+            backgroundTop = topPadding + grid.folderIconOffsetYPx;
+        } else {
+            // Multi-span: Self-Hugging Automated Math
+            float standardIconSize = grid.getWorkspaceIconProfile().getIconSizePx();
+            float itemScale = 0.85f;
+            float itemSize = standardIconSize * itemScale;
+            float idealPadding = itemSize * 0.20f;
+            float idealGap = itemSize * 0.15f;
+
+            float idealWidth = spanX * itemSize + (spanX - 1) * idealGap + 2 * idealPadding;
+            float idealHeight = spanY * itemSize + (spanY - 1) * idealGap + 2 * idealPadding;
+
+            if (idealWidth > availableSpaceX || idealHeight > availableSpaceY) {
+                float fitScale = Math.min((float) availableSpaceX / idealWidth, (float) availableSpaceY / idealHeight);
+                itemSize *= fitScale;
+                idealPadding *= fitScale;
+                idealGap *= fitScale;
+
+                idealWidth = spanX * itemSize + (spanX - 1) * idealGap + 2 * idealPadding;
+                idealHeight = spanY * itemSize + (spanY - 1) * idealGap + 2 * idealPadding;
+            }
+
+            backgroundWidth = Math.round(idealWidth);
+            backgroundHeight = Math.round(idealHeight);
+            backgroundLeft = Math.round((availableSpaceX - backgroundWidth) / 2f);
+
+            // ALWAYS top-align multi-span folder backgrounds to match standard workspace icon alignment!
+            backgroundTop = topPadding + grid.folderIconOffsetYPx;
         }
-
-        if (spanY > 1) {
-            backgroundHeight += Math.max(0, availableSpaceY - cellHeight);
-        }
-
-        int backgroundLeft = (availableSpaceX - backgroundWidth) / 2;
-        int backgroundTop = spanY > 1
-                ? (availableSpaceY - backgroundHeight) / 2
-                : topPadding + grid.folderIconOffsetYPx;
 
         outBounds.set(
             backgroundLeft,

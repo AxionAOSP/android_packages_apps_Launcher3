@@ -180,11 +180,12 @@ private class FolderResizeTarget(
     override val canResizeFromTop: Boolean = false
 
     override fun canResizeTo(cellX: Int, cellY: Int, spanX: Int, spanY: Int): Boolean {
-        val isInitialGeometry =
-            cellX == initialCellX &&
-                cellY == initialCellY &&
-                spanX == initialSpanX &&
-                spanY == initialSpanY
+        // Folders must always remain pinned at their initial top-left cell position
+        if (cellX != initialCellX || cellY != initialCellY) {
+            return false
+        }
+
+        val isInitialGeometry = spanX == initialSpanX && spanY == initialSpanY
 
         return isInitialGeometry ||
             workspace.canResizeFolderTo(folderIcon, cellX, cellY, spanX, spanY)
@@ -192,8 +193,11 @@ private class FolderResizeTarget(
 
     override fun onResizeApplied(spanX: Int, spanY: Int, committed: Boolean) {
         if (committed) {
+            folderInfo.spanX = spanX
+            folderInfo.spanY = spanY
             folderInfo.minSpanX = spanX
             folderInfo.minSpanY = spanY
+            workspace.mLauncher.modelWriter.updateItemInDatabase(folderInfo)
         }
     }
 }
@@ -839,6 +843,7 @@ constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0
                 resizeTarget.getResizeAnnouncement(launcher, spanX, spanY)?.let {
                     stateAnnouncer?.announce(it)
                 }
+                performHapticFeedback(android.view.HapticFeedbackConstants.CONFIRM)
             }
 
             wlp.tmpCellX = cellX

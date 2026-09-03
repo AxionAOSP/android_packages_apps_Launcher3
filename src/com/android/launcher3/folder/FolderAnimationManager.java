@@ -164,7 +164,11 @@ public class FolderAnimationManager implements FolderAnimationCreator {
         if (mFolderIcon.usesWorkspacePreviewLayout()) {
             workspacePreviewSnapshot = mFolderIcon.getPreviewItemManager()
                     .calculateWorkspacePreviewSnapshotForPage(mContent.getCurrentPage());
-            previewSize = workspacePreviewSnapshot.getItems().get(0).getBounds().width();
+            if (workspacePreviewSnapshot.getItems().isEmpty()) {
+                previewSize = mFolderIcon.getPreviewItemManager().mIconSize;
+            } else {
+                previewSize = workspacePreviewSnapshot.getItems().get(0).getBounds().width();
+            }
         } else {
             workspacePreviewSnapshot = null;
             float previewScale = rule.scaleForItem(itemsInPreview.size(), 0);
