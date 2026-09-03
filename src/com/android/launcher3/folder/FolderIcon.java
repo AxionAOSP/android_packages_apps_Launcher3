@@ -28,6 +28,7 @@ import static com.android.launcher3.model.data.FolderInfo.willAcceptItemType;
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
 import android.animation.ObjectAnimator;
+import android.animation.ValueAnimator;
 import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Paint;
@@ -37,6 +38,7 @@ import android.graphics.RectF;
 import android.graphics.drawable.Drawable;
 import android.os.Looper;
 import android.util.AttributeSet;
+import android.util.FloatProperty;
 import android.util.Property;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
@@ -162,6 +164,25 @@ public class FolderIcon extends FrameLayout implements FloatingIconViewCompanion
     @Nullable
     private FolderPreviewLayout.ItemPlacement mPressedPreviewItem;
 
+    private ValueAnimator mPressScaleAnimator;
+
+    private int mDefaultLabelPaddingTop = -1;
+    private int mDefaultLabelPaddingBottom = -1;
+
+    private final FloatProperty<FolderIcon> mPressScaleProperty =
+            new FloatProperty<FolderIcon>("pressScale") {
+                @Override
+                public void setValue(FolderIcon obj, float value) {
+                    obj.setScaleX(value);
+                    obj.setScaleY(value);
+                }
+
+                @Override
+                public Float get(FolderIcon obj) {
+                    return obj.getScaleX();
+                }
+            };
+
     @Nullable
     private PreviewItemLaunchSource mPreviewItemLaunchSource;
 
@@ -186,8 +207,15 @@ public class FolderIcon extends FrameLayout implements FloatingIconViewCompanion
 
     private boolean shouldShowFolderName() {
         return mRequestedTextVisible
-                && !isMultiSpanFolder()
                 && mFolderName.shouldShowLabel();
+    }
+
+    public int getFolderLabelHeight() {
+        if (shouldShowFolderName() && mFolderName != null) {
+            Paint.FontMetrics fm = mFolderName.getPaint().getFontMetrics();
+            return mFolderName.getCompoundDrawablePadding() + (int) Math.ceil(fm.bottom - fm.top);
+        }
+        return 0;
     }
 
     int getCurrentSpanX() {
@@ -213,6 +241,31 @@ public class FolderIcon extends FrameLayout implements FloatingIconViewCompanion
 
     private void updateTextVisibility() {
         mFolderName.setVisibility(shouldShowFolderName() ? VISIBLE : INVISIBLE);
+        if (mFolderName != null && mFolderName.getLayoutParams() instanceof FrameLayout.LayoutParams lp) {
+            lp.gravity = android.view.Gravity.TOP | android.view.Gravity.CENTER_HORIZONTAL;
+            lp.height = FrameLayout.LayoutParams.MATCH_PARENT;
+            lp.topMargin = 0;
+
+            if (isMultiSpanFolder()) {
+                lp.height = FrameLayout.LayoutParams.WRAP_CONTENT;
+                mFolderName.setCompoundDrawables(null, null, null, null);
+                mFolderName.setPadding(mFolderName.getPaddingLeft(), 0, mFolderName.getPaddingRight(), 0);
+            } else if (mActivity != null && mInfo != null) {
+                DeviceProfile grid = mActivity.getDeviceProfile();
+                boolean isAllAppsFolder = AxFolderExt.isAllAppsFolder(mInfo);
+                if (isAllAppsFolder) {
+                    lp.gravity = android.view.Gravity.TOP | android.view.Gravity.CENTER_HORIZONTAL;
+                    lp.height = FrameLayout.LayoutParams.MATCH_PARENT;
+                    lp.topMargin = grid.getAllAppsProfile().getIconSizePx()
+                            + grid.getAllAppsProfile().getIconDrawablePaddingPx();
+                }
+                mFolderName.setIconVisible(false);
+                int topPadding = mDefaultLabelPaddingTop != -1 ? mDefaultLabelPaddingTop : mFolderName.getPaddingTop();
+                int bottomPadding = mDefaultLabelPaddingBottom != -1 ? mDefaultLabelPaddingBottom : mFolderName.getPaddingBottom();
+                mFolderName.setPadding(mFolderName.getPaddingLeft(), topPadding, mFolderName.getPaddingRight(), bottomPadding);
+            }
+            mFolderName.setLayoutParams(lp);
+        }
     }
 
     public FolderIcon(Context context) {
@@ -265,6 +318,8 @@ public class FolderIcon extends FrameLayout implements FloatingIconViewCompanion
 
         icon.setClipToPadding(false);
         icon.mFolderName = icon.findViewById(R.id.folder_icon_name);
+        icon.mDefaultLabelPaddingTop = icon.mFolderName.getPaddingTop();
+        icon.mDefaultLabelPaddingBottom = icon.mFolderName.getPaddingBottom();
         if (icon.mFolderName.shouldShowLabel()) {
             icon.mFolderName.applyLabel(folderInfo.title);
         }
@@ -1112,6 +1167,26 @@ public class FolderIcon extends FrameLayout implements FloatingIconViewCompanion
         super.onMeasure(widthMeasureSpec, heightMeasureSpec);
     }
 
+    @Override
+    protected void onLayout(boolean changed, int left, int top, int right, int bottom) {
+        super.onLayout(changed, left, top, right, bottom);
+        if (shouldShowFolderName() && mFolderName != null && isMultiSpanFolder()) {
+            mPreviewItemManager.recomputePreviewDrawingParams();
+            Rect bgBounds = new Rect();
+            mBackground.getBounds(bgBounds);
+            int textWidth = mFolderName.getMeasuredWidth();
+            int textHeight = mFolderName.getMeasuredHeight();
+
+            float density = mActivity.getDeviceProfile().getWorkspaceIconProfile().getIconSizePx() / 60.f;
+            int gap = Math.round(8f * density);
+
+            int textLeft = bgBounds.left + (bgBounds.width() - textWidth) / 2;
+            int textTop = bgBounds.bottom + gap;
+
+            mFolderName.layout(textLeft, textTop, textLeft + textWidth, textTop + textHeight);
+        }
+    }
+
     /** Sets the visibility of the icon's title text */
     public void setTextVisible(boolean visible) {
         mRequestedTextVisible = visible;
@@ -1270,6 +1345,37 @@ public class FolderIcon extends FrameLayout implements FloatingIconViewCompanion
     @Override
     public float getReorderBounceScale() {
         return mScaleForReorderBounce;
+    }
+
+    @Override
+    public void setPressed(boolean pressed) {
+        super.setPressed(pressed);
+        if (mPressScaleAnimator != null) {
+            mPressScaleAnimator.cancel();
+        }
+
+        float targetScale = pressed ? 0.95f : 1.0f;
+        float stiffness = pressed ? 400f : 200f;
+        float damping = pressed ? 0.85f : 0.65f;
+
+        ValueAnimator animator = new com.android.launcher3.anim.SpringAnimationBuilder(getContext())
+                .setStartValue(getScaleX())
+                .setEndValue(targetScale * mScaleForReorderBounce)
+                .setStiffness(stiffness)
+                .setDampingRatio(damping)
+                .setMinimumVisibleChange(0.001f)
+                .build(this, mPressScaleProperty);
+
+        animator.start();
+        mPressScaleAnimator = animator;
+    }
+
+    @Override
+    protected void onDetachedFromWindow() {
+        if (mPressScaleAnimator != null) {
+            mPressScaleAnimator.cancel();
+        }
+        super.onDetachedFromWindow();
     }
 
     @Override

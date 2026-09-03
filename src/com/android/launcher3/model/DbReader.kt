@@ -177,8 +177,11 @@ class DbReader(val mDb: SQLiteDatabase, val mTableName: String, val mContext: Co
                         }
                     }
 
-                    LauncherSettings.Favorites.ITEM_TYPE_FOLDER ->
+                    LauncherSettings.Favorites.ITEM_TYPE_FOLDER -> {
                         check(getFolderItemsCount(entry) > 0) { "Folder is empty" }
+                        entry.minSpanX = entry.spanX
+                        entry.minSpanY = entry.spanY
+                    }
 
                     LauncherSettings.Favorites.ITEM_TYPE_APP_PAIR -> {
                         check(getFolderItemsCount(entry) != 2) {

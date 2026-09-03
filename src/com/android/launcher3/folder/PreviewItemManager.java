@@ -48,6 +48,7 @@ import androidx.annotation.Nullable;
 import androidx.annotation.VisibleForTesting;
 
 import com.android.launcher3.BubbleTextView;
+import com.android.launcher3.DeviceProfile;
 import com.android.launcher3.LauncherAppState;
 import com.android.launcher3.R;
 import com.android.launcher3.Utilities;
@@ -56,7 +57,6 @@ import com.android.launcher3.apppairs.AppPairIconDrawingParams;
 import com.android.launcher3.apppairs.AppPairIconGraphic;
 import com.android.launcher3.folder.AxFolderExt;
 import com.android.launcher3.model.data.AppPairInfo;
-import com.android.launcher3.model.data.FolderPreviewSettings;
 import com.android.launcher3.model.data.ItemInfo;
 import com.android.launcher3.model.data.ItemInfoWithIcon;
 import com.android.launcher3.model.data.WorkspaceItemInfo;
@@ -198,12 +198,18 @@ public class PreviewItemManager {
             mPrevSpanY = spanY;
             mPrevTopPadding = mIcon.getPaddingTop();
 
+            DeviceProfile deviceProfile = mIcon.mActivity.getDeviceProfile();
+            float density = deviceProfile.getWorkspaceIconProfile().getIconSizePx() / 60.f;
+            int gap = Math.round(8f * density);
+            float backgroundTop = mIcon.getPaddingTop() + deviceProfile.folderIconOffsetYPx;
+            float labelHeightAndGap = mIcon.isMultiSpanFolder() ? (mIcon.getFolderLabelHeight() + gap + backgroundTop) : 0f;
+
             mIcon.mBackground.setup(
                     mIcon.getContext(),
                     mIcon.mActivity,
                     mIcon,
                     mTotalWidth,
-                    mTotalHeight,
+                    Math.round(mTotalHeight - labelHeightAndGap),
                     mIcon.getPaddingTop(),
                     spanX,
                     spanY);
@@ -230,29 +236,73 @@ public class PreviewItemManager {
     }
 
     private FolderPreviewLayout.Grid calculateWorkspacePreviewGrid(
-            RectF backgroundBounds) {
+            RectF backgroundBounds,
+            int spanX,
+            int spanY) {
         Resources resources = mContext.getResources();
-
-        float itemScale =
-                FolderPreviewSettings.getItemScale(resources, mIcon.mInfo);
-        float padding =
-                FolderPreviewSettings.getPadding(resources, mIcon.mInfo);
-        float minGap =
-                FolderPreviewSettings.getMinimumGap(resources, mIcon.mInfo);
-
-        RectF availableBounds = new RectF(backgroundBounds);
-        availableBounds.inset(padding, padding);
+        DeviceProfile deviceProfile = mIcon.mActivity.getDeviceProfile();
 
         float defaultPadding =
                 resources.getDimension(R.dimen.folder_workspace_preview_padding);
         float baseContentSize =
-                mIcon.mActivity.getDeviceProfile().folderIconSizePx - 2 * defaultPadding;
+                deviceProfile.folderIconSizePx - 2 * defaultPadding;
 
-        float maxItemSize =
-                Math.min(availableBounds.width(), availableBounds.height());
-        float itemSize = Math.min(baseContentSize * itemScale, maxItemSize);
+        if (spanX == 1 && spanY == 1) {
+            // Standard legacy 1x1 circular folder preview grid layout
+            float minGap = resources.getDimension(R.dimen.folder_workspace_preview_min_gap);
+            RectF availableBounds = new RectF(backgroundBounds);
+            availableBounds.inset(defaultPadding, defaultPadding);
 
-        return FolderPreviewLayout.calculateGrid(availableBounds, itemSize, minGap);
+            float maxItemSize = Math.min(availableBounds.width(), availableBounds.height());
+            float itemSize = Math.min(baseContentSize, maxItemSize);
+
+            return FolderPreviewLayout.calculateGrid(availableBounds, itemSize, minGap);
+        } else {
+            // Multi-span: Self-Hugging Automated Math matching calculateBackgroundBounds
+            float standardIconSize = deviceProfile.getWorkspaceIconProfile().getIconSizePx();
+            float itemScale = 0.85f;
+            float itemSize = standardIconSize * itemScale;
+            float idealPadding = itemSize * 0.20f;
+            float idealGap = itemSize * 0.15f;
+
+            float idealWidth = spanX * itemSize + (spanX - 1) * idealGap + 2 * idealPadding;
+            float idealHeight = spanY * itemSize + (spanY - 1) * idealGap + 2 * idealPadding;
+
+            float availableWidth = backgroundBounds.width();
+            float availableHeight = backgroundBounds.height();
+
+            if (idealWidth > availableWidth || idealHeight > availableHeight) {
+                float fitScale = Math.min(availableWidth / idealWidth, availableHeight / idealHeight);
+                itemSize *= fitScale;
+                idealPadding *= fitScale;
+                idealGap *= fitScale;
+            }
+
+            RectF availableBounds = new RectF(backgroundBounds);
+            availableBounds.inset(idealPadding, idealPadding);
+
+            // Calculate expanding gaps, but clamp them to a maximum of 1.5x idealGap to prevent icons from flying apart
+            float columnGap = spanX > 1 ? Math.min(idealGap * 1.5f, (availableBounds.width() - spanX * itemSize) / (spanX - 1)) : 0f;
+            float rowGap = spanY > 1 ? Math.min(idealGap * 1.5f, (availableBounds.height() - spanY * itemSize) / (spanY - 1)) : 0f;
+
+            // Compute total size of this beautifully proportioned grid
+            float gridWidth = spanX * itemSize + (spanX - 1) * columnGap;
+            float gridHeight = spanY * itemSize + (spanY - 1) * rowGap;
+
+            // Center the grid inside the background bounds
+            float startX = backgroundBounds.left + (backgroundBounds.width() - gridWidth) / 2f;
+            float startY = backgroundBounds.top + (backgroundBounds.height() - gridHeight) / 2f;
+
+            return new FolderPreviewLayout.Grid(
+                    spanX,
+                    spanY,
+                    startX,
+                    startY,
+                    itemSize,
+                    columnGap,
+                    rowGap
+            );
+        }
     }
 
     private FolderPreviewLayout.Grid calculateWorkspacePreviewGrid(
@@ -260,16 +310,22 @@ public class PreviewItemManager {
             int availableSpaceY,
             int spanX,
             int spanY) {
+        DeviceProfile deviceProfile = mIcon.mActivity.getDeviceProfile();
+        float density = deviceProfile.getWorkspaceIconProfile().getIconSizePx() / 60.f;
+        int gap = Math.round(8f * density);
+        float backgroundTop = mIcon.getPaddingTop() + deviceProfile.folderIconOffsetYPx;
+        float labelHeightAndGap = mIcon.isMultiSpanFolder() ? (mIcon.getFolderLabelHeight() + gap + backgroundTop) : 0f;
+
         Rect backgroundBounds = new Rect();
         PreviewBackground.calculateBackgroundBounds(
-                mIcon.mActivity.getDeviceProfile(),
+                deviceProfile,
                 availableSpaceX,
-                availableSpaceY,
+                Math.round(availableSpaceY - labelHeightAndGap),
                 mIcon.getPaddingTop(),
                 spanX,
                 spanY,
                 backgroundBounds);
-        return calculateWorkspacePreviewGrid(new RectF(backgroundBounds));
+        return calculateWorkspacePreviewGrid(new RectF(backgroundBounds), spanX, spanY);
     }
 
     FolderPreviewLayout.GridUsage calculateWorkspacePreviewGridUsage(
@@ -325,7 +381,7 @@ public class PreviewItemManager {
 
         RectF snapshotBounds = new RectF(backgroundBounds);
         FolderPreviewLayout.Grid grid =
-                calculateWorkspacePreviewGrid(snapshotBounds);
+                calculateWorkspacePreviewGrid(snapshotBounds, mIcon.getCurrentSpanX(), mIcon.getCurrentSpanY());
 
         int folderColumnCount = mIcon.mActivity.getDeviceProfile()
                 .getFolderProfile().getNumColumns();
@@ -421,6 +477,14 @@ public class PreviewItemManager {
         int saveCount = canvas.getSaveCount();
         // The items are drawn in coordinates relative to the preview offset
         PreviewBackground bg = mIcon.getFolderBackground();
+
+        // Dynamically scale the nested preview icons in unison with the background scale (e.g., during accept-bounce states)
+        if (bg.mScale != 1f) {
+            float centerX = bg.getOffsetX() + bg.getScaledRadius();
+            float centerY = bg.getOffsetY() + bg.getScaledRadius();
+            canvas.scale(bg.mScale, bg.mScale, centerX, centerY);
+        }
+
         Path clipPath = bg.getClipPath();
         boolean shouldClipResize = bg.isBoundsAnimating();
         float firstPageItemsTransX = 0;
@@ -434,7 +498,7 @@ public class PreviewItemManager {
                     canvas,
                     mCurrentPageParams,
                     firstPageOffset,
-                    shouldClip || shouldClipResize,
+                    (shouldClip || shouldClipResize || mIcon.usesWorkspacePreviewLayout()) && !mIcon.isMultiSpanFolder(),
                     clipPath);
 
             firstPageItemsTransX = -mPageSlideDistance + mCurrentPageItemsTransX;
@@ -443,8 +507,10 @@ public class PreviewItemManager {
         PointF firstPageOffset = new PointF(bg.getPreviewLeft() + firstPageItemsTransX,
                 bg.getPreviewTop());
         boolean shouldClipFirstPage =
-                shouldClipResize
-                        || Math.abs(firstPageItemsTransX) > mClipThreshold;
+                (shouldClipResize
+                        || Math.abs(firstPageItemsTransX) > mClipThreshold
+                        || mIcon.usesWorkspacePreviewLayout())
+                && !mIcon.isMultiSpanFolder();
         drawParams(
                 canvas,
                 mFirstPageParams,
