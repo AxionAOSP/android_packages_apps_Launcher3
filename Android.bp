@@ -646,6 +646,7 @@ android_library {
     static_libs: [
         "SystemUI-statsd",
         "QuickstepResLib",
+        "ax_dragonite",
     ],
     manifest: "quickstep/AndroidManifest.xml",
     platform_apis: true,

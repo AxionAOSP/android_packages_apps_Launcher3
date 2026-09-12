@@ -15,6 +15,8 @@
  */
 package com.android.quickstep;
 
+import com.android.axion.dragonite.AxDragonite;
+
 import static android.app.WindowConfiguration.ACTIVITY_TYPE_HOME;
 import static android.app.WindowConfiguration.WINDOWING_MODE_FREEFORM;
 import static android.view.Surface.ROTATION_0;
@@ -1143,6 +1145,7 @@ public abstract class AbsSwipeUpHandler<
 
     @UiThread
     public void onGestureStarted(boolean isLikelyToStartNewTask) {
+        AxDragonite.onGestureStart();
         mContainerInterface.closeOverlay();
         TaskUtils.closeSystemWindowsAsync(CLOSE_SYSTEM_WINDOWS_REASON_RECENTS);
 
@@ -1232,6 +1235,7 @@ public abstract class AbsSwipeUpHandler<
     @UiThread
     public void onGestureEnded(
             float endVelocityPxPerMs, PointF velocityPxPerMs, boolean horizontalTouchSlopPassed) {
+        AxDragonite.onGestureEnd();
         float flingThreshold = mContext.getResources()
                 .getDimension(R.dimen.quickstep_fling_threshold_speed);
         boolean isFling = mGestureStarted && !mIsMotionPaused

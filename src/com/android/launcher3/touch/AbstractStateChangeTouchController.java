@@ -37,6 +37,7 @@ import android.animation.ValueAnimator;
 import android.view.InputDevice;
 import android.view.MotionEvent;
 
+import com.android.axion.dragonite.AxDragonite;
 import com.android.launcher3.Launcher;
 import com.android.launcher3.LauncherAnimUtils;
 import com.android.launcher3.LauncherState;
@@ -193,6 +194,7 @@ public abstract class AbstractStateChangeTouchController
 
     @Override
     public void onDragStart(boolean start, float startDisplacement) {
+        AxDragonite.onFling();
         mStartState = mLauncher.getStateManager().getState();
         mIsLogContainerSet = false;
 
@@ -443,6 +445,7 @@ public abstract class AbstractStateChangeTouchController
     }
 
     protected void clearState() {
+        AxDragonite.onFlingEnd();
         cancelAnimationControllers();
         mGoingBetweenStates = true;
         mDetector.finishedScrolling();

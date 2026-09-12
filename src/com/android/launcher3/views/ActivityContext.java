@@ -26,7 +26,6 @@ import static com.android.launcher3.logging.StatsLogManager.LauncherEvent.LAUNCH
 import static com.android.launcher3.util.Executors.MAIN_EXECUTOR;
 import static com.android.launcher3.util.Executors.UI_HELPER_EXECUTOR;
 
-import android.app.Activity;
 import android.app.ActivityOptions;
 import android.app.PendingIntent;
 import android.content.ActivityNotFoundException;
@@ -621,6 +620,12 @@ public interface ActivityContext extends SavedStateRegistryOwner {
     /** Returns the current ActivityContext as context */
     default Context asContext() {
         return (Context) this;
+    }
+
+    default void pauseExpensiveViewUpdates() {
+    }
+
+    default void resumeExpensiveViewUpdates() {
     }
 
     /** Closes the closeable when this context is destroyed */

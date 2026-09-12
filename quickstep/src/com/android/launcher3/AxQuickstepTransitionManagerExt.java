@@ -16,6 +16,7 @@
 package com.android.launcher3;
 
 import android.animation.Animator;
+import android.animation.AnimatorListenerAdapter;
 import android.content.Context;
 import android.graphics.Matrix;
 import android.graphics.Rect;
@@ -26,6 +27,7 @@ import android.view.View;
 import com.android.launcher3.uioverrides.QuickstepLauncher;
 import com.android.launcher3.views.AxFloatingIconView;
 import com.android.launcher3.views.FloatingIconView;
+import com.android.axion.dragonite.AxDragonite;
 import com.android.quickstep.RemoteAnimationTargets;
 import com.android.quickstep.SystemUiProxy;
 import com.android.quickstep.util.AxAnimationEngine;
@@ -64,9 +66,16 @@ public final class AxQuickstepTransitionManagerExt {
             SurfaceTransactionApplier surfaceApplier,
             RemoteAnimationTarget navBarTarget,
             int[] dragLayerBounds) {
+        String pkg = null;
+        if (firstTarget != null && firstTarget.taskInfo != null && firstTarget.taskInfo.topActivity != null) {
+            pkg = firstTarget.taskInfo.topActivity.getPackageName();
+        } else if (appTargets != null && appTargets.length > 0 && appTargets[0].taskInfo != null && appTargets[0].taskInfo.topActivity != null) {
+            pkg = appTargets[0].taskInfo.topActivity.getPackageName();
+        }
+        AxDragonite.onAppLaunch(pkg);
         RectF startBounds =
                 AxAppOpenGeometry.getFrozenBounds(launcher, sourceView, launcherIconBounds);
-        return AxPlayerImpl.createOpeningAnimator(
+        Animator anim = AxPlayerImpl.createOpeningAnimator(
                 launcher,
                 deviceProfile,
                 systemUiProxy,
@@ -87,6 +96,15 @@ public final class AxQuickstepTransitionManagerExt {
                 surfaceApplier,
                 navBarTarget,
                 dragLayerBounds);
+        if (anim != null) {
+            anim.addListener(new AnimatorListenerAdapter() {
+                @Override
+                public void onAnimationEnd(Animator animation) {
+                    AxDragonite.onAppLaunchEnd();
+                }
+            });
+        }
+        return anim;
     }
 
     public static void updateAppOpenFloatingIcon(

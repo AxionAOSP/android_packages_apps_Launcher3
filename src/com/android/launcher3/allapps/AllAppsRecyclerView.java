@@ -15,6 +15,8 @@
  */
 package com.android.launcher3.allapps;
 
+import com.android.axion.dragonite.AxDragonite;
+
 import static com.android.launcher3.logger.LauncherAtom.ContainerInfo;
 import static com.android.launcher3.logger.LauncherAtom.SearchResultContainer;
 import static com.android.launcher3.logging.StatsLogManager.LauncherEvent.LAUNCHER_ALLAPPS_PERSONAL_SCROLLED_DOWN;
@@ -137,13 +139,19 @@ public class AllAppsRecyclerView extends FastScrollRecyclerView {
         StatsLogManager mgr = ActivityContext.lookupContext(getContext()).getStatsLogManager();
         switch (state) {
             case SCROLL_STATE_DRAGGING:
+                AxDragonite.onScroll();
                 mCumulativeVerticalScroll = 0;
                 requestFocus();
                 mgr.logger().sendToInteractionJankMonitor(
                         LAUNCHER_ALLAPPS_VERTICAL_SWIPE_BEGIN, this);
                 ActivityContext.lookupContext(getContext()).hideKeyboard();
                 break;
+            case SCROLL_STATE_SETTLING:
+                AxDragonite.onFling();
+                break;
             case SCROLL_STATE_IDLE:
+                AxDragonite.onFlingEnd();
+                AxDragonite.onScrollEnd();
                 mgr.logger().sendToInteractionJankMonitor(
                         LAUNCHER_ALLAPPS_VERTICAL_SWIPE_END, this);
                 logCumulativeVerticalScroll();

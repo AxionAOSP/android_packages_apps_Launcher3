@@ -20,6 +20,7 @@ import android.graphics.RectF;
 import android.view.View;
 
 import com.android.app.animation.Interpolators;
+import com.android.axion.dragonite.AxDragonite;
 import com.android.launcher3.AxAppOpenGeometry;
 import com.android.launcher3.AxQuickstepTransitionManagerExt;
 import com.android.launcher3.uioverrides.QuickstepLauncher;
@@ -104,6 +105,7 @@ final class AxLauncherSwipeHandlerExt {
     }
 
     static void startHomeZoom(Context context) {
+        AxDragonite.onBackHome();
         boolean enabled = AxQuickstepTransitionManagerExt.isAxAnimEngineEnabled(context);
         AxAnimationEngine.trace(TAG, "homeZoom enabled=" + enabled);
         if (enabled) {
