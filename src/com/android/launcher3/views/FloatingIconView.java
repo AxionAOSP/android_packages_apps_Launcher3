@@ -22,14 +22,12 @@ import static com.android.launcher3.Utilities.getFullDrawable;
 import static com.android.launcher3.Utilities.mapToRange;
 import static com.android.launcher3.graphics.PreloadIconDelegate.newPendingIcon;
 import static com.android.launcher3.icons.BitmapInfo.FLAG_CUSTOM_SHAPE;
-import static com.android.launcher3.icons.BitmapInfo.FLAG_FULL_BLEED;
 import static com.android.launcher3.util.Executors.MODEL_EXECUTOR;
 import static com.android.launcher3.views.FloatingIconViewCompanion.setPropertiesVisible;
 
 import android.animation.Animator;
 import android.content.Context;
 import android.graphics.Canvas;
-import android.graphics.Path;
 import android.graphics.Rect;
 import android.graphics.RectF;
 import android.graphics.drawable.AdaptiveIconDrawable;
@@ -48,10 +46,12 @@ import androidx.annotation.Nullable;
 import androidx.annotation.UiThread;
 import androidx.annotation.WorkerThread;
 
+import com.android.axion.iconloader.AdaptiveIconHelper;
 import com.android.launcher3.BubbleTextView;
 import com.android.launcher3.DeviceProfile;
 import com.android.launcher3.InsettableFrameLayout;
 import com.android.launcher3.Launcher;
+import com.android.launcher3.LauncherPrefsExt;
 import com.android.launcher3.R;
 import com.android.launcher3.Utilities;
 import com.android.launcher3.dragndrop.DragLayer;
@@ -59,7 +59,6 @@ import com.android.launcher3.folder.FolderIcon;
 import com.android.launcher3.graphics.PreloadIconDelegate;
 import com.android.launcher3.icons.FastBitmapDrawable;
 import com.android.launcher3.icons.IconNormalizer;
-import com.android.launcher3.icons.IconShape;
 import com.android.launcher3.model.data.ItemInfo;
 import com.android.launcher3.model.data.ItemInfoWithIcon;
 import com.android.launcher3.popup.SystemShortcut;
@@ -177,7 +176,11 @@ public class FloatingIconView extends FrameLayout implements
 
     void updateHomeGesture(float alpha, RectF rect, float progress, float shapeProgressStart,
             float cornerRadius, float foregroundScale) {
-        mBtvDrawable.setAlpha(0f);
+        if (mClipIconView.isAdaptiveIcon()) {
+            mBtvDrawable.setAlpha(0f);
+        } else {
+            mBtvDrawable.setAlpha(alpha);
+        }
         updateViewAlpha(alpha, 0);
         mClipIconView.updateHomeGesture(rect, progress, shapeProgressStart, cornerRadius, this,
                 mLauncher.getDeviceProfile(), foregroundScale, alpha);
@@ -342,7 +345,9 @@ public class FloatingIconView extends FrameLayout implements
     private static void getIconResult(Launcher l, View originalView, ItemInfo info, RectF pos,
             @Nullable Drawable btvIcon, IconLoadResult outIconLoadResult) {
         Drawable drawable;
-        boolean supportsAdaptiveIcons = !info.isDisabled(); // Use original icon for disabled icons.
+        boolean disableAdaptive =
+                LauncherPrefsExt.isAdaptiveDisabled(l);
+        boolean supportsAdaptiveIcons = !info.isDisabled() && !disableAdaptive;
 
         Drawable badge = null;
         if (info instanceof SystemShortcut) {
@@ -367,7 +372,7 @@ public class FloatingIconView extends FrameLayout implements
                 boolean shouldThemeIcon = (btvIcon instanceof FastBitmapDrawable fbd)
                         && fbd.isCreatedForTheme();
                 fullIcon = getFullDrawable(l, info, width, height, shouldThemeIcon);
-            } else if (!(originalView instanceof BubbleTextView)) {
+            } else if (!(originalView instanceof BubbleTextView) && !disableAdaptive) {
                 fullIcon = getFullDrawable(l, info, width, height, true /* shouldThemeIcon */);
             }
 
@@ -376,6 +381,9 @@ public class FloatingIconView extends FrameLayout implements
                 badge = fullIcon.second;
             } else {
                 drawable = btvIcon;
+            }
+            if (disableAdaptive && drawable != null) {
+                drawable = AdaptiveIconHelper.wrapToDirectIcon(drawable);
             }
         }
 
@@ -412,6 +420,17 @@ public class FloatingIconView extends FrameLayout implements
                 (InsettableFrameLayout.LayoutParams) getLayoutParams();
         mBadge = badge;
         updateBadgeAlpha();
+        if (mBtvDrawable.getBackground() == null && btvIcon != null) {
+            mBtvDrawable.setBackground(btvIcon.get());
+        }
+        boolean disableAdaptive =
+                LauncherPrefsExt.isAdaptiveDisabled(mLauncher);
+        if (disableAdaptive) {
+            usingCustomShape = false;
+            if (drawable != null) {
+                drawable = AdaptiveIconHelper.wrapToDirectIcon(drawable);
+            }
+        }
         mClipIconView.setIcon(drawable, iconOffset, lp, mIsOpening, usingCustomShape, dp);
         if (mIsOpening) {
             mClipIconView.setForegroundAlpha(mAppOpenIconAlpha);
@@ -635,9 +654,11 @@ public class FloatingIconView extends FrameLayout implements
 
         boolean isThemed = false;
         boolean usingCustomShape = false;
+        boolean disableAdaptive =
+                LauncherPrefsExt.isAdaptiveDisabled(l);
         if (btvIcon != null) {
             isThemed = btvIcon.isThemed();
-            usingCustomShape = (btvIcon.creationFlags & FLAG_CUSTOM_SHAPE) != 0;
+            usingCustomShape = !disableAdaptive && (btvIcon.creationFlags & FLAG_CUSTOM_SHAPE) != 0;
         }
 
         IconLoadResult result = new IconLoadResult(info, isThemed, usingCustomShape);

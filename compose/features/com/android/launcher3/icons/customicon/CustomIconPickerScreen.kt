@@ -21,6 +21,13 @@ import android.graphics.Bitmap
 import android.graphics.drawable.Drawable
 import android.os.UserHandle
 import android.widget.FrameLayout
+import com.android.axion.iconprovider.customicon.IconOverride
+import com.android.axion.iconprovider.customicon.IconOverrideRepository
+import com.android.axion.iconprovider.customicon.IconPackDrawableInfo
+import com.android.axion.iconprovider.customicon.IconPackDrawableResolver
+import com.android.axion.iconprovider.customicon.IconPackEnumerator
+import com.android.axion.iconprovider.customicon.IconPackInfo
+import com.android.launcher3.icons.IconChangeTracker
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -81,7 +88,6 @@ object CustomIconPickerScreen {
         appIcon: Drawable,
         user: UserHandle,
     ) {
-        val repository = IconOverrideRepository.INSTANCE.get(launcher)
         val host = AxComposeView(launcher).apply {
             layoutParams = FrameLayout.LayoutParams(
                 FrameLayout.LayoutParams.MATCH_PARENT,
@@ -103,7 +109,6 @@ object CustomIconPickerScreen {
                     appLabel = appLabel,
                     appIcon = appIcon,
                     user = user,
-                    repository = repository,
                     onDismiss = dismiss,
                 )
             }
@@ -117,7 +122,6 @@ private fun CustomIconPickerContent(
     appLabel: String,
     appIcon: Drawable,
     user: UserHandle,
-    repository: IconOverrideRepository,
     onDismiss: () -> Unit,
 ) {
     val context = LocalContext.current
@@ -128,10 +132,11 @@ private fun CustomIconPickerContent(
                 context = context,
                 appLabel = appLabel,
                 appIcon = appIcon,
-                hasOverride = repository.hasOverride(componentName),
+                hasOverride = IconOverrideRepository.hasOverride(context, componentName),
                 onPackSelected = { selectedPack = it },
                 onReset = {
-                    repository.clear(componentName, user)
+                    IconOverrideRepository.clearOverride(context, componentName)
+                    IconChangeTracker.INSTANCE.get(context).notifyIconChanged(componentName.packageName, user)
                     onDismiss()
                 },
             )
@@ -141,11 +146,12 @@ private fun CustomIconPickerContent(
                 pack = selectedPack!!,
                 onBack = { selectedPack = null },
                 onIconSelected = { drawableName ->
-                    repository.set(
+                    IconOverrideRepository.setOverride(
+                        context,
                         componentName,
                         IconOverride(selectedPack!!.packageName, drawableName),
-                        user,
                     )
+                    IconChangeTracker.INSTANCE.get(context).notifyIconChanged(componentName.packageName, user)
                     onDismiss()
                 },
             )

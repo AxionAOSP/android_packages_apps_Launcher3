@@ -18,9 +18,10 @@ package com.android.launcher3
 import android.content.Context
 import android.graphics.Color
 import androidx.core.graphics.ColorUtils
+import com.android.axion.iconloader.AdaptiveIconHelper
+import com.android.axion.iconloader.ThemedIconSettings
 import com.android.launcher3.LauncherPrefs.Companion.backedUpItem
 import com.android.launcher3.LauncherPrefs.Companion.nonRestorableItem
-import com.android.launcher3.icons.ThemedIconSettings
 import kotlin.math.roundToInt
 
 object LauncherPrefsExt {
@@ -196,6 +197,8 @@ object LauncherPrefsExt {
         backedUpItem("launcher_icon_overrides", "{}", EncryptionType.SECURE_SETTINGS)
     @JvmField val ALLAPPS_THEMED_ICONS =
         backedUpItem("pref_allapps_themed_icons", false, EncryptionType.SECURE_SETTINGS)
+    @JvmField val DISABLE_ADAPTIVE_ICONS =
+        backedUpItem("pref_disable_adaptive_icons", false, EncryptionType.SECURE_SETTINGS)
     @JvmField val DRAWER_OPEN_KEYBOARD =
         backedUpItem("pref_drawer_open_keyboard", false, EncryptionType.SECURE_SETTINGS)
     @JvmField val SHOW_DESKTOP_LABELS =
@@ -428,6 +431,7 @@ object LauncherPrefsExt {
         THEMED_ICON_COLOR_PRESET,
         ICON_OVERRIDES,
         ALLAPPS_THEMED_ICONS,
+        DISABLE_ADAPTIVE_ICONS,
         DRAWER_OPEN_KEYBOARD,
         SHOW_DESKTOP_LABELS,
         SHOW_DRAWER_LABELS,
@@ -501,4 +505,8 @@ object LauncherPrefsExt {
         )
         return ColorUtils.setAlphaComponent(color, alpha)
     }
+
+    @JvmStatic
+    fun isAdaptiveDisabled(context: Context): Boolean =
+        AdaptiveIconHelper.isAdaptiveDisabled(context)
 }

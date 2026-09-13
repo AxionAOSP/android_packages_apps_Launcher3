@@ -102,7 +102,11 @@ constructor(
                 LauncherPrefsExt.THEMED_ICONS_ENABLED.sharedPrefKey -> syncThemedIconState()
             }
         }
-        prefs.addListener(prefListener, PREF_ICON_SHAPE, LauncherPrefsExt.THEMED_ICONS_ENABLED)
+        prefs.addListener(
+            prefListener,
+            PREF_ICON_SHAPE,
+            LauncherPrefsExt.THEMED_ICONS_ENABLED,
+        )
         lifecycle.addCloseable(themePreference.forEach(mainExecutor) { verifyIconState() })
         syncThemedIconState()
         lifecycle.addCloseable {

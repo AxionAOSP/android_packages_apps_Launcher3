@@ -16,9 +16,7 @@
 
 package com.android.launcher3.shapes
 
-import com.android.launcher3.Flags as LauncherFlags
 import com.android.launcher3.R
-import com.android.systemui.shared.Flags
 
 object ShapesProvider {
     private const val CIRCLE_PATH = "M50 0A50 50,0,1,1,50 100A50 50,0,1,1,50 0"
@@ -51,13 +49,12 @@ object ShapesProvider {
     const val ROUNDED_RECT_KEY = "rounded_rect"
 
     val iconShapes: Array<IconShapeModel> =
-        if (Flags.newCustomizationPickerUi() && LauncherFlags.enableLauncherIconShapes()) {
-            arrayOf(
-                IconShapeModel(
-                    key = CIRCLE_KEY,
-                    titleId = R.string.circle_shape_title,
-                    pathString = CIRCLE_PATH,
-                ),
+        arrayOf(
+            IconShapeModel(
+                key = CIRCLE_KEY,
+                titleId = R.string.circle_shape_title,
+                pathString = CIRCLE_PATH,
+            ),
                 IconShapeModel(
                     key = SQUARE_KEY,
                     titleId = R.string.square_shape_title,
@@ -134,13 +131,4 @@ object ShapesProvider {
                     shapeRadius = 8f,
                 ),
             )
-        } else {
-            arrayOf(
-                IconShapeModel(
-                    key = CIRCLE_KEY,
-                    titleId = R.string.circle_shape_title,
-                    pathString = CIRCLE_PATH,
-                )
-            )
-        }
 }

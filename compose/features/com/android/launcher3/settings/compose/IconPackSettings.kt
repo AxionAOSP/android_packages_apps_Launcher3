@@ -16,9 +16,12 @@
 package com.android.launcher3.settings.compose
 
 import android.content.Context
+import android.graphics.Path
+import android.graphics.Path.Direction.CW
 import android.graphics.drawable.Drawable
 import androidx.annotation.StringRes
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -46,8 +49,13 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Path as ComposePath
+import androidx.compose.ui.graphics.asComposePath
+import androidx.compose.ui.graphics.drawscope.scale
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
@@ -55,28 +63,35 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.core.graphics.PathParser
+import java.util.concurrent.ConcurrentHashMap
 import com.android.axion.compose.color.AxColorSwatch
 import com.android.axion.compose.color.AxCustomColorSwatch
 import com.android.axion.compose.color.AxSplitColorSwatch
 import com.android.axion.compose.color.ColorPickerDialog
 import com.android.axion.compose.preferences.LocalPreferencePosition
 import com.android.axion.compose.preferences.PreferenceGroup
+import com.android.axion.compose.preferences.PrimarySwitchPreference
 import com.android.axion.compose.preferences.preferenceShape
 import com.android.axion.util.PackageManagerUtils
 import com.android.launcher3.Item
 import com.android.launcher3.LauncherPrefsExt
 import com.android.launcher3.R
 import com.android.launcher3.graphics.ThemeManager
+import com.android.axion.iconloader.ThemedIconSettings
 import com.android.launcher3.icons.IconChangeTracker
-import com.android.launcher3.icons.ThemedIconSettings
-import com.android.launcher3.icons.customicon.IconPackDrawableResolver
-import com.android.launcher3.icons.customicon.IconPackEnumerator
-import com.android.launcher3.icons.customicon.IconPackInfo
-import com.android.launcher3.icons.customicon.IconPackPreferenceStore
+import com.android.launcher3.icons.LauncherIcons
+import com.android.axion.iconprovider.customicon.IconPackDrawableResolver
+import com.android.axion.iconprovider.customicon.IconPackEnumerator
+import com.android.axion.iconprovider.customicon.IconPackInfo
+import com.android.axion.iconprovider.customicon.IconPackPreferenceStore
+import com.android.launcher3.shapes.ShapesProvider
+import com.android.launcher3.util.Executors.MODEL_EXECUTOR
 import com.android.launcher3.util.painterResource as drawablePainter
 
 @Composable
 internal fun IconSettingsScreen() {
+    val context = LocalContext.current
     val preview = rememberHomePreviewState()
     val previewKey = rememberIconPreviewKey()
     HomeSettingsPreview(
@@ -90,7 +105,15 @@ internal fun IconSettingsScreen() {
         extraKey = previewKey,
     )
 
-    val packs = rememberInstalledIconPacks()
+    val iconPackPreference = rememberLauncherPreference(
+        item = LauncherPrefsExt.ICON_PACK_PACKAGE,
+        read = { IconPackPreferenceStore.getIconPackPackage(context) },
+        write = { _, value ->
+            IconPackPreferenceStore.setIconPackPackage(context, value)
+        },
+    )
+    val isThirdPartyIconPack = iconPackPreference.value.isNotEmpty()
+
     val themedIconsPreference = rememberLauncherPreference(LauncherPrefsExt.THEMED_ICONS_ENABLED)
     var selectedSection by remember { mutableStateOf<IconSettingsSection?>(null) }
     val section = selectedSection ?: if (themedIconsPreference.value) {
@@ -98,14 +121,237 @@ internal fun IconSettingsScreen() {
     } else {
         IconSettingsSection.ICON_PACK
     }
-    IconSettingsSectionChips(section, onSectionChange = { selectedSection = it })
-    when (section) {
-        IconSettingsSection.ICON_PACK -> IconPackSourceGroup(packs)
+
+    val disableAdaptiveIconsPreference =
+        rememberLauncherPreference(LauncherPrefsExt.DISABLE_ADAPTIVE_ICONS)
+    val isAdaptiveDisabled = disableAdaptiveIconsPreference.value
+
+    val showAdaptiveToggle = section == IconSettingsSection.ICON_PACK && isThirdPartyIconPack
+
+    val packs = rememberInstalledIconPacks()
+    IconSettingsSectionChips(
+        section = section,
+        onSectionChange = { selectedSection = it },
+    )
+    val themedIconsEnabled = when (section) {
+        IconSettingsSection.ICON_PACK -> {
+            IconPackSourceGroup(packs)
+            false
+        }
         IconSettingsSection.THEMED_ICONS -> {
-            val themedIconsEnabled = ThemedIconSourceGroup(packs)
-            if (themedIconsEnabled) {
-                ThemedIconCustomizationGroup()
+            ThemedIconSourceGroup(packs)
+        }
+    }
+
+    val showIconShapes = section == IconSettingsSection.THEMED_ICONS || !isAdaptiveDisabled
+    if (showIconShapes) {
+        val shapePreference = rememberLauncherPreference(ThemeManager.PREF_ICON_SHAPE)
+        val shapes = ShapesProvider.iconShapes
+        val defaultMask = remember(context) {
+            val resId = context.resources.getIdentifier("config_icon_mask", "string", "android")
+            if (resId != 0) {
+                try {
+                    context.resources.getString(resId)
+                } catch (_: Exception) {
+                    ""
+                }
+            } else {
+                ""
             }
+        }
+        val shapeOptions = remember(shapes, defaultMask, context) {
+            buildList {
+                val defaultPath = if (defaultMask.isNotEmpty()) {
+                    defaultMask
+                } else {
+                    shapes.firstOrNull()?.pathString ?: ""
+                }
+                add(
+                    IconShapeOption(
+                        key = "",
+                        label = context.getString(R.string.icon_shape_system_default),
+                        pathString = defaultPath,
+                    )
+                )
+                shapes.forEach { shape ->
+                    add(
+                        IconShapeOption(
+                            key = shape.key,
+                            label = context.getString(shape.titleId),
+                            pathString = shape.pathString,
+                        )
+                    )
+                }
+            }
+        }
+
+        IconShapeGroup(
+            shapes = shapeOptions,
+            selectedKey = shapePreference.value,
+            enabled = true,
+            onShapeSelected = {
+                shapePreference.onChange(it)
+                IconChangeTracker.INSTANCE.get(context).notifyAllIconsChanged()
+            },
+        )
+    }
+
+    if (showAdaptiveToggle) {
+        val onAdaptiveToggleChanged = { disabled: Boolean ->
+            disableAdaptiveIconsPreference.onChange(disabled)
+            MODEL_EXECUTOR.execute { LauncherIcons.clearPool(context) }
+        }
+
+        PrimarySwitchPreference(
+            title = stringResource(R.string.pref_disable_adaptive_icons_title),
+            summary = stringResource(R.string.pref_disable_adaptive_icons_summary),
+            checked = isAdaptiveDisabled,
+            onCheckedChange = onAdaptiveToggleChanged,
+            onClick = { onAdaptiveToggleChanged(!isAdaptiveDisabled) },
+        )
+    }
+
+    if (section == IconSettingsSection.THEMED_ICONS && themedIconsEnabled) {
+        ThemedIconCustomizationGroup()
+    }
+}
+
+private data class IconShapeOption(
+    val key: String,
+    val label: String,
+    val pathString: String,
+)
+
+@Composable
+private fun IconShapeGroup(
+    shapes: List<IconShapeOption>,
+    selectedKey: String,
+    enabled: Boolean,
+    onShapeSelected: (String) -> Unit,
+) {
+    Text(
+        text = stringResource(R.string.icon_shape_title),
+        style = MaterialTheme.typography.titleMedium,
+        color = MaterialTheme.colorScheme.onSurface,
+        modifier = Modifier.padding(top = 8.dp, bottom = 4.dp),
+    )
+    IconShapeCardRow(
+        shapes = shapes,
+        selectedKey = selectedKey,
+        enabled = enabled,
+        onShapeSelected = onShapeSelected,
+    )
+}
+
+@Composable
+private fun IconShapeCardRow(
+    shapes: List<IconShapeOption>,
+    selectedKey: String,
+    enabled: Boolean,
+    onShapeSelected: (String) -> Unit,
+) {
+    LazyRow(
+        modifier = Modifier
+            .fillMaxWidth()
+            .then(if (!enabled) Modifier.alpha(0.38f) else Modifier),
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
+        contentPadding = PaddingValues(bottom = 4.dp),
+    ) {
+        items(shapes, key = { it.key }) { shape ->
+            IconShapeCard(
+                shape = shape,
+                selected = shape.key == selectedKey,
+                enabled = enabled,
+                onClick = { if (enabled) onShapeSelected(shape.key) },
+            )
+        }
+    }
+}
+
+@Composable
+private fun IconShapeCard(
+    shape: IconShapeOption,
+    selected: Boolean,
+    enabled: Boolean,
+    onClick: () -> Unit,
+) {
+    val cardShape = RoundedCornerShape(18.dp)
+    Surface(
+        onClick = onClick,
+        enabled = enabled,
+        shape = cardShape,
+        color = if (selected) {
+            MaterialTheme.colorScheme.primaryContainer
+        } else {
+            MaterialTheme.colorScheme.surfaceBright
+        },
+        contentColor = if (selected) {
+            MaterialTheme.colorScheme.onPrimaryContainer
+        } else {
+            MaterialTheme.colorScheme.onSurface
+        },
+        border = if (selected) {
+            null
+        } else {
+            BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
+        },
+        modifier = Modifier
+            .width(88.dp)
+            .height(96.dp),
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(horizontal = 6.dp, vertical = 8.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center,
+        ) {
+            ShapePreview(
+                pathString = shape.pathString,
+                tint = if (selected) {
+                    MaterialTheme.colorScheme.primary
+                } else {
+                    MaterialTheme.colorScheme.onSurfaceVariant
+                },
+                modifier = Modifier.size(36.dp),
+            )
+            Text(
+                text = shape.label,
+                style = MaterialTheme.typography.labelSmall,
+                textAlign = TextAlign.Center,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.padding(top = 6.dp),
+            )
+        }
+    }
+}
+
+private val shapePathCache = ConcurrentHashMap<String, ComposePath>()
+
+private fun getOrCreateComposePath(pathString: String): ComposePath {
+    val cached = shapePathCache[pathString]
+    if (cached != null) return cached
+    val parsed = try {
+        if (pathString.isNotEmpty()) PathParser.createPathFromPathData(pathString) else null
+    } catch (_: Exception) {
+        null
+    } ?: Path().apply { addOval(0f, 0f, 100f, 100f, CW) }
+    val result = parsed.asComposePath()
+    shapePathCache[pathString] = result
+    return result
+}
+
+@Composable
+private fun ShapePreview(
+    pathString: String,
+    tint: Color,
+    modifier: Modifier = Modifier,
+) {
+    val composePath = remember(pathString) { getOrCreateComposePath(pathString) }
+    Canvas(modifier = modifier) {
+        scale(scaleX = size.width / 100f, scaleY = size.height / 100f, pivot = Offset.Zero) {
+            drawPath(path = composePath, color = tint)
         }
     }
 }
@@ -116,8 +362,8 @@ private fun rememberIconPreviewKey(): String {
     val iconPackPreference = rememberLauncherPreference(
         item = LauncherPrefsExt.ICON_PACK_PACKAGE,
         read = { IconPackPreferenceStore.getIconPackPackage(context) },
-        write = { prefs, value ->
-            IconPackPreferenceStore.setIconPackPackage(context, prefs, value)
+        write = { _, value ->
+            IconPackPreferenceStore.setIconPackPackage(context, value)
         },
     )
     val themedIconsPreference = rememberLauncherPreference(LauncherPrefsExt.THEMED_ICONS_ENABLED)
@@ -138,7 +384,10 @@ private fun rememberIconPreviewKey(): String {
     val foregroundPreference = rememberLauncherPreference(
         LauncherPrefsExt.THEMED_ICON_FOREGROUND_COLOR,
     )
-    return listOf(
+    val shapePreference = rememberLauncherPreference(ThemeManager.PREF_ICON_SHAPE)
+    val disableAdaptiveIconsPreference =
+        rememberLauncherPreference(LauncherPrefsExt.DISABLE_ADAPTIVE_ICONS)
+    val keys = listOf(
         iconPackPreference.value,
         themedIconsPreference.value,
         themedPackPreference.value,
@@ -148,7 +397,10 @@ private fun rememberIconPreviewKey(): String {
         backgroundPreference.value,
         foregroundSourcePreference.value,
         foregroundPreference.value,
-    ).joinToString(separator = ":")
+        shapePreference.value,
+        disableAdaptiveIconsPreference.value,
+    )
+    return keys.joinToString(separator = ":")
 }
 
 @Composable
@@ -176,8 +428,8 @@ private fun IconPackSourceGroup(packs: List<IconPackInfo>) {
     val iconPackPreference = rememberLauncherPreference(
         item = LauncherPrefsExt.ICON_PACK_PACKAGE,
         read = { IconPackPreferenceStore.getIconPackPackage(context) },
-        write = { prefs, value ->
-            IconPackPreferenceStore.setIconPackPackage(context, prefs, value)
+        write = { _, value ->
+            IconPackPreferenceStore.setIconPackPackage(context, value)
         },
     )
     val themedIconsPreference = rememberLauncherPreference(LauncherPrefsExt.THEMED_ICONS_ENABLED)
@@ -217,8 +469,8 @@ private fun ThemedIconSourceGroup(packs: List<IconPackInfo>): Boolean {
     val iconPackPreference = rememberLauncherPreference(
         item = LauncherPrefsExt.ICON_PACK_PACKAGE,
         read = { IconPackPreferenceStore.getIconPackPackage(context) },
-        write = { prefs, value ->
-            IconPackPreferenceStore.setIconPackPackage(context, prefs, value)
+        write = { _, value ->
+            IconPackPreferenceStore.setIconPackPackage(context, value)
         },
     )
     val systemIcon = rememberSystemIcon()

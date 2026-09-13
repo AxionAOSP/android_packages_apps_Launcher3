@@ -26,6 +26,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.android.launcher3.Flags;
+import com.android.launcher3.LauncherPrefsExt;
 import com.android.launcher3.graphics.ThemeManager;
 import com.android.launcher3.icons.BitmapInfo;
 import com.android.launcher3.icons.BitmapInfo.DrawableCreationFlags;
@@ -325,7 +326,8 @@ public abstract class ItemInfoWithIcon extends ItemInfo {
     public FastBitmapDrawable newIcon(Context context, @DrawableCreationFlags int creationFlags) {
         ThemeManager themeManager = ThemeManager.INSTANCE.get(context);
         IconShape iconShape = null;
-        if (supportsCustomShapes(creationFlags)) {
+        if (!LauncherPrefsExt.isAdaptiveDisabled(context)
+                && supportsCustomShapes(creationFlags)) {
             iconShape = themeManager.getIconShapeData().getValue();
         }
         if (!themeManager.isIconThemeEnabled()) {
@@ -341,7 +343,6 @@ public abstract class ItemInfoWithIcon extends ItemInfo {
      */
     public boolean supportsCustomShapes(@DrawableCreationFlags int creationFlags) {
         return Flags.enableLauncherIconShapes()
-                && (creationFlags & FLAG_THEMED) != 0
                 && bitmap.isFullBleed();
     }
 

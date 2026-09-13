@@ -33,8 +33,9 @@ import com.android.launcher3.concurrent.annotations.LightweightBackground
 import com.android.launcher3.concurrent.annotations.LightweightBackgroundPriority
 import com.android.launcher3.dagger.ApplicationContext
 import com.android.launcher3.dagger.LauncherAppComponent
+import com.android.axion.iconprovider.ThemedIconPackLoader
+import com.android.axion.iconprovider.customicon.IconPackDrawableResolver
 import com.android.launcher3.dagger.LauncherAppSingleton
-import com.android.launcher3.icons.customicon.IconPackDrawableResolver
 import com.android.launcher3.pm.UserCache
 import com.android.launcher3.util.DaggerSingletonObject
 import com.android.launcher3.util.DaggerSingletonTracker
@@ -79,6 +80,7 @@ constructor(
         val prefListener = LauncherPrefChangeListener { key ->
             if (ICON_PREF_KEYS.contains(key)) {
                 IconPackDrawableResolver.clearCache(null)
+                ThemedIconPackLoader.clearCache()
                 dispatchAllIconsChanged()
             }
         }
@@ -94,6 +96,7 @@ constructor(
             LauncherPrefsExt.THEMED_ICON_FOREGROUND_COLOR_SOURCE,
             LauncherPrefsExt.THEMED_ICON_COLOR_PRESET,
             LauncherPrefsExt.ICON_OVERRIDES,
+            LauncherPrefsExt.DISABLE_ADAPTIVE_ICONS,
         )
         lifecycleTracker.addCloseable {
             prefs.removeListener(
@@ -108,6 +111,7 @@ constructor(
                 LauncherPrefsExt.THEMED_ICON_FOREGROUND_COLOR_SOURCE,
                 LauncherPrefsExt.THEMED_ICON_COLOR_PRESET,
                 LauncherPrefsExt.ICON_OVERRIDES,
+                LauncherPrefsExt.DISABLE_ADAPTIVE_ICONS,
             )
         }
     }
@@ -116,6 +120,7 @@ constructor(
         when (intent.action) {
             ACTION_THEME_CHANGED -> {
                 IconPackDrawableResolver.clearCache(null)
+                ThemedIconPackLoader.clearCache()
                 dispatchAllIconsChanged()
             }
 
@@ -161,6 +166,7 @@ constructor(
             LauncherPrefsExt.THEMED_ICON_FOREGROUND_COLOR_SOURCE.sharedPrefKey,
             LauncherPrefsExt.THEMED_ICON_COLOR_PRESET.sharedPrefKey,
             LauncherPrefsExt.ICON_OVERRIDES.sharedPrefKey,
+            LauncherPrefsExt.DISABLE_ADAPTIVE_ICONS.sharedPrefKey,
         )
 
         private fun Context.parseComponentOrNull(resId: Int): ComponentName? {

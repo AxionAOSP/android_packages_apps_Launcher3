@@ -45,7 +45,6 @@ import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
 import android.animation.ObjectAnimator;
 import android.content.Context;
-import android.content.SharedPreferences;
 import android.content.res.ColorStateList;
 import android.content.res.TypedArray;
 import android.graphics.Canvas;
@@ -602,8 +601,9 @@ public class BubbleTextView extends TextView implements ItemInfoUpdateReceiver,
         if (mDisplay == DISPLAY_FOLDER) {
             return mThemeAllAppsIcons || !mIsInAllAppsFolder;
         }
-        return mDisplay == DISPLAY_WORKSPACE || mDisplay == DISPLAY_TASKBAR
-                || (mThemeAllAppsIcons && mDisplay == DISPLAY_ALL_APPS);
+        boolean themeAllApps = mThemeAllAppsIcons
+                && (mDisplay == DISPLAY_ALL_APPS || mDisplay == DISPLAY_PREDICTION_ROW);
+        return mDisplay == DISPLAY_WORKSPACE || mDisplay == DISPLAY_TASKBAR || themeAllApps;
     }
 
     /**

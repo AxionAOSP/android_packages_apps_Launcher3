@@ -19,6 +19,9 @@ package com.android.launcher3;
 import static com.android.launcher3.Flags.enableMouseInteractionChanges;
 import static com.android.launcher3.Flags.injectableModelItems;
 import static com.android.launcher3.LauncherSettings.Favorites.CONTAINER_PRIVATESPACE;
+import static com.android.launcher3.LauncherSettings.Favorites.ITEM_TYPE_APPLICATION;
+import static com.android.launcher3.LauncherSettings.Favorites.ITEM_TYPE_DEEP_SHORTCUT;
+import static com.android.launcher3.LauncherSettings.Favorites.ITEM_TYPE_FOLDER;
 import static com.android.launcher3.folder.ClippedFolderIconLayoutRule.ICON_OVERLAP_FACTOR;
 import static com.android.launcher3.graphics.ShapeDelegate.DEFAULT_PATH_SIZE;
 import static com.android.launcher3.icons.BitmapInfo.FLAG_THEMED;
@@ -87,8 +90,9 @@ import com.android.launcher3.icons.BitmapInfo;
 import com.android.launcher3.icons.CacheableShortcutInfo;
 import com.android.launcher3.icons.IconShape;
 import com.android.launcher3.icons.IconThemeController;
+import com.android.axion.iconloader.AdaptiveIconHelper;
+import com.android.axion.iconprovider.AxIconEngine;
 import com.android.launcher3.icons.LauncherIcons;
-import com.android.launcher3.icons.customicon.IconPackPreferenceStore;
 import com.android.launcher3.model.data.ItemInfo;
 import com.android.launcher3.model.data.ItemInfoWithIcon;
 import com.android.launcher3.pm.ShortcutConfigActivityInfo;
@@ -680,50 +684,58 @@ public final class Utilities {
             badge = iiwi.bitmap.getBadgeDrawable(context, useTheme);
         }
 
-        if (info instanceof PendingAddShortcutInfo) {
-            ShortcutConfigActivityInfo activityInfo =
-                    ((PendingAddShortcutInfo) info).getActivityInfo(context);
-            mainIcon = activityInfo.getFullResIcon(appState.getIconCache());
-        } else if (info.itemType == LauncherSettings.Favorites.ITEM_TYPE_APPLICATION) {
-            LauncherActivityInfo activityInfo = context.getSystemService(LauncherApps.class)
-                    .resolveActivity(info.getIntent(), info.user);
-            if (activityInfo == null) {
-                return null;
-            }
-            if (info instanceof ItemInfoWithIcon && info.container == CONTAINER_PRIVATESPACE) {
-                mainIcon = ((ItemInfoWithIcon) info).bitmap.getBadgeDrawable(context, useTheme);
-            } else {
-                mainIcon = appState.getIconCache().getFullResIcon(activityInfo.getActivityInfo());
-            }
-        } else if (info.itemType == LauncherSettings.Favorites.ITEM_TYPE_DEEP_SHORTCUT) {
-            List<ShortcutInfo> siList = ShortcutKey.fromItemInfo(info)
-                    .buildRequest(context)
-                    .query(ShortcutRequest.ALL);
-            if (siList.isEmpty()) {
-                return null;
-            } else {
-                ShortcutInfo si = siList.get(0);
-                mainIcon = CacheableShortcutInfo.getIcon(context, si,
-                        appState.getInvariantDeviceProfile().fillResIconDpi);
-                // Only fetch badge if the icon is on workspace
-                if (info.id != ItemInfo.NO_ID && badge == null) {
-                    ThemeManager themeManager = ThemeManager.INSTANCE.get(context);
-                    BitmapInfo badgeInfo = appState.getIconCache().getShortcutInfoBadge(si);
-                    IconShape shape = themeManager.getIconShapeData().getValue();
+        if (info.getTargetComponent() != null) {
+            mainIcon = AxIconEngine.resolveCustomOrPackIcon(
+                    context, info.getTargetComponent(),
+                    appState.getInvariantDeviceProfile().fillResIconDpi);
+        }
 
-                    int flags = ThemeManager.INSTANCE.get(context).isIconThemeEnabled()
-                            ? FLAG_THEMED : 0;
-                    badge = badgeInfo.newIcon(context, flags, shape);
+        if (mainIcon == null) {
+            if (info instanceof PendingAddShortcutInfo) {
+                ShortcutConfigActivityInfo activityInfo =
+                        ((PendingAddShortcutInfo) info).getActivityInfo(context);
+                mainIcon = activityInfo.getFullResIcon(appState.getIconCache());
+            } else if (info.itemType == ITEM_TYPE_APPLICATION) {
+                LauncherActivityInfo activityInfo = context.getSystemService(LauncherApps.class)
+                        .resolveActivity(info.getIntent(), info.user);
+                if (activityInfo == null) {
+                    return null;
                 }
+                if (info instanceof ItemInfoWithIcon && info.container == CONTAINER_PRIVATESPACE) {
+                    mainIcon = ((ItemInfoWithIcon) info).bitmap.getBadgeDrawable(context, useTheme);
+                } else {
+                    mainIcon = appState.getIconCache().getFullResIcon(activityInfo.getActivityInfo());
+                }
+            } else if (info.itemType == ITEM_TYPE_DEEP_SHORTCUT) {
+                List<ShortcutInfo> siList = ShortcutKey.fromItemInfo(info)
+                        .buildRequest(context)
+                        .query(ShortcutRequest.ALL);
+                if (siList.isEmpty()) {
+                    return null;
+                } else {
+                    ShortcutInfo si = siList.get(0);
+                    mainIcon = CacheableShortcutInfo.getIcon(context, si,
+                            appState.getInvariantDeviceProfile().fillResIconDpi);
+                    // Only fetch badge if the icon is on workspace
+                    if (info.id != ItemInfo.NO_ID && badge == null) {
+                        ThemeManager themeManager = ThemeManager.INSTANCE.get(context);
+                        BitmapInfo badgeInfo = appState.getIconCache().getShortcutInfoBadge(si);
+                        IconShape shape = themeManager.getIconShapeData().getValue();
+
+                        int flags = ThemeManager.INSTANCE.get(context).isIconThemeEnabled()
+                                ? FLAG_THEMED : 0;
+                        badge = badgeInfo.newIcon(context, flags, shape);
+                    }
+                }
+            } else if (info.itemType == ITEM_TYPE_FOLDER) {
+                FolderAdaptiveIcon icon = FolderAdaptiveIcon.createFolderAdaptiveIcon(
+                        context, info.id, new Point(width, height));
+                if (icon == null) {
+                    return null;
+                }
+                mainIcon =  icon;
+                badge = icon.getBadge();
             }
-        } else if (info.itemType == LauncherSettings.Favorites.ITEM_TYPE_FOLDER) {
-            FolderAdaptiveIcon icon = FolderAdaptiveIcon.createFolderAdaptiveIcon(
-                    context, info.id, new Point(width, height));
-            if (icon == null) {
-                return null;
-            }
-            mainIcon =  icon;
-            badge = icon.getBadge();
         }
 
         if (mainIcon == null) {
@@ -733,7 +745,7 @@ public final class Utilities {
         if (mainIcon instanceof AdaptiveIconDrawable aid) {
             result = aid;
         } else {
-            if (IconPackPreferenceStore.hasAnyIconCustomization(context)) {
+            if (AdaptiveIconHelper.isAdaptiveDisabled(context)) {
                 return null;
             }
             // Wrap the main icon in AID
@@ -746,15 +758,16 @@ public final class Utilities {
         if (ATLEAST_T && useTheme) {
             IconThemeController themeController =
                     ThemeManager.INSTANCE.get(context).getThemeController();
-            if (themeController != null) {
-                result = themeController.createThemedAdaptiveIcon(
-                        context,
-                        result,
-                        info instanceof ItemInfoWithIcon iiwi ? iiwi.bitmap : null);
-                if (result == null) {
-                    return null;
-                }
+            if (themeController == null) {
+                return null;
             }
+            BitmapInfo bitmapInfo = info instanceof ItemInfoWithIcon iiwi ? iiwi.bitmap : null;
+            AdaptiveIconDrawable themed = themeController.createThemedAdaptiveIcon(
+                    context, result, bitmapInfo);
+            if (themed == null || themed == result) {
+                return null;
+            }
+            result = themed;
         }
 
         if (badge == null) {

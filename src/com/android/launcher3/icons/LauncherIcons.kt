@@ -16,13 +16,18 @@
 package com.android.launcher3.icons
 
 import android.content.Context
+import android.graphics.drawable.AdaptiveIconDrawable
+import android.graphics.drawable.Drawable
 import android.os.UserHandle
+import com.android.axion.iconloader.AdaptiveIconHelper
 import com.android.launcher3.Flags
 import com.android.launcher3.InvariantDeviceProfile
+import com.android.launcher3.LauncherPrefsExt
 import com.android.launcher3.dagger.ApplicationContext
 import com.android.launcher3.dagger.LauncherAppSingleton
 import com.android.launcher3.dagger.LauncherComponentProvider.appComponent
 import com.android.launcher3.graphics.ThemeManager
+import com.android.launcher3.icons.BaseIconFactory.IconOptions
 import com.android.launcher3.pm.UserCache
 import com.android.launcher3.util.UserIconInfo
 import dagger.assisted.Assisted
@@ -48,10 +53,22 @@ internal constructor(
         context,
         idp.fillResIconDpi,
         idp.iconBitmapSize,
-        /* drawFullBleedIcons */ Flags.enableLauncherIconShapes(),
+        Flags.enableLauncherIconShapes() && !LauncherPrefsExt.isAdaptiveDisabled(context),
         themeManager.themeController,
     ),
     AutoCloseable {
+
+    override fun createBadgedIconBitmap(icon: Drawable?, options: IconOptions): BitmapInfo {
+        if (AdaptiveIconHelper.isAdaptiveDisabled(context)) {
+            options.setWrapNonAdaptiveIcon(false)
+            options.setDrawFullBleed(false)
+            if (icon is AdaptiveIconDrawable && AdaptiveIconHelper.canUnwrapAdaptiveIcon(icon)) {
+                val directIcon = AdaptiveIconHelper.wrapToDirectIcon(icon)
+                return super.createBadgedIconBitmap(directIcon, options)
+            }
+        }
+        return super.createBadgedIconBitmap(icon, options)
+    }
 
     /** Recycles a LauncherIcons that may be in-use. */
     fun recycle() {

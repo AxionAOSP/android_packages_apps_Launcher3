@@ -88,6 +88,7 @@ final class AxClipIconView extends ClipIconView {
                     0,
                     foregroundScale,
                     foregroundAlpha);
+            setForegroundAlpha(foregroundAlpha);
         } finally {
             mHomeGestureUpdate = false;
         }

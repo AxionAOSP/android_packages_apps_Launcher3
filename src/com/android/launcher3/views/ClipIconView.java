@@ -43,14 +43,15 @@ import android.view.ViewOutlineProvider;
 import androidx.annotation.Nullable;
 import androidx.core.util.Consumer;
 
+import com.android.axion.iconloader.AdaptiveIconHelper;
 import com.android.launcher3.DeviceProfile;
 import com.android.launcher3.Flags;
+import com.android.launcher3.LauncherPrefsExt;
 import com.android.launcher3.R;
 import com.android.launcher3.Utilities;
 import com.android.launcher3.dragndrop.FolderAdaptiveIcon;
 import com.android.launcher3.graphics.ShapeDelegate;
 import com.android.launcher3.graphics.ThemeManager;
-import com.android.launcher3.icons.IconShape;
 
 /**
  * A view used to draw both layers of an {@link AdaptiveIconDrawable}.
@@ -237,6 +238,10 @@ public class ClipIconView extends View implements ClipPathView {
         }
     }
 
+    boolean isAdaptiveIcon() {
+        return mIsAdaptiveIcon;
+    }
+
     protected boolean shouldSkipShapeReveal() {
         return false;
     }
@@ -282,7 +287,10 @@ public class ClipIconView extends View implements ClipPathView {
      */
     public void setIcon(@Nullable Drawable drawable, int iconOffset, MarginLayoutParams lp,
             boolean isOpening, boolean usingCustomShape, DeviceProfile dp) {
-        mIsAdaptiveIcon = drawable instanceof AdaptiveIconDrawable;
+        boolean disableAdaptive =
+                LauncherPrefsExt.isAdaptiveDisabled(getContext());
+        mIsAdaptiveIcon = drawable instanceof AdaptiveIconDrawable
+                && (!disableAdaptive || !AdaptiveIconHelper.canUnwrapAdaptiveIcon((AdaptiveIconDrawable) drawable));
         if (mIsAdaptiveIcon) {
             mIsFolderIcon = drawable instanceof FolderAdaptiveIcon;
             final ThemeManager themeManager = ThemeManager.INSTANCE.get(getContext());
@@ -358,6 +366,10 @@ public class ClipIconView extends View implements ClipPathView {
             mIsFolderIcon = false;
             setBackground(drawable);
             setClipToOutline(false);
+            int left = mIsRtl
+                    ? dp.getDeviceProperties().getWidthPx() - lp.getMarginStart() - lp.width
+                    : lp.leftMargin;
+            layout(left, lp.topMargin, left + lp.width, lp.topMargin + lp.height);
         }
 
         invalidate();

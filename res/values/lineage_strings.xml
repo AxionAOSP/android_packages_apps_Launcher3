@@ -321,4 +321,8 @@
     <string name="custom_icon_search_hint">Search icons</string>
     <string name="custom_icon_no_drawables">This icon pack does not expose selectable icons</string>
     <string name="custom_icon_no_search_results">No matching icons</string>
+    <string name="pref_disable_adaptive_icons_title">Disable adaptive icons</string>
+    <string name="pref_disable_adaptive_icons_summary">Disable adaptive icons. This will affect icon shapes and custom shape masking.</string>
+    <string name="icon_shape_title">Icon shape</string>
+    <string name="icon_shape_system_default">System default</string>
 </resources>

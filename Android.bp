@@ -436,6 +436,7 @@ android_library {
     static_libs: [
         "LauncherPluginLib",
         "ax_blur",
+        "ax_icon_provider",
         "ax_preferences",
         "ax_utils",
         "launcher_quickstep_log_protos_lite",

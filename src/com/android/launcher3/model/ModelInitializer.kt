@@ -192,6 +192,7 @@ constructor(
     @WorkerThread
     private fun onAppIconChanged(model: LauncherModel, event: PackageUserKey) {
         if (event.mPackageName.isNullOrEmpty()) {
+            iconCache.clearMemoryCache()
             model.forceReload()
             return
         }
