@@ -19,6 +19,7 @@ import android.content.Context;
 import android.graphics.Matrix;
 import android.graphics.Rect;
 
+import com.android.launcher3.DeviceProfile;
 import com.android.launcher3.Utilities;
 
 final class AxTaskViewSimulatorExt {
@@ -48,6 +49,19 @@ final class AxTaskViewSimulatorExt {
 
     void setSplit(boolean split) {
         mSplit = split;
+    }
+
+    void adjustTaskRect(Rect taskRect, DeviceProfile dp) {
+        if (mDesktop || dp.getDeviceProperties().isTablet()) {
+            return;
+        }
+        int screenWidth = dp.getDeviceProperties().getWidthPx();
+        int screenHeight = dp.getDeviceProperties().getHeightPx();
+        int targetWidth = Math.round(screenWidth * 0.63f);
+        int targetHeight = Math.round(screenHeight * 0.62f);
+        int left = (screenWidth - targetWidth) / 2;
+        int top = taskRect.centerY() - targetHeight / 2;
+        taskRect.set(left, top, left + targetWidth, top + targetHeight);
     }
 
     void setStackTransform(float scale, float translationX, float translationY, float alpha) {

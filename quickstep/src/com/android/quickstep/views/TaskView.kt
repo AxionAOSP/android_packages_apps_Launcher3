@@ -2183,12 +2183,20 @@ constructor(
 
     fun getAxStackScale(): Float = axStackTransform.getScale()
 
+    private var axStackIconElevation = 0f
+
     fun setAxStackIconElevation(elevation: Float) {
+        if (kotlin.math.abs(axStackIconElevation - elevation) <= 0.05f) {
+            return
+        }
+        axStackIconElevation = elevation
         taskContainers.forEach {
             it.iconView.asView().elevation = elevation
         }
         lockBadgeView?.elevation = elevation
     }
+
+    fun getAxStackIconElevation(): Float = axStackIconElevation
 
     fun getAxStackTranslationX(): Float = axStackTransform.getTranslationX()
 
@@ -2227,25 +2235,25 @@ constructor(
     private fun hasAxStackTransform(): Boolean = axStackTransform.isActive()
 
     private fun applyAxStackDepth() {
-        elevation = axStackTransform.getAppliedDepth(fullscreenProgress) * axStackElevationScale
+        val targetElevation = axStackTransform.getAppliedDepth(fullscreenProgress) * axStackElevationScale
+        if (kotlin.math.abs(elevation - targetElevation) > 0.05f) {
+            elevation = targetElevation
+        }
     }
 
     private fun applyAxStackAlpha() {
         val alpha = axStackTransform.getAppliedAlpha(fullscreenProgress)
+        appliedAxStackAlpha = alpha
         if (alpha <= 0f) {
-            appliedAxStackAlpha = alpha
-            if (!axStackHidden && visibility != GONE) {
-                visibility = GONE
+            if (!axStackHidden) {
+                visibility = INVISIBLE
                 axStackHidden = true
             }
-        } else {
-            if (axStackHidden) {
-                if (visibility != VISIBLE) {
-                    visibility = VISIBLE
-                }
-                axStackHidden = false
-            }
-            appliedAxStackAlpha = alpha
+            return
+        }
+        if (axStackHidden) {
+            visibility = VISIBLE
+            axStackHidden = false
         }
     }
 

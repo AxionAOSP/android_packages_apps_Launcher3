@@ -218,6 +218,7 @@ public class TaskViewSimulator implements TransformParams.BuilderProxy {
             }
         } else {
             mTaskRect.set(mFullTaskSize);
+            mAxExt.adjustTaskRect(mTaskRect, mDp);
         }
     }
 
@@ -496,7 +497,7 @@ public class TaskViewSimulator implements TransformParams.BuilderProxy {
                 calculateDesktopTaskCropRect();
             }
         }
-        mAxExt.applyStackScale(mMatrix, mFullTaskSize, fullScreenProgress);
+        mAxExt.applyStackScale(mMatrix, mTaskRect, fullScreenProgress);
 
         mOrientationState.getOrientationHandler().setPrimary(mMatrix, MATRIX_POST_TRANSLATE,
                 taskPrimaryTranslation.value);

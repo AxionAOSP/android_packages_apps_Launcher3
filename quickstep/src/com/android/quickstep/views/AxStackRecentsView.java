@@ -16,6 +16,11 @@
 package com.android.quickstep.views;
 
 import static com.android.launcher3.PagedView.INVALID_PAGE;
+import static com.android.quickstep.GestureState.GestureEndTarget.HOME;
+import static com.android.quickstep.GestureState.GestureEndTarget.RECENTS;
+import static com.android.quickstep.GestureState.GestureEndTarget.REJECT_HOME;
+
+import com.android.quickstep.GestureState.GestureEndTarget;
 
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
@@ -23,7 +28,6 @@ import android.animation.AnimatorSet;
 import android.animation.ValueAnimator;
 import android.content.Context;
 import android.graphics.Rect;
-import android.util.ArrayMap;
 import android.util.ArraySet;
 import android.util.AttributeSet;
 import android.view.Display;
@@ -33,12 +37,12 @@ import android.view.View;
 import androidx.annotation.Nullable;
 
 import com.android.app.animation.Interpolators;
+import com.android.launcher3.DeviceProfile;
 import com.android.launcher3.R;
 import com.android.launcher3.Utilities;
 import com.android.launcher3.statehandlers.DepthController;
 import com.android.launcher3.statemanager.BaseState;
 import com.android.launcher3.statemanager.StatefulContainer;
-import com.android.quickstep.GestureState;
 import com.android.quickstep.RecentsAnimationController;
 import com.android.quickstep.RecentsAnimationTargets;
 import com.android.quickstep.RemoteTargetGluer.RemoteTargetHandle;
@@ -48,16 +52,21 @@ import com.android.quickstep.util.AxAnimationEngine;
 import com.android.quickstep.util.AxWallpaperZoom;
 import com.android.quickstep.util.GroupTask;
 import com.android.quickstep.util.TaskViewSimulator;
+import com.android.quickstep.views.AxStackLayout;
+import com.android.quickstep.views.DesktopTaskView;
+import com.android.quickstep.views.TaskView;
 import com.android.wm.shell.shared.GroupedTaskInfo;
 
 public abstract class AxStackRecentsView<
         CONTAINER_TYPE extends Context & RecentsViewContainer & StatefulContainer<STATE_TYPE>,
         STATE_TYPE extends BaseState<STATE_TYPE>> extends RecentsView<CONTAINER_TYPE, STATE_TYPE> {
     private static final float MIN_SIZE = 1f;
-    private static final float MAX_STACK_DEPTH = 0.05f;
-    private static final float MAX_STACK_TILT = 8f;
-    private static final float TASK_DEPTH = 0.001f;
+    private static final float MAX_STACK_DEPTH = 1f;
+    private static final float MAX_STACK_TILT = 2.5f;
+    private static final float TASK_DEPTH = 0.05f;
     private static final long STACK_ENTRANCE_DURATION_MS = 320L;
+    private static final long STACK_CHIP_FADE_OUT_DURATION_MS = 150L;
+    private static final long STACK_CHIP_FADE_IN_DURATION_MS = 200L;
     private static final float HOME_ENTRANCE_STAGGER = 0.1f;
     private static final String TRACE = "stack";
 
@@ -66,7 +75,6 @@ public abstract class AxStackRecentsView<
     private final AxStackLayout.Transform mStackTransform = new AxStackLayout.Transform();
     private final Rect mStackTaskHitRect = new Rect();
     private final ArraySet<TaskView> mLaunchSiblings = new ArraySet<>();
-    private final ArrayMap<TaskView, Float> mStackChipMotionBaseAlpha = new ArrayMap<>();
 
     private boolean mOverviewEnabled;
     private boolean mGestureActive;
@@ -76,13 +84,12 @@ public abstract class AxStackRecentsView<
     private boolean mStackEntranceActive;
     private boolean mStackEntranceFromHome;
     private float mStackEntranceProgress;
-    private boolean mStackChipTouchActive;
     private boolean mStackChipMotionActive;
     private float mStackChipMotionFadeProgress = 1f;
     @Nullable
     private ValueAnimator mStackEntranceAnimation;
     @Nullable
-    private ValueAnimator mStackChipFadeOutAnimation;
+    private ValueAnimator mStackChipMotionAnimator;
     @Nullable
     private TaskView mLaunchTask;
     @Nullable
@@ -146,13 +153,12 @@ public abstract class AxStackRecentsView<
 
     @Override
     public void onGestureAnimationEnd() {
-        GestureState.GestureEndTarget endTarget = mCurrentGestureEndTarget;
+        GestureEndTarget endTarget = mCurrentGestureEndTarget;
         AxAnimationEngine.trace(TRACE, "gestureEnd view=" + id(this)
                 + " target=" + endTarget);
         super.onGestureAnimationEnd();
         mGestureActive = false;
-        if (endTarget != GestureState.GestureEndTarget.HOME
-                && endTarget != GestureState.GestureEndTarget.REJECT_HOME) {
+        if (endTarget != HOME && endTarget != REJECT_HOME) {
             updateCurveProperties();
         } else {
             setRecentsWallpaperZoomOverride(Float.NaN);
@@ -163,13 +169,13 @@ public abstract class AxStackRecentsView<
 
     @Override
     public void onPrepareGestureEndAnimation(AnimatorSet animatorSet,
-            GestureState.GestureEndTarget endTarget, RemoteTargetHandle[] remoteTargetHandles,
+            GestureEndTarget endTarget, RemoteTargetHandle[] remoteTargetHandles,
             boolean isHandlingAtomicEvent) {
         super.onPrepareGestureEndAnimation(
                 animatorSet, endTarget, remoteTargetHandles, isHandlingAtomicEvent);
         AxAnimationEngine.trace(TRACE, "prepareEnd view=" + id(this)
                 + " target=" + endTarget + " handles=" + count(remoteTargetHandles));
-        if (endTarget == GestureState.GestureEndTarget.RECENTS) {
+        if (endTarget == RECENTS) {
             setRecentsWallpaperZoomOverride(0f);
             SystemUiProxy systemUiProxy = SystemUiProxy.INSTANCE.get(getContext());
             animatorSet.addListener(new AnimatorListenerAdapter() {
@@ -189,7 +195,6 @@ public abstract class AxStackRecentsView<
     public void reset() {
         mOverviewEnabled = false;
         mGestureActive = false;
-        mStackChipTouchActive = false;
         clearStackChipMotion();
         clearDismissDragPreview();
         setRecentsWallpaperZoomOverride(Float.NaN);
@@ -203,7 +208,6 @@ public abstract class AxStackRecentsView<
     protected void onDetachedFromWindow() {
         mOverviewEnabled = false;
         mGestureActive = false;
-        mStackChipTouchActive = false;
         clearStackChipMotion();
         clearDismissDragPreview();
         setRecentsWallpaperZoomOverride(Float.NaN);
@@ -227,28 +231,10 @@ public abstract class AxStackRecentsView<
 
     @Override
     public boolean onInterceptTouchEvent(MotionEvent ev) {
-        int action = ev.getActionMasked();
-        if (action == MotionEvent.ACTION_DOWN) {
-            mStackChipTouchActive = true;
-            updateCurveProperties();
+        if (ev.getActionMasked() == MotionEvent.ACTION_DOWN) {
+            cancelStackEntranceAnimation();
         }
-        boolean intercepted = super.onInterceptTouchEvent(ev);
-        if (action == MotionEvent.ACTION_UP || action == MotionEvent.ACTION_CANCEL) {
-            mStackChipTouchActive = false;
-            postOnAnimation(this::updateCurveProperties);
-        }
-        return intercepted;
-    }
-
-    @Override
-    public boolean onTouchEvent(MotionEvent ev) {
-        boolean handled = super.onTouchEvent(ev);
-        int action = ev.getActionMasked();
-        if (action == MotionEvent.ACTION_UP || action == MotionEvent.ACTION_CANCEL) {
-            mStackChipTouchActive = false;
-            updateCurveProperties();
-        }
-        return handled;
+        return super.onInterceptTouchEvent(ev);
     }
 
     @Override
@@ -302,12 +288,36 @@ public abstract class AxStackRecentsView<
     }
 
     @Override
+    public void getTaskSize(Rect outRect) {
+        super.getTaskSize(outRect);
+        DeviceProfile dp = mContainer.getDeviceProfile();
+        if (dp.getDeviceProperties().isTablet() || mContainer.getDisplayId() != Display.DEFAULT_DISPLAY) {
+            return;
+        }
+        int screenWidth = dp.getDeviceProperties().getWidthPx();
+        int screenHeight = dp.getDeviceProperties().getHeightPx();
+        int targetWidth = Math.round(screenWidth * 0.63f);
+        int targetHeight = Math.round(screenHeight * 0.62f);
+        int left = (screenWidth - targetWidth) / 2;
+        int top = outRect.centerY() - targetHeight / 2;
+        outRect.set(left, top, left + targetWidth, top + targetHeight);
+    }
+
+    @Override
     protected @Nullable TaskView getTaskViewForTouch() {
         if (!mStackTransformsActive) {
             return super.getTaskViewForTouch();
         }
         TaskView taskView = getTaskViewAt(getStackCenterTaskIndex(getHomeTaskView()));
-        return taskView != null && taskView.isAxStackIconVisible() ? taskView : null;
+        return taskView != null ? taskView : super.getTaskViewForTouch();
+    }
+
+    @Override
+    public void loadVisibleTaskData(int dataChanges) {
+        if (mStackTransformsActive && (isHandlingTouch() || !mScroller.isFinished())) {
+            return;
+        }
+        super.loadVisibleTaskData(dataChanges);
     }
 
     @Override
@@ -369,13 +379,13 @@ public abstract class AxStackRecentsView<
         if (taskIndex == INVALID_PAGE) {
             return;
         }
-        if (taskIndex != getCurrentPage()
-                || isPageInTransition() || !mScroller.isFinished()
-                || getCurrentPageScrollDiff() != 0) {
+        if (taskIndex != getCurrentPage()) {
             setCurrentPageScrollDiff(0);
             setCurrentPage(taskIndex);
             updateScrollSynchronously();
             updateCurveProperties();
+        } else if (!mScroller.isFinished()) {
+            mScroller.forceFinished(true);
         }
     }
 
@@ -519,21 +529,30 @@ public abstract class AxStackRecentsView<
         int centerIndex = getStackCenterTaskIndex(homeTask);
         TaskView centerTask = getTaskViewAt(centerIndex);
         if (centerTask == null) {
-            resetStackTransforms(forceLiveTileUpdate);
+            int page = getPageNearestToCenterOfScreen();
+            centerTask = getTaskViewAt(page);
+            if (centerTask != null && isStackTask(centerTask, homeTask)) {
+                centerIndex = page;
+            } else {
+                page = getCurrentPage();
+                centerTask = getTaskViewAt(page);
+                if (centerTask != null && isStackTask(centerTask, homeTask)) {
+                    centerIndex = page;
+                }
+            }
+        }
+        if (centerTask == null) {
             return;
         }
         RecentsPagedOrientationHandler orientationHandler = getPagedOrientationHandler();
         boolean naturalLayout = orientationHandler.isLayoutNaturalToLauncher();
         float primarySize = orientationHandler.getPrimarySize(centerTask);
         if (primarySize <= 0f) {
-            resetStackTransforms(forceLiveTileUpdate);
             return;
         }
         float pageDistance = Math.max(MIN_SIZE, primarySize + getPageSpacing());
         int scroll = orientationHandler.getPrimaryScroll(this);
         int anchorScroll = getAnchorScroll(centerIndex, scroll, pageDistance);
-        float focusedDisplacement = Math.min(1f,
-                Math.abs(getVisualDelta(getScrollForPage(centerIndex) - anchorScroll) / pageDistance));
         boolean redrawLiveTile = false;
         boolean liveTileFound = false;
         RemoteTargetHandle[] remoteTargetHandles = getRemoteTargetHandles();
@@ -566,36 +585,33 @@ public abstract class AxStackRecentsView<
             }
             float normalDelta = anchorDelta + reflowTranslation;
             float distance = (anchorDelta + reflowTranslation) / pageDistance;
+            if ((distance > 3.5f || distance < -1.8f) && taskView.getVisibility() == INVISIBLE) {
+                continue;
+            }
             STACK_LAYOUT.getTransform(distance, normalDelta, reflowTranslation,
                     anchorDelta / pageDistance, primarySize, naturalLayout, mIsRtl,
                     mStackTransform);
             float entranceProgress = getStackEntranceProgress(index, centerIndex);
-            float stackScale = interpolate(1f, mStackTransform.scale, entranceProgress);
-            float stackTranslation = mStackTransform.primaryTranslation * entranceProgress;
-            float handoffTranslationX = getPageSpacing() * focusedDisplacement
-                    * (mIsRtl ? -Math.signum(distance) : Math.signum(distance));
-            float primaryStackTranslation = naturalLayout
-                    ? stackTranslation + handoffTranslationX : stackTranslation;
+            float stackScale = mStackTransform.scale;
+            float primaryStackTranslation = mStackTransform.primaryTranslation;
             if (taskView == mDismissDragBehindTask) {
                 primaryStackTranslation -= mDismissDragScrollDelta;
             }
-            float stackAlpha = mStackEntranceFromHome
+            float stackAlpha = (mStackEntranceActive && mStackEntranceFromHome)
                     ? mStackTransform.alpha * entranceProgress
-                    : interpolate(1f, mStackTransform.alpha, entranceProgress);
-            float stackIconAlpha = interpolate(1f, mStackTransform.iconAlpha, entranceProgress);
-            if (mStackChipMotionActive) {
-                Float baseAlpha = mStackChipMotionBaseAlpha.get(taskView);
-                stackIconAlpha = baseAlpha == null
-                        ? 0f : baseAlpha * mStackChipMotionFadeProgress;
-            }
+                    : mStackTransform.alpha;
+            float baseIconAlpha = (mStackEntranceActive && mStackEntranceFromHome)
+                    ? mStackTransform.iconAlpha * entranceProgress
+                    : mStackTransform.iconAlpha;
+            float stackIconAlpha = baseIconAlpha * mStackChipMotionFadeProgress;
             boolean visible = stackAlpha > 0f;
-            float tilt = visible && distance > 0f
-                    ? MAX_STACK_TILT * focusedDisplacement
-                    : 0f;
             float stackDepth = visible
                     ? MAX_STACK_DEPTH * STACK_LAYOUT.getStackDepth(distance, naturalLayout)
                     : 0f;
-            taskView.setRotationY(tilt);
+            float appliedTilt = getStackCardTilt(visible, distance);
+            if (Math.abs(taskView.getRotationY() - appliedTilt) > 0.05f) {
+                taskView.setRotationY(appliedTilt);
+            }
             boolean transformChanged = taskView.setAxStackTransform(
                     stackScale,
                     naturalLayout ? primaryStackTranslation : 0f,
@@ -625,7 +641,7 @@ public abstract class AxStackRecentsView<
         if (!stackWasActive) {
             loadVisibleTaskData(TaskView.FLAG_UPDATE_ALL);
         }
-        if (redrawLiveTile && canDrawStack() && !getEnableDrawingLiveTile()) {
+        if (redrawLiveTile && canDrawStack()) {
             redrawLiveTile();
         }
     }
@@ -667,12 +683,11 @@ public abstract class AxStackRecentsView<
     }
 
     private boolean canDrawStack() {
-        if (mGestureActive) {
-            return mCurrentGestureEndTarget != null
-                    && mCurrentGestureEndTarget != GestureState.GestureEndTarget.HOME
-                    && mCurrentGestureEndTarget != GestureState.GestureEndTarget.REJECT_HOME;
+        if (!mGestureActive) {
+            return mOverviewEnabled;
         }
-        return mOverviewEnabled;
+        GestureEndTarget target = mCurrentGestureEndTarget;
+        return target != null && target != HOME && target != REJECT_HOME;
     }
 
     @Override
@@ -809,16 +824,15 @@ public abstract class AxStackRecentsView<
 
     private boolean canUseStackLayout(@Nullable TaskView homeTask) {
         boolean stackGestureActive = mGestureActive && mStackEntranceActive
-                && (mCurrentGestureEndTarget == null
-                        || mCurrentGestureEndTarget == GestureState.GestureEndTarget.RECENTS);
+                && (mCurrentGestureEndTarget == null || mCurrentGestureEndTarget == RECENTS);
         boolean gestureLeavingStack = mGestureActive && mCurrentGestureEndTarget != null
-                && mCurrentGestureEndTarget != GestureState.GestureEndTarget.RECENTS;
+                && mCurrentGestureEndTarget != RECENTS;
         boolean keepForStateTransition = mStackTransformsActive
                 && getStateManager().isInTransition()
                 && (!mGestureActive || stackGestureActive);
-        boolean stackStateActive = mLaunchTask != null || mStackEntranceActive
-                || (!mGestureActive && mOverviewEnabled)
-                || (!gestureLeavingStack && keepForStateTransition);
+        boolean stackStateActive = mLaunchTask != null
+                || (!gestureLeavingStack && (mStackEntranceActive
+                        || (!mGestureActive && mOverviewEnabled) || keepForStateTransition));
         if (!stackStateActive
                 || mContainer.getDisplayId() != Display.DEFAULT_DISPLAY
                 || mContainer.getDeviceProfile().getDeviceProperties().isTablet()
@@ -835,15 +849,12 @@ public abstract class AxStackRecentsView<
             if (!(getChildAt(index) instanceof TaskView taskView)) {
                 continue;
             }
-            if (taskView == homeTask) {
+            if (taskView == homeTask || taskView instanceof DesktopTaskView) {
                 continue;
-            }
-            if (!isStackTask(taskView, homeTask)) {
-                return false;
             }
             taskCount++;
         }
-        return taskCount > 1;
+        return taskCount > 0;
     }
 
     private void startStackEntranceAnimation(boolean fromHome, @Nullable AnimatorSet settleAnimation) {
@@ -891,6 +902,15 @@ public abstract class AxStackRecentsView<
         }
     }
 
+    private float getStackCardTilt(boolean visible, float distance) {
+        if (!visible || distance <= 0f) {
+            return 0f;
+        }
+        float progress = Utilities.boundToRange(distance, 0f, 1f);
+        float tilt = MAX_STACK_TILT * (1f - (float) Math.pow(1f - progress, 1.3));
+        return mIsRtl ? tilt : -tilt;
+    }
+
     private float getStackEntranceProgress(int index, int centerIndex) {
         if (!mStackEntranceActive || !mStackEntranceFromHome) {
             return mStackEntranceProgress;
@@ -912,23 +932,28 @@ public abstract class AxStackRecentsView<
 
     private static boolean isStackTask(@Nullable TaskView taskView,
             @Nullable TaskView homeTask) {
-        GroupTask groupTask = taskView == null ? null : taskView.getGroupTask();
-        return taskView != null && taskView != homeTask
-                && !(taskView instanceof DesktopTaskView)
-                && taskView.getDisplayId() == Display.DEFAULT_DISPLAY
-                && groupTask != null && groupTask.matchesDisplayId(Display.DEFAULT_DISPLAY);
+        if (taskView == null || taskView == homeTask || taskView instanceof DesktopTaskView) {
+            return false;
+        }
+        if (taskView.getDisplayId() != Display.DEFAULT_DISPLAY) {
+            return false;
+        }
+        GroupTask groupTask = taskView.getGroupTask();
+        return groupTask == null || groupTask.matchesDisplayId(Display.DEFAULT_DISPLAY);
     }
 
     private int getStackCenterTaskIndex(@Nullable TaskView homeTask) {
         if (!isPageScrollsInitialized()) {
             return INVALID_PAGE;
         }
-        int centerIndex;
-        if (!mScroller.isFinished()) {
+        int centerIndex = INVALID_PAGE;
+        if (!mScroller.isFinished() && mCurrentScrollOverPage != INVALID_PAGE) {
             centerIndex = mCurrentScrollOverPage;
-        } else if (isHandlingTouch() || isPageInTransition() || mDismissDragTask != null) {
+        }
+        if (centerIndex == INVALID_PAGE || !isStackTask(getTaskViewAt(centerIndex), homeTask)) {
             centerIndex = getPageNearestToCenterOfScreen();
-        } else {
+        }
+        if (centerIndex == INVALID_PAGE || !isStackTask(getTaskViewAt(centerIndex), homeTask)) {
             centerIndex = getCurrentPage();
         }
         if (isStackTask(getTaskViewAt(centerIndex), homeTask)) {
@@ -1017,86 +1042,84 @@ public abstract class AxStackRecentsView<
         return getVisualDelta(taskView.getPrimaryDismissTranslationProperty().get(taskView));
     }
 
-    private void updateStackChipMotionState() {
-        boolean moving = mStackChipTouchActive || mGestureActive || isHandlingTouch()
-                || isPageInTransition() || !mScroller.isFinished() || mDismissDragTask != null
-                || mLaunchTask != null || (mStackEntranceActive && mStackEntranceProgress < 1f)
-                || hasTaskViewDismissMotion();
-        if (moving == mStackChipMotionActive) {
-            return;
-        }
-        if (moving) {
-            startStackChipMotion();
-        } else {
-            endStackChipMotion();
-        }
-    }
-
     private boolean hasTaskViewDismissMotion() {
-        for (TaskView taskView : getTaskViews()) {
-            if (taskView.isBeingDismissed()) {
+        int count = getTaskViewCount();
+        for (int i = 0; i < count; i++) {
+            TaskView taskView = getTaskViewAt(i);
+            if (taskView != null && taskView.isBeingDismissed()) {
                 return true;
             }
         }
         return false;
     }
 
-    private void startStackChipMotion() {
-        mStackChipMotionActive = true;
-        mStackChipMotionFadeProgress = 1f;
-        mStackChipMotionBaseAlpha.clear();
-        boolean hasVisibleChip = false;
-        for (TaskView taskView : getTaskViews()) {
-            if (!isStackTask(taskView)) {
-                continue;
-            }
-            float alpha = taskView.getAxStackIconAlpha();
-            mStackChipMotionBaseAlpha.put(taskView, alpha);
-            hasVisibleChip |= alpha > 0f;
+    private boolean isStackChipMoving() {
+        if (mGestureActive || isHandlingTouch()) {
+            return true;
         }
-        cancelStackChipFadeOutAnimation();
-        if (!hasVisibleChip) {
-            mStackChipMotionFadeProgress = 0f;
+        if (isPageInTransition() || !mScroller.isFinished()) {
+            return true;
+        }
+        if (mDismissDragTask != null || mLaunchTask != null) {
+            return true;
+        }
+        if (mStackEntranceActive && mStackEntranceProgress < 1f) {
+            return true;
+        }
+        return hasTaskViewDismissMotion();
+    }
+
+    private void updateStackChipMotionState() {
+        boolean moving = isStackChipMoving();
+        if (moving == mStackChipMotionActive) {
             return;
         }
-        ValueAnimator animation = ValueAnimator.ofFloat(1f, 0f);
-        animation.setDuration(TaskView.FADE_IN_ICON_DURATION);
-        animation.setInterpolator(Interpolators.LINEAR);
-        animation.addUpdateListener(valueAnimator -> {
-            mStackChipMotionFadeProgress = (float) valueAnimator.getAnimatedValue();
+        mStackChipMotionActive = moving;
+        animateStackChipMotion(moving ? 0f : 1f);
+    }
+
+    private void animateStackChipMotion(float targetProgress) {
+        cancelStackChipMotionAnimation();
+        if (Float.compare(mStackChipMotionFadeProgress, targetProgress) == 0) {
+            return;
+        }
+        boolean fadingOut = targetProgress == 0f;
+        long duration = fadingOut
+                ? STACK_CHIP_FADE_OUT_DURATION_MS
+                : STACK_CHIP_FADE_IN_DURATION_MS;
+        ValueAnimator animation = ValueAnimator.ofFloat(
+                mStackChipMotionFadeProgress, targetProgress);
+        animation.setDuration(duration);
+        animation.setInterpolator(Interpolators.FAST_OUT_SLOW_IN);
+        animation.addUpdateListener(animator -> {
+            mStackChipMotionFadeProgress = (float) animator.getAnimatedValue();
             updateCurveProperties();
         });
         animation.addListener(new AnimatorListenerAdapter() {
             @Override
             public void onAnimationEnd(Animator animator) {
-                if (mStackChipFadeOutAnimation == animator) {
-                    mStackChipFadeOutAnimation = null;
+                if (mStackChipMotionAnimator == animator) {
+                    mStackChipMotionFadeProgress = targetProgress;
+                    mStackChipMotionAnimator = null;
+                    updateCurveProperties();
                 }
             }
         });
-        mStackChipFadeOutAnimation = animation;
+        mStackChipMotionAnimator = animation;
         animation.start();
     }
 
-    private void endStackChipMotion() {
-        mStackChipMotionActive = false;
-        mStackChipMotionFadeProgress = 1f;
-        mStackChipMotionBaseAlpha.clear();
-        cancelStackChipFadeOutAnimation();
+    private void cancelStackChipMotionAnimation() {
+        if (mStackChipMotionAnimator != null) {
+            mStackChipMotionAnimator.cancel();
+            mStackChipMotionAnimator = null;
+        }
     }
 
     private void clearStackChipMotion() {
         mStackChipMotionActive = false;
         mStackChipMotionFadeProgress = 1f;
-        mStackChipMotionBaseAlpha.clear();
-        cancelStackChipFadeOutAnimation();
-    }
-
-    private void cancelStackChipFadeOutAnimation() {
-        if (mStackChipFadeOutAnimation != null) {
-            mStackChipFadeOutAnimation.cancel();
-            mStackChipFadeOutAnimation = null;
-        }
+        cancelStackChipMotionAnimation();
     }
 
     private float getDismissDragPageDistance() {
