@@ -107,7 +107,7 @@ import com.android.launcher3.model.StringCache;
 import com.android.launcher3.model.data.ItemInfo;
 import com.android.launcher3.pm.UserCache;
 import com.android.launcher3.recyclerview.AllAppsRecyclerViewPool;
-import com.android.launcher3.util.ItemInfoMatcher;
+import com.android.launcher3.util.UserIconInfo;
 import com.android.launcher3.util.Preconditions;
 import com.android.launcher3.util.Themes;
 import com.android.launcher3.views.ActivityContext;
@@ -148,8 +148,7 @@ public class ActivityAllAppsContainerView<T extends Context & ActivityContext>
 
     protected final T mActivityContext;
     protected final List<AdapterHolder> mAH;
-    protected final Predicate<ItemInfo> mPersonalMatcher = ItemInfoMatcher.ofUser(
-            Process.myUserHandle());
+    protected final Predicate<ItemInfo> mPersonalMatcher;
     protected WorkProfileManager mWorkManager;
     protected final PrivateProfileManager mPrivateProfileManager;
     protected final Point mFastScrollerOffset = new Point();
@@ -219,6 +218,17 @@ public class ActivityAllAppsContainerView<T extends Context & ActivityContext>
     public ActivityAllAppsContainerView(Context context, AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
         mActivityContext = ActivityContext.lookupContext(context);
+        mPersonalMatcher = itemInfo -> {
+            if (itemInfo == null || itemInfo.user == null) {
+                return false;
+            }
+            if (itemInfo.user.equals(Process.myUserHandle()) || itemInfo.user.getIdentifier() == 999) {
+                return true;
+            }
+            UserCache userCache = UserCache.INSTANCE.get(mActivityContext);
+            UserIconInfo iconInfo = userCache.getUserInfo(itemInfo.user);
+            return iconInfo != null && iconInfo.isCloned();
+        };
         mAllAppsStore = mActivityContext.getActivityComponent().getAppsStore();
         mAllAppsDisplayPrefs = AxAllAppsDisplayPrefs.INSTANCE.get(context);
 
