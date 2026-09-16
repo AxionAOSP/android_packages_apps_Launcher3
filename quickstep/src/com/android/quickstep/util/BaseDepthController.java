@@ -35,6 +35,7 @@ import androidx.annotation.Nullable;
 import androidx.annotation.VisibleForTesting;
 
 import com.android.app.animation.Interpolators;
+import com.android.axion.blur.AxBlurConfig;
 import com.android.launcher3.Flags;
 import com.android.launcher3.Launcher;
 import com.android.launcher3.LauncherPrefChangeListener;
@@ -202,7 +203,8 @@ public class BaseDepthController implements LauncherPrefChangeListener {
                 LauncherPrefsExt.LAUNCHER_BLUR_RADIUS_PCT.get(mLauncher),
                 LauncherPrefsExt.LAUNCHER_BLUR_MIN_RADIUS_PCT,
                 LauncherPrefsExt.LAUNCHER_BLUR_MAX_RADIUS_PCT);
-        return Math.round(LauncherPrefsExt.LAUNCHER_BLUR_MAX_RADIUS_PX
+        float maxRadius = AxBlurConfig.getMaxBlurRadiusPx(mLauncher);
+        return Math.round(maxRadius
                 * radiusPct / (float) LauncherPrefsExt.LAUNCHER_BLUR_MAX_RADIUS_PCT);
     }
 

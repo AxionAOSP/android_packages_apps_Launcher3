@@ -18,10 +18,13 @@ package com.android.launcher3
 import android.content.Context
 import android.graphics.Color
 import androidx.core.graphics.ColorUtils
+import com.android.axion.blur.AxBlurConfig
 import com.android.axion.iconloader.AdaptiveIconHelper
 import com.android.axion.iconloader.ThemedIconSettings
+import com.android.launcher3.EncryptionType
 import com.android.launcher3.LauncherPrefs.Companion.backedUpItem
 import com.android.launcher3.LauncherPrefs.Companion.nonRestorableItem
+import kotlin.jvm.JvmField
 import kotlin.math.roundToInt
 
 object LauncherPrefsExt {
@@ -102,14 +105,14 @@ object LauncherPrefsExt {
             EncryptionType.SECURE_SETTINGS,
         )
     @JvmField val LAUNCHER_BLUR_ENABLED =
-        backedUpItem("pulse_launcher_blur_enabled", true, EncryptionType.SECURE_SETTINGS)
+        backedUpItem(AxBlurConfig.KEY_LAUNCHER_BLUR_ENABLED, AxBlurConfig.DEFAULT_LAUNCHER_BLUR_ENABLED, EncryptionType.SECURE_SETTINGS)
     const val LAUNCHER_BLUR_MAX_RADIUS_PX = 175
-    const val LAUNCHER_BLUR_MIN_RADIUS_PCT = 0
-    const val LAUNCHER_BLUR_MAX_RADIUS_PCT = 100
-    const val LAUNCHER_BLUR_DEFAULT_RADIUS_PCT = LAUNCHER_BLUR_MAX_RADIUS_PCT
+    const val LAUNCHER_BLUR_MIN_RADIUS_PCT = AxBlurConfig.MIN_LAUNCHER_BLUR_RADIUS_PCT
+    const val LAUNCHER_BLUR_MAX_RADIUS_PCT = AxBlurConfig.MAX_LAUNCHER_BLUR_RADIUS_PCT
+    const val LAUNCHER_BLUR_DEFAULT_RADIUS_PCT = AxBlurConfig.DEFAULT_LAUNCHER_BLUR_RADIUS_PCT
     @JvmField val LAUNCHER_BLUR_RADIUS_PCT =
         backedUpItem(
-            "pulse_launcher_blur_radius_pct",
+            AxBlurConfig.KEY_LAUNCHER_BLUR_RADIUS_PCT,
             LAUNCHER_BLUR_DEFAULT_RADIUS_PCT,
             EncryptionType.SECURE_SETTINGS,
         )

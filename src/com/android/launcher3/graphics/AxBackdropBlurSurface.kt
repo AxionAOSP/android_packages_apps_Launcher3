@@ -20,8 +20,9 @@ import android.graphics.Canvas
 import android.graphics.Path
 import android.graphics.RectF
 import android.view.View
-import com.android.axion.blur.BlurEngine
+import com.android.axion.blur.AxBlurConfig
 import com.android.axion.blur.AxWindowBlurController
+import com.android.axion.blur.BlurEngine
 import com.android.axion.blur.settings.AxBackdropBlurSettingsSpec
 import com.android.launcher3.LauncherPrefsExt
 import com.android.launcher3.views.ActivityContext
@@ -119,7 +120,7 @@ class AxBackdropBlurSurface(private val host: View, activityContext: ActivityCon
     }
 
     private fun launcherBlurSpec(): AxBackdropBlurSettingsSpec {
-        val maxRadiusPx = LauncherPrefsExt.LAUNCHER_BLUR_MAX_RADIUS_PX.toFloat()
+        val maxRadiusPx = AxBlurConfig.getMaxBlurRadiusPx(host.context)
         return AxBackdropBlurSettingsSpec.launcher(
             defaultRadiusPx = maxRadiusPx,
             maxRadiusPx = maxRadiusPx,
