@@ -297,7 +297,7 @@ public abstract class AxStackRecentsView<
         int screenWidth = dp.getDeviceProperties().getWidthPx();
         int screenHeight = dp.getDeviceProperties().getHeightPx();
         int targetWidth = Math.round(screenWidth * 0.63f);
-        int targetHeight = Math.round(screenHeight * 0.62f);
+        int targetHeight = Math.round((float) targetWidth * screenHeight / screenWidth);
         int left = (screenWidth - targetWidth) / 2;
         int top = outRect.centerY() - targetHeight / 2;
         outRect.set(left, top, left + targetWidth, top + targetHeight);
@@ -609,7 +609,7 @@ public abstract class AxStackRecentsView<
                     ? MAX_STACK_DEPTH * STACK_LAYOUT.getStackDepth(distance, naturalLayout)
                     : 0f;
             float appliedTilt = getStackCardTilt(visible, distance);
-            if (Math.abs(taskView.getRotationY() - appliedTilt) > 0.05f) {
+            if (taskView.getRotationY() != appliedTilt) {
                 taskView.setRotationY(appliedTilt);
             }
             boolean transformChanged = taskView.setAxStackTransform(
@@ -619,9 +619,10 @@ public abstract class AxStackRecentsView<
                     stackDepth,
                     stackAlpha,
                     stackIconAlpha);
-            taskView.setAxStackIconElevation(
-                    mIconChipElevation * Math.max(0f, Math.min(1f,
-                            1f - Math.abs(distance))));
+            float targetElevation = distance == 0f ? mIconChipElevation : 0f;
+            if (taskView.getAxStackIconElevation() != targetElevation) {
+                taskView.setAxStackIconElevation(targetElevation);
+            }
             if (taskView.isRunningTask()) {
                 liveTileFound = true;
                 if (transformChanged || forceLiveTileUpdate || taskView != mLiveTileTask) {
@@ -641,7 +642,7 @@ public abstract class AxStackRecentsView<
         if (!stackWasActive) {
             loadVisibleTaskData(TaskView.FLAG_UPDATE_ALL);
         }
-        if (redrawLiveTile && canDrawStack()) {
+        if (redrawLiveTile && canDrawStack() && !getEnableDrawingLiveTile()) {
             redrawLiveTile();
         }
     }
@@ -823,16 +824,11 @@ public abstract class AxStackRecentsView<
     }
 
     private boolean canUseStackLayout(@Nullable TaskView homeTask) {
-        boolean stackGestureActive = mGestureActive && mStackEntranceActive
-                && (mCurrentGestureEndTarget == null || mCurrentGestureEndTarget == RECENTS);
-        boolean gestureLeavingStack = mGestureActive && mCurrentGestureEndTarget != null
-                && mCurrentGestureEndTarget != RECENTS;
-        boolean keepForStateTransition = mStackTransformsActive
-                && getStateManager().isInTransition()
-                && (!mGestureActive || stackGestureActive);
-        boolean stackStateActive = mLaunchTask != null
-                || (!gestureLeavingStack && (mStackEntranceActive
-                        || (!mGestureActive && mOverviewEnabled) || keepForStateTransition));
+        boolean keepStackActive = mStackTransformsActive
+                && (mGestureActive || getStateManager().isInTransition() || mLaunchTask != null);
+        boolean stackStateActive = keepStackActive
+                || mStackEntranceActive
+                || (!mGestureActive && mOverviewEnabled);
         if (!stackStateActive
                 || mContainer.getDisplayId() != Display.DEFAULT_DISPLAY
                 || mContainer.getDeviceProfile().getDeviceProperties().isTablet()
@@ -903,12 +899,7 @@ public abstract class AxStackRecentsView<
     }
 
     private float getStackCardTilt(boolean visible, float distance) {
-        if (!visible || distance <= 0f) {
-            return 0f;
-        }
-        float progress = Utilities.boundToRange(distance, 0f, 1f);
-        float tilt = MAX_STACK_TILT * (1f - (float) Math.pow(1f - progress, 1.3));
-        return mIsRtl ? tilt : -tilt;
+        return 0f;
     }
 
     private float getStackEntranceProgress(int index, int centerIndex) {

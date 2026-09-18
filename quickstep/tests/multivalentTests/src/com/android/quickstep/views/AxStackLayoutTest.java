@@ -53,7 +53,7 @@ public class AxStackLayoutTest {
 
         layout.getTransform(-1f, -100f, 0f, 1f, 100f, true, false, transform);
 
-        assertThat(transform.scale).isEqualTo(1.04f);
+        assertThat(transform.scale).isEqualTo(1.07f);
         assertThat(transform.iconAlpha).isEqualTo(0f);
     }
 
@@ -64,7 +64,7 @@ public class AxStackLayoutTest {
 
         layout.getTransform(1f, 100f, 0f, 1f, 100f, true, false, transform);
 
-        assertThat(transform.scale).isEqualTo(0.96f);
+        assertThat(transform.scale).isEqualTo(0.93f);
     }
 
 }

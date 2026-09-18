@@ -280,6 +280,21 @@ public final class TaskViewUtils {
         if (!taskView.isRunningTask()) {
             initTaskViewSimulatorsForRemoteTargetHandles(
                     Arrays.asList(remoteTargetHandles), dp, recentsView, taskView, out);
+        } else {
+            int scrollOffset = recentsView.getScrollOffset(
+                    recentsView.indexOfChild(taskView));
+            for (RemoteTargetHandle handle : remoteTargetHandles) {
+                TaskViewSimulator tvsLocal = handle.getTaskViewSimulator();
+                tvsLocal.setDp(dp);
+                tvsLocal.fullScreenProgress.value = 0;
+                tvsLocal.recentsViewScale.value = 1;
+                tvsLocal.recentsViewScroll.value = scrollOffset;
+                tvsLocal.setAxStackTransform(
+                        taskView.getAxStackScale(),
+                        taskView.getAxStackTranslationX(),
+                        taskView.getAxStackTranslationY(),
+                        taskView.getAxStackAlpha());
+            }
         }
 
         for (RemoteTargetHandle targetHandle : remoteTargetHandles) {

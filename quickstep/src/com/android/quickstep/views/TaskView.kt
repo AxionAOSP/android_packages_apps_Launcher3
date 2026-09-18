@@ -2186,7 +2186,7 @@ constructor(
     private var axStackIconElevation = 0f
 
     fun setAxStackIconElevation(elevation: Float) {
-        if (kotlin.math.abs(axStackIconElevation - elevation) <= 0.05f) {
+        if (kotlin.math.abs(axStackIconElevation - elevation) <= 0.5f) {
             return
         }
         axStackIconElevation = elevation
@@ -2236,7 +2236,7 @@ constructor(
 
     private fun applyAxStackDepth() {
         val targetElevation = axStackTransform.getAppliedDepth(fullscreenProgress) * axStackElevationScale
-        if (kotlin.math.abs(elevation - targetElevation) > 0.05f) {
+        if (kotlin.math.abs(elevation - targetElevation) > 1f) {
             elevation = targetElevation
         }
     }

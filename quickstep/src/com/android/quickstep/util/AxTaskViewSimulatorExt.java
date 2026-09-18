@@ -58,7 +58,7 @@ final class AxTaskViewSimulatorExt {
         int screenWidth = dp.getDeviceProperties().getWidthPx();
         int screenHeight = dp.getDeviceProperties().getHeightPx();
         int targetWidth = Math.round(screenWidth * 0.63f);
-        int targetHeight = Math.round(screenHeight * 0.62f);
+        int targetHeight = Math.round((float) targetWidth * screenHeight / screenWidth);
         int left = (screenWidth - targetWidth) / 2;
         int top = taskRect.centerY() - targetHeight / 2;
         taskRect.set(left, top, left + targetWidth, top + targetHeight);

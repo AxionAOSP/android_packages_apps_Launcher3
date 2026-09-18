@@ -182,6 +182,7 @@ public class TaskViewSimulator implements TransformParams.BuilderProxy {
         } else {
             mSizeStrategy.calculateTaskSize(mContext, mDp, mFullTaskSize,
                     mOrientationState.getOrientationHandler());
+            mAxExt.adjustTaskRect(mFullTaskSize, mDp);
             if (enableGridOnlyOverview()) {
                 mCarouselTaskSize.set(mFullTaskSize);
             }
@@ -218,7 +219,6 @@ public class TaskViewSimulator implements TransformParams.BuilderProxy {
             }
         } else {
             mTaskRect.set(mFullTaskSize);
-            mAxExt.adjustTaskRect(mTaskRect, mDp);
         }
     }
 
