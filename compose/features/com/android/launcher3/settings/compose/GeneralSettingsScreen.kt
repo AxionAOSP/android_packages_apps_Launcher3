@@ -68,5 +68,16 @@ internal fun GeneralScreen(
                 valueLabel = { stringResource(R.string.home_settings_percent_value, it) },
             )
         }
+        item {
+            val blurEnabled = rememberLauncherPreference(LauncherPrefsExt.LAUNCHER_BLUR_ENABLED)
+            val appLaunchBlur = rememberLauncherPreference(LauncherPrefsExt.APP_LAUNCH_BLUR_ENABLED)
+            SwitchPreference(
+                title = stringResource(R.string.pref_app_launch_blur_title),
+                summary = stringResource(R.string.pref_app_launch_blur_summary),
+                checked = appLaunchBlur.value,
+                onCheckedChange = appLaunchBlur.onChange,
+                enabled = blurEnabled.value,
+            )
+        }
     }
 }

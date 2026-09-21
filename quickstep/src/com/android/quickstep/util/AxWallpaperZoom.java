@@ -20,6 +20,7 @@ import android.animation.AnimatorListenerAdapter;
 import android.animation.ValueAnimator;
 import android.view.animation.Interpolator;
 
+import com.android.launcher3.statehandlers.DepthController;
 import com.android.quickstep.SystemUiProxy;
 
 public final class AxWallpaperZoom {
@@ -41,11 +42,19 @@ public final class AxWallpaperZoom {
     }
 
     public static Animator createAppOpenAnimator(SystemUiProxy systemUiProxy, boolean enabled) {
-        return enabled ? createZoomInAnimator(systemUiProxy) : null;
+        return createAppOpenAnimator(systemUiProxy, null, 0f, enabled);
+    }
+
+    public static Animator createAppOpenAnimator(
+            SystemUiProxy systemUiProxy,
+            DepthController depthController,
+            float targetDepth,
+            boolean enabled) {
+        return enabled ? createZoomInAnimator(systemUiProxy, depthController, targetDepth) : null;
     }
 
     public static void startZoomIn(SystemUiProxy systemUiProxy) {
-        createZoomInAnimator(systemUiProxy).start();
+        createZoomInAnimator(systemUiProxy, null, 0f).start();
     }
 
     public static void startHomeGesture(SystemUiProxy systemUiProxy) {
@@ -61,9 +70,14 @@ public final class AxWallpaperZoom {
                 AxAnimationEngine.WALLPAPER_HOME_GESTURE_INTERPOLATOR).start();
     }
 
-    private static ValueAnimator createZoomInAnimator(SystemUiProxy systemUiProxy) {
+    private static ValueAnimator createZoomInAnimator(
+            SystemUiProxy systemUiProxy,
+            DepthController depthController,
+            float targetDepth) {
         return createAnimator(
                 systemUiProxy,
+                depthController,
+                targetDepth,
                 AxAnimationEngine.WALLPAPER_APP_OPEN_ZOOM_OUT,
                 AxAnimationEngine.WALLPAPER_APP_OPEN_DURATION,
                 AxAnimationEngine.WALLPAPER_APP_OPEN_INTERPOLATOR);
@@ -74,8 +88,19 @@ public final class AxWallpaperZoom {
             float endZoomOut,
             long duration,
             Interpolator interpolator) {
+        return createAnimator(systemUiProxy, null, 0f, endZoomOut, duration, interpolator);
+    }
+
+    private static ValueAnimator createAnimator(
+            SystemUiProxy systemUiProxy,
+            DepthController depthController,
+            float endDepth,
+            float endZoomOut,
+            long duration,
+            Interpolator interpolator) {
         ValueAnimator animator = ValueAnimator.ofFloat(0f, 1f);
-        ZoomState state = new ZoomState(systemUiProxy, animator, endZoomOut);
+        ZoomState state =
+                new ZoomState(systemUiProxy, animator, depthController, endDepth, endZoomOut);
         animator.setDuration(duration);
         animator.setInterpolator(interpolator);
         animator.addListener(state);
@@ -147,14 +172,23 @@ public final class AxWallpaperZoom {
     private static final class ZoomState extends AnimatorListenerAdapter {
         private final SystemUiProxy mSystemUiProxy;
         private final ValueAnimator mAnimator;
+        private final DepthController mDepthController;
+        private final float mEndDepth;
         private final float mEndZoomOut;
         private float mStartZoomOut;
         private Token mToken;
         private boolean mCancelled;
 
-        private ZoomState(SystemUiProxy systemUiProxy, ValueAnimator animator, float endZoomOut) {
+        private ZoomState(
+                SystemUiProxy systemUiProxy,
+                ValueAnimator animator,
+                DepthController depthController,
+                float endDepth,
+                float endZoomOut) {
             mSystemUiProxy = systemUiProxy;
             mAnimator = animator;
+            mDepthController = depthController;
+            mEndDepth = endDepth;
             mEndZoomOut = endZoomOut;
         }
 
@@ -162,18 +196,27 @@ public final class AxWallpaperZoom {
         public void onAnimationStart(Animator animation) {
             mCancelled = false;
             begin(this);
+            if (mDepthController != null) {
+                mDepthController.stateDepth.setValue(0f);
+            }
         }
 
         @Override
         public void onAnimationCancel(Animator animation) {
             mCancelled = true;
             end(this, sZoomOut);
+            if (mDepthController != null) {
+                mDepthController.stateDepth.setValue(0f);
+            }
         }
 
         @Override
         public void onAnimationEnd(Animator animation) {
             if (!mCancelled) {
                 end(this, mEndZoomOut);
+                if (mDepthController != null) {
+                    mDepthController.stateDepth.setValue(mEndDepth);
+                }
             }
         }
 
@@ -181,7 +224,11 @@ public final class AxWallpaperZoom {
             if (!isActive(this)) {
                 return;
             }
-            setZoom(mSystemUiProxy, valueAt(mStartZoomOut, mEndZoomOut, progress));
+            float zoom = valueAt(mStartZoomOut, mEndZoomOut, progress);
+            setZoom(mSystemUiProxy, zoom);
+            if (mDepthController != null) {
+                mDepthController.stateDepth.setValue(progress * mEndDepth);
+            }
         }
     }
 

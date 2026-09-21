@@ -23,6 +23,8 @@ import com.android.app.animation.Interpolators;
 import com.android.axion.dragonite.AxDragonite;
 import com.android.launcher3.AxAppOpenGeometry;
 import com.android.launcher3.AxQuickstepTransitionManagerExt;
+import com.android.launcher3.LauncherPrefsExt;
+import com.android.launcher3.statehandlers.DepthController;
 import com.android.launcher3.uioverrides.QuickstepLauncher;
 import com.android.launcher3.views.FloatingIconView;
 import com.android.quickstep.RemoteTargetGluer.RemoteTargetHandle;
@@ -102,6 +104,21 @@ final class AxLauncherSwipeHandlerExt {
         AxAnimationEngine.trace(
                 TAG,
                 "gestureRadius enabled=" + enabled + " handles=" + handles.length);
+    }
+
+    static void pauseBlur(Context context, DepthController depthController, boolean pause) {
+        if (!AxQuickstepTransitionManagerExt.isAxAnimEngineEnabled(context)) {
+            return;
+        }
+        boolean appLaunchBlurEnabled = LauncherPrefsExt.LAUNCHER_BLUR_ENABLED.get(context)
+                && LauncherPrefsExt.APP_LAUNCH_BLUR_ENABLED.get(context);
+        if (appLaunchBlurEnabled) {
+            return;
+        }
+        if (depthController != null) {
+            depthController.pauseBlursOnWindows(pause);
+        }
+        AxAnimationEngine.trace(TAG, "pauseBlur paused=" + pause);
     }
 
     static void startHomeZoom(Context context) {

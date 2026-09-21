@@ -32,6 +32,10 @@ import android.view.RemoteAnimationTarget;
 import android.view.animation.Interpolator;
 
 import com.android.app.animation.Interpolators;
+import com.android.launcher3.AxQuickstepTransitionManagerExt;
+import com.android.launcher3.LauncherPrefsExt;
+import com.android.launcher3.LauncherState;
+import com.android.launcher3.statehandlers.DepthController;
 import com.android.launcher3.uioverrides.QuickstepLauncher;
 import com.android.launcher3.views.FloatingIconView;
 import com.android.quickstep.SystemUiProxy;
@@ -43,6 +47,7 @@ import com.android.quickstep.util.SurfaceTransactionApplier;
 final class AxValueAnimPlayer {
     private static final String TRACE = "open";
 
+    private final QuickstepLauncher mLauncher;
     private final DeviceProfile mDeviceProfile;
     private final SystemUiProxy mSystemUiProxy;
     private final Interpolator mOpeningInterpolator;
@@ -86,6 +91,7 @@ final class AxValueAnimPlayer {
             SurfaceTransactionApplier surfaceApplier,
             RemoteAnimationTarget navBarTarget,
             int[] dragLayerBounds) {
+        mLauncher = launcher;
         mDeviceProfile = deviceProfile;
         mSystemUiProxy = systemUiProxy;
         mOpeningInterpolator = openingInterpolator;
@@ -207,7 +213,13 @@ final class AxValueAnimPlayer {
     }
 
     Animator createWallpaperAnimator() {
-        return AxWallpaperZoom.createAppOpenAnimator(mSystemUiProxy, mPlayWallpaperZoom);
+        boolean blurEnabled = AxQuickstepTransitionManagerExt.isAxAnimEngineEnabled(mLauncher)
+                && LauncherPrefsExt.LAUNCHER_BLUR_ENABLED.get(mLauncher)
+                && LauncherPrefsExt.APP_LAUNCH_BLUR_ENABLED.get(mLauncher);
+        DepthController depthController = blurEnabled ? mLauncher.getDepthController() : null;
+        float targetDepth = LauncherState.BACKGROUND_APP.getDepth(mLauncher);
+        return AxWallpaperZoom.createAppOpenAnimator(
+                mSystemUiProxy, depthController, targetDepth, mPlayWallpaperZoom);
     }
 
     private void applyFrame(

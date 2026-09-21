@@ -116,6 +116,12 @@ object LauncherPrefsExt {
             LAUNCHER_BLUR_DEFAULT_RADIUS_PCT,
             EncryptionType.SECURE_SETTINGS,
         )
+    @JvmField val APP_LAUNCH_BLUR_ENABLED =
+        backedUpItem(
+            "pref_app_launch_blur_enabled",
+            false,
+            EncryptionType.SECURE_SETTINGS,
+        )
     @JvmField val WORKSPACE_ROUNDED_WIDGETS =
         backedUpItem(
             "pref_workspace_rounded_widgets",
@@ -422,6 +428,7 @@ object LauncherPrefsExt {
         WORKSPACE_SHOW_TOP_SHADOW,
         LAUNCHER_BLUR_ENABLED,
         LAUNCHER_BLUR_RADIUS_PCT,
+        APP_LAUNCH_BLUR_ENABLED,
         WORKSPACE_ROUNDED_WIDGETS,
         WORKSPACE_ALLOW_WIDGET_OVERLAP,
         WORKSPACE_FORCE_WIDGET_RESIZE,

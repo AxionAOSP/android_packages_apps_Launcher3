@@ -20,6 +20,8 @@ import static com.android.app.animation.Interpolators.LINEAR;
 import static com.android.launcher3.LauncherState.NORMAL;
 import static com.android.launcher3.Utilities.mapBoundToRange;
 import static com.android.launcher3.views.FloatingIconView.SHAPE_PROGRESS_DURATION;
+import static com.android.quickstep.GestureState.GestureEndTarget.HOME;
+import static com.android.quickstep.GestureState.GestureEndTarget.RECENTS;
 import static com.android.quickstep.util.FloatingIconViewHelper.getFloatingIconView;
 
 import android.animation.AnimatorSet;
@@ -39,6 +41,7 @@ import androidx.annotation.Nullable;
 import com.android.launcher3.LauncherState;
 import com.android.launcher3.anim.AnimatorPlaybackController;
 import com.android.launcher3.model.data.ItemInfo;
+import com.android.launcher3.statehandlers.DepthController;
 import com.android.launcher3.statehandlers.DesktopVisibilityController;
 import com.android.launcher3.states.StateAnimationConfig;
 import com.android.launcher3.uioverrides.QuickstepLauncher;
@@ -48,6 +51,7 @@ import com.android.launcher3.views.ClipIconView;
 import com.android.launcher3.views.FloatingIconView;
 import com.android.launcher3.views.FloatingView;
 import com.android.launcher3.widget.LauncherAppWidgetHostView;
+import com.android.quickstep.GestureState.GestureEndTarget;
 import com.android.quickstep.util.ActiveGestureLog;
 import com.android.quickstep.util.AxScalingWorkspaceRevealAnim;
 import com.android.quickstep.util.RectFSpringAnim;
@@ -77,6 +81,15 @@ public class LauncherSwipeHandlerV2 extends AbsSwipeUpHandler<
                 touchTimeMs, continuingLastGesture, inputConsumer, msdlPlayerWrapper);
     }
 
+    @Nullable
+    private DepthController getDepthController() {
+        if (mContainer != null) {
+            return mContainer.getDepthController();
+        }
+        QuickstepLauncher launcher = QuickstepLauncher.ACTIVITY_TRACKER.getCreatedContext();
+        return launcher != null ? launcher.getDepthController() : null;
+    }
+
     @Override
     public void onRecentsAnimationStart(
             RecentsAnimationController controller,
@@ -84,18 +97,37 @@ public class LauncherSwipeHandlerV2 extends AbsSwipeUpHandler<
             @Nullable TransitionInfo transitionInfo) {
         super.onRecentsAnimationStart(controller, targets, transitionInfo);
         AxLauncherSwipeHandlerExt.setGestureRadius(mContext, mRemoteTargetHandles, true);
+        AxLauncherSwipeHandlerExt.pauseBlur(mContext, getDepthController(), true);
     }
 
     @Override
     public void onRecentsAnimationCanceled(HashMap<Integer, ThumbnailData> thumbnailDatas) {
         AxLauncherSwipeHandlerExt.setGestureRadius(mContext, mRemoteTargetHandles, false);
+        AxLauncherSwipeHandlerExt.pauseBlur(mContext, getDepthController(), false);
         super.onRecentsAnimationCanceled(thumbnailDatas);
+    }
+
+    @Override
+    protected boolean onActivityInit(Boolean isHomeStarted) {
+        boolean result = super.onActivityInit(isHomeStarted);
+        AxLauncherSwipeHandlerExt.pauseBlur(mContext, getDepthController(), true);
+        return result;
+    }
+
+    @Override
+    public void onConsumerAboutToBeSwitched() {
+        AxLauncherSwipeHandlerExt.pauseBlur(mContext, getDepthController(), false);
+        super.onConsumerAboutToBeSwitched();
     }
 
     @Override
     protected void onSettledOnEndTarget() {
         super.onSettledOnEndTarget();
         AxLauncherSwipeHandlerExt.setGestureRadius(mContext, mRemoteTargetHandles, false);
+        GestureEndTarget endTarget = mGestureState.getEndTarget();
+        if (endTarget != HOME && endTarget != RECENTS) {
+            AxLauncherSwipeHandlerExt.pauseBlur(mContext, getDepthController(), false);
+        }
     }
 
 

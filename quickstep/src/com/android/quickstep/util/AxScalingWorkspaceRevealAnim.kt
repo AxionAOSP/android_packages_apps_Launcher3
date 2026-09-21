@@ -27,6 +27,7 @@ import com.android.launcher3.LauncherAnimUtils.HOTSEAT_SCALE_PROPERTY_FACTORY
 import com.android.launcher3.LauncherAnimUtils.SCALE_INDEX_WORKSPACE_STATE
 import com.android.launcher3.LauncherAnimUtils.VIEW_ALPHA
 import com.android.launcher3.LauncherAnimUtils.WORKSPACE_SCALE_PROPERTY_FACTORY
+import com.android.launcher3.LauncherPrefsExt
 import com.android.launcher3.LauncherState
 import com.android.launcher3.anim.AlphaUpdateListener
 import com.android.launcher3.anim.AnimatorListeners
@@ -37,6 +38,7 @@ import com.android.launcher3.states.StateAnimationConfig.SKIP_DEPTH_CONTROLLER
 import com.android.launcher3.states.StateAnimationConfig.SKIP_OVERVIEW
 import com.android.launcher3.states.StateAnimationConfig.SKIP_SCRIM
 import com.android.launcher3.uioverrides.QuickstepLauncher
+import com.android.quickstep.util.AxAnimationEngine
 import com.android.quickstep.views.RecentsView
 
 class AxScalingWorkspaceRevealAnim(
@@ -147,6 +149,11 @@ class AxScalingWorkspaceRevealAnim(
             StateAnimationConfig.ANIM_DEPTH,
             AxAnimationEngine.HOME_GESTURE_WORKSPACE_INTERPOLATOR,
         )
+        val blurDisabled = !LauncherPrefsExt.LAUNCHER_BLUR_ENABLED.get(launcher)
+            || !LauncherPrefsExt.APP_LAUNCH_BLUR_ENABLED.get(launcher)
+        if (blurDisabled) {
+            launcher.depthController.pauseBlursOnWindows(true)
+        }
         launcher.depthController.stateDepth.value =
             LauncherState.BACKGROUND_APP.getDepth(launcher)
         launcher.depthController.setStateWithAnimation(
@@ -199,6 +206,9 @@ class AxScalingWorkspaceRevealAnim(
 
                     Animations.setOngoingAnimation(workspace, animation = null)
                     Animations.setOngoingAnimation(hotseat, animation = null)
+                    if (blurDisabled) {
+                        launcher.depthController.pauseBlursOnWindows(false)
+                    }
                     AxDragonite.onBackHomeEnd()
                 }
             )

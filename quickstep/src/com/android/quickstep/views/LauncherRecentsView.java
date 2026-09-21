@@ -22,6 +22,8 @@ import static com.android.launcher3.LauncherState.OVERVIEW;
 import static com.android.launcher3.LauncherState.OVERVIEW_MODAL_TASK;
 import static com.android.launcher3.LauncherState.OVERVIEW_SPLIT_SELECT;
 import static com.android.launcher3.util.OverviewReleaseFlags.enableGridOnlyOverview;
+import static com.android.quickstep.GestureState.GestureEndTarget.LAST_TASK;
+import static com.android.quickstep.GestureState.GestureEndTarget.RECENTS;
 
 import android.annotation.TargetApi;
 import android.content.Context;
@@ -43,7 +45,7 @@ import com.android.launcher3.uioverrides.QuickstepLauncher;
 import com.android.launcher3.util.PendingSplitSelectInfo;
 import com.android.launcher3.util.SplitConfigurationOptions;
 import com.android.launcher3.util.SplitConfigurationOptions.SplitSelectSource;
-import com.android.quickstep.GestureState;
+import com.android.quickstep.GestureState.GestureEndTarget;
 import com.android.quickstep.SystemUiProxy;
 import com.android.quickstep.util.SplitSelectStateController;
 import com.android.wm.shell.shared.GroupedTaskInfo;
@@ -183,6 +185,10 @@ public class LauncherRecentsView extends AxStackRecentsView<QuickstepLauncher, L
         }
         if (isOverlayEnabled) {
             mBlurUtils.setDrawLiveTileBelowRecents(true);
+            DepthController depthController = getDepthController();
+            if (depthController != null) {
+                depthController.pauseBlursOnWindows(false);
+            }
         }
     }
 
@@ -259,8 +265,8 @@ public class LauncherRecentsView extends AxStackRecentsView<QuickstepLauncher, L
         final DesktopVisibilityController desktopVisibilityController =
                 DesktopVisibilityController.INSTANCE.get(mContainer);
         boolean showDesktopApps = false;
-        GestureState.GestureEndTarget endTarget = mCurrentGestureEndTarget;
-        if (endTarget == GestureState.GestureEndTarget.LAST_TASK
+        GestureEndTarget endTarget = mCurrentGestureEndTarget;
+        if (endTarget == LAST_TASK
                 && desktopVisibilityController.isInDesktopModeAndNotInOverview(
                 mContainer.getDisplayId())) {
             // Recents gesture was cancelled and we are returning to the previous task.
@@ -272,6 +278,12 @@ public class LauncherRecentsView extends AxStackRecentsView<QuickstepLauncher, L
             SystemUiProxy.INSTANCE.get(mContainer).showDesktopApps(mContainer.getDisplayId(),
                     /* transition */ null, /* taskIdToReorderToFront */ null,
                     DesktopModeTransitionSource.RECENTS);
+        }
+        if (endTarget == RECENTS) {
+            DepthController depthController = getDepthController();
+            if (depthController != null) {
+                depthController.pauseBlursOnWindows(false);
+            }
         }
     }
 }
