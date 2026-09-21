@@ -214,7 +214,6 @@ class SystemUiProxy @Inject constructor(
     // Used to dedupe calls to SystemUI
     private var lastLauncherKeepClearAreaHeight = 0
     private var lastLauncherKeepClearAreaHeightVisible = false
-    private var lastLauncherWallpaperZoom = 0f
 
     private val asyncHandler =
         Handler(lightweightBackgroundExecutor.looper) { handleMessageAsync(it) }
@@ -365,7 +364,6 @@ class SystemUiProxy @Inject constructor(
         setBackToLauncherCallback(backToLauncherCallback, backToLauncherRunner)
         setUnfoldAnimationListener(unfoldAnimationListener)
         setDesktopTaskListener(desktopTaskListener)
-        setLauncherWallpaperZoom(lastLauncherWallpaperZoom)
         setAssistantOverridesRequested(
             ContextualSearchInvoker(context).getSysUiAssistOverrideInvocationTypes()
         )
@@ -474,14 +472,15 @@ class SystemUiProxy @Inject constructor(
             systemUiProxy?.setOverrideHomeButtonLongPress(duration, slopMultiplier, haptic)
         }
 
-    fun setLauncherWallpaperZoom(zoomOut: Float) {
-        lastLauncherWallpaperZoom = zoomOut
-        executeWithErrorLog({ "Failed call setLauncherWallpaperZoom with arg: $zoomOut" }) {
-            systemUiProxy?.setLauncherWallpaperZoom(zoomOut)
+    fun setLauncherWallpaperZoom(owner: Int, zoomOut: Float) {
+        executeWithErrorLog({ "Failed call setLauncherWallpaperZoom with args: owner=$owner, zoom=$zoomOut" }) {
+            systemUiProxy?.setLauncherWallpaperZoom(owner, zoomOut)
         }
     }
 
-    fun getLauncherWallpaperZoom(): Float = lastLauncherWallpaperZoom
+    fun setLauncherWallpaperZoom(zoomOut: Float) {
+        setLauncherWallpaperZoom(ISystemUiProxy.WP_ZOOM_APP_ZOOM, zoomOut)
+    }
 
     fun notifyAccessibilityButtonClicked(displayId: Int) =
         executeWithErrorLog({ "Failed call notifyAccessibilityButtonClicked" }) {

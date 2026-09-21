@@ -120,7 +120,6 @@ public final class AxWallpaperZoom {
     }
 
     private static float getCurrentVisualZoomOut(SystemUiProxy systemUiProxy) {
-        sZoomOut = boundToUnit(systemUiProxy.getLauncherWallpaperZoom());
         return sZoomOut;
     }
 

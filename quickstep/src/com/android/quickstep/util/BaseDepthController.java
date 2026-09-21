@@ -48,6 +48,7 @@ import com.android.launcher3.uioverrides.QuickstepLauncher;
 import com.android.launcher3.util.MultiPropertyFactory;
 import com.android.launcher3.util.MultiPropertyFactory.MultiProperty;
 import com.android.quickstep.SystemUiProxy;
+import com.android.systemui.shared.recents.ISystemUiProxy;
 import com.android.systemui.shared.system.BlurUtils;
 
 /**
@@ -157,7 +158,8 @@ public class BaseDepthController implements LauncherPrefChangeListener {
                 LauncherPrefsExt.LAUNCHER_BLUR_ENABLED,
                 LauncherPrefsExt.LAUNCHER_BLUR_RADIUS_PCT,
                 LauncherPrefsExt.DISABLE_WALLPAPER_ZOOM);
-        SystemUiProxy.INSTANCE.get(mLauncher).setLauncherWallpaperZoom(0f);
+        SystemUiProxy.INSTANCE.get(mLauncher)
+                .setLauncherWallpaperZoom(ISystemUiProxy.WP_ZOOM_BASE_DEPTH, 0f);
     }
 
     public void setWallpaperZoomOverride(float zoom) {
@@ -262,9 +264,9 @@ public class BaseDepthController implements LauncherPrefChangeListener {
     private void applyDepthAndBlur(@Nullable SurfaceTransaction surfaceTransaction,
             boolean applyImmediately, boolean skipSimilarBlur) {
         float depth = mDepth;
+        float zoom = Float.isNaN(mWallpaperZoomOverride) ? depth : mWallpaperZoomOverride;
         SystemUiProxy.INSTANCE.get(mLauncher)
-                .setLauncherWallpaperZoom(
-                        Float.isNaN(mWallpaperZoomOverride) ? depth : mWallpaperZoomOverride);
+                .setLauncherWallpaperZoom(ISystemUiProxy.WP_ZOOM_BASE_DEPTH, zoom);
 
         if (!BlurUtils.supportsBlursOnWindows()) {
             return;
