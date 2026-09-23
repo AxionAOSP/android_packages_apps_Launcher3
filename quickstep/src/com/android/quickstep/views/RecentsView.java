@@ -2762,7 +2762,9 @@ public abstract class RecentsView<
                 visible = isTaskViewWithinBounds(taskView, visibleStart, visibleEnd,
                         mTaskViewsDismissPrimaryTranslations.getOrDefault(taskView, 0));
             } else {
-                visible = index >= lowerIndex && index <= upperIndex;
+                visible = index >= lowerIndex && index <= upperIndex
+                        || isTaskViewVisible(taskView)
+                        || (mEnableDrawingLiveTile && taskView == getRunningTaskView());
             }
             if (visible) {
                 // Default update all non-null tasks, then remove running ones
