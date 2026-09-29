@@ -3590,25 +3590,11 @@ public class Workspace<T extends View & PageIndicator> extends PagedView<T>
         if (cellLayout == null) return List.of();
 
         Rect resizeBounds = getFolderResizeBounds(cellLayout, lp);
-        Rect candidateBounds = new Rect();
         List<Point> allowedSizes = new ArrayList<>();
 
         for (int spanY = 1; spanY <= resizeBounds.height(); spanY++) {
             for (int spanX = 1; spanX <= resizeBounds.width(); spanX++) {
-                cellLayout.cellToRect(
-                        resizeBounds.left,
-                        resizeBounds.top,
-                        spanX,
-                        spanY,
-                        candidateBounds);
-
-                if (folderIcon.isPreviewTightlyWrapped(
-                        candidateBounds.width(),
-                        candidateBounds.height(),
-                        spanX,
-                        spanY)) {
-                    allowedSizes.add(new Point(spanX, spanY));
-                }
+                allowedSizes.add(new Point(spanX, spanY));
             }
         }
 
@@ -3631,16 +3617,7 @@ public class Workspace<T extends View & PageIndicator> extends PagedView<T>
 
         CellAndSpan target = new CellAndSpan(cellX, cellY, spanX, spanY);
         Rect resizeBounds = getFolderResizeBounds(cellLayout, lp);
-        if (!isFolderResizeTargetWithinBounds(target, resizeBounds)) return false;
-
-        Rect targetBounds = new Rect();
-        cellLayout.cellToRect(cellX, cellY, spanX, spanY, targetBounds);
-
-        return folderIcon.isPreviewTightlyWrapped(
-            targetBounds.width(),
-            targetBounds.height(),
-            spanX,
-            spanY);
+        return isFolderResizeTargetWithinBounds(target, resizeBounds);
     }
 
     public boolean autoShrinkFolder(FolderIcon folderIcon) {

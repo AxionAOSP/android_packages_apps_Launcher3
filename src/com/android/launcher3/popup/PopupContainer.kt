@@ -28,6 +28,7 @@ import com.android.launcher3.DropTarget.DragObject
 import com.android.launcher3.R
 import com.android.launcher3.dragndrop.DragController
 import com.android.launcher3.dragndrop.DragOptions
+import com.android.launcher3.folder.FolderIcon
 import com.android.launcher3.model.data.ItemInfo
 import com.android.launcher3.util.ShortcutUtil
 import com.android.launcher3.views.ActivityContext
@@ -79,6 +80,13 @@ open class PopupContainer<T>(context: Context?, val originalView: View, val item
 
     override fun isOfType(type: Int): Boolean {
         return (type and AbstractFloatingView.TYPE_ACTION_POPUP) != 0
+    }
+
+    override fun shouldAddArrow(): Boolean {
+        if (originalView is FolderIcon) {
+            return false
+        }
+        return super.shouldAddArrow()
     }
 
     @CallSuper

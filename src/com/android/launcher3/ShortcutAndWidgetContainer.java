@@ -168,26 +168,28 @@ public class ShortcutAndWidgetContainer extends ViewGroup implements FolderIcon.
         } else {
             lp.setup(mCellWidth, mCellHeight, invertLayoutHorizontally(), mCountX, mCountY,
                     mBorderSpace);
-            // Center the icon/folder
-            int cHeight = getCellContentHeight();
-            int cellPaddingY =
-                    dp.getWorkspaceIconProfile().getCellYPaddingPx() >= 0 && mContainerType == WORKSPACE
-                            ? dp.getWorkspaceIconProfile().getCellYPaddingPx()
-                            : (int) Math.max(0, ((lp.height - cHeight) / 2f));
+            if (child instanceof FolderIcon folderIcon && folderIcon.usesWorkspacePreviewLayout()) {
+                child.setPadding(0, 0, 0, 0);
+            } else {
+                int cHeight = getCellContentHeight();
+                int cellPaddingY =
+                        dp.getWorkspaceIconProfile().getCellYPaddingPx() >= 0 && mContainerType == WORKSPACE
+                                ? dp.getWorkspaceIconProfile().getCellYPaddingPx()
+                                : (int) Math.max(0, ((lp.height - cHeight) / 2f));
 
-            // No need to add padding when cell layout border spacing is present.
-            boolean noPaddingX =
-                    (dp.getWorkspaceIconProfile().getCellLayoutBorderSpacePx().x > 0
-                            && mContainerType == WORKSPACE)
-                            || (dp.getFolderProfile().getCellLayoutBorderSpacePx().x > 0
-                                && mContainerType == FOLDER)
-                            || (dp.hotseatBorderSpace > 0 && mContainerType == HOTSEAT);
-            int cellPaddingX = noPaddingX
-                    ? 0
-                    : mContainerType == WORKSPACE
-                            ? dp.mWorkspaceProfile.getWorkspaceCellPaddingXPx()
-                            : (int) (dp.mWorkspaceProfile.getEdgeMarginPx() / 2f);
-            child.setPadding(cellPaddingX, cellPaddingY, cellPaddingX, 0);
+                boolean noPaddingX =
+                        (dp.getWorkspaceIconProfile().getCellLayoutBorderSpacePx().x > 0
+                                && mContainerType == WORKSPACE)
+                                || (dp.getFolderProfile().getCellLayoutBorderSpacePx().x > 0
+                                    && mContainerType == FOLDER)
+                                || (dp.hotseatBorderSpace > 0 && mContainerType == HOTSEAT);
+                int cellPaddingX = noPaddingX
+                        ? 0
+                        : mContainerType == WORKSPACE
+                                ? dp.mWorkspaceProfile.getWorkspaceCellPaddingXPx()
+                                : (int) (dp.mWorkspaceProfile.getEdgeMarginPx() / 2f);
+                child.setPadding(cellPaddingX, cellPaddingY, cellPaddingX, 0);
+            }
         }
         int childWidthMeasureSpec = MeasureSpec.makeMeasureSpec(lp.width, MeasureSpec.EXACTLY);
         int childheightMeasureSpec = MeasureSpec.makeMeasureSpec(lp.height, MeasureSpec.EXACTLY);

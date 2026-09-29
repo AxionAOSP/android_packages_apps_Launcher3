@@ -42,6 +42,7 @@ import android.graphics.drawable.Drawable;
 import android.util.FloatProperty;
 import android.util.Log;
 import android.view.View;
+import android.view.ViewGroup;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -156,10 +157,22 @@ public class PreviewItemManager {
     }
 
     public void recomputePreviewDrawingParams() {
-        if (mReferenceDrawable != null) {
-            computePreviewDrawingParams(mReferenceDrawable.getIntrinsicWidth(),
-                    mIcon.getMeasuredWidth(),
-                    mIcon.getMeasuredHeight());
+        int drawableSize = mReferenceDrawable != null
+                ? mReferenceDrawable.getIntrinsicWidth()
+                : (mIcon.mActivity != null
+                        ? mIcon.mActivity.getDeviceProfile().getWorkspaceIconProfile().getIconSizePx()
+                        : 0);
+        int totalWidth = mIcon.getMeasuredWidth();
+        int totalHeight = mIcon.getMeasuredHeight();
+        if (totalWidth <= 0 || totalHeight <= 0) {
+            ViewGroup.LayoutParams lp = mIcon.getLayoutParams();
+            if (lp != null && lp.width > 0 && lp.height > 0) {
+                totalWidth = lp.width;
+                totalHeight = lp.height;
+            }
+        }
+        if (drawableSize > 0 && totalWidth > 0 && totalHeight > 0) {
+            computePreviewDrawingParams(drawableSize, totalWidth, totalHeight);
         }
     }
 
@@ -198,18 +211,12 @@ public class PreviewItemManager {
             mPrevSpanY = spanY;
             mPrevTopPadding = mIcon.getPaddingTop();
 
-            DeviceProfile deviceProfile = mIcon.mActivity.getDeviceProfile();
-            float density = deviceProfile.getWorkspaceIconProfile().getIconSizePx() / 60.f;
-            int gap = Math.round(8f * density);
-            float backgroundTop = mIcon.getPaddingTop() + deviceProfile.folderIconOffsetYPx;
-            float labelHeightAndGap = mIcon.isMultiSpanFolder() ? (mIcon.getFolderLabelHeight() + gap + backgroundTop) : 0f;
-
             mIcon.mBackground.setup(
                     mIcon.getContext(),
                     mIcon.mActivity,
                     mIcon,
                     mTotalWidth,
-                    Math.round(mTotalHeight - labelHeightAndGap),
+                    mTotalHeight,
                     mIcon.getPaddingTop(),
                     spanX,
                     spanY);
@@ -239,70 +246,77 @@ public class PreviewItemManager {
             RectF backgroundBounds,
             int spanX,
             int spanY) {
-        Resources resources = mContext.getResources();
         DeviceProfile deviceProfile = mIcon.mActivity.getDeviceProfile();
+        float standardIconSize = deviceProfile.getWorkspaceIconProfile().getIconSizePx();
+        float density = standardIconSize / 60.f;
 
-        float defaultPadding =
-                resources.getDimension(R.dimen.folder_workspace_preview_padding);
-        float baseContentSize =
-                deviceProfile.folderIconSizePx - 2 * defaultPadding;
+        float paddingH = Math.round(8f * density);
+        float paddingV = Math.round(8f * density);
+
+        float availW = Math.max(0f, backgroundBounds.width() - 2 * paddingH);
+        float availH = Math.max(0f, backgroundBounds.height() - 2 * paddingV);
 
         if (spanX == 1 && spanY == 1) {
-            // Standard legacy 1x1 circular folder preview grid layout
-            float minGap = resources.getDimension(R.dimen.folder_workspace_preview_min_gap);
-            RectF availableBounds = new RectF(backgroundBounds);
-            availableBounds.inset(defaultPadding, defaultPadding);
-
-            float maxItemSize = Math.min(availableBounds.width(), availableBounds.height());
-            float itemSize = Math.min(baseContentSize, maxItemSize);
-
-            return FolderPreviewLayout.calculateGrid(availableBounds, itemSize, minGap);
-        } else {
-            // Multi-span: Self-Hugging Automated Math matching calculateBackgroundBounds
-            float standardIconSize = deviceProfile.getWorkspaceIconProfile().getIconSizePx();
-            float itemScale = 0.85f;
-            float itemSize = standardIconSize * itemScale;
-            float idealPadding = itemSize * 0.20f;
-            float idealGap = itemSize * 0.15f;
-
-            float idealWidth = spanX * itemSize + (spanX - 1) * idealGap + 2 * idealPadding;
-            float idealHeight = spanY * itemSize + (spanY - 1) * idealGap + 2 * idealPadding;
-
-            float availableWidth = backgroundBounds.width();
-            float availableHeight = backgroundBounds.height();
-
-            if (idealWidth > availableWidth || idealHeight > availableHeight) {
-                float fitScale = Math.min(availableWidth / idealWidth, availableHeight / idealHeight);
-                itemSize *= fitScale;
-                idealPadding *= fitScale;
-                idealGap *= fitScale;
-            }
-
-            RectF availableBounds = new RectF(backgroundBounds);
-            availableBounds.inset(idealPadding, idealPadding);
-
-            // Calculate expanding gaps, but clamp them to a maximum of 1.5x idealGap to prevent icons from flying apart
-            float columnGap = spanX > 1 ? Math.min(idealGap * 1.5f, (availableBounds.width() - spanX * itemSize) / (spanX - 1)) : 0f;
-            float rowGap = spanY > 1 ? Math.min(idealGap * 1.5f, (availableBounds.height() - spanY * itemSize) / (spanY - 1)) : 0f;
-
-            // Compute total size of this beautifully proportioned grid
-            float gridWidth = spanX * itemSize + (spanX - 1) * columnGap;
-            float gridHeight = spanY * itemSize + (spanY - 1) * rowGap;
-
-            // Center the grid inside the background bounds
-            float startX = backgroundBounds.left + (backgroundBounds.width() - gridWidth) / 2f;
-            float startY = backgroundBounds.top + (backgroundBounds.height() - gridHeight) / 2f;
-
-            return new FolderPreviewLayout.Grid(
-                    spanX,
-                    spanY,
-                    startX,
-                    startY,
-                    itemSize,
-                    columnGap,
-                    rowGap
-            );
+            int cols = 2;
+            int rows = 2;
+            float cellW = availW / cols;
+            float cellH = availH / rows;
+            float itemSize = Math.min(cellW * 0.82f, cellH * 0.72f);
+            float columnGap = cellW - itemSize;
+            float rowGap = Math.min(cellH - itemSize, Math.max(columnGap, Math.round(14f * density)));
+            float totalW = cols * itemSize + (cols - 1) * columnGap;
+            float totalH = rows * itemSize + (rows - 1) * rowGap;
+            float startX = backgroundBounds.left + (backgroundBounds.width() - totalW) / 2f;
+            float startY = backgroundBounds.top + (backgroundBounds.height() - totalH) / 2f;
+            return new FolderPreviewLayout.Grid(cols, rows, startX, startY, itemSize, columnGap, rowGap);
         }
+
+        float idealTileW = standardIconSize * 0.95f;
+        float idealTileH = standardIconSize * 0.95f;
+        float minGap = Math.round(10f * density);
+
+        int fitCols = spanX == 1 ? 1 : Math.max(1, (int) Math.round((availW + minGap) / (idealTileW + minGap)));
+        int cols = Math.max(fitCols, spanX);
+
+        int fitRows = Math.max(1, (int) Math.floor((availH + minGap) / (idealTileH + minGap)));
+        int itemCount = mIcon.mInfo != null ? mIcon.mInfo.getContents().size() : 0;
+        int neededRows = Math.max(1, (int) Math.ceil((double) itemCount / cols));
+        int rows = Math.min(fitRows, Math.max(spanY, neededRows));
+
+        if (spanY == 1 && itemCount <= cols) {
+            rows = 1;
+        }
+
+        float cellW = availW / cols;
+        float cellH = availH / rows;
+
+        float maxAllowedIconSize = standardIconSize * 1.05f;
+        float itemSize = Math.min(maxAllowedIconSize, Math.min(cellW * 0.85f, cellH * 0.82f));
+
+        float naturalColGap = cols > 1 ? (availW - cols * itemSize) / (cols - 1) : 0f;
+        float naturalRowGap = rows > 1 ? (availH - rows * itemSize) / (rows - 1) : 0f;
+
+        float maxRowGap = cols > 1
+                ? Math.max(naturalColGap * 1.25f, Math.round(18f * density))
+                : Math.round(24f * density);
+        float rowGap = Math.min(naturalRowGap, maxRowGap);
+        float columnGap = naturalColGap;
+
+        float totalGridW = cols * itemSize + (cols - 1) * columnGap;
+        float totalGridH = rows * itemSize + (rows - 1) * rowGap;
+
+        float startX = backgroundBounds.left + (backgroundBounds.width() - totalGridW) / 2f;
+        float startY = backgroundBounds.top + (backgroundBounds.height() - totalGridH) / 2f;
+
+        return new FolderPreviewLayout.Grid(
+                cols,
+                rows,
+                startX,
+                startY,
+                itemSize,
+                columnGap,
+                rowGap
+        );
     }
 
     private FolderPreviewLayout.Grid calculateWorkspacePreviewGrid(
@@ -311,19 +325,16 @@ public class PreviewItemManager {
             int spanX,
             int spanY) {
         DeviceProfile deviceProfile = mIcon.mActivity.getDeviceProfile();
-        float density = deviceProfile.getWorkspaceIconProfile().getIconSizePx() / 60.f;
-        int gap = Math.round(8f * density);
-        float backgroundTop = mIcon.getPaddingTop() + deviceProfile.folderIconOffsetYPx;
-        float labelHeightAndGap = mIcon.isMultiSpanFolder() ? (mIcon.getFolderLabelHeight() + gap + backgroundTop) : 0f;
-
         Rect backgroundBounds = new Rect();
         PreviewBackground.calculateBackgroundBounds(
                 deviceProfile,
                 availableSpaceX,
-                Math.round(availableSpaceY - labelHeightAndGap),
+                availableSpaceY,
                 mIcon.getPaddingTop(),
                 spanX,
                 spanY,
+                mIcon.getFolderLabelHeight(),
+                mIcon.usesWorkspacePreviewLayout(),
                 backgroundBounds);
         return calculateWorkspacePreviewGrid(new RectF(backgroundBounds), spanX, spanY);
     }
@@ -769,6 +780,7 @@ public class PreviewItemManager {
             setDrawable(drawingParams, placement.getItem());
             applyPlacement(placement, drawingParams);
         }
+        onParamsChanged();
     }
 
     void buildParamsForPage(int page, ArrayList<PreviewItemDrawingParams> params, boolean animate) {
@@ -994,8 +1006,25 @@ public class PreviewItemManager {
             if (loadHighResIcon) {
                 LauncherAppState.getInstance(mContext).getIconCache().updateIconInBackground(
                         newInfo -> {
-                            if (p.item == newInfo) {
-                                setDrawableInternal(p, newInfo, false /* loadHighResIcon */);
+                            boolean updated = false;
+                            for (PreviewItemDrawingParams drawingParams : mFirstPageParams) {
+                                if (drawingParams.item == newInfo
+                                        || (drawingParams.item != null && newInfo != null && drawingParams.item.id == newInfo.id)) {
+                                    setDrawableInternal(drawingParams, newInfo, false /* loadHighResIcon */);
+                                    updated = true;
+                                }
+                            }
+                            for (PreviewItemDrawingParams drawingParams : mCurrentPageParams) {
+                                if (drawingParams.item == newInfo
+                                        || (drawingParams.item != null && newInfo != null && drawingParams.item.id == newInfo.id)) {
+                                    setDrawableInternal(drawingParams, newInfo, false /* loadHighResIcon */);
+                                    updated = true;
+                                }
+                            }
+                            if (updated || p.item == newInfo) {
+                                if (!updated) {
+                                    setDrawableInternal(p, newInfo, false /* loadHighResIcon */);
+                                }
                                 mIcon.invalidate();
                             }
                         }, info, DESKTOP_ICON_FLAG);

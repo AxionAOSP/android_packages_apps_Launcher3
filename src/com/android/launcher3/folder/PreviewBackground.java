@@ -52,6 +52,7 @@ import com.android.launcher3.DeviceProfile;
 import com.android.launcher3.Flags;
 import com.android.launcher3.LauncherPrefsExt;
 import com.android.launcher3.R;
+import com.android.launcher3.widget.RoundedCornerEnforcement;
 import com.android.launcher3.celllayout.DelegatedCellDrawing;
 import com.android.launcher3.graphics.ShapeDelegate;
 import com.android.launcher3.graphics.ThemeManager;
@@ -93,6 +94,9 @@ public class PreviewBackground extends DelegatedCellDrawing {
     private View mInvalidateDelegate;
 
     int previewSize;
+    private int mSpanX = 1;
+    private int mSpanY = 1;
+    private boolean mIsWorkspace = false;
 
     private CellLayout mDrawingDelegate;
 
@@ -152,6 +156,8 @@ public class PreviewBackground extends DelegatedCellDrawing {
             int topPadding,
             int spanX,
             int spanY,
+            int labelHeight,
+            boolean isWorkspace,
             Rect outBounds) {
         int previewSize = grid.folderIconSizePx;
 
@@ -160,39 +166,28 @@ public class PreviewBackground extends DelegatedCellDrawing {
         int backgroundLeft;
         int backgroundTop;
 
-        if (spanX == 1 && spanY == 1) {
-            // Keep legacy 1x1 circular folder preview size and alignment exactly
+        if (!isWorkspace) {
             backgroundWidth = previewSize;
             backgroundHeight = previewSize;
             backgroundLeft = (availableSpaceX - backgroundWidth) / 2;
             backgroundTop = topPadding + grid.folderIconOffsetYPx;
         } else {
-            // Multi-span: Self-Hugging Automated Math
-            float standardIconSize = grid.getWorkspaceIconProfile().getIconSizePx();
-            float itemScale = 0.85f;
-            float itemSize = standardIconSize * itemScale;
-            float idealPadding = itemSize * 0.20f;
-            float idealGap = itemSize * 0.15f;
+            float density = grid.getWorkspaceIconProfile().getIconSizePx() / 60.f;
+            int margin = Math.round(4f * density);
 
-            float idealWidth = spanX * itemSize + (spanX - 1) * idealGap + 2 * idealPadding;
-            float idealHeight = spanY * itemSize + (spanY - 1) * idealGap + 2 * idealPadding;
+            backgroundLeft = margin;
+            backgroundWidth = Math.max(previewSize, availableSpaceX - 2 * margin);
+            backgroundTop = margin;
 
-            if (idealWidth > availableSpaceX || idealHeight > availableSpaceY) {
-                float fitScale = Math.min((float) availableSpaceX / idealWidth, (float) availableSpaceY / idealHeight);
-                itemSize *= fitScale;
-                idealPadding *= fitScale;
-                idealGap *= fitScale;
-
-                idealWidth = spanX * itemSize + (spanX - 1) * idealGap + 2 * idealPadding;
-                idealHeight = spanY * itemSize + (spanY - 1) * idealGap + 2 * idealPadding;
+            if (labelHeight > 0) {
+                int gap = Math.round(6f * density);
+                int bottomPadding = margin;
+                backgroundHeight = Math.max(previewSize,
+                        availableSpaceY - backgroundTop - gap - labelHeight - bottomPadding);
+            } else {
+                backgroundHeight = Math.max(previewSize,
+                        availableSpaceY - 2 * margin);
             }
-
-            backgroundWidth = Math.round(idealWidth);
-            backgroundHeight = Math.round(idealHeight);
-            backgroundLeft = Math.round((availableSpaceX - backgroundWidth) / 2f);
-
-            // ALWAYS top-align multi-span folder backgrounds to match standard workspace icon alignment!
-            backgroundTop = topPadding + grid.folderIconOffsetYPx;
         }
 
         outBounds.set(
@@ -230,6 +225,8 @@ public class PreviewBackground extends DelegatedCellDrawing {
     public void setup(Context context, ActivityContext activity, View invalidateDelegate,
             int availableSpaceX, int availableSpaceY, int topPadding, int spanX, int spanY) {
         mInvalidateDelegate = invalidateDelegate;
+        mSpanX = spanX;
+        mSpanY = spanY;
 
         TypedArray ta = context.getTheme().obtainStyledAttributes(R.styleable.FolderIconPreview);
         mStrokeColor = ta.getColor(R.styleable.FolderIconPreview_folderIconBorderColor, 0);
@@ -239,6 +236,13 @@ public class PreviewBackground extends DelegatedCellDrawing {
         DeviceProfile grid = activity.getDeviceProfile();
         previewSize = grid.folderIconSizePx;
 
+        boolean isWorkspace = (invalidateDelegate instanceof FolderIcon folderIcon)
+                && folderIcon.usesWorkspacePreviewLayout();
+        mIsWorkspace = isWorkspace;
+
+        int labelHeight = (invalidateDelegate instanceof FolderIcon folderIcon)
+                ? folderIcon.getFolderLabelHeight() : 0;
+
         calculateBackgroundBounds(
             grid,
             availableSpaceX,
@@ -246,6 +250,8 @@ public class PreviewBackground extends DelegatedCellDrawing {
             topPadding,
             spanX,
             spanY,
+            labelHeight,
+            isWorkspace,
             mBackgroundBounds);
         mTargetBackgroundBounds.set(mBackgroundBounds);
 
@@ -299,6 +305,9 @@ public class PreviewBackground extends DelegatedCellDrawing {
         animator.addUpdateListener(animation -> {
             mBackgroundBounds.set(
                     (Rect) animation.getAnimatedValue());
+            if (mInvalidateDelegate instanceof FolderIcon folderIcon) {
+                folderIcon.layoutFolderName();
+            }
             invalidate();
         });
         animator.addListener(new AnimatorListenerAdapter() {
@@ -410,6 +419,11 @@ public class PreviewBackground extends DelegatedCellDrawing {
             ShapeDelegate shape,
             RectF bounds,
             float scale) {
+        if (mIsWorkspace || mSpanX > 1 || mSpanY > 1) {
+            float widgetRadius = RoundedCornerEnforcement.computeEnforcedRadius(mContext);
+            return Math.min(widgetRadius * scale, Math.min(bounds.width(), bounds.height()) / 2f);
+        }
+
         if (!(shape instanceof ShapeDelegate.RoundedSquare roundedSquare)) {
             return 0f;
         }

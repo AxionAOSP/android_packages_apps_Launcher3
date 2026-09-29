@@ -183,8 +183,7 @@ object FolderPreviewLayout {
 
     @JvmStatic
     fun isTightlyWrapped(itemCount: Int, grid: Grid): Boolean {
-        val usage = calculateGridUsage(itemCount, grid)
-        return !usage.hasEmptyColumns && !usage.hasEmptyRows
+        return grid.columns > 0 && grid.rows > 0
     }
 
     @JvmStatic
