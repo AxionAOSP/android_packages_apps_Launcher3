@@ -59,6 +59,7 @@ public class BaseDepthController implements LauncherPrefChangeListener {
     public static final float DEPTH_60_PERCENT = 0.6f;
     public static final float DEPTH_70_PERCENT = 0.7f;
     public static final float DEPTH_85_PERCENT = 0.85f;
+    private static final boolean DEBUG = false;
 
     private static final FloatProperty<BaseDepthController> DEPTH =
             new FloatProperty<BaseDepthController>("depth") {
@@ -296,13 +297,18 @@ public class BaseDepthController implements LauncherPrefChangeListener {
         int delta = Math.abs(newBlur - previousBlur);
         if (skipSimilarBlur && delta < Utilities.dpToPx(1) && newBlur != 0 && previousBlur != 0
                 && blurAmount != 1f) {
-            Log.d(TAG, "Skipping small blur delta. newBlur: " + newBlur + " previousBlur: "
-                    + previousBlur + " delta: " + delta + " surface: " + blurSurface);
+            if (DEBUG) {
+                Log.d(TAG, "Skipping small blur delta. newBlur: " + newBlur + " previousBlur: "
+                        + previousBlur + " delta: " + delta + " surface: " + blurSurface);
+            }
             return;
         }
         mCurrentBlur = newBlur;
-        Log.v(TAG, "Applying blur: " + mCurrentBlur + " to " + blurSurface + " applyImmediately: "
-                + applyImmediately);
+        
+        if (DEBUG) {
+            Log.v(TAG, "Applying blur: " + mCurrentBlur + " to " + blurSurface + " applyImmediately: "
+                    + applyImmediately);
+        }
 
         if (surfaceTransaction == null) {
             surfaceTransaction = new SurfaceTransaction();
@@ -321,8 +327,10 @@ public class BaseDepthController implements LauncherPrefChangeListener {
         }
 
         if (applyImmediately || mSurfaceTransactionApplier == null) {
-            Log.d(TAG, "Applying blur immediately, mSurfaceTransactionApplier is null? "
-                    + (mSurfaceTransactionApplier == null));
+            if (DEBUG) {
+                Log.d(TAG, "Applying blur immediately, mSurfaceTransactionApplier is null? "
+                        + (mSurfaceTransactionApplier == null));
+            }
             surfaceTransaction.getTransaction().apply();
         } else {
             mSurfaceTransactionApplier.scheduleApply(surfaceTransaction);
@@ -384,11 +392,13 @@ public class BaseDepthController implements LauncherPrefChangeListener {
                 ? RenderEffect.createBlurEffect(mCurrentBlur, mCurrentBlur, Shader.TileMode.DECAL)
                 // If blur is not desired, clear the blur effect from the depth targets.
                 : null;
-        Log.d(TAG, "shouldBlurWorkspace: " + shouldBlurWorkspace
-                + " targetState: " + targetState
-                + " currentStableState: " + stateManager.getCurrentStableState()
-                + " mCurrentBlur: " + mCurrentBlur
-                + " mLauncher.getDepthBlurTargets(): " + mLauncher.getDepthBlurTargets());
+        if (DEBUG) {
+            Log.d(TAG, "shouldBlurWorkspace: " + shouldBlurWorkspace
+                    + " targetState: " + targetState
+                    + " currentStableState: " + stateManager.getCurrentStableState()
+                    + " mCurrentBlur: " + mCurrentBlur
+                    + " mLauncher.getDepthBlurTargets(): " + mLauncher.getDepthBlurTargets());
+        }
         mLauncher.getDepthBlurTargets().forEach(target -> target.setRenderEffect(blurEffect));
         return shouldBlurWorkspace;
     }
