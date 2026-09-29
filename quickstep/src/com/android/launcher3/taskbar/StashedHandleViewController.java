@@ -196,8 +196,7 @@ public class StashedHandleViewController implements TaskbarControllers.LoggableT
                 mActivity.getContentResolver().registerContentObserver(
                         Settings.System.getUriFor("gesture_navbar_length_mode"),
                         false,
-                        mNavbarLengthObserver,
-                        UserHandle.USER_CURRENT);
+                        mNavbarLengthObserver);
                 mNavbarLengthObserverRegistered = true;
             }
         } else {
