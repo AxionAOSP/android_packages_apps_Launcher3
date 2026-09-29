@@ -30,6 +30,12 @@ import android.animation.AnimatorListenerAdapter;
 import android.animation.ValueAnimator;
 import android.app.TaskInfo;
 import android.content.Context;
+import android.database.ContentObserver;
+import android.net.Uri;
+import android.os.Handler;
+import android.os.Looper;
+import android.os.UserHandle;
+import android.provider.Settings;
 import android.content.res.Resources;
 import android.graphics.Outline;
 import android.graphics.Rect;
@@ -89,6 +95,17 @@ public class StashedHandleViewController implements TaskbarControllers.LoggableT
     private final LauncherPrefs mPrefs;
     private final StashedHandleView mStashedHandleView;
     private int mStashedHandleWidth;
+
+    private boolean mNavbarLengthObserverRegistered;
+
+    private final ContentObserver mNavbarLengthObserver = new ContentObserver(
+            new Handler(Looper.getMainLooper())) {
+        @Override
+        public void onChange(boolean selfChange, Uri uri) {
+            updateStashedHandleWidth();
+            mStashedHandleView.invalidateOutline();
+        }
+    };
     private final int mStashedHandleHeight;
     @Nullable
     private RegionSamplingHelper mRegionSamplingHelper;
@@ -133,6 +150,40 @@ public class StashedHandleViewController implements TaskbarControllers.LoggableT
                 R.dimen.taskbar_stashed_handle_height);
     }
 
+    private void updateStashedHandleWidth() {
+        mStashedHandleWidth = getStashedHandleWidth(mActivity.getResources());
+    }
+
+    private int getStashedHandleWidth(Resources resources) {
+        int mode = Settings.System.getIntForUser(
+                mActivity.getContentResolver(),
+                "gesture_navbar_length_mode",
+                2,
+                UserHandle.USER_CURRENT);
+
+        final int widthDp;
+        switch (mode) {
+            case 0:
+                widthDp = 72;
+                break;
+            case 1:
+                widthDp = 90;
+                break;
+            case 3:
+                widthDp = 126;
+                break;
+            case 4:
+                widthDp = 144;
+                break;
+            case 2:
+            default:
+                widthDp = 108;
+                break;
+        }
+
+        return (int) (widthDp * resources.getDisplayMetrics().density + 0.5f);
+    }
+
     public void init(TaskbarControllers controllers) {
         mControllers = controllers;
         DeviceProfile deviceProfile = mActivity.getDeviceProfile();
@@ -140,8 +191,15 @@ public class StashedHandleViewController implements TaskbarControllers.LoggableT
         if (mActivity.isPhoneGestureNavMode() || mActivity.isTinyTaskbar()
                 || mActivity.isBubbleBarOnPhone()) {
             mTaskbarSize = resources.getDimensionPixelSize(R.dimen.taskbar_phone_size);
-            mStashedHandleWidth =
-                    resources.getDimensionPixelSize(R.dimen.taskbar_stashed_small_screen);
+            mStashedHandleWidth = getStashedHandleWidth(resources);
+            if (!mNavbarLengthObserverRegistered) {
+                mActivity.getContentResolver().registerContentObserver(
+                        Settings.System.getUriFor("gesture_navbar_length_mode"),
+                        false,
+                        mNavbarLengthObserver,
+                        UserHandle.USER_CURRENT);
+                mNavbarLengthObserverRegistered = true;
+            }
         } else {
             mTaskbarSize = deviceProfile.getTaskbarProfile().getHeight();
             mStashedHandleWidth = resources
