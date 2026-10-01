@@ -36,6 +36,7 @@ import android.view.WindowManager;
 import com.android.launcher3.AbstractFloatingView;
 import com.android.launcher3.BaseActivity;
 import com.android.launcher3.DeviceProfile;
+import com.android.launcher3.Launcher;
 import com.android.launcher3.util.TouchController;
 import com.android.quickstep.SystemUiProxy;
 
@@ -109,6 +110,9 @@ public class StatusBarTouchController implements TouchController {
             // one touch pointer. Hence, even if slope passed, only set the slippery flag
             // when there is single touch event. (context: InputDispatcher.cpp line 1445)
             if (dy > mTouchSlop && dy > Math.abs(dx) && ev.getPointerCount() == 1) {
+                if (mLauncher instanceof Launcher launcher) {
+                    launcher.onNotificationShadeExpandChanged(true);
+                }
                 ev.setAction(ACTION_DOWN);
                 dispatchTouchEvent(ev);
                 setWindowSlippery(true);

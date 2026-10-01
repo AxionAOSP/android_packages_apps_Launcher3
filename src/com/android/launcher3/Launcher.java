@@ -1232,6 +1232,7 @@ public class Launcher extends StatefulActivity<LauncherState>
         } else if (ALL_APPS.equals(state) && DRAWER_OPEN_KEYBOARD.get(this)) {
             getAppsView().getSearchUiManager().focusSearchField();
         }
+        mPerfController.onStateSetEnd(state);
         setTitle(state);
         applyWorkspaceStylePrefs();
     }
@@ -1252,6 +1253,7 @@ public class Launcher extends StatefulActivity<LauncherState>
     protected void onResume() {
         TraceHelper.INSTANCE.beginSection(ON_RESUME_EVT);
         super.onResume();
+        mPerfController.onResume();
 
         if (mStateManager.getState() == LauncherState.EDIT_MODE && mShakeDetector != null) {
             mShakeDetector.start();
@@ -2806,6 +2808,17 @@ public class Launcher extends StatefulActivity<LauncherState>
         return false;
     }
 
+    private final AxLauncherPerfController mPerfController =
+            new AxLauncherPerfController(this);
+
+    public AxLauncherPerfController getPerfController() {
+        return mPerfController;
+    }
+
+    public void onNotificationShadeExpandChanged(boolean isExpanded) {
+        mPerfController.onNotificationShadeExpandChanged(isExpanded);
+    }
+
     /**
      * Animates Launcher elements during a transition to the All Apps page.
      *
@@ -2815,6 +2828,7 @@ public class Launcher extends StatefulActivity<LauncherState>
         if (progress == 0 && mAppsView != null) {
             hideKeyboard();
         }
+        mPerfController.onAllAppsTransition(progress);
     }
 
     /** @return list of View targets to be blurred based on changes to depth. */

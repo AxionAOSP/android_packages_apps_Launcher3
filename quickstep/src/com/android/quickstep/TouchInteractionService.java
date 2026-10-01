@@ -46,6 +46,9 @@ import static com.android.quickstep.InputConsumerUtils.tryCreateAssistantInputCo
 import static com.android.quickstep.RecentsAnimationDeviceState.RESET_TO_DEFAULT_GESTURAL_HEIGHT;
 import static com.android.quickstep.window.RecentsWindowFlags.enableOverviewOnConnectedDisplays;
 import static com.android.systemui.shared.system.ActivityManagerWrapper.CLOSE_SYSTEM_WINDOWS_REASON_RECENTS;
+import static com.android.systemui.shared.system.QuickStepContract.SYSUI_STATE_NOTIFICATION_PANEL_EXPANDED;
+import static com.android.systemui.shared.system.QuickStepContract.SYSUI_STATE_NOTIFICATION_PANEL_VISIBLE;
+import static com.android.systemui.shared.system.QuickStepContract.SYSUI_STATE_QUICK_SETTINGS_EXPANDED;
 
 import android.app.ActivityManager;
 import android.app.Service;
@@ -985,6 +988,13 @@ public class TouchInteractionService extends Service {
                     // ever will, they should be taken care of.
                     SystemUiProxy.INSTANCE.get(this).setLastSystemUiStateFlags(systemUiStateFlags);
                     mOverviewComponentObserver.setHomeDisabled(deviceState.isHomeDisabled());
+                    boolean isShadeActive = (systemUiStateFlags & (SYSUI_STATE_NOTIFICATION_PANEL_VISIBLE
+                            | SYSUI_STATE_NOTIFICATION_PANEL_EXPANDED
+                            | SYSUI_STATE_QUICK_SETTINGS_EXPANDED)) != 0;
+                    Launcher launcher = Launcher.ACTIVITY_TRACKER.getCreatedContext();
+                    if (launcher != null) {
+                        launcher.getPerfController().onNotificationShadeExpandChanged(isShadeActive);
+                    }
                 }
                 taskAnimationManager.onSystemUiFlagsChanged(lastSysUIFlags, systemUiStateFlags);
             }
