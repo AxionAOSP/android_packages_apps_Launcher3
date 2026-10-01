@@ -660,13 +660,6 @@ public class QuickstepTransitionManager implements OnDeviceProfileChangeListener
             ObjectAnimator alpha = ObjectAnimator.ofFloat(appsView, View.ALPHA, alphas);
             alpha.setDuration(CONTENT_ALPHA_DURATION);
             alpha.setInterpolator(LINEAR);
-            appsView.setLayerType(View.LAYER_TYPE_HARDWARE, null);
-            alpha.addListener(new AnimatorListenerAdapter() {
-                @Override
-                public void onAnimationEnd(Animator animation) {
-                    appsView.setLayerType(View.LAYER_TYPE_NONE, null);
-                }
-            });
 
             if (!skipAllAppsScale) {
                 SCALE_PROPERTY.set(appsView, scales[0]);
@@ -681,7 +674,6 @@ public class QuickstepTransitionManager implements OnDeviceProfileChangeListener
             endListener = () -> {
                 appsView.setAlpha(startAlpha);
                 SCALE_PROPERTY.set(appsView, startScale);
-                appsView.setLayerType(View.LAYER_TYPE_NONE, null);
                 mLauncher.resumeExpensiveViewUpdates();
             };
         } else if (mLauncher.isInState(OVERVIEW)) {

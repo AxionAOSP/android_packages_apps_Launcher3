@@ -1582,17 +1582,11 @@ public class Workspace<T extends View & PageIndicator> extends PagedView<T>
     }
 
     private void updateChildrenLayersEnabled() {
-        boolean enableChildrenLayers = mIsSwitchingState || isPageInTransition();
-
-        if (enableChildrenLayers != mChildrenLayersEnabled) {
-            mChildrenLayersEnabled = enableChildrenLayers;
-            if (mChildrenLayersEnabled) {
-                enableHwLayersOnVisiblePages();
-            } else {
-                for (int i = 0; i < getPageCount(); i++) {
-                    final CellLayout cl = (CellLayout) getChildAt(i);
-                    cl.enableHardwareLayer(false);
-                }
+        if (mChildrenLayersEnabled) {
+            mChildrenLayersEnabled = false;
+            for (int i = 0; i < getPageCount(); i++) {
+                final CellLayout cl = (CellLayout) getChildAt(i);
+                cl.enableHardwareLayer(false);
             }
         }
     }

@@ -321,6 +321,8 @@ constructor(
     fun setColorTint(color: Int, amount: Float) {
         if (amount == 0f) {
             setLayerType(View.LAYER_TYPE_NONE, null)
+            setLayerPaint(null)
+            return
         }
         val layerPaint = Paint()
         layerPaint.setColorFilter(Utilities.makeColorTintingColorFilter(color, amount))
