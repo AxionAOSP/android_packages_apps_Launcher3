@@ -38,6 +38,7 @@ import android.view.ViewGroup
 import android.widget.ImageButton
 import android.widget.ImageView
 import androidx.annotation.VisibleForTesting
+import androidx.core.graphics.ColorUtils
 import androidx.core.view.children
 import com.android.launcher3.AppWidgetResizeFrame.Companion.DragHandles.Companion.HANDLE_COUNT
 import com.android.launcher3.DropTarget.DragObject
@@ -58,6 +59,7 @@ import com.android.launcher3.model.data.LauncherAppWidgetInfo
 import com.android.launcher3.popup.PopupContainer.Companion.getOpen
 import com.android.launcher3.util.CellAndSpan
 import com.android.launcher3.util.PendingRequestArgs
+import com.android.launcher3.util.Themes
 import com.android.launcher3.views.ArrowTipView
 import com.android.launcher3.views.BaseDragLayer
 import com.android.launcher3.widget.LauncherAppWidgetHostView
@@ -200,6 +202,11 @@ private class FolderResizeTarget(
         val lp = folderIcon.layoutParams as? CellLayoutLayoutParams ?: return
         lp.cellHSpan = spanX
         lp.cellVSpan = spanY
+        val folderInfo = folderIcon.mInfo
+        if (folderInfo != null) {
+            folderInfo.spanX = spanX
+            folderInfo.spanY = spanY
+        }
         cellLayout.shortcutsAndWidgets.setupLp(folderIcon)
         folderIcon.measure(
             View.MeasureSpec.makeMeasureSpec(lp.width, View.MeasureSpec.EXACTLY),
@@ -211,14 +218,16 @@ private class FolderResizeTarget(
             folderIcon.left + lp.width,
             folderIcon.top + lp.height,
         )
+        folderIcon.previewItemManager.recomputePreviewDrawingParams()
         folderIcon.layoutFolderName()
+        folderIcon.invalidate()
 
         if (committed) {
-            folderInfo.spanX = spanX
-            folderInfo.spanY = spanY
-            folderInfo.minSpanX = spanX
-            folderInfo.minSpanY = spanY
-            workspace.mLauncher.modelWriter.updateItemInDatabase(folderInfo)
+            if (folderInfo != null) {
+                folderInfo.minSpanX = spanX
+                folderInfo.minSpanY = spanY
+                workspace.mLauncher.modelWriter.updateItemInDatabase(folderInfo)
+            }
             workspace.resizeFolder(
                 folderIcon,
                 CellAndSpan(lp.cellX, lp.cellY, spanX, spanY),
@@ -320,13 +329,15 @@ constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0
         folderResizeHandleLength =
             resources.getDimension(R.dimen.folder_resize_handle_length)
 
+        val isBrightWallpaper = Themes.getAttrBoolean(context, R.attr.isWorkspaceDarkText)
+
         folderResizeOutlinePaint.apply {
             style = Paint.Style.STROKE
             strokeWidth =
                 resources.getDimension(R.dimen.folder_resize_outline_stroke_width)
             strokeCap = Paint.Cap.ROUND
             strokeJoin = Paint.Join.ROUND
-            color = context.getColor(R.color.materialColorPrimary)
+            color = if (isBrightWallpaper) FOLDER_RESIZE_OUTLINE_BRIGHT_COLOR else FOLDER_RESIZE_OUTLINE_DARK_COLOR
         }
 
         folderResizeHandlePaint.apply {
@@ -336,7 +347,7 @@ constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0
                     R.dimen.folder_resize_handle_stroke_width)
             strokeCap = Paint.Cap.ROUND
             strokeJoin = Paint.Join.ROUND
-            color = context.getColor(R.color.materialColorPrimary)
+            color = if (isBrightWallpaper) FOLDER_RESIZE_HANDLE_BRIGHT_COLOR else FOLDER_RESIZE_HANDLE_DARK_COLOR
         }
 
         firstFrameAnimatorHelper = FirstFrameAnimatorHelper(this)
@@ -424,6 +435,12 @@ constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0
     }
 
     private fun updateFolderResizeGeometry(folderIcon: FolderIcon) {
+        val isBrightWallpaper = Themes.getAttrBoolean(context, R.attr.isWorkspaceDarkText)
+        folderResizeOutlinePaint.color =
+            if (isBrightWallpaper) FOLDER_RESIZE_OUTLINE_BRIGHT_COLOR else FOLDER_RESIZE_OUTLINE_DARK_COLOR
+        folderResizeHandlePaint.color =
+            if (isBrightWallpaper) FOLDER_RESIZE_HANDLE_BRIGHT_COLOR else FOLDER_RESIZE_HANDLE_DARK_COLOR
+
         val bgBounds = TempRect
         folderIcon.getFolderBackgroundBounds(bgBounds)
 
@@ -1327,6 +1344,11 @@ constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0
     }
 
     companion object {
+        private const val FOLDER_RESIZE_OUTLINE_BRIGHT_COLOR = 0x33000000.toInt()
+        private const val FOLDER_RESIZE_OUTLINE_DARK_COLOR = 0x99FFFFFF.toInt()
+        private const val FOLDER_RESIZE_HANDLE_BRIGHT_COLOR = 0xFF808080.toInt()
+        private const val FOLDER_RESIZE_HANDLE_DARK_COLOR = 0xFFFFFFFF.toInt()
+
         private const val SNAP_DURATION_MS = 150
 
         private const val DIMMED_ALPHA = 0f

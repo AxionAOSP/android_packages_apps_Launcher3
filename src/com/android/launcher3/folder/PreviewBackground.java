@@ -172,21 +172,45 @@ public class PreviewBackground extends DelegatedCellDrawing {
             backgroundLeft = (availableSpaceX - backgroundWidth) / 2;
             backgroundTop = topPadding + grid.folderIconOffsetYPx;
         } else {
-            float density = grid.getWorkspaceIconProfile().getIconSizePx() / 60.f;
-            int margin = Math.round(4f * density);
+            int iconSize = grid.getWorkspaceIconProfile().getIconSizePx();
+            int cellWidth = grid.getWorkspaceIconProfile().getCellSize().x;
+            int cellHeight = grid.getWorkspaceIconProfile().getCellSize().y;
+            int cHeight = grid.getWorkspaceIconProfile().getCellHeightPx();
 
-            backgroundLeft = margin;
-            backgroundWidth = Math.max(previewSize, availableSpaceX - 2 * margin);
-            backgroundTop = margin;
+            int iconTopInCell = grid.getWorkspaceIconProfile().getCellYPaddingPx() >= 0
+                    ? grid.getWorkspaceIconProfile().getCellYPaddingPx()
+                    : Math.max(0, (cellHeight - cHeight) / 2);
+            int iconBottomPaddingInCell = Math.max(0, cellHeight - iconTopInCell - iconSize);
+            int iconLeftInCell = Math.max(0, (cellWidth - iconSize) / 2);
 
-            if (labelHeight > 0) {
-                int gap = Math.round(6f * density);
-                int bottomPadding = margin;
-                backgroundHeight = Math.max(previewSize,
-                        availableSpaceY - backgroundTop - gap - labelHeight - bottomPadding);
+            int borderX = grid.getWorkspaceIconProfile().getCellLayoutBorderSpacePx().x;
+            int cardSize = cellWidth + borderX + iconSize;
+
+            if (spanX == 1 && spanY == 1) {
+                backgroundWidth = iconSize;
+                backgroundHeight = iconSize;
+                backgroundLeft = iconLeftInCell;
+                backgroundTop = iconTopInCell;
+            } else if (spanX == 2 && spanY == 1) {
+                backgroundWidth = Math.max(iconSize, availableSpaceX - 2 * iconLeftInCell);
+                backgroundHeight = iconSize;
+                backgroundLeft = iconLeftInCell;
+                backgroundTop = iconTopInCell;
+            } else if (spanX == 1 && spanY == 2) {
+                backgroundWidth = iconSize;
+                backgroundHeight = cardSize;
+                backgroundLeft = iconLeftInCell;
+                backgroundTop = iconTopInCell;
+            } else if (spanX == 2 && spanY == 2) {
+                backgroundWidth = Math.max(iconSize, availableSpaceX - 2 * iconLeftInCell);
+                backgroundHeight = backgroundWidth;
+                backgroundLeft = iconLeftInCell;
+                backgroundTop = iconTopInCell;
             } else {
-                backgroundHeight = Math.max(previewSize,
-                        availableSpaceY - 2 * margin);
+                backgroundLeft = iconLeftInCell;
+                backgroundWidth = Math.max(iconSize, availableSpaceX - 2 * iconLeftInCell);
+                backgroundTop = iconTopInCell;
+                backgroundHeight = Math.max(iconSize, availableSpaceY - backgroundTop - iconBottomPaddingInCell);
             }
         }
 
@@ -421,6 +445,10 @@ public class PreviewBackground extends DelegatedCellDrawing {
             float scale) {
         if (mIsWorkspace || mSpanX > 1 || mSpanY > 1) {
             float widgetRadius = RoundedCornerEnforcement.computeEnforcedRadius(mContext);
+            if (widgetRadius <= 0) {
+                float density = mContext.getResources().getDisplayMetrics().density;
+                widgetRadius = 24f * density;
+            }
             return Math.min(widgetRadius * scale, Math.min(bounds.width(), bounds.height()) / 2f);
         }
 

@@ -250,20 +250,17 @@ public class PreviewItemManager {
         float standardIconSize = deviceProfile.getWorkspaceIconProfile().getIconSizePx();
         float density = standardIconSize / 60.f;
 
-        float paddingH = Math.round(8f * density);
-        float paddingV = Math.round(8f * density);
-
-        float availW = Math.max(0f, backgroundBounds.width() - 2 * paddingH);
-        float availH = Math.max(0f, backgroundBounds.height() - 2 * paddingV);
-
         if (spanX == 1 && spanY == 1) {
             int cols = 2;
             int rows = 2;
+            float padding = Math.round(5f * density);
+            float availW = Math.max(0f, backgroundBounds.width() - 2 * padding);
+            float availH = Math.max(0f, backgroundBounds.height() - 2 * padding);
             float cellW = availW / cols;
             float cellH = availH / rows;
-            float itemSize = Math.min(cellW * 0.82f, cellH * 0.72f);
+            float itemSize = Math.min(cellW * 0.85f, cellH * 0.85f);
             float columnGap = cellW - itemSize;
-            float rowGap = Math.min(cellH - itemSize, Math.max(columnGap, Math.round(14f * density)));
+            float rowGap = cellH - itemSize;
             float totalW = cols * itemSize + (cols - 1) * columnGap;
             float totalH = rows * itemSize + (rows - 1) * rowGap;
             float startX = backgroundBounds.left + (backgroundBounds.width() - totalW) / 2f;
@@ -271,42 +268,29 @@ public class PreviewItemManager {
             return new FolderPreviewLayout.Grid(cols, rows, startX, startY, itemSize, columnGap, rowGap);
         }
 
-        float idealTileW = standardIconSize * 0.95f;
-        float idealTileH = standardIconSize * 0.95f;
-        float minGap = Math.round(10f * density);
+        int cols = (spanX == 1) ? 1 : (spanX == 2 ? 3 : Math.max(3, spanX));
+        int rows = (spanY == 1) ? 1 : (spanY == 2 ? 3 : Math.max(3, spanY));
 
-        int fitCols = spanX == 1 ? 1 : Math.max(1, (int) Math.round((availW + minGap) / (idealTileW + minGap)));
-        int cols = Math.max(fitCols, spanX);
+        float bgWidth = backgroundBounds.width();
+        float bgHeight = backgroundBounds.height();
 
-        int fitRows = Math.max(1, (int) Math.floor((availH + minGap) / (idealTileH + minGap)));
-        int itemCount = mIcon.mInfo != null ? mIcon.mInfo.getContents().size() : 0;
-        int neededRows = Math.max(1, (int) Math.ceil((double) itemCount / cols));
-        int rows = Math.min(fitRows, Math.max(spanY, neededRows));
+        float targetItemSize = standardIconSize * 0.67f;
 
-        if (spanY == 1 && itemCount <= cols) {
-            rows = 1;
-        }
+        float maxItemW = (bgWidth - Math.round(12f * density)) / cols;
+        float maxItemH = (bgHeight - Math.round(12f * density)) / rows;
+        float itemSize = Math.min(targetItemSize, Math.min(maxItemW, maxItemH));
 
-        float cellW = availW / cols;
-        float cellH = availH / rows;
+        float totalItemW = cols * itemSize;
+        float totalItemH = rows * itemSize;
 
-        float maxAllowedIconSize = standardIconSize * 1.05f;
-        float itemSize = Math.min(maxAllowedIconSize, Math.min(cellW * 0.85f, cellH * 0.82f));
-
-        float naturalColGap = cols > 1 ? (availW - cols * itemSize) / (cols - 1) : 0f;
-        float naturalRowGap = rows > 1 ? (availH - rows * itemSize) / (rows - 1) : 0f;
-
-        float maxRowGap = cols > 1
-                ? Math.max(naturalColGap * 1.25f, Math.round(18f * density))
-                : Math.round(24f * density);
-        float rowGap = Math.min(naturalRowGap, maxRowGap);
-        float columnGap = naturalColGap;
+        float columnGap = cols > 1 ? Math.max(0f, (bgWidth - Math.round(16f * density) - totalItemW) / (cols - 1)) : 0f;
+        float rowGap = rows > 1 ? Math.max(0f, (bgHeight - Math.round(16f * density) - totalItemH) / (rows - 1)) : 0f;
 
         float totalGridW = cols * itemSize + (cols - 1) * columnGap;
         float totalGridH = rows * itemSize + (rows - 1) * rowGap;
 
-        float startX = backgroundBounds.left + (backgroundBounds.width() - totalGridW) / 2f;
-        float startY = backgroundBounds.top + (backgroundBounds.height() - totalGridH) / 2f;
+        float startX = backgroundBounds.left + (bgWidth - totalGridW) / 2f;
+        float startY = backgroundBounds.top + (bgHeight - totalGridH) / 2f;
 
         return new FolderPreviewLayout.Grid(
                 cols,

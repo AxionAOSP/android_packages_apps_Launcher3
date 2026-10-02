@@ -230,19 +230,21 @@ public class FolderIcon extends FrameLayout implements FloatingIconViewCompanion
     }
 
     int getCurrentSpanX() {
-        if (!usesWorkspacePreviewLayout()) return 1;
+        if (mInfo == null || mInfo.container != LauncherSettings.Favorites.CONTAINER_DESKTOP) {
+            return 1;
+        }
 
-        return getLayoutParams() instanceof CellLayoutLayoutParams lp
-                ? lp.cellHSpan
-                : mInfo.spanX;
+        int lpSpan = getLayoutParams() instanceof CellLayoutLayoutParams lp ? lp.cellHSpan : 1;
+        return Math.max(mInfo.spanX, Math.max(1, lpSpan));
     }
 
     int getCurrentSpanY() {
-        if (!usesWorkspacePreviewLayout()) return 1;
+        if (mInfo == null || mInfo.container != LauncherSettings.Favorites.CONTAINER_DESKTOP) {
+            return 1;
+        }
 
-        return getLayoutParams() instanceof CellLayoutLayoutParams lp
-                ? lp.cellVSpan
-                : mInfo.spanY;
+        int lpSpan = getLayoutParams() instanceof CellLayoutLayoutParams lp ? lp.cellVSpan : 1;
+        return Math.max(mInfo.spanY, Math.max(1, lpSpan));
     }
 
     public boolean usesWorkspacePreviewLayout() {
@@ -251,25 +253,28 @@ public class FolderIcon extends FrameLayout implements FloatingIconViewCompanion
     }
 
     private void updateTextVisibility() {
-        mFolderName.setVisibility(shouldShowFolderName() ? VISIBLE : INVISIBLE);
+        boolean show = shouldShowFolderName();
+        mFolderName.setVisibility(show ? VISIBLE : INVISIBLE);
+        mFolderName.setTextVisibility(show);
         if (mFolderName != null && mFolderName.getLayoutParams() instanceof FrameLayout.LayoutParams lp) {
             lp.gravity = android.view.Gravity.TOP | android.view.Gravity.CENTER_HORIZONTAL;
-            lp.height = FrameLayout.LayoutParams.MATCH_PARENT;
+            lp.height = FrameLayout.LayoutParams.WRAP_CONTENT;
             lp.topMargin = 0;
 
             if (usesWorkspacePreviewLayout()) {
-                lp.height = FrameLayout.LayoutParams.WRAP_CONTENT;
+                lp.width = FrameLayout.LayoutParams.MATCH_PARENT;
                 mFolderName.setCompoundDrawables(null, null, null, null);
-                mFolderName.setPadding(mFolderName.getPaddingLeft(), 0, mFolderName.getPaddingRight(), 0);
+                mFolderName.setPadding(0, 0, 0, 0);
             } else if (mActivity != null && mInfo != null) {
                 DeviceProfile grid = mActivity.getDeviceProfile();
                 boolean isAllAppsFolder = AxFolderExt.isAllAppsFolder(mInfo);
-                if (isAllAppsFolder) {
-                    lp.gravity = android.view.Gravity.TOP | android.view.Gravity.CENTER_HORIZONTAL;
-                    lp.height = FrameLayout.LayoutParams.MATCH_PARENT;
-                    lp.topMargin = grid.getAllAppsProfile().getIconSizePx()
-                            + grid.getAllAppsProfile().getIconDrawablePaddingPx();
-                }
+                lp.gravity = android.view.Gravity.TOP | android.view.Gravity.CENTER_HORIZONTAL;
+                lp.height = FrameLayout.LayoutParams.WRAP_CONTENT;
+                lp.topMargin = isAllAppsFolder
+                        ? grid.getAllAppsProfile().getIconSizePx()
+                                + grid.getAllAppsProfile().getIconDrawablePaddingPx()
+                        : grid.getWorkspaceIconProfile().getIconSizePx()
+                                + grid.getWorkspaceIconProfile().getIconDrawablePaddingPx();
                 mFolderName.setIconVisible(false);
                 int topPadding = mDefaultLabelPaddingTop != -1 ? mDefaultLabelPaddingTop : mFolderName.getPaddingTop();
                 int bottomPadding = mDefaultLabelPaddingBottom != -1 ? mDefaultLabelPaddingBottom : mFolderName.getPaddingBottom();
@@ -339,7 +344,7 @@ public class FolderIcon extends FrameLayout implements FloatingIconViewCompanion
         if (folderInfo != null && folderInfo.container == LauncherSettings.Favorites.CONTAINER_DESKTOP) {
             lp.gravity = Gravity.NO_GRAVITY;
             lp.height = FrameLayout.LayoutParams.WRAP_CONTENT;
-            lp.width = FrameLayout.LayoutParams.WRAP_CONTENT;
+            lp.width = FrameLayout.LayoutParams.MATCH_PARENT;
             lp.topMargin = 0;
             lp.leftMargin = 0;
             icon.mFolderName.setCenterVertically(false);
@@ -357,6 +362,7 @@ public class FolderIcon extends FrameLayout implements FloatingIconViewCompanion
         icon.setOnClickListener(icon::handleClick);
         icon.mInfo = folderInfo;
         icon.mActivity = activity;
+        icon.updateTextVisibility();
         icon.mDotRenderer = grid.mDotRendererWorkSpace;
 
         icon.updateDotInfo();
@@ -1212,26 +1218,33 @@ public class FolderIcon extends FrameLayout implements FloatingIconViewCompanion
         if (usesWorkspacePreviewLayout()) {
             if (shouldShowFolderName()) {
                 mFolderName.setVisibility(VISIBLE);
+                mFolderName.setTextVisibility(true);
                 mPreviewItemManager.recomputePreviewDrawingParams();
                 Rect bgBounds = new Rect();
                 mBackground.getBounds(bgBounds);
-                int textWidth = Math.min(bgBounds.width(), mFolderName.getMeasuredWidth());
-                if (textWidth <= 0) {
-                    textWidth = mFolderName.getMeasuredWidth();
-                }
+
                 Paint.FontMetrics fm = mFolderName.getPaint().getFontMetrics();
                 int textHeight = (int) Math.ceil(fm.bottom - fm.top);
+                int measuredHeight = mFolderName.getMeasuredHeight();
+                if (measuredHeight > textHeight) {
+                    textHeight = measuredHeight;
+                }
 
                 float density = mActivity.getDeviceProfile().getWorkspaceIconProfile().getIconSizePx() / 60.f;
                 int gap = Math.round(6f * density);
 
-                int textLeft = bgBounds.left + (bgBounds.width() - textWidth) / 2;
+                int textWidth = getWidth();
+                if (textWidth <= 0) {
+                    textWidth = mFolderName.getMeasuredWidth();
+                }
+                int textLeft = 0;
                 int textTop = bgBounds.bottom + gap;
 
                 mFolderName.setPadding(0, 0, 0, 0);
                 mFolderName.layout(textLeft, textTop, textLeft + textWidth, textTop + textHeight);
             } else {
                 mFolderName.setVisibility(INVISIBLE);
+                mFolderName.setTextVisibility(false);
             }
         }
     }
