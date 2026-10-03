@@ -29,6 +29,7 @@ import android.content.Context;
 import com.android.launcher3.AxPreferenceFeature;
 import com.android.launcher3.ConstantItem;
 import com.android.launcher3.DeviceProfile;
+import com.android.launcher3.InvariantDeviceProfile;
 import com.android.launcher3.Item;
 import com.android.launcher3.LauncherPrefs;
 import com.android.launcher3.Utilities;
@@ -80,6 +81,11 @@ public final class AxAllAppsDisplayPrefs extends AxPreferenceFeature {
 
     public boolean shouldPlayOpenHaptic(Context context) {
         return LauncherPrefs.get(context).get(ALL_APPS_HAPTIC_FEEDBACK);
+    }
+
+    public void applyToInvariantProfile(Context context, InvariantDeviceProfile inv) {
+        inv.numAllAppsColumns = getDrawerColumns(context, inv.numAllAppsColumns);
+        inv.numDatabaseAllAppsColumns = getDrawerColumns(context, inv.numDatabaseAllAppsColumns);
     }
 
     public void applyToDeviceProfile(Context context, DeviceProfile deviceProfile) {

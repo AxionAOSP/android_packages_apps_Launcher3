@@ -151,7 +151,11 @@ public class AlphabeticalAppsList implements AllAppsStore.OnUpdateListener,
 
     /** Set the number of apps per row when device profile changes. */
     public void setNumAppsPerRowAllApps(int numAppsPerRow) {
+        if (numAppsPerRow <= 0 || mNumAppsPerRowAllApps == numAppsPerRow) {
+            return;
+        }
         mNumAppsPerRowAllApps = numAppsPerRow;
+        updateAdapterItems();
     }
 
     public void updateItemFilter(Predicate<ItemInfo> itemFilter) {

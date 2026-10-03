@@ -201,6 +201,7 @@ public class AllAppsGridAdapter extends BaseAllAppsAdapter {
             }
         }
         mGridLayoutMgr.setSpanCount(totalSpans);
+        mGridLayoutMgr.getSpanSizeLookup().invalidateSpanIndexCache();
     }
 
     /**

@@ -45,7 +45,7 @@ final class AxAllAppsListController {
 
     void addPreferenceListener(LauncherPrefChangeListener listener) {
         LauncherPrefs prefs = LauncherPrefs.get(mContext);
-        prefs.addListener(listener, ALL_APPS_FOLDERS);
+        prefs.addListener(listener, ALL_APPS_FOLDERS, PINNED_APPS);
         mSmartDrawerManager.addChangeListener(prefs, listener);
     }
 

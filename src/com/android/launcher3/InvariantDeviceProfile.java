@@ -500,6 +500,7 @@ public class InvariantDeviceProfile {
         // Supported overrides: numRows, numColumns, iconSize
         applyPartnerDeviceProfileOverrides(context, metrics);
         mWorkspaceDisplayPrefs.applyToInvariantProfile(context, this);
+        mAllAppsDisplayPrefs.applyToInvariantProfile(context, this);
         updateIconBitmapSize(metrics);
 
         final List<DeviceProfile> localSupportedProfiles = new ArrayList<>();
@@ -583,7 +584,7 @@ public class InvariantDeviceProfile {
     private Object[] toModelState() {
         return new Object[]{
                 numColumns, numRows, numSearchContainerColumns, numDatabaseHotseatIcons,
-                iconBitmapSize, fillResIconDpi, numDatabaseAllAppsColumns, dbFile, mLocale};
+                iconBitmapSize, fillResIconDpi, numAllAppsColumns, numDatabaseAllAppsColumns, dbFile, mLocale};
     }
 
     /** Updates IDP using the provided context. Notifies listeners of change. */

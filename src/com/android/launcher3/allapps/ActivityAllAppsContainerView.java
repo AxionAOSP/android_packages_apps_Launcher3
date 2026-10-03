@@ -1167,8 +1167,8 @@ public class ActivityAllAppsContainerView<T extends Context & ActivityContext>
             if (holder.mRecyclerView != null) {
                 // Remove all views and clear the pool, while keeping the data same. After this
                 // call, all the viewHolders will be recreated.
-                holder.mRecyclerView.swapAdapter(holder.mRecyclerView.getAdapter(), true);
                 holder.mRecyclerView.getRecycledViewPool().clear();
+                holder.mAdapter.notifyDataSetChanged();
             }
         }
         updateBackgroundVisibility(dp);
