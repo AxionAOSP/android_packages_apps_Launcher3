@@ -170,16 +170,23 @@ public class PreviewBackground extends DelegatedCellDrawing {
             backgroundWidth = previewSize;
             backgroundHeight = previewSize;
             backgroundLeft = (availableSpaceX - backgroundWidth) / 2;
-            backgroundTop = topPadding + grid.folderIconOffsetYPx;
+            backgroundTop = (labelHeight > 0)
+                    ? (topPadding + grid.folderIconOffsetYPx)
+                    : Math.max(0, (availableSpaceY - previewSize) / 2);
         } else {
             int iconSize = grid.getWorkspaceIconProfile().getIconSizePx();
             int cellWidth = grid.getWorkspaceIconProfile().getCellSize().x;
             int cellHeight = grid.getWorkspaceIconProfile().getCellSize().y;
             int cHeight = grid.getWorkspaceIconProfile().getCellHeightPx();
 
-            int iconTopInCell = grid.getWorkspaceIconProfile().getCellYPaddingPx() >= 0
-                    ? grid.getWorkspaceIconProfile().getCellYPaddingPx()
-                    : Math.max(0, (cellHeight - cHeight) / 2);
+            boolean hasLabel = labelHeight > 0;
+
+            int iconTopInCell = hasLabel
+                    ? (grid.getWorkspaceIconProfile().getCellYPaddingPx() >= 0
+                            ? grid.getWorkspaceIconProfile().getCellYPaddingPx()
+                            : Math.max(0, (cellHeight - cHeight) / 2))
+                    : Math.max(0, (cellHeight - iconSize) / 2);
+
             int iconBottomPaddingInCell = Math.max(0, cellHeight - iconTopInCell - iconSize);
             int iconLeftInCell = Math.max(0, (cellWidth - iconSize) / 2);
 
@@ -200,17 +207,23 @@ public class PreviewBackground extends DelegatedCellDrawing {
                 backgroundWidth = iconSize;
                 backgroundHeight = cardSize;
                 backgroundLeft = iconLeftInCell;
-                backgroundTop = iconTopInCell;
+                backgroundTop = hasLabel
+                        ? iconTopInCell
+                        : Math.max(0, (availableSpaceY - backgroundHeight) / 2);
             } else if (spanX == 2 && spanY == 2) {
                 backgroundWidth = Math.max(iconSize, availableSpaceX - 2 * iconLeftInCell);
                 backgroundHeight = backgroundWidth;
                 backgroundLeft = iconLeftInCell;
-                backgroundTop = iconTopInCell;
+                backgroundTop = hasLabel
+                        ? iconTopInCell
+                        : Math.max(0, (availableSpaceY - backgroundHeight) / 2);
             } else {
                 backgroundLeft = iconLeftInCell;
                 backgroundWidth = Math.max(iconSize, availableSpaceX - 2 * iconLeftInCell);
-                backgroundTop = iconTopInCell;
-                backgroundHeight = Math.max(iconSize, availableSpaceY - backgroundTop - iconBottomPaddingInCell);
+                backgroundHeight = Math.max(iconSize, availableSpaceY - (hasLabel ? (iconTopInCell + iconBottomPaddingInCell) : 2 * iconTopInCell));
+                backgroundTop = hasLabel
+                        ? iconTopInCell
+                        : Math.max(0, (availableSpaceY - backgroundHeight) / 2);
             }
         }
 
