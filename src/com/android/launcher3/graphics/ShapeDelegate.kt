@@ -234,11 +234,11 @@ interface ShapeDelegate {
         }
 
         override fun addToPath(path: Path, offsetX: Float, offsetY: Float, radius: Float) {
-            addToPath(path, offsetX, offsetY, radius, Matrix())
+            addToPath(path, offsetX, offsetY, radius, tmpMatrix)
         }
 
         override fun addToPathInBounds(path: Path, bounds: RectF) {
-            transformPathToBounds(path, bounds, Matrix())
+            transformPathToBounds(path, bounds, tmpMatrix)
         }
 
         private fun addToPath(

@@ -35,6 +35,8 @@ class AxBackdropBlurSurface(private val host: View, activityContext: ActivityCon
 
     private var everCapable = false
 
+    private val clipBounds = RectF()
+
     fun isActive(): Boolean {
         val capable = markCapability()
         return capableOrPreserved(capable)
@@ -77,7 +79,7 @@ class AxBackdropBlurSurface(private val host: View, activityContext: ActivityCon
 
     fun drawPath(canvas: Canvas, clipPath: Path?, cornerRadius: Float): Boolean {
         if (clipPath == null) return false
-        val bounds = RectF()
+        val bounds = clipBounds
         clipPath.computeBounds(bounds, true)
         if (bounds.isEmpty || bounds.width() <= 0f || bounds.height() <= 0f) return false
         val engine = prepareEngine() ?: return false

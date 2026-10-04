@@ -397,7 +397,9 @@ public class PreviewItemManager {
 
     @Nullable
     FolderPreviewLayout.ItemPlacement findDirectItemAt(float x, float y) {
-        if (!mIcon.usesWorkspacePreviewLayout() || mIntrinsicIconSize <= 0) {
+        if (!mIcon.usesWorkspacePreviewLayout()
+                || !mIcon.isMultiSpanFolder()
+                || mIntrinsicIconSize <= 0) {
             return null;
         }
 
