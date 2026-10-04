@@ -26,6 +26,7 @@ import com.android.internal.jank.Cuj
 import com.android.launcher3.LauncherAppState
 import com.android.launcher3.LauncherSettings.Favorites
 import com.android.launcher3.Utilities
+import com.android.launcher3.folder.AxFolderExt
 import com.android.launcher3.logger.LauncherAtom
 import com.android.launcher3.logger.LauncherAtom.ContainerInfo
 import com.android.launcher3.logger.LauncherAtom.ContainerInfo.ContainerCase.ALL_APPS_CONTAINER
@@ -218,11 +219,14 @@ class StatsLogCompatManager private constructor(context: Context) : StatsLogMana
             // If the item is inside a collection, fetch collection info in a BG thread
             // and then write to StatsLog.
             LauncherAppState.INSTANCE[context].model.enqueueModelUpdateTask { _, dataModel, _ ->
+                val collectionInfo =
+                    AxFolderExt.getAllAppsFolderInfo(context, info)
+                        ?: (dataModel.itemsIdMap[info.container] as? CollectionInfo)
                 write(
                     event,
                     applyOverwrites(
                         info.buildProto(
-                            dataModel.itemsIdMap[info.container] as CollectionInfo?,
+                            collectionInfo,
                             context,
                         )
                     ),

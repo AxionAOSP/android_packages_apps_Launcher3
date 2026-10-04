@@ -21,6 +21,7 @@ import static com.android.launcher3.folder.ClippedFolderIconLayoutRule.MAX_NUM_I
 import static com.android.launcher3.folder.FolderGridOrganizer.createFolderGridOrganizer;
 import static com.android.launcher3.folder.PreviewItemManager.INITIAL_ITEM_ANIMATION_DURATION;
 import static com.android.launcher3.LauncherPrefsExt.SHOW_DESKTOP_LABELS;
+import static com.android.launcher3.LauncherPrefsExt.SHOW_DRAWER_LABELS;
 import static com.android.launcher3.logging.StatsLogManager.LauncherEvent.LAUNCHER_FOLDER_AUTO_LABELED;
 import static com.android.launcher3.logging.StatsLogManager.LauncherEvent.LAUNCHER_FOLDER_AUTO_LABELING_SKIPPED_EMPTY_PRIMARY;
 import static com.android.launcher3.logging.StatsLogManager.LauncherEvent.LAUNCHER_FOLDER_AUTO_LABELING_SKIPPED_EMPTY_SUGGESTIONS;
@@ -221,7 +222,7 @@ public class FolderIcon extends FrameLayout implements FloatingIconViewCompanion
     public boolean shouldShowFolderName() {
         return mRequestedTextVisible
                 && mFolderName != null
-                && SHOW_DESKTOP_LABELS.get(getContext())
+                && AxFolderExt.shouldShowFolderLabel(getContext(), mInfo)
                 && mInfo != null
                 && !TextUtils.isEmpty(mInfo.title);
     }
@@ -229,7 +230,21 @@ public class FolderIcon extends FrameLayout implements FloatingIconViewCompanion
     public int getFolderLabelHeight() {
         if (shouldShowFolderName() && mFolderName != null) {
             Paint.FontMetrics fm = mFolderName.getPaint().getFontMetrics();
-            return mFolderName.getCompoundDrawablePadding() + (int) Math.ceil(fm.bottom - fm.top);
+            int textHeight = (int) Math.ceil(fm.bottom - fm.top);
+            int measuredHeight = mFolderName.getMeasuredHeight();
+            if (measuredHeight > textHeight) {
+                textHeight = measuredHeight;
+            }
+            int gap;
+            if (AxFolderExt.isAllAppsFolder(mInfo) && mActivity != null) {
+                gap = mActivity.getDeviceProfile().getAllAppsProfile().getIconDrawablePaddingPx();
+            } else if (mActivity != null) {
+                float density = mActivity.getDeviceProfile().getWorkspaceIconProfile().getIconSizePx() / 60.f;
+                gap = Math.round(6f * density);
+            } else {
+                gap = 0;
+            }
+            return textHeight + gap;
         }
         return 0;
     }
@@ -257,34 +272,22 @@ public class FolderIcon extends FrameLayout implements FloatingIconViewCompanion
                 && mInfo.container == LauncherSettings.Favorites.CONTAINER_DESKTOP;
     }
 
-    private void updateTextVisibility() {
+    void updateTextVisibility() {
         boolean show = shouldShowFolderName();
         mFolderName.setVisibility(show ? VISIBLE : INVISIBLE);
         mFolderName.setTextVisibility(show);
+        if (show && mInfo != null && !TextUtils.isEmpty(mInfo.title)
+                && TextUtils.isEmpty(mFolderName.getText())) {
+            mFolderName.setText(mInfo.title);
+        }
         if (mFolderName != null && mFolderName.getLayoutParams() instanceof FrameLayout.LayoutParams lp) {
             lp.gravity = android.view.Gravity.TOP | android.view.Gravity.CENTER_HORIZONTAL;
+            lp.width = FrameLayout.LayoutParams.MATCH_PARENT;
             lp.height = FrameLayout.LayoutParams.WRAP_CONTENT;
             lp.topMargin = 0;
-
-            if (usesWorkspacePreviewLayout()) {
-                lp.width = FrameLayout.LayoutParams.MATCH_PARENT;
-                mFolderName.setCompoundDrawables(null, null, null, null);
-                mFolderName.setPadding(0, 0, 0, 0);
-            } else if (mActivity != null && mInfo != null) {
-                DeviceProfile grid = mActivity.getDeviceProfile();
-                boolean isAllAppsFolder = AxFolderExt.isAllAppsFolder(mInfo);
-                lp.gravity = android.view.Gravity.TOP | android.view.Gravity.CENTER_HORIZONTAL;
-                lp.height = FrameLayout.LayoutParams.WRAP_CONTENT;
-                lp.topMargin = isAllAppsFolder
-                        ? grid.getAllAppsProfile().getIconSizePx()
-                                + grid.getAllAppsProfile().getIconDrawablePaddingPx()
-                        : grid.getWorkspaceIconProfile().getIconSizePx()
-                                + grid.getWorkspaceIconProfile().getIconDrawablePaddingPx();
-                mFolderName.setIconVisible(false);
-                int topPadding = mDefaultLabelPaddingTop != -1 ? mDefaultLabelPaddingTop : mFolderName.getPaddingTop();
-                int bottomPadding = mDefaultLabelPaddingBottom != -1 ? mDefaultLabelPaddingBottom : mFolderName.getPaddingBottom();
-                mFolderName.setPadding(mFolderName.getPaddingLeft(), topPadding, mFolderName.getPaddingRight(), bottomPadding);
-            }
+            mFolderName.setCompoundDrawables(null, null, null, null);
+            mFolderName.setPadding(0, 0, 0, 0);
+            mFolderName.setCenterVertically(false);
             mFolderName.setLayoutParams(lp);
         }
     }
@@ -300,7 +303,8 @@ public class FolderIcon extends FrameLayout implements FloatingIconViewCompanion
         mPreviewLayoutRule = new ClippedFolderIconLayoutRule();
         mPreviewItemManager = new PreviewItemManager(this);
         mPrefListener = key -> {
-            if (SHOW_DESKTOP_LABELS.getSharedPrefKey().equals(key)) {
+            if (SHOW_DESKTOP_LABELS.getSharedPrefKey().equals(key)
+                    || SHOW_DRAWER_LABELS.getSharedPrefKey().equals(key)) {
                 updateTextVisibility();
                 mPreviewItemManager.recomputePreviewDrawingParams();
                 layoutFolderName();
@@ -353,8 +357,11 @@ public class FolderIcon extends FrameLayout implements FloatingIconViewCompanion
         icon.mFolderName = icon.findViewById(R.id.folder_icon_name);
         icon.mDefaultLabelPaddingTop = icon.mFolderName.getPaddingTop();
         icon.mDefaultLabelPaddingBottom = icon.mFolderName.getPaddingBottom();
-        if (icon.mFolderName.shouldShowLabel()) {
+        if (AxFolderExt.shouldShowFolderLabel(icon.getContext(), folderInfo)) {
             icon.mFolderName.applyLabel(folderInfo.title);
+            if (TextUtils.isEmpty(icon.mFolderName.getText()) && !TextUtils.isEmpty(folderInfo.title)) {
+                icon.mFolderName.setText(folderInfo.title);
+            }
         }
         icon.mFolderName.setCompoundDrawablePadding(0);
         FrameLayout.LayoutParams lp = (FrameLayout.LayoutParams) icon.mFolderName.getLayoutParams();
@@ -1130,7 +1137,7 @@ public class FolderIcon extends FrameLayout implements FloatingIconViewCompanion
             postInvalidateOnAnimation();
         }
 
-        if (shouldShowFolderName() && usesWorkspacePreviewLayout()) {
+        if (shouldShowFolderName()) {
             layoutFolderName();
         }
 
@@ -1198,16 +1205,14 @@ public class FolderIcon extends FrameLayout implements FloatingIconViewCompanion
     @Override
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
         boolean isAllAppsFolder = AxFolderExt.isAllAppsFolder(mInfo);
-        boolean shouldCenterIcon = isAllAppsFolder
-                || mActivity.getDeviceProfile().getWorkspaceIconProfile().getIconCenterVertically()
-                || !shouldShowFolderName();
+        boolean shouldCenterIcon = !isAllAppsFolder && (
+                mActivity.getDeviceProfile().getWorkspaceIconProfile().getIconCenterVertically()
+                || !shouldShowFolderName());
 
         updateTextVisibility();
 
         if (!usesWorkspacePreviewLayout() && shouldCenterIcon) {
-            int iconSize = isAllAppsFolder
-                    ? mActivity.getDeviceProfile().getAllAppsProfile().getIconSizePx()
-                    : mActivity.getDeviceProfile().getWorkspaceIconProfile().getIconSizePx();
+            int iconSize = mActivity.getDeviceProfile().getWorkspaceIconProfile().getIconSizePx();
             int cellHeightPx;
             if (shouldShowFolderName()) {
                 Paint.FontMetrics fm = mFolderName.getPaint().getFontMetrics();
@@ -1220,7 +1225,7 @@ public class FolderIcon extends FrameLayout implements FloatingIconViewCompanion
                     - cellHeightPx) / 2, getPaddingRight(), getPaddingBottom());
         }
         super.onMeasure(widthMeasureSpec, heightMeasureSpec);
-        if (usesWorkspacePreviewLayout()) {
+        if (usesWorkspacePreviewLayout() || isAllAppsFolder) {
             mPreviewItemManager.recomputePreviewDrawingParams();
         }
     }
@@ -1233,10 +1238,16 @@ public class FolderIcon extends FrameLayout implements FloatingIconViewCompanion
 
     public void layoutFolderName() {
         if (mFolderName == null) return;
-        if (usesWorkspacePreviewLayout()) {
+        boolean isWorkspace = usesWorkspacePreviewLayout();
+        boolean isAllApps = AxFolderExt.isAllAppsFolder(mInfo);
+        if (isWorkspace || isAllApps) {
             if (shouldShowFolderName()) {
                 mFolderName.setVisibility(VISIBLE);
                 mFolderName.setTextVisibility(true);
+                if (mInfo != null && !TextUtils.isEmpty(mInfo.title)
+                        && TextUtils.isEmpty(mFolderName.getText())) {
+                    mFolderName.setText(mInfo.title);
+                }
                 mPreviewItemManager.recomputePreviewDrawingParams();
                 Rect bgBounds = new Rect();
                 mBackground.getBounds(bgBounds);
@@ -1248,8 +1259,15 @@ public class FolderIcon extends FrameLayout implements FloatingIconViewCompanion
                     textHeight = measuredHeight;
                 }
 
-                float density = mActivity.getDeviceProfile().getWorkspaceIconProfile().getIconSizePx() / 60.f;
-                int gap = Math.round(6f * density);
+                int gap;
+                if (isAllApps && mActivity != null) {
+                    gap = mActivity.getDeviceProfile().getAllAppsProfile().getIconDrawablePaddingPx();
+                } else if (mActivity != null) {
+                    float density = mActivity.getDeviceProfile().getWorkspaceIconProfile().getIconSizePx() / 60.f;
+                    gap = Math.round(6f * density);
+                } else {
+                    gap = 0;
+                }
 
                 int textWidth = getWidth();
                 if (textWidth <= 0) {
@@ -1475,7 +1493,7 @@ public class FolderIcon extends FrameLayout implements FloatingIconViewCompanion
     @Override
     protected void onAttachedToWindow() {
         super.onAttachedToWindow();
-        LauncherPrefs.get(getContext()).addListener(mPrefListener, SHOW_DESKTOP_LABELS);
+        LauncherPrefs.get(getContext()).addListener(mPrefListener, SHOW_DESKTOP_LABELS, SHOW_DRAWER_LABELS);
     }
 
     @Override
@@ -1483,7 +1501,7 @@ public class FolderIcon extends FrameLayout implements FloatingIconViewCompanion
         if (mPressScaleAnimator != null) {
             mPressScaleAnimator.cancel();
         }
-        LauncherPrefs.get(getContext()).removeListener(mPrefListener, SHOW_DESKTOP_LABELS);
+        LauncherPrefs.get(getContext()).removeListener(mPrefListener, SHOW_DESKTOP_LABELS, SHOW_DRAWER_LABELS);
         super.onDetachedFromWindow();
     }
 

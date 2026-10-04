@@ -48,6 +48,7 @@ import com.android.launcher3.Launcher;
 import com.android.launcher3.LauncherSettings;
 import com.android.launcher3.R;
 import com.android.launcher3.apppairs.AppPairIcon;
+import com.android.launcher3.folder.AxFolderExt;
 import com.android.launcher3.folder.Folder;
 import com.android.launcher3.folder.FolderIcon;
 import com.android.launcher3.lineage.trust.db.TrustDatabaseHelper;
@@ -448,6 +449,8 @@ public class ItemClickHandler {
         } else {
             launcher.startActivitySafely(v, intent, item);
         }
+
+        AxFolderExt.collapseIfAllAppsFolder(launcher, item);
     }
 
     /**

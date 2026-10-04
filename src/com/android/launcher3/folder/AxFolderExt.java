@@ -15,8 +15,11 @@
  */
 package com.android.launcher3.folder;
 
+import static com.android.launcher3.LauncherPrefsExt.SHOW_DESKTOP_LABELS;
+import static com.android.launcher3.LauncherPrefsExt.SHOW_DRAWER_LABELS;
 import static com.android.launcher3.LauncherSettings.Favorites.CONTAINER_ALL_APPS;
 
+import android.content.Context;
 import android.view.View;
 import android.widget.TextView;
 
@@ -34,6 +37,13 @@ public final class AxFolderExt {
 
     public static boolean isAllAppsFolder(FolderInfo info) {
         return info != null && info.container == CONTAINER_ALL_APPS;
+    }
+
+    public static boolean shouldShowFolderLabel(Context context, FolderInfo info) {
+        if (isAllAppsFolder(info)) {
+            return SHOW_DRAWER_LABELS.get(context);
+        }
+        return SHOW_DESKTOP_LABELS.get(context);
     }
 
     public static boolean onLongClick(FolderInfo info, View view) {
@@ -67,5 +77,28 @@ public final class AxFolderExt {
         Folder folder = Folder.getOpen(activityContext);
         return folder != null && isAllAppsFolder(folder.mInfo) && itemInfo != null
                 && itemInfo.container == folder.mInfo.id;
+    }
+
+    public static FolderInfo getAllAppsFolderInfo(Context context, ItemInfo itemInfo) {
+        if (itemInfo == null) {
+            return null;
+        }
+        ActivityContext activityContext = ActivityContext.lookupContextNoThrow(context);
+        if (activityContext != null) {
+            Folder folder = Folder.getOpen(activityContext);
+            if (folder != null && isAllAppsFolder(folder.mInfo)
+                    && itemInfo.container == folder.mInfo.id) {
+                return folder.mInfo;
+            }
+        }
+        return AllAppsFolderStore.getFolderInfo(context, itemInfo.container);
+    }
+
+    public static void collapseIfAllAppsFolder(ActivityContext activityContext, ItemInfo itemInfo) {
+        Folder folder = Folder.getOpen(activityContext);
+        if (folder != null && isAllAppsFolder(folder.mInfo)
+                && (itemInfo == null || itemInfo.container == folder.mInfo.id)) {
+            folder.close(true);
+        }
     }
 }

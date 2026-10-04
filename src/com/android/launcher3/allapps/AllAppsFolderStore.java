@@ -16,6 +16,7 @@
 package com.android.launcher3.allapps;
 
 import static com.android.launcher3.LauncherPrefsExt.ALL_APPS_FOLDERS;
+import static com.android.launcher3.LauncherSettings.Favorites.CONTAINER_ALL_APPS;
 
 import android.content.ComponentName;
 import android.content.Context;
@@ -27,6 +28,7 @@ import com.android.launcher3.ConstantItem;
 import com.android.launcher3.LauncherPrefs;
 import com.android.launcher3.R;
 import com.android.launcher3.model.data.AppInfo;
+import com.android.launcher3.model.data.FolderInfo;
 import com.android.launcher3.pm.UserCache;
 
 import org.json.JSONArray;
@@ -388,6 +390,21 @@ public final class AllAppsFolderStore {
 
     static void writeFolders(Context context, JSONArray folders, ConstantItem<String> item) {
         LauncherPrefs.get(context).put(item, folders.toString());
+    }
+
+    public static FolderInfo getFolderInfo(Context context, int folderId) {
+        JSONArray folders = readFolders(context);
+        for (int i = 0; i < folders.length(); i++) {
+            JSONObject folder = folders.optJSONObject(i);
+            if (folder != null && folder.optInt(KEY_ID) == folderId) {
+                FolderInfo folderInfo = new FolderInfo();
+                folderInfo.id = folderId;
+                folderInfo.container = CONTAINER_ALL_APPS;
+                folderInfo.title = getTitle(context, folder);
+                return folderInfo;
+            }
+        }
+        return null;
     }
 
     public static final class FolderRecord {

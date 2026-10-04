@@ -171,9 +171,8 @@ public class PreviewBackground extends DelegatedCellDrawing {
             backgroundWidth = previewSize;
             backgroundHeight = previewSize;
             backgroundLeft = (availableSpaceX - backgroundWidth) / 2;
-            backgroundTop = (labelHeight > 0)
-                    ? (topPadding + grid.folderIconOffsetYPx)
-                    : Math.max(0, (availableSpaceY - previewSize) / 2);
+            int totalHeight = (labelHeight > 0) ? (previewSize + labelHeight) : previewSize;
+            backgroundTop = Math.max(0, (availableSpaceY - totalHeight) / 2);
         } else {
             int iconSize = grid.getWorkspaceIconProfile().getIconSizePx();
             int cellWidth = grid.getWorkspaceIconProfile().getCellSize().x;
