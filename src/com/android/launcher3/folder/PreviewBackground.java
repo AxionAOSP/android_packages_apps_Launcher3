@@ -426,9 +426,7 @@ public class PreviewBackground extends DelegatedCellDrawing {
     }
 
     public int getBgColor() {
-        return LauncherPrefsExt.LAUNCHER_BLUR_ENABLED.get(mContext)
-                ? AxBlurColors.surfaceEffect0(mContext)
-                : mBgColor;
+        return mBgColor;
     }
 
     boolean isBoundsAnimating() {

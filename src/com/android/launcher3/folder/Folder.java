@@ -276,6 +276,8 @@ public class Folder extends AbstractFloatingView implements ClipPathView, DragSo
 
     private final @NonNull GradientDrawable mBackground;
 
+    private static final boolean ENABLE_FOLDER_BLUR = false;
+
     private final AxBackdropBlurSurface mBlurSurface;
     private final Paint mBlurSurfaceFillPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
     private final RectF mBlurBounds = new RectF();
@@ -1925,7 +1927,7 @@ public class Folder extends AbstractFloatingView implements ClipPathView, DragSo
     @Override
     protected void dispatchDraw(Canvas canvas) {
         boolean drewBlur = false;
-        if (mBlurSurface.isActive() && getWidth() > 0 && getHeight() > 0) {
+        if (ENABLE_FOLDER_BLUR && mBlurSurface.isActive() && getWidth() > 0 && getHeight() > 0) {
             if (computeBlurGeometry(mBackground.getCornerRadius())) {
                 drewBlur = mBlurSurface.drawRect(canvas,
                         (int) mBlurBounds.left,

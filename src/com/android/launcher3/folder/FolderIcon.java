@@ -132,11 +132,16 @@ public class FolderIcon extends FrameLayout implements FloatingIconViewCompanion
 
     PreviewBackground mBackground = new PreviewBackground(getContext());
 
+    private static final boolean ENABLE_FOLDER_BLUR = false;
+
     private AxBackdropBlurSurface mBlurSurface;
 
     private final Path mBlurPath = new Path();
 
     private AxBackdropBlurSurface getBlurSurface() {
+        if (!ENABLE_FOLDER_BLUR) {
+            return null;
+        }
         if (mBlurSurface == null) {
             mBlurSurface = new AxBackdropBlurSurface(this, mActivity);
         }
@@ -1128,7 +1133,7 @@ public class FolderIcon extends FrameLayout implements FloatingIconViewCompanion
     @Override
     protected void dispatchDraw(Canvas canvas) {
         boolean drewBlur = false;
-        boolean canBlur = !mBackground.drawingDelegated() && mBackgroundIsVisible;
+        boolean canBlur = ENABLE_FOLDER_BLUR && !mBackground.drawingDelegated() && mBackgroundIsVisible;
         if (canBlur && getLayerType() != View.LAYER_TYPE_HARDWARE) {
             mBackground.getDrawnShapePath(mBlurPath);
             drewBlur = getBlurSurface().drawPath(canvas, mBlurPath,
