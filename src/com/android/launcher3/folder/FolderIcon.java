@@ -322,7 +322,7 @@ public class FolderIcon extends FrameLayout implements FloatingIconViewCompanion
         };
         mDotParams = new DotRenderer.DrawParams();
         mDotParams.setDotColor(Themes.getAttrColor(context, R.attr.notificationDotColor));
-        mDotParams.shapeInfo = ThemeManager.INSTANCE.get(context).getIconState().getIconShapeInfo();
+        mDotParams.shapeInfo = ThemeManager.INSTANCE.get(context).getIconState().getFolderShapeInfo();
     }
 
     public static <T extends Context & ActivityContext> FolderIcon inflateFolderAndIcon(int resId,
@@ -1191,15 +1191,15 @@ public class FolderIcon extends FrameLayout implements FloatingIconViewCompanion
     public void drawDot(Canvas canvas) {
         if (!mForceHideDot && ((mDotInfo != null && mDotInfo.hasDot()) || mDotScale > 0)) {
             Rect iconBounds = mDotParams.iconBounds;
-            // FolderIcon draws the icon to be top-aligned (with padding) & horizontally-centered
-            int iconSize = mActivity.getDeviceProfile().getWorkspaceIconProfile().getIconSizePx();
-            iconBounds.left = (getWidth() - iconSize) / 2;
-            iconBounds.right = iconBounds.left + iconSize;
-            iconBounds.top = getPaddingTop();
-            iconBounds.bottom = iconBounds.top + iconSize;
-
-            float iconScale = (float) mBackground.previewSize / iconSize;
-            Utilities.scaleRectAboutCenter(iconBounds, iconScale);
+            mBackground.getBounds(iconBounds);
+            if (isMultiSpanFolder()) {
+                int iconSize = mActivity.getDeviceProfile().getWorkspaceIconProfile().getIconSizePx();
+                iconBounds.left = iconBounds.right - iconSize;
+                iconBounds.bottom = iconBounds.top + iconSize;
+            }
+            if (mBackground.mScale != 1f) {
+                Utilities.scaleRectAboutCenter(iconBounds, mBackground.mScale);
+            }
 
             // If we are animating to the accepting state, animate the dot out.
             mDotParams.scale = Math.max(0, mDotScale - mBackground.getAcceptScaleProgress());
