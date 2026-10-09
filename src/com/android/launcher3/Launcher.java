@@ -1782,6 +1782,7 @@ public class Launcher extends StatefulActivity<LauncherState>
 
     @Override
     public void onDestroy() {
+        AxLauncherSceneBooster.releaseAll();
         if (mShakeDetector != null) {
             mShakeDetector.stop();
             mShakeDetector = null;

@@ -80,6 +80,7 @@ import androidx.annotation.VisibleForTesting;
 import androidx.core.content.res.ResourcesCompat;
 
 import com.android.launcher3.AbstractFloatingView;
+import com.android.launcher3.AxLauncherSceneBooster;
 import com.android.launcher3.Alarm;
 import com.android.launcher3.CellLayout;
 import com.android.launcher3.DeviceProfile;
@@ -683,11 +684,13 @@ public class Folder extends AbstractFloatingView implements ClipPathView, DragSo
             public void onAnimationStart(Animator animation) {
                 setState(STATE_ANIMATING);
                 mCurrentAnimator = a;
+                AxLauncherSceneBooster.beginScene(AxLauncherSceneBooster.SCENE_FOLDER_ANIMATION);
             }
 
             @Override
             public void onAnimationEnd(Animator animation) {
                 mCurrentAnimator = null;
+                AxLauncherSceneBooster.endScene(AxLauncherSceneBooster.SCENE_FOLDER_ANIMATION);
             }
         });
     }

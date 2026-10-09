@@ -38,7 +38,7 @@ import static com.android.systemui.shared.system.QuickStepContract.SYSUI_STATE_O
 
 import android.view.MotionEvent;
 
-import com.android.axion.dragonite.AxDragonite;
+import com.android.launcher3.AxLauncherSceneBooster;
 
 import com.android.launcher3.LauncherState;
 import com.android.launcher3.Utilities;
@@ -96,7 +96,7 @@ public class QuickSwitchTouchController extends AbstractStateChangeTouchControll
     @Override
     public void onDragStart(boolean start, float startDisplacement) {
         super.onDragStart(start, startDisplacement);
-        AxDragonite.onQuickSwitch();
+        AxLauncherSceneBooster.beginScene(AxLauncherSceneBooster.SCENE_NORMAL_ANIMATION);
         mStartContainerType = LAUNCHER_STATE_BACKGROUND;
         TaskUtils.closeSystemWindowsAsync(CLOSE_SYSTEM_WINDOWS_REASON_RECENTS);
     }
@@ -104,7 +104,7 @@ public class QuickSwitchTouchController extends AbstractStateChangeTouchControll
     @Override
     protected void onSwipeInteractionCompleted(LauncherState targetState) {
         super.onSwipeInteractionCompleted(targetState);
-        AxDragonite.onQuickSwitchEnd();
+        AxLauncherSceneBooster.endScene(AxLauncherSceneBooster.SCENE_NORMAL_ANIMATION);
     }
 
     @Override

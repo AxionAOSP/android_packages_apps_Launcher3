@@ -16,8 +16,6 @@
 
 package com.android.launcher3;
 
-import com.android.axion.dragonite.AxDragonite;
-
 import static com.android.app.animation.Interpolators.SCROLL;
 import static com.android.launcher3.RemoveAnimationSettingsTracker.WINDOW_ANIMATION_SCALE_URI;
 import static com.android.launcher3.compat.AccessibilityManagerCompat.isAccessibilityEnabled;
@@ -488,7 +486,7 @@ public abstract class PagedView<T extends View & PageIndicator> extends ViewGrou
     }
     protected void pageBeginTransition() {
         if (!mIsPageInTransition) {
-            AxDragonite.onFling();
+            AxLauncherSceneBooster.beginScene(AxLauncherSceneBooster.SCENE_NORMAL_ANIMATION);
             mIsPageInTransition = true;
             onPageBeginTransition();
         }
@@ -497,7 +495,7 @@ public abstract class PagedView<T extends View & PageIndicator> extends ViewGrou
     protected void pageEndTransition() {
         if (mIsPageInTransition && !mIsBeingDragged && mScroller.isFinished()
                 && (!isShown() || (mEdgeGlowLeft.isFinished() && mEdgeGlowRight.isFinished()))) {
-            AxDragonite.onFlingEnd();
+            AxLauncherSceneBooster.endScene(AxLauncherSceneBooster.SCENE_NORMAL_ANIMATION);
             mIsPageInTransition = false;
             onPageEndTransition();
         }

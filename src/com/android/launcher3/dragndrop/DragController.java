@@ -32,7 +32,7 @@ import androidx.annotation.Nullable;
 import androidx.annotation.VisibleForTesting;
 
 import com.android.app.animation.Interpolators;
-import com.android.axion.dragonite.AxDragonite;
+import com.android.launcher3.AxLauncherSceneBooster;
 import com.android.launcher3.DragSource;
 import com.android.launcher3.DropTarget;
 import com.android.launcher3.Flags;
@@ -231,7 +231,7 @@ public abstract class DragController<T extends ActivityContext>
             DragOptions options);
 
     protected void callOnDragStart() {
-        AxDragonite.onDragAndDrop();
+        AxLauncherSceneBooster.beginScene(AxLauncherSceneBooster.SCENE_DRAG_AND_DROP);
         if (mOptions.preDragCondition != null) {
             mOptions.preDragCondition.onPreDragEnd(mDragObject, true /* dragStarted*/);
         }
@@ -360,7 +360,7 @@ public abstract class DragController<T extends ActivityContext>
     }
 
     protected void callOnDragEnd() {
-        AxDragonite.onDragAndDropEnd();
+        AxLauncherSceneBooster.endScene(AxLauncherSceneBooster.SCENE_DRAG_AND_DROP);
         if (mIsInPreDrag && mOptions.preDragCondition != null) {
             mOptions.preDragCondition.onPreDragEnd(mDragObject, false /* dragStarted*/);
         }

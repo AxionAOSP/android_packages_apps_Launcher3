@@ -88,7 +88,11 @@ public class LauncherAnimationRunner extends RemoteAnimationRunnerCompat {
             Runnable runnable) {
         Runnable r = () -> {
             finishExistingAnimation();
-            mAnimationResult = new AnimationResult(() -> mAnimationResult = null, runnable);
+            AxLauncherSceneBooster.beginScene(AxLauncherSceneBooster.SCENE_NORMAL_ANIMATION);
+            mAnimationResult = new AnimationResult(() -> {
+                AxLauncherSceneBooster.endScene(AxLauncherSceneBooster.SCENE_NORMAL_ANIMATION);
+                mAnimationResult = null;
+            }, runnable);
             getFactory().onAnimationStart(transit, appTargets, wallpaperTargets, nonAppTargets,
                     mAnimationResult);
         };

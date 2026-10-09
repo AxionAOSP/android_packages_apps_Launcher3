@@ -39,7 +39,7 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.LauncherActivityInfo;
 
-import com.android.axion.dragonite.AxDragonite;
+import com.android.launcher3.AxLauncherSceneBooster;
 import android.content.pm.LauncherApps;
 import android.content.pm.PackageInstaller.SessionInfo;
 import android.content.pm.PackageManager;
@@ -393,7 +393,7 @@ public class LoaderTask implements Runnable {
             }
         }
 
-        AxDragonite.onDataLoading();
+        AxLauncherSceneBooster.beginScene(AxLauncherSceneBooster.SCENE_DATA_LOADING);
         TraceHelper.INSTANCE.beginSection(TAG);
         MODEL_EXECUTOR.elevatePriority(CALLER_LOADER_TASK);
         LoaderMemoryLogger memoryLogger = new LoaderMemoryLogger();
@@ -422,7 +422,7 @@ public class LoaderTask implements Runnable {
             memoryLogger.printLogs();
             throw e;
         } finally {
-            AxDragonite.onDataLoadingEnd();
+            AxLauncherSceneBooster.endScene(AxLauncherSceneBooster.SCENE_DATA_LOADING);
         }
         MODEL_EXECUTOR.restorePriority(CALLER_LOADER_TASK);
         TraceHelper.INSTANCE.endSection();
