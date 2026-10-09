@@ -151,6 +151,7 @@ public class NavHandleLongPressHandler {
     @VisibleForTesting
     final void onTouchStarted(NavHandle navHandle) {
         mPendingInvocation = false;
+        navHandle.setNavBarHandleActive();
         if (isContextualSearchEntrypointEnabled(navHandle)
                 && mContextualSearchInvoker.runContextualSearchInvocationChecksAndLogFailures()) {
             Log.i(TAG, "Contextual Search invocation: touch started");
@@ -168,6 +169,7 @@ public class NavHandleLongPressHandler {
     @VisibleForTesting
     final void onTouchFinished(NavHandle navHandle, String reason) {
         Log.i(TAG, "Contextual Search invocation: touch finished with reason: " + reason);
+        navHandle.scheduleNavBarHandleIdle();
 
         if (!DeviceConfigWrapper.get().getShrinkNavHandleOnPress() || !mPendingInvocation) {
             mVibratorWrapper.cancelVibrate();

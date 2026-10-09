@@ -39,6 +39,14 @@ public interface NavHandle {
      */
     void animateNavBarLongPress(boolean isTouchDown, boolean shrink, long durationMs);
 
+    /** Makes the gesture handle fully opaque while the navbar is being interacted with. */
+    default void setNavBarHandleActive() {
+    }
+
+    /** Schedules the gesture handle to fade back to its idle opacity. */
+    default void scheduleNavBarHandleIdle() {
+    }
+
     /** @return {@code true} if this nav handle is actually the stashed taskbar */
     default boolean isNavHandleStashedTaskbar() {
         return false;
