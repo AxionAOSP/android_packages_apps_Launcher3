@@ -850,7 +850,7 @@ public class Folder extends AbstractFloatingView implements ClipPathView, DragSo
                                     getContext(), android.R.interpolator.fast_out_slow_in));
                     mPageIndicator.playEntryAnimation();
 
-                    if (updateAnimationFlag) {
+                    if (updateAnimationFlag && !AxFolderExt.isAllAppsFolder(mInfo)) {
                         mInfo.setOption(FolderInfo.FLAG_MULTI_PAGE_ANIMATION, true,
                                 mActivityContext.getModelWriter());
                     }
