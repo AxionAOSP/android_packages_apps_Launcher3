@@ -15,10 +15,9 @@
  */
 package com.android.launcher3.settings.compose
 
-import android.content.ComponentName
 import android.content.Context
+import android.content.pm.LauncherApps
 import android.graphics.drawable.Drawable
-import android.os.Process
 import androidx.activity.compose.BackHandler
 import androidx.annotation.StringRes
 import androidx.compose.foundation.Image
@@ -42,9 +41,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import com.android.axion.compose.applist.AppEntry as AxAppEntry
-import com.android.axion.compose.applist.AppFilter as AxAppFilter
-import com.android.axion.compose.applist.rememberAppList
 import com.android.axion.compose.navigation.AxRouteAnimatedContent
 import com.android.axion.compose.navigation.rememberAxRouteNavigator
 import com.android.axion.compose.preferences.BasePreference
@@ -59,14 +55,22 @@ import com.android.launcher3.allapps.AllAppsFolderStore.FolderRecord
 import com.android.launcher3.allapps.AxSmartDrawerFolderStore
 import com.android.launcher3.allapps.AxSmartDrawerManager
 import com.android.launcher3.allapps.AxSmartDrawerPinnedStore
+import com.android.launcher3.pm.UserCache
 import com.android.launcher3.util.painterResource as drawablePainterResource
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 
 @Composable
 internal fun AllAppsFoldersScreen(smartDrawer: Boolean = false) {
     val context = LocalContext.current
     val navigator = rememberAxRouteNavigator()
-    val sdkApps by rememberAppList(AxAppFilter.LAUNCHABLE_ONLY, AxAppFilter.NO_OVERLAYS)
-    val apps = remember(context, sdkApps) { loadAllAppsFolderEntries(context, sdkApps) }
+    var apps by remember(context) { mutableStateOf<List<AllAppsFolderAppEntry>>(emptyList()) }
+    LaunchedEffect(context) {
+        val loaded = withContext(Dispatchers.IO) {
+            loadAllAppsFolderEntries(context)
+        }
+        apps = loaded
+    }
     var version by remember { mutableIntStateOf(0) }
     LaunchedEffect(context, smartDrawer, apps) {
         if (smartDrawer && seedSmartDrawerFoldersIfNeeded(context, apps)) {
@@ -429,28 +433,24 @@ private fun seedSmartDrawerFoldersIfNeeded(
 
 private fun loadAllAppsFolderEntries(
     context: Context,
-    sdkApps: List<AxAppEntry>,
 ): List<AllAppsFolderAppEntry> {
     val appFilter = AppFilter(context)
-    return sdkApps.mapNotNull { entry ->
-        if (entry.className.isEmpty()) {
-            return@mapNotNull null
-        }
-        val componentName = ComponentName(entry.packageName, entry.className)
-        if (!appFilter.shouldShowApp(componentName)) {
-            return@mapNotNull null
-        }
-        val key = AllAppsFolderStore.encodeAppKey(
-            context,
-            componentName,
-            Process.myUserHandle(),
-        ) ?: return@mapNotNull null
-        val category = AxSmartDrawerManager.resolveCategory(context, entry.packageName)
+    val launcherApps = context.getSystemService(LauncherApps::class.java)
+        ?: return emptyList()
+    val density = context.resources.displayMetrics.densityDpi
+    return UserCache.INSTANCE.get(context).userManagerState.getAllCachedInfos()
+        .filterNot { it.iconInfo.isPrivate }
+        .flatMap { launcherApps.getActivityList(null, it.iconInfo.user) }
+        .mapNotNull { info ->
+        val component = info.componentName
+        if (!appFilter.shouldShowApp(component)) return@mapNotNull null
+        val key = AllAppsFolderStore.encodeAppKey(context, component, info.user)
+            ?: return@mapNotNull null
         AllAppsFolderAppEntry(
             key = key,
-            label = entry.label,
-            icon = entry.icon,
-            category = category,
+            label = info.label.toString(),
+            icon = info.getBadgedIcon(density),
+            category = AxSmartDrawerManager.resolveCategory(context, component.packageName),
         )
     }.sortedBy { it.label.lowercase() }
 }
