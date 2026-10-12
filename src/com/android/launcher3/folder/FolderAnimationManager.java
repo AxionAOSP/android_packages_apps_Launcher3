@@ -193,8 +193,8 @@ public class FolderAnimationManager implements FolderAnimationCreator {
         mFolder.mFooter.setPivotY(0);
 
         int previewItemOffsetX = 0;
-        if (Utilities.isRtl(mContext.getResources())) {
-            previewItemOffsetX = (int) (lp.width * initialScale - initialBackgroundWidth);
+        if (Utilities.isRtl(mContext.getResources()) && !mFolderIcon.isMultiSpanFolder()) {
+            previewItemOffsetX = Math.max(0, (int) (lp.width * initialScale - initialBackgroundWidth));
         }
 
         final int paddingOffsetX = (int) (mContent.getPaddingLeft() * initialScale);

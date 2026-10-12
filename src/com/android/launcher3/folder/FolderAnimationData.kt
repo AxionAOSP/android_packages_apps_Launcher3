@@ -80,8 +80,8 @@ data class FolderAnimationData(
 
             // Get offsets for Previews and Content
             val initialPreviewItemOffsetX =
-                if (Utilities.isRtl(context.resources)) {
-                    (layoutParams.width * initialFolderScale - initialFolderSize).toInt()
+                if (Utilities.isRtl(context.resources) && !folderIcon.isMultiSpanFolder) {
+                    Math.max(0, (layoutParams.width * initialFolderScale - initialFolderSize).toInt())
                 } else 0
             val contentOffsetX = (content.paddingLeft * initialFolderScale).toInt()
             val contentOffsetY = (content.paddingTop * initialFolderScale).toInt()
