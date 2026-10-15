@@ -30,6 +30,12 @@ import android.animation.AnimatorListenerAdapter;
 import android.animation.ValueAnimator;
 import android.app.TaskInfo;
 import android.content.Context;
+import android.database.ContentObserver;
+import android.net.Uri;
+import android.os.Handler;
+import android.os.Looper;
+import android.os.UserHandle;
+import android.provider.Settings;
 import android.content.res.Resources;
 import android.graphics.Outline;
 import android.graphics.Rect;
@@ -70,7 +76,17 @@ public class StashedHandleViewController implements TaskbarControllers.LoggableT
     public static final int ALPHA_INDEX_HIDDEN_WHILE_DREAMING = 3;
     public static final int ALPHA_INDEX_NUDGED = 4;
     public static final int ALPHA_INDEX_ALL_SET_TRANSITION = 5;
-    private static final int NUM_ALPHA_CHANNELS = 6;
+    public static final int ALPHA_INDEX_IDLE = 6;
+    private static final int NUM_ALPHA_CHANNELS = 7;
+
+    private static final long NAV_HANDLE_IDLE_DELAY_MS = 2000;
+    private static final long NAV_HANDLE_IDLE_FADE_DURATION_MS = 300;
+    private static final float NAV_HANDLE_ACTIVE_ALPHA = 1f;
+    private static final float NAV_HANDLE_IDLE_ALPHA = 0.49f;
+
+    private final Handler mNavHandleIdleHandler = new Handler(Looper.getMainLooper());
+    private final Runnable mNavHandleIdleRunnable = this::fadeNavBarHandleToIdle;
+    private Animator mNavHandleIdleAnimator;
 
     // Values for long press animations, picked to most closely match navbar spec.
     private static final float SCALE_TOUCH_ANIMATION_SHRINK = 0.85f;
@@ -89,6 +105,17 @@ public class StashedHandleViewController implements TaskbarControllers.LoggableT
     private final LauncherPrefs mPrefs;
     private final StashedHandleView mStashedHandleView;
     private int mStashedHandleWidth;
+
+    private boolean mNavbarLengthObserverRegistered;
+
+    private final ContentObserver mNavbarLengthObserver = new ContentObserver(
+            new Handler(Looper.getMainLooper())) {
+        @Override
+        public void onChange(boolean selfChange, Uri uri) {
+            updateStashedHandleWidth();
+            mStashedHandleView.invalidateOutline();
+        }
+    };
     private final int mStashedHandleHeight;
     @Nullable
     private RegionSamplingHelper mRegionSamplingHelper;
@@ -126,11 +153,46 @@ public class StashedHandleViewController implements TaskbarControllers.LoggableT
         mStashedHandleView = stashedHandleView;
         mTaskbarStashedHandleAlpha = new MultiValueAlpha(mStashedHandleView, NUM_ALPHA_CHANNELS);
         mTaskbarStashedHandleAlpha.setUpdateVisibility(true);
+        mTaskbarStashedHandleAlpha.get(ALPHA_INDEX_IDLE).setValue(NAV_HANDLE_IDLE_ALPHA);
         mStashedHandleView.updateHandleColor(
                 mPrefs.get(STASHED_HANDLE_REGION_IS_DARK), false /* animate */);
         final Resources resources = mActivity.getResources();
         mStashedHandleHeight = resources.getDimensionPixelSize(
                 R.dimen.taskbar_stashed_handle_height);
+    }
+
+    private void updateStashedHandleWidth() {
+        mStashedHandleWidth = getStashedHandleWidth(mActivity.getResources());
+    }
+
+    private int getStashedHandleWidth(Resources resources) {
+        int mode = Settings.System.getIntForUser(
+                mActivity.getContentResolver(),
+                "gesture_navbar_length_mode",
+                2,
+                UserHandle.USER_CURRENT);
+
+        final int widthDp;
+        switch (mode) {
+            case 0:
+                widthDp = 72;
+                break;
+            case 1:
+                widthDp = 90;
+                break;
+            case 3:
+                widthDp = 126;
+                break;
+            case 4:
+                widthDp = 144;
+                break;
+            case 2:
+            default:
+                widthDp = 108;
+                break;
+        }
+
+        return (int) (widthDp * resources.getDisplayMetrics().density + 0.5f);
     }
 
     public void init(TaskbarControllers controllers) {
@@ -140,8 +202,14 @@ public class StashedHandleViewController implements TaskbarControllers.LoggableT
         if (mActivity.isPhoneGestureNavMode() || mActivity.isTinyTaskbar()
                 || mActivity.isBubbleBarOnPhone()) {
             mTaskbarSize = resources.getDimensionPixelSize(R.dimen.taskbar_phone_size);
-            mStashedHandleWidth =
-                    resources.getDimensionPixelSize(R.dimen.taskbar_stashed_small_screen);
+            mStashedHandleWidth = getStashedHandleWidth(resources);
+            if (!mNavbarLengthObserverRegistered) {
+                mActivity.getContentResolver().registerContentObserver(
+                        Settings.System.getUriFor("gesture_navbar_length_mode"),
+                        false,
+                        mNavbarLengthObserver);
+                mNavbarLengthObserverRegistered = true;
+            }
         } else {
             mTaskbarSize = deviceProfile.getTaskbarProfile().getHeight();
             mStashedHandleWidth = resources
@@ -405,6 +473,39 @@ public class StashedHandleViewController implements TaskbarControllers.LoggableT
         if (mRegionSamplingHelper != null) {
             mRegionSamplingHelper.dump(prefix, pw);
         }
+    }
+
+    public void setNavBarHandleActive() {
+        mNavHandleIdleHandler.removeCallbacks(mNavHandleIdleRunnable);
+
+        if (mNavHandleIdleAnimator != null) {
+            mNavHandleIdleAnimator.cancel();
+            mNavHandleIdleAnimator = null;
+        }
+
+        mTaskbarStashedHandleAlpha.get(ALPHA_INDEX_IDLE)
+                .setValue(NAV_HANDLE_ACTIVE_ALPHA);
+    }
+
+    public void scheduleNavBarHandleIdle() {
+        mNavHandleIdleHandler.removeCallbacks(mNavHandleIdleRunnable);
+        mNavHandleIdleHandler.postDelayed(
+                mNavHandleIdleRunnable, NAV_HANDLE_IDLE_DELAY_MS);
+    }
+
+    public void fadeNavBarHandleToIdle() {
+        mNavHandleIdleAnimator = mTaskbarStashedHandleAlpha.get(ALPHA_INDEX_IDLE)
+                .animateToValue(NAV_HANDLE_IDLE_ALPHA);
+        mNavHandleIdleAnimator.setDuration(NAV_HANDLE_IDLE_FADE_DURATION_MS);
+        mNavHandleIdleAnimator.addListener(new AnimatorListenerAdapter() {
+            @Override
+            public void onAnimationEnd(Animator animation) {
+                if (mNavHandleIdleAnimator == animation) {
+                    mNavHandleIdleAnimator = null;
+                }
+            }
+        });
+        mNavHandleIdleAnimator.start();
     }
 
     @Override
